@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title> 命令模拟器拓展包文档 </title>
+        <link href="../css/wendang.css" rel="stylesheet" type="text/css" media="all" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+
+    <body style="width: 80%; margin: 0px auto;">
+        <div class="menu">
+            <div id="menu_1">
+                <div class="menu_1">
+                    <div onclick="display_thing('main_1');">拓展包</div>
+                    <div onclick="display_thing('main_2');">语法转换</div>
+                    <div onclick="display_thing('main_3');">语法提示</div>
+                    <div onclick="display_thing('main_4');">命令模板</div>
+                </div>
+                <div class="menu_1">
+                    <div onclick="display_thing('main_5');">rawtext</div>
+                    <div onclick="display_thing('main_6');">MC WS</div>
+                    <div onclick="display_thing('main_7');">可视化</div>
+                </div>
+            </div>
+            <div style="text-align: center; background-color: rgb(62, 94, 7); color: white; display: flex;">
+                <div onclick="close_menu()" style="padding: 3px 0px; width: 50%; border-right: 3px solid white;" id="button_1">点击收入菜单</div>
+                <div onclick="website1()" style="padding: 3px 0px; width: 50%;">点击返回主页</div>
+            </div>
+        </div>
+
+        <div id="top_blank" style="height: 80px;"></div>
+
+        <div id="main_text" style="width: 95%; margin: 0px auto;">
+
+            <div id="main_1" >
+                <h1 style="text-align: center;">拓展包</h1>
+                <p>
+                    &emsp;&emsp;拓展包为命令模拟器附加的服务，体验拓展包需要注册命令模拟器的账户，并在官网选购拓展包，拓展包将会根据未来用户的反馈进行更新。
+                </p>
+                <p>
+                    &emsp;&emsp;拓展包并不是只由命令模拟器作者进行开发，未来可能有拓展包开发者对自己的拓展包进行定价，请各位用户尊重拓展包开发者的著作权。
+                </p>
+                <p>
+                    &emsp;&emsp;拓展包有启动和重启两个开启方式。如果点击启动，则将恢复用户上一次对该拓展包内容的修改，如果点击重启，则销毁上一次的修改重新启动拓展包。
+                </p>
+                <p>
+                    &emsp;&emsp;注意：<samp class="red_text">由于拓展包是贴近python代码进行开发，请不要安装第三方未知拓展包。</samp>
+                    安装第三方拓展包造成的设备损害，开发者将不对此进行负责。
+                </p>
+            </div>
+            
+            <div id="main_2" style="display: none;" >
+                <h1 style="text-align: center;">语法转换</h1>
+                <p style="text-align: center;">作者: Missing245</p>
+                <p>
+                    &emsp;&emsp;新execute语法将在1.19.50版本启用，新方块状态语法将在1.20.0版本启用，
+                    该拓展包实现的是1.19.50版本前的execute旧语法以及方块数据值的转换。同时实现了适配于1.20版本的方块状态的语法转换。
+                    <samp class="red_text">方块数据值转换和方块状态语法转换需要在方块类命令里才能被正确转换。</samp>
+                </p>
+                <p>
+                    &emsp;&emsp;有两种转换模式，输入转换和批量转换。
+                </p>
+                <p>
+                    &emsp;&emsp;输入转换指的是将输入区的每一行命令都转换到输出区。<br>
+                    &emsp;&emsp;批量转换指的是将<samp class="red_text">expand_pack\b96d85f5-789c-4812-895c-b1751c150adc\input</samp>文件夹内的所有文件进行语法转换。
+                    转换结果将会出现在<samp class="red_text">expand_pack\b96d85f5-789c-4812-895c-b1751c150adc\output</samp>文件夹内，
+                    支持被转换的文件有.txt .mcfunction .bdx。
+                </p>
+                <p>
+                    &emsp;&emsp;输入命令版本有1.19.0和1.19.50两个版本。区别在于前者是对execute和方块数据值进行转换；
+                    后者是仅仅对方块数据值和方块状态做适配于1.20的语法转换，在这个版本要求的execute语法一定为新版本语法。
+                    <samp class="red_text">格式错误的命令不支持转换。</samp>
+                </p>
+                <p>
+                    &emsp;&emsp;输出命令版本有1.19.50和1.20.0两个版本。区别在于这两个版本使用的方块状态语法是不同的；
+                    如果你在输入区选择1.19.50，则输出命令版本会强制设置为1.20.0版本。
+                    你可以在输入区输入<samp class="red_text">setblock ~ ~ ~ bed</samp>观察输出结果。
+                </p>
+            </div>
+    
+            <div id="main_3" style="display: none;" >
+                <h1 style="text-align: center;">语法提示</h1>
+                <p style="text-align: center;">作者: CberJun</p>
+                <p>
+                    &emsp;&emsp;该拓展包可以对命令的初步语法检查、语法关键字的高亮和命令自动补全。
+                    <samp class="red_text">该拓展包也可以手动对游戏版本进行选择。</samp>
+                </p>
+                <p>&emsp;&emsp;在输入框内，输入的命令均不能带有斜杠符号。当有输入行为发生时，命令的自动补全会自动启用，
+                    自动补全中提示的内容需要<samp class="red_text">双击</samp>才能插入文本框中。</p>
+                <p>
+                    &emsp;&emsp;用户可以通过面板窗口修改编辑器的参数。例如游戏版本，错误提示等等，还可以对文件进行保存和打开。
+                    本拓展包会根据游戏内命令的更新进行随时的更新和调整。
+                </p>
+            </div>
+    
+            <div id="main_4" style="display: none;" >
+                <h1 style="text-align: center;">命令模板生成</h1>
+                <p style="text-align: center;">作者: Missing245</p>
+                <p>
+                    &emsp;&emsp;该拓展包支持设计命令模板，并且按照模板生成用户需要的高重复度命令。首先，用户可以点击“新建”按钮创建新的模板，
+                    然后点击“打开”按钮进入模板编辑模式。
+                </p>
+                <p>
+                    &emsp;&emsp;一号输入框可以修改模板的名字，名字可以区分模板的用途。<br>
+                    &emsp;&emsp;二号输入框可以修改三号输入框内模板命令生成的总次数。<br>
+                    &emsp;&emsp;三号输入框是<samp style="color: red;">模板命令</samp>的编辑框。<br>
+                    &emsp;&emsp;四号输入框是<samp style="color: red;">模板样式</samp>的编辑框。
+                </p>
+                <div style="text-align: center;"><img src="../picture/tutorial/template.jpg"></div>
+                <p>
+                    &emsp;&emsp;模板命令编辑窗口，是用户对需要生成的命令的大致设定。例如图片中的命令，而图片中的橙色高亮字符即为模板样式。
+                    模板样式的创建格式是“$temp”后加数字，可以参考图片中的橙色高亮字体。
+                    当模板样式创建成功后，该段字符就会变为橙色字体，如果没有变化则创建失败。
+                </p>
+                <p>&emsp;&emsp;<samp style="color: red;">用户可以点击“导入”按钮导入官方模板进行学习与试用。(练练手总是好的，不然真无从下手)</samp></p>
+                <p>
+                    &emsp;&emsp;当用户设置完成模板样式后，首先点击<samp style="color: red;">左、右箭头</samp>选中需要设置的样式，被选中的样式会在三号输入框中设置为深绿色背景。
+                    选中后即可设置样式的<samp style="color: red;">种类</samp>，在下拉菜单框中提供了以下几种样式的种类。<br>
+                    &emsp;&emsp;<samp style="color: red;">单次列表</samp>：将需要的内容填入四号输入框内，一行一个内容，如果内容个数比模板生成次数少，则会提前终止命令的生成。<br>
+                    &emsp;&emsp;<samp style="color: red;">循环列表</samp>：将需要的内容填入四号输入框内，一行一个内容，如果内容个数比模板生成次数少，则会从头开始将内容依次填入。<br>
+                    &emsp;&emsp;<samp style="color: red;">复杂表达式</samp>：编写一个数学表达式，在生成的过程中计算表达式的结果并填入模板命令中。<br>
+                    &emsp;&emsp;<samp style="color: red;">多段字符</samp>：将某个字段在该样式内重复生成，生成完毕后，所有字段将会使用空格拼接并填入。
+                    在四号输入框的第1行使用表达式设定<samp style="color: red;">字段的生成次数</samp>，在第2行设定<samp style="color: red;">需要重复的字段</samp>。
+                    字段支持使用占位符%s，这里的%s就相当于设置为复杂表达式的<samp style="color: red;">匿名模板样式</samp>。
+                    设置了多少%s就要从第3行开始编写相等行数的表达式。<br>
+                </p>
+
+                <h1 style="text-align: center;">表达式</h1>
+                <p>
+                    &emsp;&emsp;表达式包括常数(<samp style="color: red;">123</samp>)、数学计算式(<samp style="color: red;">pow(1,2)</samp>)、
+                    <a href="https://blog.csdn.net/qq_36640903/article/details/119857714">Python三元表达式</a>(<samp style="color: red;">0 if True == True else 1</samp>)等。该拓展包提供了以下几个常数变量：
+                </p>
+                <p>
+                    var0：模板总生成次数<br>
+                    var1：模板当前生成次数，从1开始递增<br>
+                    var2：字段当前生成次数，从1开始递增，仅限在多段字符模式下使用，设定字段总生成次数后该变量才有效<br>
+                    var3：字段总生成次数，仅限在多段字符模式下使用，设定字段总生成次数后该变量才有效<br>
+                    pi：π&emsp;&emsp;tau：2π&emsp;&emsp;e：自然常数<br>
+                    degrees：π/180
+                </p>
+                <p>该拓展包提供了以下几个数学函数：</p>
+                <p>
+                    floor(value) --&#62; 向下取整数<br>ceil(value) --&#62; 向上取整数<br><br>
+
+                    random() --&#62; 0~1随机小数<br>randfloat(value1,value2) --&#62; value1~value2的随机小数<br>
+                    randint(value1,value2) --&#62; value1~value2的随机整数，value1和value2必须是整数<br><br>
+
+                    sin(value) --&#62; 小数<br>cos(value) --&#62; 小数<br>tan(value) --&#62; 小数<br>
+                    arcsin(value) --&#62; 小数<br>arccos(value) --&#62; 小数<br>arctan(value) --&#62; 小数<br><br>
+
+                    pow(a,b) --&#62; a的b次(整或小数)<br>
+                    log(a,N) --&#62; 以a为底N为真数(小数)<br>
+                    factorial(n) --&#62; n!(整数)<br>
+                    comb(k,n) --&#62; 组合数运算(整数)<br>
+                    abs(value) --&#62; 绝对值运算(整或小数)<br>
+                    sqrt(value) --&#62; 开方运算(小数)
+                </p>
+                <p>&emsp;&emsp;<samp style="color: red;">用户可以点击“导入”按钮导入官方模板进行学习与试用。(练练手总是好的，不然真无从下手)</samp></p>
+                <p>&emsp;&emsp;当模板样式的设置完成时，用户可以点击“生成命令”按钮生成命令，生成结果将会打印在结果界面，<samp style="color: red;">请仔细在结果界面确认生成的命令格式是否准确无误，然后再进行后续操作。</samp></p>
+                
+                <h1 style="text-align: center;">导入与导出</h1>
+                <p>
+                    &emsp;&emsp;当模板设计完成后，用户可以在主界面选择模板，并点击“导出”按钮，即可在<samp style="color: red;">expand_pack\cf061f76-414f-410e-ad6b-7b1876343918\export</samp>文件夹下获取导出的模板文件，有助于分享。
+                    同样的将模板文件放入<samp style="color: red;">expand_pack\cf061f76-414f-410e-ad6b-7b1876343918\import</samp>文件夹内，点击“导入”按钮，即可导入模板。
+                </p>
+            </div>
+
+            <div id="main_5" style="display: none;" >
+                <h1 style="text-align: center;">Rawtext Json</h1>
+                <p style="text-align: center;">作者: Missing245</p>
+                <p>
+                    &emsp;&emsp;该拓展包实现的是对Rawtext Json的实时编辑以及实时生成结果。
+                </p>
+                <p>
+                    &emsp;&emsp;在编辑模式下，用户可以通过<samp class="red_text">右键菜单(安卓用户需长按)</samp>在文本框中选择插入的解析对象。
+                    例如selector、score、translate。
+                </p>
+                <p>
+                    &emsp;&emsp;如果您对rawtext json的概念不明确，<a href="https://minecraft.fandom.com/zh/wiki/%E5%9F%BA%E5%B2%A9%E7%89%88%E5%8E%9F%E5%A7%8BJSON%E6%96%87%E6%9C%AC%E6%A0%BC%E5%BC%8F">点击此处</a>
+                </p>
+                <p>
+                    &emsp;&emsp;在translate的with文本框中同样也可以使用右键菜单插入的解析对象。
+                </p>
+                <p>
+                    &emsp;&emsp;由于translate的with是一个列表，因此在with文本框中，程序会按照用户填写了多少行内容，来进行列表的内容填充。
+                </p>
+                <p>
+                    &emsp;&emsp;如果需要对with输入框中某一行的内容，在游戏内输出时进行换行，需要填写\n，如下图所示。
+                </p>
+                <div style="text-align: center;"><img src="../picture/tutorial/rawtext.jpg"></div>
+                <p>
+                    &emsp;&emsp;在mc中，两个英文字符宽度(包括空格)等于一个中文宽度，如果注重菜单风格请自行计算空格数量。
+                </p>
+                <p>
+                    &emsp;&emsp;现在，本拓展包支持按钮复制的功能，用户需要点击文本框后，<samp class="red_text">滑动选中文本框内的项目</samp>，
+                    然后点击<samp class="red_text">菜单栏功能按钮</samp>中的复制，即可拷贝按钮等项目。
+                </p>
+                <p>
+                    &emsp;&emsp;注意，如果你复制了内容中含有按钮项目，在离开拓展包界面后会清除剪贴板的储存内容。
+                </p>
+            </div>
+
+            <div id="main_6" style="display: none;" >
+                <h1 style="text-align: center;">MC Websocket</h1>
+                <p style="text-align: center;">作者: Missing245</p>
+                <p>
+                    &emsp;&emsp;该拓展包实现的是创建websocket服务器并与<samp class="red_text">国际基岩版Minecraft</samp>使用connect命令进行通讯。
+                </p>
+                <p>
+                    &emsp;&emsp;启动服务器后，连接服务器的命令将会自动复制进剪贴板中，该命令需要在国际基岩版Minecraft中执行。
+                    在此过程中，<samp class="red_text">安卓用户需要将Pydroid 3以小窗模式运行！！！</samp>
+                </p>
+                <p>&emsp;&emsp;websocket服务器可申请监听客户端的事件，也可以对客户端发送命令执行。最后客户端的结果都将会显示在终端界面。</p>
+                <p>
+                    &emsp;&emsp;如果用户需要使用websocket进行二次创作，请将expand_pack/f2a3d3a6-3ef1-4797-8e8e-28e8463f03a9文件夹内的mc_websocket文件夹完整复制，
+                    最后使用import命令导入即可。
+                </p>
+            </div>
+
+            <div id="main_7" style="display: none;" >
+                <h1 style="text-align: center;">可视化</h1>
+                <p style="text-align: center;">作者: Missing245</p>
+                <p>
+                    &emsp;&emsp;该拓展包实现的是对MC的后台世界进行渲染，并将每一游戏刻产生的效果渲染在界面上。
+                </p>
+                <p>
+                    &emsp;&emsp;启动该拓展包后，<samp class="red_text">首先需要进入一个世界</samp>，然后在参数界面，用户可以设置渲染的参数。<br>
+                    &emsp;&emsp;<span style="font-weight: 900;">区域起始位置：</span>渲染的起点<br>
+                    &emsp;&emsp;<span style="font-weight: 900;">区域记录大小：</span>需要渲染多大的范围<br>
+                    &emsp;&emsp;<span style="font-weight: 900;">实体跟踪：</span>使用目标选择器指定需要跟踪的实体，实体将会使用输入框旁的颜色进行渲染。超出区域大小的实体不会被渲染。
+                </p>
+                <p>
+                    &emsp;&emsp;在终端界面，点击<samp class="red_text">同步内容</samp>按钮，你可以将游戏的终端命令内容进行同步。
+                    该输入框与游戏的终端命令输入框等价。同样的，你在这个输入框输入的内容也会和游戏的终端命令同步。
+                </p>
+                <p>
+                    &emsp;&emsp;在终端界面，点击<samp class="red_text">开始记录</samp>按钮，游戏将会开始运行命令并记录世界产生的变化。
+                    记录完成后，点击<samp class="red_text">可视化</samp>按钮，即可跳转至网页查看渲染结果。
+                </p>
+                <p>
+                    &emsp;&emsp;注意：如果进入网页出现<samp class="red_text">与服务器通讯超时</samp>的错误，用户需要将 Pydroid 3 设置为小窗模式，与浏览器一起双前台运行。
+                </p>
+            </div>
+
+        </div>
+        
+        <div style="height: 30px;"></div>
+
+    </body>
+
+    <script>
+        var count_1 = 0 ;
+        function close_menu(){
+            if (count_1 == 0){
+                document.getElementById('menu_1').style.display = "none";
+                document.getElementById('button_1').innerHTML = "点击展开菜单";
+                document.getElementById('top_blank').style.height = "20px";
+            }
+            else{
+                document.getElementById('menu_1').style.display = "";
+                document.getElementById('button_1').innerHTML = "点击收入菜单"
+                document.getElementById('top_blank').style.height = (document.getElementById('menu_1').clientHeight + 20).toString() + "px"
+            }
+            count_1 ++; count_1 %= 2;
+        }
+        function website1(){window.location.href='http://localhost:32323';}
+    </script>
+
+    <script>
+        if (window.innerWidth > 700) {document.getElementById('main_text').style.width = "700px";}  
+        function display_thing(id1){
+            array1 = ['main_1','main_2','main_3','main_4','main_5','main_6','main_7','main_8'];
+            document.body.scrollTop = 0; 
+            document.documentElement.scrollTop = 0;
+            for (let index = 0; index < array1.length; index++) {
+                if (id1 == array1[index]) document.getElementById(array1[index]).style.display = "";
+                else document.getElementById(array1[index]).style.display = "none";
+            }
+        }
+    </script>
+
+</html>

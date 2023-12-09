@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title> 命令模拟器世界配置文档 </title>
+        <link href="../css/wendang.css" rel="stylesheet" type="text/css" media="all" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+        
+    <body style="width: 80%; margin: 0px auto;">
+        <div class="menu">
+            <div id="menu_1">
+                <div class="menu_1">
+                    <div onclick="display_thing('main_1');">世界类型</div>
+                    <div onclick="display_thing('main_2');">加载区块</div>
+                    <div onclick="display_thing('main_3');">游戏刻</div>
+                </div>
+            </div>
+            <div style="text-align: center; background-color: rgb(62, 94, 7); color: white; display: flex;">
+                <div onclick="close_menu()" style="padding: 3px 0px; width: 50%; border-right: 3px solid white;" id="button_1">点击收入菜单</div>
+                <div onclick="website1()" style="padding: 3px 0px; width: 50%;">点击返回主页</div>
+            </div>
+        </div>
+
+        <div id="top_blank" style="height: 80px;"></div>
+
+        <div id="main_text" style="width: 95%; margin: 0px auto;">
+            
+            <div id="main_1">
+                <h1 style="text-align: center;">世界类型</h1>
+                <p>
+                    &emsp;&emsp;命令模拟器并不会依照柏林噪声生成一个和Minecraft一模一样的世界，使用柏林噪声生成的时间消耗过大。
+                    为了加快世界生成的速度，命令模拟器使用了预设的区块模板。
+                </p>
+                <p>
+                    &emsp;&emsp;在基岩版下，如果你选择flat世界类型，主世界维度的每个区块按以下模板顺序生成：<samp class="red_text">1层基岩(y=-64)、2层泥土、1层草方块、380层空气</samp>
+                </p>
+                <p>
+                    &emsp;&emsp;如果你选择infinity世界类型，主世界维度的每个区块按以下模板顺序生成：<samp class="red_text">1层基岩(y=-64)、8层石头(可能有中空区域)、2层泥土、1层草方块，372层空气</samp>
+                </p>
+                <p>
+                    &emsp;&emsp;下界维度的每个区块按以下模板顺序生成：<samp class="red_text">1层基岩(y=0)、8层地狱岩、118层空气、1层基岩</samp>
+                </p>
+                <p>
+                    &emsp;&emsp;末地维度的每个区块按以下模板顺序生成：<samp class="red_text">一层空气(y=0)、8层末地石、119层空气</samp>
+                </p>
+            </div>
+
+            <div id="main_2" style="display: none;" >
+                <h1 style="text-align: center;">加载区块</h1>
+                <p>
+                    &emsp;&emsp;命令模拟器在进入世界时会在世界原点附近生成5个玩家，每个玩家都以玩家所在的区块为中心，以模拟距离为半径，
+                    将这个圆形区域所覆盖的区块全部设置为加载区块。
+                </p>
+                <div style="text-align:center"><img src="../picture/tutorial/load_chunk.png" alt="" width="250" height="250"></div>
+                <p>
+                    &emsp;&emsp;例如图中的Player所在的区块为ChunkPos，模拟距离为4。则该圆形区域以ChunkPos为起点，半径为4个区块，
+                    包含的区块A到Z1都会被标记为加载区块。你可以观察这张图并总结更大的模拟距离会影响多少范围的区块。tickingarea的circle模式同理。
+                </p>
+                <p>
+                    &emsp;&emsp;超出加载区块的位置会影响clone、setblock等方块处理命令。
+                    并且在命令模拟器中，超出加载区块的实体在下一个游戏刻将不会被读取和搜索。
+                </p>
+            </div>
+            
+            <div id="main_3" style="display: none;" >
+                <h1 style="text-align: center;">游戏刻</h1>
+                <p>
+                    &emsp;&emsp;命令模拟器的生成的世界将按照顺序执行执行以下事件：<br>
+                    &emsp;&emsp;①更新需要加载的区块<br>
+                    &emsp;&emsp;②更新实体的相关数据<br>
+                    &emsp;&emsp;③运行终端中被发送的命令<samp class="red_text">(命令的执行者是某个玩家，执行位置是玩家的位置)</samp><br>
+                    &emsp;&emsp;④运行预设的延时和循环命令<samp class="red_text">(命令的执行者是服务器，执行位置是世界原点)</samp><br>
+                    &emsp;&emsp;⑤运行命令方块<samp class="red_text">(命令的执行者是命令方块，执行位置是命令方块的中心)</samp><br>
+                    &emsp;&emsp;⑥运行预设的延时和循环函数<samp class="red_text">(命令的执行者是服务器，执行位置是世界原点)</samp><br>
+                </p>
+                <p>
+                    &emsp;&emsp;由于命令模拟器还在开发初期，很多Minecraft的特性需要根据玩家的反馈进行更新，
+                    所以现在为止世界中所有的实体都是静止的，不会更新运动状态，许多条件需要用户在命令栏中自行创造调试。
+                </p>
+            </div>
+            
+        </div>
+        
+        <div style="height: 30px;"></div>
+
+    </body>
+
+    <script>
+        var count_1 = 0 ;
+        function close_menu(){
+            if (count_1 == 0){
+                document.getElementById('menu_1').style.display = "none";
+                document.getElementById('button_1').innerHTML = "点击展开菜单";
+                document.getElementById('top_blank').style.height = "20px";
+            }
+            else{
+                document.getElementById('menu_1').style.display = "";
+                document.getElementById('button_1').innerHTML = "点击收入菜单"
+                document.getElementById('top_blank').style.height = (document.getElementById('menu_1').clientHeight + 20).toString() + "px"
+            }
+            count_1 ++; count_1 %= 2;
+        }
+        function website1(){window.location.href='http://localhost:32323';}
+    </script>
+
+    <script>
+        if (window.innerWidth > 700) {document.getElementById('main_text').style.width = "700px";}  
+        function display_thing(id1){
+            array1 = ['main_1','main_2','main_3','main_4','main_5'];
+            document.body.scrollTop = 0; 
+            document.documentElement.scrollTop = 0;
+            for (let index = 0; index < array1.length; index++) {
+                if (id1 == array1[index]) document.getElementById(array1[index]).style.display = "";
+                else document.getElementById(array1[index]).style.display = "none";
+            }
+        }
+    </script>
+
+</html>
