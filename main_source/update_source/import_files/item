@@ -1,0 +1,4978 @@
+{
+  "minecraft:acacia_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:activator_rail": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:air": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:allay_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:allow": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:amethyst_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:amethyst_cluster": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:amethyst_shard": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ancient_debris": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:andesite": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:andesite_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:angler_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:anvil": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:apple": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:archer_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:armor_stand": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:arms_up_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:arrow": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:axolotl_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:axolotl_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:azalea": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:azalea_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:azalea_leaves_flowered": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:baked_potato": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_chest_raft": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_mosaic": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_mosaic_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_mosaic_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_raft": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bamboo_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:banner": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:barrel": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:barrier": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:basalt": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bat_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:beacon": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bed": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bedrock": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bee_nest": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bee_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:beef": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:beehive": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:beetroot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:beetroot_seeds": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:beetroot_soup": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bell": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:big_dripleaf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:black_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blackstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blackstone_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blackstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blackstone_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blade_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blast_furnace": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blaze_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blaze_rod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blaze_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_ice": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bone_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bone_meal": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:book": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bookshelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:border_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bordure_indented_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bow": {
+    "damage_max": 384,
+    "can_enchant": [
+      "vanishing",
+      "flame",
+      "infinity",
+      "mending",
+      "power",
+      "punch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:bowl": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brain_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bread": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brewer_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brewing_stand": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brick": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brick_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_mushroom": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_mushroom_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brush": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bubble_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:budding_amethyst": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:burn_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cactus": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cake": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:calibrated_sculk_sensor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:camel_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:campfire": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:carrot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:carrot_on_a_stick": {
+    "damage_max": 26,
+    "can_enchant": [
+      "vanishing",
+      "mending",
+      "unbreaking"
+    ]
+  },
+  "minecraft:cartography_table": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:carved_pumpkin": {
+    "damage_max": null,
+    "can_enchant": [
+      "binding",
+      "vanishing"
+    ]
+  },
+  "minecraft:cat_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cauldron": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cave_spider_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chain_command_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chainmail_boots": {
+    "damage_max": 195,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "depth_strider",
+      "feather_falling",
+      "fire_protection",
+      "frost_walker",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "soul_speed",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:chainmail_chestplate": {
+    "damage_max": 240,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:chainmail_helmet": {
+    "damage_max": 165,
+    "can_enchant": [
+      "aqua_affinity",
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "respiration",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:chainmail_leggings": {
+    "damage_max": 225,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "swift_sneak",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:charcoal": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chest": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chest_minecart": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chicken": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chicken_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chiseled_bookshelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chiseled_deepslate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chiseled_nether_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chiseled_polished_blackstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chorus_flower": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chorus_fruit": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chorus_plant": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:clay": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:clay_ball": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:clock": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coal": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coal_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coal_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coast_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cobbled_deepslate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cobbled_deepslate_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cobbled_deepslate_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cobbled_deepslate_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cobblestone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cobblestone_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cocoa_beans": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cod_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cod_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:command_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:command_block_minecart": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:comparator": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:compass": {
+    "damage_max": null,
+    "can_enchant": [
+      "vanishing"
+    ]
+  },
+  "minecraft:composter": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:conduit": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cooked_beef": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cooked_chicken": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cooked_cod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cooked_mutton": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cooked_porkchop": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cooked_rabbit": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cooked_salmon": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cookie": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_ingot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coral_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coral_fan": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coral_fan_dead": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cow_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cracked_deepslate_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cracked_deepslate_tiles": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cracked_nether_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cracked_polished_blackstone_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crafting_table": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:creeper_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:creeper_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_fungus": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_hyphae": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_nylium": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_stem": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crossbow": {
+    "damage_max": 464,
+    "can_enchant": [
+      "vanishing",
+      "mending",
+      "multishot",
+      "piercing",
+      "quick_charge",
+      "unbreaking"
+    ]
+  },
+  "minecraft:crying_obsidian": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:danger_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_prismarine_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:daylight_detector": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dead_brain_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dead_bubble_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dead_fire_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dead_horn_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dead_tube_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deadbush": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:decorated_pot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_brick_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_brick_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_coal_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_copper_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_diamond_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_emerald_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_gold_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_iron_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_lapis_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_redstone_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_tile_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_tile_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_tile_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deepslate_tiles": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:deny": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:detector_rail": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:diamond": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:diamond_axe": {
+    "damage_max": 1561,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "sharpness",
+      "silk_touch",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:diamond_boots": {
+    "damage_max": 429,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "depth_strider",
+      "feather_falling",
+      "fire_protection",
+      "frost_walker",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "soul_speed",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_chestplate": {
+    "damage_max": 528,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_helmet": {
+    "damage_max": 363,
+    "can_enchant": [
+      "aqua_affinity",
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "respiration",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_hoe": {
+    "damage_max": 1561,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_horse_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:diamond_leggings": {
+    "damage_max": 495,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "swift_sneak",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:diamond_pickaxe": {
+    "damage_max": 1561,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_shovel": {
+    "damage_max": 1561,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diamond_sword": {
+    "damage_max": 1561,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "fire_aspect",
+      "knockback",
+      "looting",
+      "mending",
+      "sharpness",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:diorite": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:diorite_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dirt": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dirt_with_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:disc_fragment_5": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dispenser": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dolphin_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:donkey_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:double_plant": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dragon_breath": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dragon_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dried_kelp": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dried_kelp_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dripstone_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dropper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:drowned_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dune_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:echo_shard": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:elder_guardian_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:elytra": {
+    "damage_max": 432,
+    "can_enchant": [
+      "binding",
+      "vanishing",
+      "mending"
+    ]
+  },
+  "minecraft:emerald": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:emerald_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:emerald_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:empty_map": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:enchanted_book": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:enchanted_golden_apple": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:enchanting_table": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:end_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:end_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:end_crystal": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:end_portal_frame": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:end_rod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:end_stone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ender_chest": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ender_dragon_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ender_eye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ender_pearl": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:enderman_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:endermite_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:evoker_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:experience_bottle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:explorer_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:eye_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:farmland": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:feather": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:fermented_spider_eye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:field_masoned_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:filled_map": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:fire_charge": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:fire_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:firework_rocket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:firework_star": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:fishing_rod": {
+    "damage_max": 384,
+    "can_enchant": [
+      "vanishing",
+      "luck_of_the_sea",
+      "lure",
+      "mending",
+      "unbreaking"
+    ]
+  },
+  "minecraft:fletching_table": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:flint": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:flint_and_steel": {
+    "damage_max": 64,
+    "can_enchant": [
+      "vanishing",
+      "mending",
+      "unbreaking"
+    ]
+  },
+  "minecraft:flower_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:flower_pot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:flowering_azalea": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:fox_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:frame": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:friend_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:frog_spawn": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:frog_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:frosted_ice": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:furnace": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ghast_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ghast_tear": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gilded_blackstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glass_bottle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glistering_melon_slice": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:globe_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glow_berries": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glow_frame": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glow_ink_sac": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glow_lichen": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glow_squid_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glowstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:glowstone_dust": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:goat_horn": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:goat_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gold_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gold_ingot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gold_nugget": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gold_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:golden_apple": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:golden_axe": {
+    "damage_max": 32,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "sharpness",
+      "silk_touch",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_boots": {
+    "damage_max": 91,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "depth_strider",
+      "feather_falling",
+      "fire_protection",
+      "frost_walker",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "soul_speed",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_carrot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:golden_chestplate": {
+    "damage_max": 112,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_helmet": {
+    "damage_max": 77,
+    "can_enchant": [
+      "aqua_affinity",
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "respiration",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_hoe": {
+    "damage_max": 32,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_horse_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:golden_leggings": {
+    "damage_max": 105,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "swift_sneak",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_pickaxe": {
+    "damage_max": 32,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_rail": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:golden_shovel": {
+    "damage_max": 32,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:golden_sword": {
+    "damage_max": 32,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "fire_aspect",
+      "knockback",
+      "looting",
+      "mending",
+      "sharpness",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:granite": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:granite_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:grass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:grass_path": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gravel": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gray_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:grindstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:guardian_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:gunpowder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:hanging_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:hardened_clay": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:hay_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:heart_of_the_sea": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:heart_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:heartbreak_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:heavy_weighted_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:hoglin_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:honey_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:honey_bottle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:honeycomb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:honeycomb_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:hopper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:hopper_minecart": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:horn_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:horse_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:host_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:howl_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:husk_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ice": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:infested_deepslate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ink_sac": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_axe": {
+    "damage_max": 250,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "sharpness",
+      "silk_touch",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_boots": {
+    "damage_max": 195,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "depth_strider",
+      "feather_falling",
+      "fire_protection",
+      "frost_walker",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "soul_speed",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_chestplate": {
+    "damage_max": 240,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_golem_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_helmet": {
+    "damage_max": 165,
+    "can_enchant": [
+      "aqua_affinity",
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "respiration",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_hoe": {
+    "damage_max": 250,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_horse_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_ingot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_leggings": {
+    "damage_max": 225,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "swift_sneak",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_nugget": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:iron_pickaxe": {
+    "damage_max": 250,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_shovel": {
+    "damage_max": 250,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_sword": {
+    "damage_max": 250,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "fire_aspect",
+      "knockback",
+      "looting",
+      "mending",
+      "sharpness",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:iron_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jigsaw": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jukebox": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:kelp": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ladder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lantern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lapis_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lapis_lazuli": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lapis_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:large_amethyst_bud": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lava_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lead": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:leather": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:leather_boots": {
+    "damage_max": 65,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "depth_strider",
+      "feather_falling",
+      "fire_protection",
+      "frost_walker",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "soul_speed",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:leather_chestplate": {
+    "damage_max": 80,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:leather_helmet": {
+    "damage_max": 55,
+    "can_enchant": [
+      "aqua_affinity",
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "respiration",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:leather_horse_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:leather_leggings": {
+    "damage_max": 75,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "swift_sneak",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:leaves2": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lectern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lever": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_blue_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_weighted_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lightning_rod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lingering_potion": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lit_pumpkin": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:llama_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lodestone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lodestone_compass": {
+    "damage_max": null,
+    "can_enchant": [
+      "vanishing"
+    ]
+  },
+  "minecraft:loom": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magma": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magma_cream": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magma_cube_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_propagule": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mangrove_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:medium_amethyst_bud": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:melon_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:melon_seeds": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:melon_slice": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:milk_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:minecart": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:miner_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mob_spawner": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mojang_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:monster_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mooshroom_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:moss_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:moss_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mossy_cobblestone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mossy_cobblestone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mossy_stone_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mourner_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mud": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mud_brick_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mud_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mud_brick_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mud_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:muddy_mangrove_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mule_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mushroom_stew": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_11": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_13": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_5": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_blocks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_cat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_chirp": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_far": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_mall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_mellohi": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_otherside": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_pigstep": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_relic": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_stal": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_strad": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_wait": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_ward": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mutton": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mycelium": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:name_tag": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nautilus_shell": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_brick": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_brick_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_gold_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_sprouts": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_star": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_wart": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_wart_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:netherbrick": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:netherite_axe": {
+    "damage_max": 2031,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "sharpness",
+      "silk_touch",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:netherite_boots": {
+    "damage_max": 481,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "depth_strider",
+      "feather_falling",
+      "fire_protection",
+      "frost_walker",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "soul_speed",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_chestplate": {
+    "damage_max": 592,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_helmet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:netherite_hoe": {
+    "damage_max": 2031,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_ingot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:netherite_leggings": {
+    "damage_max": 555,
+    "can_enchant": [
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "swift_sneak",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_pickaxe": {
+    "damage_max": 2031,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_scrap": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:netherite_shovel": {
+    "damage_max": 2031,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_sword": {
+    "damage_max": 2031,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "fire_aspect",
+      "knockback",
+      "looting",
+      "mending",
+      "sharpness",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:netherite_upgrade_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:netherrack": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:normal_stone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:noteblock": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:observer": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:obsidian": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ocelot_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ochre_froglight": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:packed_ice": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:packed_mud": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:painting": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:panda_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:paper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:parrot_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pearlescent_froglight": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:phantom_membrane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:phantom_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pig_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:piglin_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:piglin_brute_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:piglin_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pillager_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_petals": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:piston": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pitcher_plant": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pitcher_pod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:plenty_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:podzol": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pointed_dripstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:poisonous_potato": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polar_bear_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_andesite": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_andesite_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_basalt": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_brick_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_brick_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_blackstone_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_deepslate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_deepslate_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_deepslate_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_deepslate_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_diorite": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_diorite_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_granite": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:polished_granite_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:popped_chorus_fruit": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:porkchop": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:potato": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:potion": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:powder_snow_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:prismarine": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:prismarine_bricks_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:prismarine_crystals": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:prismarine_shard": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:prismarine_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:prize_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pufferfish": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pufferfish_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pufferfish_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pumpkin": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pumpkin_pie": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pumpkin_seeds": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purple_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purpur_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purpur_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:quartz": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:quartz_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:quartz_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:quartz_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:quartz_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rabbit": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rabbit_foot": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rabbit_hide": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rabbit_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rabbit_stew": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rail": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:raiser_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ravager_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:raw_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:raw_copper_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:raw_gold": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:raw_gold_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:raw_iron": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:raw_iron_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:recovery_compass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_flower": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_mushroom": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_mushroom_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_nether_brick": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_nether_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_sandstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_sandstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:redstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:redstone_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:redstone_lamp": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:redstone_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:redstone_torch": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:reinforced_deepslate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:repeater": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:repeating_command_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:respawn_anchor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rib_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:rotten_flesh": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:saddle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:salmon": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:salmon_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:salmon_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sand": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sandstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sandstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:scaffolding": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sculk": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sculk_catalyst": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sculk_sensor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sculk_shrieker": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sculk_vein": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:scute": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sea_lantern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sea_pickle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:seagrass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sentry_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:shaper_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sheaf_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:shears": {
+    "damage_max": 238,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:sheep_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:shelter_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:shield": {
+    "damage_max": 337,
+    "can_enchant": [
+      "vanishing",
+      "mending",
+      "unbreaking"
+    ]
+  },
+  "minecraft:shroomlight": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:shulker_shell": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:shulker_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:silence_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:silver_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:silverfish_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:skeleton_horse_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:skeleton_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:skull": {
+    "damage_max": null,
+    "can_enchant": [
+      "binding",
+      "vanishing"
+    ]
+  },
+  "minecraft:skull_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:skull_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:slime": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:slime_ball": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:slime_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:small_amethyst_bud": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:small_dripleaf_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smithing_table": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smoker": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smooth_basalt": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smooth_quartz_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smooth_red_sandstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smooth_sandstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smooth_stone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sniffer_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sniffer_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:snort_pottery_sherd": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:snout_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:snow": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:snow_golem_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:snow_layer": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:snowball": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:soul_campfire": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:soul_lantern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:soul_sand": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:soul_soil": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:soul_torch": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spider_eye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spider_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spire_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:splash_potion": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sponge": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spore_blossom": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spyglass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:squid_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stick": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sticky_piston": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_axe": {
+    "damage_max": 131,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "sharpness",
+      "silk_touch",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:stone_block_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_block_slab2": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_block_slab3": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_block_slab4": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_hoe": {
+    "damage_max": 131,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:stone_pickaxe": {
+    "damage_max": 131,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:stone_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_shovel": {
+    "damage_max": 131,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:stone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_sword": {
+    "damage_max": 131,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "fire_aspect",
+      "knockback",
+      "looting",
+      "mending",
+      "sharpness",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:stonebrick": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stonecutter_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stray_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:strider_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:string": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_acacia_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_bamboo_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_birch_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_cherry_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_cherry_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_crimson_hyphae": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_crimson_stem": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_dark_oak_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_jungle_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_mangrove_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_mangrove_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_oak_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_spruce_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_warped_hyphae": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_warped_stem": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:structure_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:structure_void": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sugar": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sugar_cane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:suspicious_gravel": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:suspicious_sand": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:suspicious_stew": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sweet_berries": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tadpole_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tadpole_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tallgrass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:target": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tide_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tinted_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tnt": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tnt_minecart": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:torch": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:torchflower": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:torchflower_seeds": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:totem_of_undying": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:trader_llama_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:trapped_chest": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:trident": {
+    "damage_max": 250,
+    "can_enchant": [
+      "channeling",
+      "vanishing",
+      "impaling",
+      "loyalty",
+      "mending",
+      "riptide",
+      "unbreaking"
+    ]
+  },
+  "minecraft:tripwire_hook": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tropical_fish": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tropical_fish_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tropical_fish_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tube_coral": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tuff": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:turtle_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:turtle_helmet": {
+    "damage_max": 275,
+    "can_enchant": [
+      "aqua_affinity",
+      "blast_protection",
+      "binding",
+      "vanishing",
+      "fire_protection",
+      "mending",
+      "projectile_protection",
+      "protection",
+      "respiration",
+      "thorns",
+      "unbreaking"
+    ]
+  },
+  "minecraft:turtle_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:twisting_vines": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:undyed_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:verdant_froglight": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:vex_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:vex_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:villager_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:vindicator_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:vine": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wandering_trader_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:ward_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warden_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_fungus": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_fungus_on_a_stick": {
+    "damage_max": 100,
+    "can_enchant": [
+      "vanishing",
+      "mending",
+      "unbreaking"
+    ]
+  },
+  "minecraft:warped_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_hyphae": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_nylium": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_stem": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:warped_wart_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:water_bucket": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waterlily": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_exposed_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_exposed_cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_exposed_cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_exposed_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_oxidized_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_oxidized_cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_oxidized_cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_oxidized_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_weathered_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_weathered_cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_weathered_cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_weathered_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wayfinder_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_cut_copper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_cut_copper_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:web": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weeping_vines": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wheat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wheat_seeds": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:white_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wild_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:witch_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wither_rose": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wither_skeleton_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wither_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wolf_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wooden_axe": {
+    "damage_max": 59,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "sharpness",
+      "silk_touch",
+      "smite",
+      "unbreaking"
+    ]
+  },
+  "minecraft:wooden_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wooden_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wooden_hoe": {
+    "damage_max": 59,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:wooden_pickaxe": {
+    "damage_max": 59,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:wooden_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wooden_shovel": {
+    "damage_max": 59,
+    "can_enchant": [
+      "vanishing",
+      "efficiency",
+      "fortune",
+      "mending",
+      "silk_touch",
+      "unbreaking"
+    ]
+  },
+  "minecraft:wooden_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wooden_sword": {
+    "damage_max": 59,
+    "can_enchant": [
+      "bane_of_arthropods",
+      "vanishing",
+      "fire_aspect",
+      "knockback",
+      "looting",
+      "mending",
+      "sharpness",
+      "smite"
+    ]
+  },
+  "minecraft:writable_book": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_candle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_concrete": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_concrete_powder": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_flower": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_shulker_box": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_stained_glass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_stained_glass_pane": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:zoglin_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:zombie_horse_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:zombie_pigman_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:zombie_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:zombie_villager_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  }
+}
