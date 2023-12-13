@@ -1,0 +1,83 @@
+{
+  "ancient_city": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "bastion_remnant": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "buried_treasure": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "end_city": {
+    "dimension": [
+      "the_end"
+    ]
+  },
+  "fortress": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "mansion": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mineshaft": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "monument": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "pillager_outpost": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "ruined_portal": {
+    "dimension": [
+      "nether",
+      "overworld"
+    ]
+  },
+  "ruins": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "shipwreck": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "stronghold": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "temple": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "trail_ruins": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "village": {
+    "dimension": [
+      "overworld"
+    ]
+  }
+}

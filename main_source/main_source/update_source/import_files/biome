@@ -1,0 +1,427 @@
+{
+  "bamboo_jungle": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "bamboo_jungle_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "basalt_deltas": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "beach": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "birch_forest": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "birch_forest_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "birch_forest_hills_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "birch_forest_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "cherry_grove": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "cold_beach": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "cold_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "cold_taiga": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "cold_taiga_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "cold_taiga_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "crimson_forest": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "deep_cold_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "deep_dark": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "deep_frozen_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "deep_lukewarm_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "deep_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "desert": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "desert_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "desert_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "dripstone_caves": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "extreme_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "extreme_hills_edge": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "extreme_hills_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "extreme_hills_plus_trees": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "extreme_hills_plus_trees_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "flower_forest": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "forest": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "forest_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "frozen_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "frozen_peaks": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "frozen_river": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "grove": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "hell": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "ice_mountains": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "ice_plains": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "ice_plains_spikes": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "jagged_peaks": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "jungle": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "jungle_edge": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "jungle_edge_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "jungle_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "jungle_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "legacy_frozen_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "lukewarm_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "lush_caves": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mangrove_swamp": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "meadow": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mega_taiga": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mega_taiga_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mesa": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mesa_bryce": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mesa_plateau": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mesa_plateau_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mesa_plateau_stone": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mesa_plateau_stone_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mushroom_island": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "mushroom_island_shore": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "plains": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "redwood_taiga_hills_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "redwood_taiga_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "river": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "roofed_forest": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "roofed_forest_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "savanna": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "savanna_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "savanna_plateau": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "savanna_plateau_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "snowy_slopes": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "soulsand_valley": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "stone_beach": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "stony_peaks": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "sunflower_plains": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "swampland": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "swampland_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "taiga": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "taiga_hills": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "taiga_mutated": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "the_end": {
+    "dimension": [
+      "the_end"
+    ]
+  },
+  "warm_ocean": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "warped_forest": {
+    "dimension": [
+      "nether"
+    ]
+  }
+}

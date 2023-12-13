@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>命令方块视图</title>
+	</head>
+
+	<body>
+		<script type="module">
+			import * as THREE from "./js/three.module.js";
+			import {OrbitControls} from "./js/OrbitControls.js";
+			import {command_block_rander_system} from "./js/minecraft_block.js";
+
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 2000 );
+
+			const renderer = new THREE.WebGLRenderer({antialias: true});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+	
+			// 环境光
+			const light = new THREE.AmbientLight(0xfaffff); // soft white light
+			scene.add(light);
+
+			const axesHelper = new THREE.AxesHelper( 96 );
+			scene.add( axesHelper );
+	
+			camera.position.x = -0.1;
+			camera.position.z = 0.0001;
+			camera.position.y = 10;
+			camera.lookAt(scene.position);
+			
+			camera.position.x = 1;
+			camera.position.z = 1;
+	
+			const command_block_list = command_block_rander_system($cb_list);
+			for (let index = 0; index < command_block_list.length; index++) scene.add(command_block_list[index]) ;
+			
+			const controls = new OrbitControls( camera, renderer.domElement );
+			controls.target = new THREE.Vector3( 45, 5, 45 );
+			controls.minDistance = 5;
+			camera.position.x = 45;
+			camera.position.y = 60;
+			camera.position.z = 45;
+
+			function animate() {
+				requestAnimationFrame( animate );
+				renderer.render( scene, camera );
+			};
+			animate();
+			
+		</script>
+	</body>
+	
+</html>
