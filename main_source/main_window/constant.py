@@ -2,7 +2,7 @@ import os,uuid
 try : import jnius
 except : jnius = None
 
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.0.0" ; debug_testing = True
 PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius else None
 Context = jnius.autoclass('android.content.Context') if jnius else None
 
@@ -23,17 +23,8 @@ Prove_ID_List = [
 ]
 
 #世界文件验证列表
-world_file_prove = ['level_name','world_info','scoreboard','chunk']
+world_file_prove = ['level_name','world_info','scoreboard','chunk_data']
 
-VANILLA_EXPANDS = {
-    "android": ["7a41de93-0a65-41e7-8a58-a4223e7161ad", {}],
-    "windows": ["4bb65bed-05d0-463c-af81-1140e059dd82", {}],
-    "ios": ["3f3443b6-4c0e-4e23-946b-488961152be1", {}]
-}
-for _platform, _data in VANILLA_EXPANDS.items():
-    _data[1]["pack_name"] = "%s 原版拓展" % _platform
-    _data[1]["version"] = "" # 留空
-del _platform, _data
 
 manifest_json = """
 {

@@ -1,7 +1,6 @@
 import re,os,itertools
 from . import HtmlGenerate,CommandParser,CommandCompiler
 from .. import MathFunction,Constants,RunTime,FileOperation,np,BlockComponent
-import main_source.package.python_bdx as python_bdx
 import main_source.package.python_nbt as python_nbt
 from typing import Dict,List,Tuple
 
@@ -214,6 +213,7 @@ class command_block_compile_system :
 
 
     def transfor_bdx_file(self, _game:RunTime.minecraft_thread) :
+        import main_source.package.python_bdx as python_bdx
         a = python_bdx.BDX_File(os.path.join("functionality", "structure_output", _game.world_name+".bdx"),"wb")
         a.author = "Command_Simulator"
         pos_start = [0,0,0] ; cb_type = {"minecraft:command_block":0,"minecraft:repeating_command_block":1,"minecraft:chain_command_block":2}

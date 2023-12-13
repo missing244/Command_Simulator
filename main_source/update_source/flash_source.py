@@ -184,11 +184,6 @@ bedrock_id_operation = bedrock_id_info()
 
 
 def unzip_id_file() -> bool :
-    """
-    None -> 不是文件
-    False -> 不是zip文件
-    True -> 解压成功
-    """
     zip_path = os.path.join(source_unzip_dir, "minecraft_id.zip")
     if not FileOperation.is_file(zip_path) : raise FileNotFoundError("基岩版ID文件不存在")
     if not zipfile.is_zipfile(zip_path) : raise zipfile.BadZipFile("基岩版ID文件并不是zip压缩包")
@@ -196,11 +191,6 @@ def unzip_id_file() -> bool :
     return True
 
 def unzip_source_file() -> bool :
-    """
-    None -> 不是文件
-    False -> 不是tar文件
-    True -> 解压成功
-    """
     tar_path = os.path.join(source_unzip_dir, "be_resource.tar")
     if not FileOperation.is_file(tar_path) : raise FileNotFoundError("基岩版资源文件不存在")
     if not tarfile.is_tarfile(tar_path) : raise tarfile.TarError("基岩版资源文件并不是tar压缩包")
@@ -366,7 +356,7 @@ def flash_search_id() -> Dict[Literal["success","error"],Union[list,list]] :
             content1 = file.read().split("\n")
             content1 = [tuple(text.split(": ",1)) for text in content1[1 : len(content1)-3]]
             id_translat[id_name] = {
-                text_list[0]:text_list[1] for text_list in content1 if (text_list[1] != "")
+                text_list[0]:text_list[1].replace("（不可召唤）","") for text_list in content1 if (text_list[1] != "")
             }
             file.close()
             logs["success"].append("%s 文件翻译提取成功" % open_file_list[id_name]["name"])

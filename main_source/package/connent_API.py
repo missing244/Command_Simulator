@@ -228,7 +228,7 @@ def request_API_url(url:Union[str,List[str]],post_data:dict = None,cookie_data:s
     for url1 in url :
         for times1 in range(2) :
             req1 = request.Request(url1, headers=request_headers, data = post_data)
-            response2:bytes = request.urlopen(req1,timeout=4).read()
+            response2:bytes = request.urlopen(req1,timeout=3).read()
             if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :
                 request_headers["cookie"] = js_execute.decode(response2.decode("utf-8")) ; time.sleep(0.25)
             else : return response2
@@ -242,7 +242,7 @@ def request_url_without_error(url:Union[str,List[str]],post_data:dict = None,coo
     for url1 in url :
         for times1 in range(2) :
             req1 = request.Request(url1, headers=request_headers, data = post_data)
-            try : response2:bytes = request.urlopen(req1,timeout=4).read()
+            try : response2:bytes = request.urlopen(req1,timeout=3).read()
             except : response2 = None; print(url1) ; traceback.print_exc() ; continue
             else :
                 if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :
@@ -265,20 +265,17 @@ APP_INFO_URL = "https://sharechain.qq.com/a28ff773d6d07e3830dc7bf54cc7a079"
 
 AUTO_LOGIN = ["https://command.infinityfreeapp.com/app_login.php?i=1","https://commandsimulatorapi.great-site.net/app_login.php?i=1"]
 MANUAL_LOGIN = ["https://command.infinityfreeapp.com/manual_login.php?i=1","https://commandsimulatorapi.great-site.net/manual_login.php?i=1"]
-UPDATE_EXPAND_PACK = ["https://command.infinityfreeapp.com/expand_buy.php?i=1","https://commandsimulatorapi.great-site.net/expand_buy.php?i=1"]
-APP_TEST = ["https://command.infinityfreeapp.com/get_app_test.php?i=1","https://commandsimulatorapi.great-site.net/get_app_test.php?i=1"]
+UPDATE_EXPAND_PACK = ["https://command.infinityfreeapp.com/expand_pack_get.php?i=1","https://commandsimulatorapi.great-site.net/expand_pack_get.php?i=1"]
 
 UPDATE_BE_ID = "https://ca.projectxero.top/idlist/data/beta/vanilla.zip"
-UPDATE_BE_RESOURES = "https://missing244.github.io/cs-main/cs-things/be_resource.tar"
 BLOCK_TEXTURE_DOWNLOAD = "https://z4a.net/images/2023/10/01/block_texture.png"
 
 
 
 def get_online_api(json1:dict) :
-    global AUTO_LOGIN,MANUAL_LOGIN,UPDATE_EXPAND_PACK,APP_TEST
+    global AUTO_LOGIN,MANUAL_LOGIN,UPDATE_EXPAND_PACK
 
     if "AUTO_LOGIN" in json1 : AUTO_LOGIN = json1['AUTO_LOGIN']
     if "MANUAL_LOGIN" in json1 : MANUAL_LOGIN = json1['MANUAL_LOGIN']
     if "UPDATE_EXPAND_PACK" in json1 : UPDATE_EXPAND_PACK = json1['UPDATE_EXPAND_PACK']
-    if "APP_TEST" in json1 : APP_TEST = json1['APP_TEST']
 

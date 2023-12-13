@@ -1,6 +1,6 @@
-import os,json,traceback,threading,functools,time
+import os,json,traceback,threading,functools,time,tkinter.messagebox
 from .. import FileOperation,BaseNbtClass,DataSave,Constants
-from typing import List,Dict,Union,Literal,Tuple
+from typing import List,Dict,Union,Literal,Tuple,Callable
 
 class dynamic_source :
 
@@ -48,9 +48,7 @@ class runtime_variable :
     def terminal_clear(self) :
         self.how_times_run_all_command = -1 
         self.command_will_run.clear()
-        self.function_will_run.clear()
         self.command_will_loop.clear()
-        self.function_will_loop.clear()
         self.command_will_run_test_end.clear()
 
         self.command_block_schedules.clear()
@@ -91,7 +89,7 @@ class minecraft_thread :
                 "delay_command":[],"loop_command":[],"command_block":[],"delay_function":[],"loop_function":[],"end_command":[]}
         self.runtime_variable.all_command_response[now_time][response_type].append(response.set_command(command))
 
-    def __game_loading__(self, word_name:str) :
+    def __game_loading__(self, word_name:str, func:Callable) :
         from . import ExpandPackAPI,JoinWorld
 
         self.world_name:str = word_name
@@ -102,7 +100,7 @@ class minecraft_thread :
             self.minecraft_chunk = json.loads(FileOperation.read_a_file(os.path.join('save_world',word_name,'chunk_data')),object_hook=DataSave.decoding)
         except :
             traceback.print_exc(file=open(os.path.join("log", "join_world.txt")))
-            raise Exception("启动世界失败\n日志join_world.txt已保存\n尝试咨询开发者解决问题")
+            return Exception("启动世界失败\n日志join_world.txt已保存")
 
         os.makedirs(os.path.join("save_world", self.world_name, "resource_packs"),exist_ok=True)
         os.makedirs(os.path.join("save_world", self.world_name, "behavior_packs"),exist_ok=True)
@@ -116,29 +114,35 @@ class minecraft_thread :
             a = JoinWorld.join_game_load(self)
             if a : 
                 with open(os.path.join("log", "join_world.txt"),"w+",encoding="utf-8") as f : f.write("\n".join(a))
-                result = "加入世界成功,有文件加载失败\n日志join_world.txt已保存\n游戏版本：%s.%s.%s" % (1,20,50)
-            else : result = "加入世界成功\n游戏版本：%s.%s.%s" % (1,20,50)
+                result = Warning("加入世界成功, 有文件加载失败\n日志join_world.txt已保存\n游戏版本：%s.%s.%s" % self.game_version)
+            else : result = "加入世界成功\n游戏版本：%s.%s.%s" % self.game_version
         else : 
-            self.verification_challenge_object = ExpandPackAPI.challenge(self)
+            self.verification_challenge_object = None
             JoinWorld.join_game_load(self)
-            result = "你已进入每周挑战世界\n本世界无法进行交互\n可以自行删除这个世界"
+            result = Warning("你已进入每周挑战世界\n本世界无法进行交互\n可以自行删除这个世界")
 
-        self.loop_thread = threading.Thread(target=self.__game_looping__)
+        self.loop_thread = threading.Thread(target=self.__game_looping__, args=(func,))
         return result
-        
-    def __game_looping__(self) :
+
+    def __game_looping__(self, func_set:Callable) :
         from . import GameLoop
         try :
             while self.in_game_tag :
-                time.sleep(0.25)
+                func_set(self.minecraft_world.game_time)
                 for func in GameLoop.loop_function_list : 
-                    if not self.in_game_tag : return None
-                    func(self)
-        except : traceback.print_exc(file=open(os.path.join("log","game_run.txt"), "w+",encoding="utf-8"))
+                    if self.in_game_tag : func(self)
+                time.sleep(0.25)
+        except : 
+            traceback.print_exc(file=open(os.path.join("log","game_run.txt"), "w+",encoding="utf-8"))
+            tkinter.messagebox.showerror("Error", "游戏运行出现错误\n日志 game_run.txt 已保存")
 
     def __exit_world__(self) :
-        self.in_game_tag = False
-        if not self.game_load_over : return "不保存退出世界成功"
+        from . import GameLoop
+        GameLoop.modify_termial_end_hook("clear")
+        GameLoop.modify_test_end_hook("clear")
+        GameLoop.modify_tick_end_hook("clear")
+
+        if not self.game_load_over : return Warning("不保存退出世界成功")
         while self.loop_thread and self.loop_thread.is_alive() : time.sleep(0.25)
         try :
             self.minecraft_chunk.____save_and_write_db_file____(self.world_name)
@@ -155,12 +159,12 @@ class minecraft_thread :
             json1 = json.dumps(self.minecraft_scoreboard.__save__(), default=DataSave.encoding)
             FileOperation.write_a_file(save_file, json1)
             
-            save_file = os.path.join("save_world", self.world_name, "chunk")
+            save_file = os.path.join("save_world", self.world_name, "chunk_data")
             json1 = json.dumps(self.minecraft_chunk.__save__(), default=DataSave.encoding)
             FileOperation.write_a_file(save_file, json1)
 
             return "退出世界成功"
         except : 
             traceback.print_exc(file=open(os.path.join("log","save_world.txt"), "w", encoding="utf-8"))
-            return "世界保存出错\n日志save_world.txt已保存\n请联系开发者解决"
+            return Exception("世界保存出错\n日志save_world.txt已保存")
 

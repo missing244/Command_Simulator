@@ -1,12 +1,14 @@
-import os,traceback,json,time,threading,re,copy,random,base64,tarfile,platform
+import os,traceback,json,time,threading,re,copy,random,base64,tarfile,platform,zlib
 import main_source.package.file_operation as FileOperation
 from typing import List,Literal,Union
-from tkinter import ttk ; import tkinter
+from tkinter import ttk ; import tkinter ; import tkinter.messagebox
+import main_source.package.connent_API as connent_API
 
 class user_manager :
 
+    save_timestemp = 0
     save_path = os.path.join("save_world", "user_data.data")
-    save_data = {} ; update_end_function_list = []
+    save_data = {} ; info_update = False
     save_data_template = {
         "cookies": {"api_web_cookie":""}, 
         "online_get": {}, 
@@ -33,6 +35,16 @@ class user_manager :
         if "pass_code" not in self.save_data["user"] : self.save_data["user"]["pass_code"] = None
         if "data" not in self.save_data["user"] : self.save_data["user"]["data"] = None
 
+        self.save_timestemp = time.time() + 600
+        threading.Thread(target=self.save_thread).start()
+    
+    def save_thread(self) :
+        while 1 :
+            if time.time() > self.save_timestemp : 
+                self.write_back()
+                self.save_timestemp = time.time() + 600
+            time.sleep(6)
+
     def write_back(self) :
         json.dump(self.save_data, fp=open(self.save_path, "w+", encoding="utf-8"), indent=4)
 
@@ -49,7 +61,6 @@ class user_manager :
         self.write_back()
 
     def login_account(self, account:str, passcode:str, request_msg:str) :
-        if not isinstance(self.save_data["user_account"],type({})) : self.save_data["user_account"] = {}
         match_request_msg = self.login_msg_match.search(request_msg)
         if match_request_msg == None : self.login_out_account() ; return None
         account_log_msg = match_request_msg.group().replace("<login_msg>","").replace("</login_msg>","")
@@ -66,7 +77,7 @@ class user_manager :
         return True
 
     def get_account_info(self) :
-        return self.save_data_template["user"].get("data", None)
+        return self.save_data["user"].get("data", None)
 
 class main_window_variable :
 
@@ -81,266 +92,133 @@ class main_window_variable :
 
         self.focus_input:Union[tkinter.Text, tkinter.Entry, ttk.Entry] = None #当前选择的输入框
 
-        self.is_installing = False #正在安装拓展包
         self.is_login = False #正在登录
 
+class initialization_log :
+
+    def __repr__(self) -> str:
+        return str(self.log_text)
+
+    def __init__ (self):
+        self.log_text = ""
+        self.time_start = time.time()
+        self.time_end = 0
+
+    def write_log(self, text:str, space_count:int=0):
+        self.log_text += (" " * space_count) + text + "\n"
+
+    def set_time_end(self) :
+        self.time_end = time.time()
+
+    def get_spend_time(self) :
+        return self.time_end - self.time_start
 
 
 
+def get_app_infomation_and_login(Announcement, user:user_manager, log:initialization_log) :
+    import main_source.main_window.constant as app_constant
 
+    log.write_log("正在获取软件信息...")
+    def updata_info() :
+        response2 = connent_API.request_url_without_error(connent_API.APP_INFO_URL)
+        if response2 == None : 
+            Announcement.set_notification(None)
+            log.write_log("软件信息获取失败", 2) ; return True
+        response2 = connent_API.transfor_qq_share(response2.decode("utf-8"))
+        response2 = zlib.decompress(base64.b64decode(response2.encode("utf-8"))).decode("utf-8")
+        response2 = json.loads(response2)
+        user.save_data['online_get'] = response2
 
+        Announcement.set_notification(response2['notification'])
+        user.info_update = True ; log.write_log("软件信息同步完成",2) ; return True
 
+    def test_network() :
+        request1 = connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL)
+        if request1 == None : log.write_log("网络验证失败",2) ; return False
+        else : return True
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class main_windows_function :
-
-
-    def check_world_file(now_test,dir_obj):
-
-            for i in world_file_prove :
-                try : 
-                    file1 = open(os.path.join(now_test,i),"r",encoding='utf-8')
-                    json.loads(file1.read())
-                except :
-                    try :
-                        if not(tarfile.is_tarfile(os.path.join(now_test,i))) : return (False,None,None)
-                    except : return (False,None,None)
-                else : file1.close()
-
-            try :
-                file1 = open(os.path.join(now_test,"level_name"),"r",encoding='utf-8')
-                json1 = json.loads(file1.read())
-                world_name = json1['name']
-                world_version = json1['version']
-                file1.close()
-            except : return (False,None,None)
-            else :
-                if isinstance(world_name,str) and (world_version in ["java","bedrock"]): return (True,world_name,world_version,dir_obj)
-                else : return (False,None,None)
-
-
-
-    def create_world(self) :
-        world_config_copy = copy.deepcopy(world_config)
-        for i in self.world_config_frame.winfo_children() : i.destroy()
-        if self.select_version == "java" : pass
-        elif self.select_version == "bedrock" : pass
-
-    def modify_world(self,world_name : str) :
-        for i in self.world_config_frame.winfo_children() : i.destroy()
-        if self.select_version == "java" : pass
-        elif self.select_version == "bedrock" : pass
-
-    def flash_list(self):
-
-        if self.version_check() and self.in_game_check() :
-            self.list_select.delete(0,"end")
-            file_list = list(os.walk("save_world"))[0]
-
-            for dir_obj in file_list[1] :
-                now_test = os.path.join(file_list[0],dir_obj)
-                check_reault = main_windows_function.check_world_file(now_test,dir_obj)
-                if check_reault[0] :
-                    textbox_text = "-->".join([check_reault[1],check_reault[3]])
-                    if self.select_java.get() and check_reault[2] == "java" :
-                        self.list_select.insert('end',textbox_text)
-                    if self.select_bedrock.get() and check_reault[2] == "bedrock" :
-                        self.list_select.insert('end',textbox_text)
-
-            self.modify_state("执行操作：刷新世界列表")
-
-    def create_world_treading(self , world_config_json : dict,challenge:bool = False,challenge_id = None):
-            self.creat_button_count += 1
-
-            if self.creat_button_count < 2 : 
-                self.modify_state("二次确认\n是否创建世界？","info",False) ; return None 
-            self.creat_button_count = 0
-            os.makedirs("save_world",exist_ok=True)
-
-            rand_text = hex(random.randint(268435456 , 536870912))[3:]
-            try :
-                for i in world_file_prove :
-                    if i == 'world_info' : nbt_class.minecraft_world(self).__create__(world_config_json).__save__(os.path.join("save_world",rand_text,i))
-                    elif i == 'level_name' :
-                        ttt = json.dumps(
-                            {"name":world_config_json['normal_setting']['world_name'], "version": self.select_version,
-                            "verification_challenge": challenge, "verification_id": challenge_id}
-                        )
-                        file_IO.write_a_file( os.path.join("save_world",rand_text,i) , ttt )
-                    elif i == 'scoreboard' : nbt_class.scoreboard_nbt().__save__(rand_text)
-                    elif i == 'block_mapping' : file_IO.write_a_file( os.path.join("save_world",rand_text,i) , file_IO.read_a_file(os.path.join(bedrock_command_thing_path,"default_map")) )
-                    elif i == 'player_info' : file_IO.write_a_file( os.path.join("save_world",rand_text,i) , "[]" )
-                    else : file_IO.write_a_file( os.path.join("save_world",rand_text,i) , "{}" )
-            except :
-                file_IO.delete_all_file(os.path.join("save_world",rand_text))
-                self.modify_state("创建世界错误\n日志 create.txt 已生成","error")
-                traceback.print_exc(file=open(os.path.join("log","create.txt"), "w+",encoding="utf-8"))
-                return None
-
-            os.makedirs(os.path.join("save_world",rand_text,"behavior_packs"),exist_ok=True)
-            os.makedirs(os.path.join("save_world",rand_text,"resource_packs"),exist_ok=True)
-            os.makedirs(os.path.join("save_world",rand_text,"command_blocks"),exist_ok=True)
-            os.makedirs(os.path.join("save_world",rand_text,"chunk_info","overworld"),exist_ok=True)
-            os.makedirs(os.path.join("save_world",rand_text,"chunk_info","nether"),exist_ok=True)
-            os.makedirs(os.path.join("save_world",rand_text,"chunk_info","the_end"),exist_ok=True)
-
-            self.flash_world()
-            if not challenge : 
-                self.creat_windows_world() ; self.modify_state("执行操作：创建世界")
-            return rand_text
-
-    def delete_world(self):
-        if self.in_game_check():
-            if len(self.list_select.curselection()) :
-                self.delete_button_count += 1
-                if self.delete_button_count > 3 :
-                    self.delete_button_count = 0
-                    text1 = self.list_select.get(self.list_select.curselection()).split("-->")[1]
-                    file_IO.delete_all_file(os.path.join('save_world',text1))
-                    self.modify_state("执行操作：删除世界")
-                    self.flash_world()
-                else:
-                        self.modify_state("第" + str(self.delete_button_count) + "次确认\n是否删除选择的世界？\n所有文件都将会被删除!!!","info",False)
-            else :
-                self.modify_state("错误: 无任何选择","error")
-
-    def join_world(self,name_of_world=None):
-        global game_process
-        def main_game(self):
-            global game_process
-            game_process = minecraft_running()
-            if self.select_version == "bedrock" : game_process.____be_init_chunk____()
-            elif self.select_version == "java" : game_process.____je_init_chunk____()
-
-        p1 = threading.Thread(target=main_game,args=(self,))
-        p1.start()
-
-        if name_of_world and main_windows_function.check_world_vaild(name_of_world) : text1 = name_of_world
-        elif name_of_world and main_windows_function.check_world_vaild(name_of_world) == False : return None
-        else : text1 = self.list_select.get(self.list_select.curselection()).split("-->")[1]
-        self.in_game_world = text1
-
-        while p1.is_alive() : time.sleep(0.2)
-        
-        self.main_process = game_process
-        game_process.in_game_world = self.in_game_world
-
-        if self.select_version == "bedrock" : game_process.loop_tread = threading.Thread(target=game_process.__be_running__,args=(text1,))
-        elif self.select_version == "java" : game_process.loop_tread = threading.Thread(target=game_process.__je_running__,args=(text1,))
-
-        game_process.loop_tread.start()
-        self.input_box1.delete("1.0",'end')
-        while game_process.world_infomation == None : pass
-        if ("verification_challenge" not in game_process.world_infomation) or (not game_process.world_infomation['verification_challenge']) : 
-            self.input_box1.insert('end', game_process.world_infomation['terminal_command'])
-            self.input_box1.config(state="normal")
-            self.send_command_button.config(state="normal")
-            self.see_feedback_button.config(state="normal")
-            self.input_box1.see("end")
+    def get_info() :
+        data1 = {"userdata":user.get_account()} if (user.get_account() != None) else None
+        request1 = connent_API.request_url_without_error(connent_API.AUTO_LOGIN,data1,user.save_data['cookies']["api_web_cookie"])
+        if request1 == None : log.write_log("自动登录连接失败",2) ; return False
         else : 
-            self.input_box1.config(state="disabled")
-            self.send_command_button.config(state="disabled")
-            self.see_feedback_button.config(state="disabled")
+            log.write_log("自动登录连接成功",2)
+            user.save_data['cookies']["api_web_cookie"] = connent_API.request_headers['cookie']
+            user.login_account(None,None,request1.decode("utf-8"))
+            return True
 
-    def leave_world(self,not_save_exit = False):
-        global game_process
-        a = game_process
-        game_process.in_game_tag = False
-        game_process.world_infomation['terminal_command'] = self.input_box1.get("0.0","end")[:-1]
-        while game_process.loop_tread.is_alive() : time.sleep(0.2)
+    for i in [updata_info,test_network,get_info] :
+        if not i() : break
+    log.set_time_end()
+    if user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
+        tkinter.messagebox.showinfo("最新版本已发布\n当前版本:%s\n最新版本:%s"%(app_constant.APP_VERSION,
+            user.save_data['online_get']['app_version']))
 
-        if not(not_save_exit) and game_process.game_load_over : game_process.exit_world()
-        else : self.modify_state("不保存已退出")
+def flash_minecraft_id(log:initialization_log) :
+    update_id_zip_path = os.path.join("main_source", "update_source", "minecraft_id.zip")
+    import main_source.update_source.flash_source as flash_source
+    log.write_log("正在获取minecraft id...")
 
-        self.main_process = None
-        game_process = None
+    def download_online_id() -> bool :
+        try :
+            response = connent_API.request_url_without_error(connent_API.UPDATE_BE_ID)
+            if response == None : raise Exception
+            with open(update_id_zip_path, 'wb') as file1: file1.write(response)
+        except : log.write_log("在线BE-ID列表下载失败", 2) ; return True
+        else : log.write_log("在线BE-ID列表下载成功", 2) ; return True
 
-    def execute_command(self) :
-        self.modify_state("执行操作：发送命令\n等待被游戏执行")
-        self.terminal_log.clear()
-        #exec(self.input_box1.get("1.0",'end'),globals(),locals())
-        game_process.is_terminal_send_command = True
+    def generate_online_id() -> bool :
+        try : flash_source.unzip_id_file()
+        except Exception as e : log.write_log(e.args[0], 2) ; return False
+
+        try : a = flash_source.report_source_update_date()
+        except Exception as e : log.write_log(e.args[0], 2) ; return False
+        for i in a : log.write_log(i, 2)
+
+        a = flash_source.update_minecraft_id()
+        for i in a["success"] : log.write_log(i, 2)
+        for i in a["error"] : log.write_log(i, 2)
+
+        a = flash_source.flash_search_id()
+        for i in a["success"] : log.write_log(i, 2)
+        for i in a["error"] : log.write_log(i, 2)
+
         return True
 
-    def check_world_vaild(world_name) :
-        return main_windows_function.check_world_file(os.path.join("save_world",world_name),world_name)[0]
+    for i in [download_online_id,generate_online_id] :
+        if not i() : break
+    log.set_time_end()
 
-
-
-def compare_version(v1,v2) :
-    if len(v1) > len(v2) : return None
-    for i in range(len(v1)) :
-        if v1[i] > v2[i] : return 1
-        elif v1[i] < v2[i] : return -1
-    return 0
-
-
-def compile_file(txt_file_path) :
-    return compile(file_operation().read_a_file(txt_file_path),txt_file_path,'exec')
-
-
-def skip_space(text1) :
-    return re.split("^[ ]{0,}",re.split("[ ]{0,}$",text1)[0])[1]
-
-
-def setTimeOut(sleep_time,func,*args1) :
-    def time_out_func(sleep_time,func,*args1) :
-        time.sleep(sleep_time)
-        func(*args1)
-    threading.Thread(target=time_out_func,args=(sleep_time,func) + args1).start()
-
-
-class search_id_object :
+def flash_minecraft_source(user:user_manager, log:initialization_log) :
+    source_path = os.path.join("main_source", "update_source", "be_resource.tar")
+    import main_source.update_source.flash_source as flash_source
+    while not user.info_update : time.sleep(0.2)
     
-    def __init__(self) -> None:
-        try : self.MC_ID = json.load(open(os.path.join('main_source' , 'id_tanslate.json'),"r",encoding="utf-8"))
-        except : self.MC_ID = {} ; traceback.print_exc()
-        self.search = []
-    
-    def search_str(self,condition_str : str,is_regx=False) :
-        if condition_str.replace(" ","") == "" : return []
-        result_list = []
+    log.write_log("正在检查minecraft source...")
+    if FileOperation.is_file(source_path) : 
+        if zlib.crc32(FileOperation.read_a_file(source_path, "readbyte")) == user.save_data["online_get"]["app_info"]["source_crc32"] :
+            log.set_time_end() ; log.write_log("检查完毕，无需更新", 2) ; return None
 
-        if not is_regx :
-            m1,m2 = "\\u","0000"
-            condition_str = "".join( [(m1 + hex(ord(i)).replace("0x",m2)[-4:]) for i in condition_str])
-        
-        try: 
-            if re.compile(condition_str).search("") : return None
-        except : 
-            self.search = result_list ; return None
+    log.write_log("正在获取minecraft source...")
 
-        for i in self.MC_ID.keys() :
-            result_list += [(j,self.MC_ID[i][j]) for j in list(self.MC_ID[i].keys()) if re.search(condition_str,j)]
+    def download_online_source() :
+        be_resource = connent_API.request_url_without_error(user.save_data["online_get"]["app_info"]["source_update_url"])
+        if be_resource == None : log.write_log("资源联网获取失败",2) ; return False
+        log.write_log("资源获取成功", 2)
+        with open(source_path, 'wb') as file1 : file1.write(be_resource)
+        return True
 
-        self.search = result_list
-        return result_list
+    def generate_online_source() -> bool :
+        try : flash_source.unzip_source_file()
+        except Exception as e : log.write_log(e.args[0], 2) ; return False
 
+        a = flash_source.update_minecraft_source()
+        for i in a["success"] : log.write_log(i, 2)
+        for i in a["error"] : log.write_log(i, 2)
+        return True
 
-
-
-
-
-
+    for i in [download_online_source,generate_online_source] :
+        if not i() : break
+    log.set_time_end()
 
 

@@ -4,7 +4,7 @@
 
 from . import BaseMatch
 from typing import Dict,Union,List,Tuple
-import re,types
+import re
 
 __all__ = ["BE_String","BE_Quotation_String","Relative_Offset_Float","Local_Offset_Float"]
 
@@ -49,6 +49,31 @@ class BE_Range_Int(BaseMatch.Int) :
         if not isinstance(terminator,str) : raise TypeError("terminator 提供字符串以外的参数")
         super().__init__(token_type)
         self.re_match = re.compile("[^%s\\.]{0,}" % terminator)
+
+
+def Scoreboard_Objective_Tree(*end_node:BaseMatch.Match_Base):
+    """
+    自动生成一个计分板名字匹配树\n
+    *end_node : 添加下一级匹配类\n
+    -------------------------------
+    返回匹配列表，请将该列表传入add_leaves时添加解包操作
+    """
+    return [
+        BE_String("Scoreboard_Name").add_leaves(*end_node),
+        BE_Quotation_String("Scoreboard_Name").add_leaves(*end_node)
+    ]
+
+def Scoreboard_Entity_Name_Tree(*end_node:BaseMatch.Match_Base):
+    """
+    自动生成一个计分板内项目名的匹配树\n
+    *end_node : 添加下一级匹配类\n
+    -------------------------------
+    返回匹配列表，请将该列表传入add_leaves时添加解包操作
+    """
+    return [
+        *BE_Selector_Tree(*end_node),
+        BaseMatch.KeyWord("Objective_Name","*").add_leaves(*end_node)
+    ]
 
 class BE_String(BaseMatch.Match_Base) :
     """
@@ -258,30 +283,6 @@ def Range_Tree(*end_node:BaseMatch.Match_Base) -> List[BaseMatch.Match_Base] :
         )
     ]
 
-def Scoreboard_Objective_Tree(*end_node:BaseMatch.Match_Base):
-    """
-    自动生成一个计分板名字匹配树\n
-    *end_node : 添加下一级匹配类\n
-    -------------------------------
-    返回匹配列表，请将该列表传入add_leaves时添加解包操作
-    """
-    return [
-        BE_String("Scoreboard_Name").add_leaves(*end_node),
-        BE_Quotation_String("Scoreboard_Name").add_leaves(*end_node)
-    ]
-
-def Scoreboard_Entity_Name_Tree(*end_node:BaseMatch.Match_Base):
-    """
-    自动生成一个计分板内项目名的匹配树\n
-    *end_node : 添加下一级匹配类\n
-    -------------------------------
-    返回匹配列表，请将该列表传入add_leaves时添加解包操作
-    """
-    return [
-        BE_String("Objective_Name").add_leaves(*end_node),
-        BE_Quotation_String("Objective_Name").add_leaves(*end_node),
-        BaseMatch.KeyWord("Objective_Name","*").add_leaves(*end_node)
-    ]
 
 
 def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :

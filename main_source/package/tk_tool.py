@@ -78,7 +78,7 @@ class tk_Msgbox(tkinter.Toplevel) :
         # 设置Toplevel窗口的标题
         self.title("MsgBox")
         self.resizable(False, False)
-        self.geometry("%sx%s+%s+%s"%(int(parent_window.winfo_width()*2/3),int(parent_window.winfo_height()/5),
+        self.geometry("%sx%s+%s+%s"%(int(parent_window.winfo_width()*2/3), int(parent_window.winfo_height()/4),
                                     int(parent_window.winfo_x() + parent_window.winfo_width()/2 - parent_window.winfo_width()/3),
                                     int(parent_window.winfo_y() + parent_window.winfo_height()/2 - parent_window.winfo_height()/10)))
 
@@ -170,7 +170,7 @@ def get_selection_component(text : tkinter.Text) :
     return result_list
 
 
-def get_default_font(size:int) :
+def get_default_font(size:int,**karg) :
     import tkinter.font
     a = tkinter.font.nametofont("TkDefaultFont").actual()['family']
-    return tkinter.font.Font(family=a,size=size)
+    return tkinter.font.Font(family=a,size=size,**karg)

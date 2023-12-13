@@ -33,14 +33,14 @@ class ability :
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         temp = string.Template("玩家 $player 的能力: $abi = $value")
         return Response.Response_Template("查询到以下玩家的能力：\n$result", 1, len(entity_list)).substitute(
-        result = "\n".join((
-            temp.substitute(player=ID_tracker(i), abi=ability_id, t2=i.Ability[ability_id]) for i in entity_list
+            result = "\n".join((
+            temp.substitute(player=ID_tracker(i), abi=ability_id, value=i.Ability[ability_id]) for i in entity_list
         )))
 
     def set(execute_var:COMMAND_CONTEXT, entity_get:functools.partial, ability_id:str, set_value:Literal["true","false"]) :
         entity_list = entity_get(execute_var)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        for entity in entity_list : entity.Ability[ability_id] = ("true","false").index(set_value)
+        for entity in entity_list : entity.Ability[ability_id] = ("false","true").index(set_value)
         return Response.Response_Template("以下玩家的 $abi 能力设置为 $value ：\n$players", 1, len(entity_list)).substitute(
             abi=ability_id, value=set_value, players=", ".join( (ID_tracker(i) for i in entity_list) )
         )

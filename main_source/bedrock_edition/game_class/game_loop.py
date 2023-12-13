@@ -257,6 +257,7 @@ def add_entity(game:RunTime.minecraft_thread, *entity_list:BaseNbtClass.entity_n
 
 
 def game_time_tick(self:RunTime.minecraft_thread) :
+    self.minecraft_world.game_time += 1
     gt1 = str(self.minecraft_world.game_time)
     if self.minecraft_world.dodaylightcycle : self.minecraft_world.day_count += np.int32(1)
     self.minecraft_world.day_time = self.minecraft_world.day_count // 24000
@@ -271,7 +272,6 @@ def game_time_tick(self:RunTime.minecraft_thread) :
             self.minecraft_world.sunny_time = np.int32(list1[0])
             self.minecraft_world.rain_time = np.int32(list1[1])
             self.minecraft_world.thunder_time = np.int32(list1[2])
-    self.minecraft_world.game_time += 1
     
     if gt1 in self.runtime_variable.scoreboard_score_remove :
         for name in self.runtime_variable.scoreboard_score_remove[gt1] : self.minecraft_scoreboard.__reset_score__(name)
@@ -280,9 +280,10 @@ def game_time_tick(self:RunTime.minecraft_thread) :
 def loading_chunk(self:RunTime.minecraft_thread) :
     self.minecraft_chunk.out_load_entity.clear()
 
-    self.minecraft_chunk.____load_chunk_data____(self.world_name, self.minecraft_world.simulator_distance)
+    self.minecraft_chunk.____load_chunk_data____(self.minecraft_world, self.world_name, self.minecraft_world.simulator_distance)
     self.minecraft_chunk.____save_outload_chunk_data____(self.world_name)
     if self.minecraft_world.game_time % 5000 == 0 : self.minecraft_chunk.____save_and_write_db_file____(self.world_name)
+    self.game_load_over = True
 
 def player_things(self:RunTime.minecraft_thread) :
     for player1 in self.minecraft_chunk.player :
@@ -347,7 +348,8 @@ def terminal_running(self:RunTime.minecraft_thread) :
         elif pass_times : pass_times -= 1 ; continue
         elif KEYWORD_PASS[0].match(command_text) : #关键字
             keyword_end = KEYWORD_PASS[0].match(command_text).end()
-            mid1 = int( KEYWORD_PASS[1].search(command_text, keyword_end) )
+            times = KEYWORD_PASS[1].search(command_text, keyword_end)
+            mid1 = int(0 if times == None else times)
             if mid1 < 1 : feedback_list.append((lines, "pass 的参数应该为正整数", keyword_end)) ; continue
             pass_times = mid1
         elif KEYWORD_COMMENTARY.match(command_text) : continue
@@ -366,10 +368,10 @@ def terminal_running(self:RunTime.minecraft_thread) :
                 continue
             command_function.append( (command_text,func_object) )
 
-    if len(feedback_list) : return None
-    for command,function in command_function : 
-        feedback = function(context)
-        feedback_list.append( feedback.set_command(command) )
+    if len(feedback_list) == 0 :
+        for command,function in command_function : 
+            feedback = function(context)
+            feedback_list.append( feedback.set_command(command) )
 
     #print(debug_windows.terminal_log) "[\u2714]" "[\u2718]"
     termial_end_hook(self)
@@ -386,6 +388,8 @@ def command_running(self:RunTime.minecraft_thread) :
     for command_str,func in self.runtime_variable.command_will_loop : self.register_response("loop_command",command_str,func(aaa))
 
 def command_block_running(self:RunTime.minecraft_thread) :
+    return None
+    if not self.minecraft_world.commandblocksenabled : return None
     run_cb_obj = runing_command_block_obj(self)
     run_cb_obj.main()
 
@@ -421,21 +425,21 @@ def tick_end_hook(self:RunTime.minecraft_thread) :
 
 def modify_termial_end_hook(mode:Literal["add","remove","clear"]="add", _func:Callable=None) :
     if mode in ("add","remove") and not hasattr(_func, "__call__") : return
-    dict_key = _func.__code__.co_code.__hash__()
+    if _func : dict_key = _func.__code__.co_code.__hash__()
     if mode == "add" : RUN_TERMINAL_END[dict_key] = _func
     elif mode == "remove" and dict_key in RUN_TERMINAL_END : del RUN_TERMINAL_END[dict_key]
     elif mode == "clear" : RUN_TERMINAL_END.clear()
 
-def modify_termial_end_hook(mode:Literal["add","remove","clear"]="add", _func:Callable=None) :
+def modify_test_end_hook(mode:Literal["add","remove","clear"]="add", _func:Callable=None) :
     if mode in ("add","remove") and not hasattr(_func, "__call__") : return
-    dict_key = _func.__code__.co_code.__hash__()
+    if _func : dict_key = _func.__code__.co_code.__hash__()
     if mode == "add" : RUN_TEST_END[dict_key] = _func
     elif mode == "remove" and dict_key in RUN_TEST_END : del RUN_TEST_END[dict_key]
     elif mode == "clear" : RUN_TEST_END.clear()
 
-def modify_termial_end_hook(mode:Literal["add","remove","clear"]="add", _func:Callable=None) :
+def modify_tick_end_hook(mode:Literal["add","remove","clear"]="add", _func:Callable=None) :
     if mode in ("add","remove") and not hasattr(_func, "__call__") : return
-    dict_key = _func.__code__.co_code.__hash__()
+    if _func : dict_key = _func.__code__.co_code.__hash__()
     if mode == "add" : RUN_TICK_END[dict_key] = _func
     elif mode == "remove" and dict_key in RUN_TICK_END : del RUN_TICK_END[dict_key]
     elif mode == "clear" : RUN_TICK_END.clear()

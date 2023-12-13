@@ -615,6 +615,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:calcite": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:calibrated_sculk_sensor": {
     "damage_max": null,
     "can_enchant": []

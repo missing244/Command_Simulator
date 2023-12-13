@@ -17,7 +17,7 @@ class List_Start(BaseMatch.KeyWord) : pass
 class Json_String(BaseMatch.Match_Base) :
     def __init__(self, token_type: str, auto_complete:Dict[str,str]=None) -> None :
         super().__init__(token_type)
-        self.re_match = re.compile('"([^"\\\\u]|\\\\u[A-Fa-f0-9]{4}|\\\\\\\\|\\\\"|){0,}"')
+        self.re_match = re.compile(r'"([^"\\]|\\u[a-fA-F0-9]{4}|\\[^u])*"')
         self.auto_complete = auto_complete
 
     def _match_string(self,s:str,s_pointer:int) : 

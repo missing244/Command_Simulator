@@ -70,14 +70,16 @@ class world_nbt :
         self.__minecraft_type__ = "world_nbt"
 
     def __create__(self, json1:dict) :
-        for obj1 in json1['normal_setting'].keys() :
+        for obj1 in json1['normal_setting'] :
             if obj1 in ["world_name"] : continue
             if not hasattr(self,obj1) : continue
-            self.__setattr__(obj1,json1['normal_setting'][obj1])
+            types1 = self.__getattribute__(obj1)
+            self.__setattr__(obj1,types1(json1['normal_setting'][obj1]))
 
-        for obj1 in json1['normal_setting'].keys() :
+        for obj1 in json1['normal_setting'] :
             obj2 = obj1.lower()
-            self.__setattr__(obj2,json1['be_gamerule'][obj1])
+            types1 = self.__getattribute__(obj2)
+            self.__setattr__(obj2,types1(json1['be_gamerule'][obj1]))
 
     def __save__(self) :
         all_data = {}
@@ -204,7 +206,7 @@ class entity_nbt :
         self.Dimension = list(Constants.DIMENSION_INFO).index(dimension)
         self.Pos = [np.float32(pos[0]), np.float32(pos[1]), np.float32(pos[2])]
         
-        if (hasattr(self,"CanModifyName")) and (getattr(self,"CanModifyName")) and name : 
+        if (Identifier == "minecraft:player" or (hasattr(self,"CanModifyName")) and (getattr(self,"CanModifyName"))) and name : 
             self.CustomName = name
         else : 
             entity_name = self.Identifier.replace("minecraft:","",1)
@@ -276,7 +278,7 @@ class entity_nbt :
 
 
     def __get_passengers__(self):
-        if hasattr(self,"Passengers") : return None
+        if not hasattr(self,"Passengers") : return None
         passengers_list:List[entity_nbt] = []
         for sit_info in self.Passengers['entity'] :
             if not isinstance(sit_info['entity'],entity_nbt) :
@@ -287,7 +289,7 @@ class entity_nbt :
         return passengers_list
 
     def __sit_update__(self) :
-        if hasattr(self,"Passengers") : return None
+        if not hasattr(self,"Passengers") : return None
         
         for sit_info in self.Passengers['entity'] :
             if not isinstance(sit_info['entity'],entity_nbt) :
@@ -299,7 +301,7 @@ class entity_nbt :
             sit_info['entity'].Pos[2] = self.Pos[2] + sit_info['seat_pos'][2]
 
     def __sit_start_riding__(self, entity_obj) :
-        if hasattr(self,"Passengers") : return False
+        if not hasattr(self,"Passengers") : return False
         if entity_obj.Identifier == "minecraft:warden" : return False
         
         if self.Passengers['family_types'] :
@@ -339,7 +341,7 @@ class entity_nbt :
 
     def __sit_evict_riders__(self) :
         """踢出骑手"""
-        if hasattr(self,"Passengers") : return []
+        if not hasattr(self,"Passengers") : return []
 
         passengers_list:List[entity_nbt] = []
         for sit_info in self.Passengers['entity'] :
@@ -852,7 +854,7 @@ class chunk_nbt :
         entity_list.extend(self.player)
         
         start_index = 0
-        while start_index < entity_list :
+        while start_index < entity_list.__len__() :
             if hasattr(entity_list[start_index], "Passengers") :
                 for entity in entity_list[start_index].Passengers['entity'] :
                     if not isinstance(entity['entity'], entity_nbt) : continue
@@ -888,7 +890,7 @@ class chunk_nbt :
     def ____generate_chunk____(self, world_config:world_nbt, dimension_id:Literal["overworld","nether","the_end"], chunk_pos:List[Union[float,np.float32,int]]):
         chunk_copy = copy.deepcopy(self.chunk_example)
         chunk_pos = (math.floor(chunk_pos[0])//16*16, math.floor(chunk_pos[1])//16*16)
-        if (chunk_pos not in self.loading_chunk[dimension_id]) and dimension_id == "overworld" :
+        if dimension_id == "overworld" :
             if world_config.world_type == "infinity" :
                 chunk_copy['biomes'] = self.__select_biome__(world_config.seed, dimension_id, chunk_pos)
                 chunk_copy['structures'] = self.__select_structure__(world_config.seed, dimension_id, chunk_pos)
@@ -897,10 +899,10 @@ class chunk_nbt :
                 chunk_copy['biomes'] = ["plains"]
                 chunk_copy['structures'] = []
                 chunk_copy['blocks'] = Constants.DEFAULT_CHUNK_DATA['flat'].copy()
-        elif (chunk_pos not in self.loading_chunk[dimension_id]) :
+        else :
             chunk_copy['biomes'] = self.__select_biome__(world_config.seed, dimension_id, chunk_pos)
             chunk_copy['structures'] = self.__select_structure__(world_config.seed, dimension_id, chunk_pos)
-            chunk_copy['blocks'] = copy.deepcopy(Constants.DEFAULT_CHUNK_DATA[dimension_id])
+            chunk_copy['blocks'] = Constants.DEFAULT_CHUNK_DATA[dimension_id].copy()
 
         self.loading_chunk[dimension_id][chunk_pos] = chunk_copy
 
@@ -1006,13 +1008,13 @@ class chunk_nbt :
             elif (chunk_data2 == None) and (entity in self.out_load_entity) : self.out_load_entity.append(entity)
 
 
-    def ____load_chunk_data____(self, world_name:str, chunk_radius:int) :
+    def ____load_chunk_data____(self, world:world_nbt, world_name:str, chunk_radius:int) :
         chunk_radius = int(chunk_radius) ; dimension_list = list(Constants.DIMENSION_INFO)
         player_load_location = {i:[] for i in dimension_list}
         for i in self.player : player_load_location[dimension_list[i.Dimension]].append(
             (math.floor(i.Pos[0])//16*16, math.floor(i.Pos[2])//16*16))
 
-        for keys in player_load_location : self.loading_chunk_pos[list(self.loading_chunk_pos)].clear()
+        for keys in dimension_list : self.loading_chunk_pos[keys].clear()
 
         for keys in player_load_location :
             for player_chunk_x,player_chunk_z in player_load_location[keys] :
@@ -1021,31 +1023,31 @@ class chunk_nbt :
                     player_chunk_z - (chunk_radius*16) , player_chunk_z + 16 + (chunk_radius*16) ,
                 )
                 for chunk_pos in itertools.product(range(load_range[0], load_range[1], 16), range(load_range[2], load_range[3], 16)) :
-                    if ((chunk_pos[0] - player_chunk_x) ** 2 + (chunk_pos[1]- player_chunk_z) ** 2) <= ((chunk_radius*16) ** 2) : continue
-                    self.loading_chunk_pos[list(self.loading_chunk_pos)].add(chunk_pos)
+                    if ((chunk_pos[0] - player_chunk_x) ** 2 + (chunk_pos[1]- player_chunk_z) ** 2) > ((chunk_radius*16) ** 2) : continue
+                    self.loading_chunk_pos[keys].add(chunk_pos)
+
         for keys in self.tickingarea :
             self.loading_chunk_pos[self.tickingarea[keys]['dimension']].update(*self.tickingarea[keys]['force_load'])
-        self.loading_chunk_pos[self.tickingarea[keys]['dimension']].update(Constants.COMMAND_BLOCK_LOAD_CHUNK)
+        self.loading_chunk_pos["overworld"].update(Constants.COMMAND_BLOCK_LOAD_CHUNK)
 
         for keys in self.loading_chunk_pos :
             for will_load_chunk in self.loading_chunk_pos[keys] :
                 db_tuple = (will_load_chunk[0]//400*400, will_load_chunk[1]//400*400)
-                data_base_name = "db%s" % db_tuple
+                data_base_name = "db%s" % str(db_tuple)
+                db_file_path = os.path.join("save_world", world_name, "chunk_info", keys, data_base_name)
 
-                if (data_base_name not in self.loading_db_file[keys]) : 
-                    db_file_path = os.path.join("save_world", world_name, "chunk_info", keys, data_base_name)
-                    if not FileOperation.is_file(db_file_path) : 
-                        self.loading_db_file[keys][db_file_path] = ["" for i in range(25*25)]
-                        continue
-                    else : FileOperation.read_a_file(db_file_path).split("\n")
+                if (db_file_path not in self.loading_db_file[keys]) : 
+                    if not FileOperation.is_file(db_file_path) : self.loading_db_file[keys][db_file_path] = ["" for i in range(25*25)]
+                    else : self.loading_db_file[keys][db_file_path] = FileOperation.read_a_file(db_file_path).split("\n")
                 
                 save_chunk_pos = ((will_load_chunk[0] - db_tuple[0])//16, (will_load_chunk[1] - db_tuple[1])//16)
                 save_index = save_chunk_pos[1] * 25 + save_chunk_pos[0]
-                if not self.____in_load_chunk____(keys, (will_load_chunk[0]*16, 0, will_load_chunk[1]*16)) :
-                    if self.loading_db_file[keys][db_file_path][save_index] == "" : self.____generate_chunk____(keys, will_load_chunk)
+                if not self.____in_load_chunk____(keys, (will_load_chunk[0], 0, will_load_chunk[1])) :
+                    if self.loading_db_file[keys][db_file_path][save_index] == "" :
+                        self.____generate_chunk____(world, keys, will_load_chunk)
                     else :
                         try : json_text = DataSave.zip_to_string(self.loading_db_file[keys][db_file_path][save_index])
-                        except : self.____generate_chunk____(keys, will_load_chunk)
+                        except : self.____generate_chunk____(world, keys, will_load_chunk)
                         else : self.loading_chunk[keys][will_load_chunk] = json.loads(json_text, object_hook=DataSave.decoding)
 
     def ____save_outload_chunk_data____(self, world_name:str) :
@@ -1065,8 +1067,9 @@ class chunk_nbt :
     def ____save_and_write_db_file____(self, world_name:str) :
         for keys in self.loading_chunk :
             for load_chunk in self.loading_chunk[keys] :
+                if load_chunk in Constants.COMMAND_BLOCK_LOAD_CHUNK : continue
                 db_tuple = (load_chunk[0]//400*400, load_chunk[1]//400*400)
-                data_base_name = "db%s" % db_tuple
+                data_base_name = "db%s" % str(db_tuple)
                 db_file_path = os.path.join("save_world", world_name, "chunk_info", keys, data_base_name)
 
                 save_chunk_pos = ((load_chunk[0] - db_tuple[0])//16, (load_chunk[1] - db_tuple[1])//16)
@@ -1076,7 +1079,7 @@ class chunk_nbt :
 
         for keys in self.loading_db_file :
             for file_name in self.loading_db_file[keys] :
-                FileOperation.write_a_file(file_name, self.loading_db_file[keys][file_name])
+                FileOperation.write_a_file(file_name, "\n".join(self.loading_db_file[keys][file_name]))
 
 
     def __save__(self) :
