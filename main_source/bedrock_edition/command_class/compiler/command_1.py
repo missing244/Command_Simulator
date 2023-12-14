@@ -187,7 +187,7 @@ class camerashake :
             return functools.partial(cls.add, entity_get=entity_func)
 
     def stop(execute_var:COMMAND_CONTEXT, entity_get:functools.partial=None) :
-        entity_list = entity_get(execute_var) if entity_get else [execute_var["executor"]]
+        entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if entity_get is None and isinstance(entity_list[0], BaseNbtClass.entity_nbt) : entity_list.pop()
         return Response.Response_Template("以下玩家的摄像头进行摇晃：\n$players", 1, len(entity_list)).substitute(

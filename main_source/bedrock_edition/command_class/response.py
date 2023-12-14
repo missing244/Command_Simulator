@@ -14,7 +14,7 @@ class Function_Response_Group :
         self.Response_List.append(obj)
 
     def push_context(self) :
-        return "执行者 %s 在%s位置，维度%s，朝向%s，执行函数 %s" % (ID_tracker(self.Context["executor"]),
+        return "执行者 %s 在%s位置，维度%s，朝向%s，执行函数 %s" % (ID_tracker(self.Context["executer"]),
         self.Context["pos"], self.Context["dimension"], self.Context["rotate"], self.MCfunction_Name)
     
     def pop_context(self) :

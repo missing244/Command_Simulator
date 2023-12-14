@@ -30,7 +30,7 @@ class tools :
 
 def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_thread, selector_var:dict) :
     entity_saves : List[BaseNbtClass.entity_nbt] = []
-    if selector_var["is_executer"] : all_entity_test_list = (execute_var["executor"],) if isinstance(execute_var["executor"],BaseNbtClass.entity_nbt) else ()
+    if selector_var["is_executer"] : all_entity_test_list = (execute_var["executer"],) if isinstance(execute_var["executer"],BaseNbtClass.entity_nbt) else ()
     else : all_entity_test_list = game_tread.minecraft_chunk.__get_all_load_entity__()
 
     select_origin_x = (execute_var["pos"][0] + selector_var["pos_offset"][0]) if selector_var["pos"][0] == None else (selector_var["pos"][0] + selector_var["pos_offset"][0])

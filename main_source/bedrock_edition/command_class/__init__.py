@@ -6,7 +6,7 @@ import re
 
 COMMAND_TOKEN = List[Dict[Literal["type","token"],Union[str,re.Match]]]
 COMMAND_CONTEXT = Dict[
-    Literal["executor", "dimension", "pos", "rotate", "version"],
+    Literal["executer", "dimension", "pos", "rotate", "version"],
     Union[BaseNbtClass.entity_nbt, Literal["overworld","nether","the_end"], List[float], List[float], List[int]]
 ]
 
