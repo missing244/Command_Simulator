@@ -79,21 +79,6 @@ class user_manager :
     def get_account_info(self) :
         return self.save_data["user"].get("data", None)
 
-class main_window_variable :
-
-    def __init__(self) -> None:
-        self.expand_pack_open = {} #拓展包启动列表
-        self.paset_thread_time = 0  #输入降频计时
-
-        self.platform:Literal["windows","android"] = None #系统名称
-        system_info = platform.uname()
-        if system_info.system.lower() == 'windows' : self.platform = 'windows'
-        elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : self.platform = 'android'
-
-        self.focus_input:Union[tkinter.Text, tkinter.Entry, ttk.Entry] = None #当前选择的输入框
-
-        self.is_login = False #正在登录
-
 class initialization_log :
 
     def __repr__(self) -> str:
@@ -147,12 +132,12 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
             user.login_account(None,None,request1.decode("utf-8"))
             return True
 
-    for i in [updata_info,test_network,get_info] :
+    for i in [updata_info, test_network, get_info] :
         if not i() : break
     log.set_time_end()
     if user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
-        tkinter.messagebox.showinfo("最新版本已发布\n当前版本:%s\n最新版本:%s"%(app_constant.APP_VERSION,
-            user.save_data['online_get']['app_version']))
+        tkinter.messagebox.showinfo("最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
+        user.save_data['online_get']['app_version']))
 
 def flash_minecraft_id(log:initialization_log) :
     update_id_zip_path = os.path.join("main_source", "update_source", "minecraft_id.zip")

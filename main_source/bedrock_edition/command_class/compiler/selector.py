@@ -8,6 +8,8 @@ DIMENSION_LIST= Constants.DIMENSION_INFO
 DISTANCE_FUNC = lambda item,origin_x,origin_y,origin_z : ((item.Pos[0]-origin_x)**2 + (item.Pos[1]-origin_y)**2 + (item.Pos[2]-origin_z)**2) ** 0.5
 
 
+
+
 def minecraft_ID_transfor(s:str) :
     if ":" not in s : return "minecraft:%s" % s
     return s
@@ -317,6 +319,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
 
 def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], index:int, / ,
                       is_player:bool=False, is_npc:bool=False) -> Tuple[int, functools.partial] : 
+
     selector_argument_all = ("x", "y", "z", "c", "dx", "dy", "dz", "rx", "ry", "rxm", "rym", "l", "lm", "r", "rm", "scores",
                              "hasitem", "haspermission", "tag", "name", "family", "type", "m")
     selector_argument_single = ("x","y","z","c","dx","dy","dz","rx","ry","rxm","rym","l","lm","r","rm","scores","hasitem","haspermission")

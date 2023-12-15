@@ -19,8 +19,8 @@ class Announcement(tkinter.Frame) :
     def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
 
-        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
-        tkinter.Label(self,text="推送信息",fg='black',font=tk_tool.get_default_font(20),width=15,height=1).pack()
+        c1 = tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)) ; c1.pack()
+        c2 = tkinter.Label(self,text="推送信息",fg='black',font=tk_tool.get_default_font(20),width=15,height=1) ; c2.pack()
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
@@ -33,7 +33,7 @@ class Announcement(tkinter.Frame) :
         sco1.config(command=self.Announce_InputBox.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
         frame_m10.pack()
-        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
 
         frame_m0 = tkinter.Frame(self)
         self.jump_to_web = tkinter.Button(frame_m0, text='了解更多..', bg='purple' ,fg='white',font=tk_tool.get_default_font(11), width=10, height=1)
@@ -42,10 +42,13 @@ class Announcement(tkinter.Frame) :
         tkinter.Button(frame_m0, text='关闭本界面', bg='purple' ,fg='white',font=tk_tool.get_default_font(11), width=10, height=1,
         command=lambda : [self.pack_forget(), main_win.creat_windows()]).pack(side="left")
         frame_m0.pack()
+        main_win.add_can_change_hight_component([self.Announce_InputBox, c1,c2,c1,c1,frame_m0])
 
     def set_notification(self, response2:dict = None) :
         self.Announce_InputBox.delete("0.0", tkinter.END)
-        if response2 == None : self.Announce_InputBox.insert(tkinter.END,"推送信息获取失败\n\n\n请点击\"关闭本界面\"按钮\n退出该界面")
+        if response2 == None : 
+            self.Announce_InputBox.insert(tkinter.END,"推送信息获取失败\n\n\n请点击\"关闭本界面\"按钮\n退出该界面")
+            return
 
         notice = [("    %s" % i) for i in response2['information']]
         self.Announce_InputBox.insert(tkinter.END, "\n".join(notice))
@@ -70,8 +73,7 @@ class Bottom_Bar(tkinter.Canvas) :
         self.bind("<ButtonRelease-1>", self.update_menu_text)
         self.Menu = Bottom_Bar_Menu(main_win)
         self.main_win = main_win
-        
-        line_width = 10 if main_win.runtime_variable.platform == "windows" else 30
+
         canvas_width = int(self.cget("width")) ; canvas_height = int(self.cget("height"))
         text_id_0 = self.create_text(20, 20, text="游戏", font=tk_tool.get_default_font(14, weight="bold"), fill="#00ff00")
         self.coords(text_id_0, int(canvas_width*0.13), canvas_height//2)
@@ -227,7 +229,7 @@ class Special_Char(tkinter.Toplevel) :
         self.display_id = 0
         self.mode_id = "ByteCode"
         self.image_list = [
-            ( mc_be_icon.tk_Image(i) if self.main_win.runtime_variable.platform == "windows" else mc_be_icon.tk_Image(i).zoom(4,4)
+            ( mc_be_icon.tk_Image(i) if self.main_win.platform == "windows" else mc_be_icon.tk_Image(i).zoom(4,4)
             ) for i in mc_be_icon.icon_list
         ]
 
@@ -459,7 +461,7 @@ class Copy_File_Command(tkinter.Toplevel) :
         open_frame.pack()
 
         self.copy_frame = copy_frame = tkinter.Frame(self)
-        width_2 = 4 if self.main_win.runtime_variable.platform == 'Windows' else 2
+        width_2 = 4 if self.main_win.platform == 'Windows' else 2
         tkinter.Label(copy_frame, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
         frame_m10 = tkinter.Frame(copy_frame)
         sco1 = tkinter.Scrollbar(frame_m10, orient='vertical')
@@ -566,7 +568,7 @@ class Game_Ready(tkinter.Frame) :
         a1 = tkinter.Label(self, text="模拟世界存档", bg='#82aaff',fg='black',font=tk_tool.get_default_font(20), width=15, height=1)
         a1.pack()
 
-        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+        c1 = tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)) ; c1.pack()
 
         frame_m3 = tkinter.Frame(self)
         tkinter.Button(frame_m3,text='生成',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.create_world).pack(side='left')
@@ -576,7 +578,7 @@ class Game_Ready(tkinter.Frame) :
         tkinter.Button(frame_m3,text='进入',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.join_world).pack(side='left')
         frame_m3.pack()
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
-        self.list_select = tkinter.Listbox(self,font=tk_tool.get_default_font(13), selectmode=tkinter.SINGLE, height=9, width=22)
+        self.list_select = tkinter.Listbox(self,font=tk_tool.get_default_font(13), selectmode=tkinter.SINGLE, height=13, width=22)
         self.list_select.pack()
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
 
@@ -588,6 +590,7 @@ class Game_Ready(tkinter.Frame) :
         command=lambda : webbrowser.open("https://missing254.github.io/cs-tool/tool/Question/")).pack(side='left')
         frame_m4.pack()
 
+        main_win.add_can_change_hight_component([self.list_select, a1,c1,frame_m3,c1,c1,frame_m4])
         self.flash_world()
 
     def create_world(self):
@@ -607,8 +610,10 @@ class Game_Ready(tkinter.Frame) :
         self.flash_world()
 
     def join_world(self):
+        import main_source.main_window.constant as app_constants
         if any([i.is_alive() for i in self.main_win.initialization_process]) :
             tkinter.messagebox.showerror("Error", "正在加载软件,请稍后....") ; return None
+        
         if len(self.list_select.curselection()) == 0 : return None
         try : import brotli
         except : tkinter.messagebox.showerror("Error", "未安装完整原版拓展\n请在拓展包界面中安装") ; return None
@@ -805,7 +810,7 @@ class Game_Run(tkinter.Frame) :
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
         frame_m10.pack()
 
-        tkinter.Label(self,text="",fg='black',font=tk_tool.get_default_font(3),width=15,height=1).pack()
+        c1 = tkinter.Label(self,text="",fg='black',font=tk_tool.get_default_font(3),width=15,height=1) ; c1.pack()
 
         frame_m4 = tkinter.Frame(self)
         self.send_command_button = tkinter.Button(frame_m4,text="执行", bg='pink',fg='black',
@@ -819,6 +824,8 @@ class Game_Run(tkinter.Frame) :
         tkinter.Button(frame_m4, text='退出', bg='pink',font=tk_tool.get_default_font(11), width=5, height=1,
             command=self.exit_world).pack(side='left')
         frame_m4.pack()
+
+        main_win.add_can_change_hight_component([self.input_box1, c1,self.world_gt,c1,frame_m4])
 
     def join_world(self) : 
         def aaaa(_game:Minecraft_BE.RunTime.minecraft_thread, Terminal = self.input_box1) :
@@ -878,7 +885,8 @@ class Game_Terminal(tkinter.Frame) :
 
         tkinter.Label(self,text="",fg='black',font=tk_tool.get_default_font(3),width=15,height=1).pack()
 
-        tkinter.Label(self, text="终端执行返回界面",bg="green",fg="white",font=tk_tool.get_default_font(12), width=21, height=1).pack()
+        c0 = tkinter.Label(self, text="终端执行返回界面",bg="green",fg="white",font=tk_tool.get_default_font(12), width=21, height=1)
+        c0.pack()
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
         sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
@@ -891,7 +899,7 @@ class Game_Terminal(tkinter.Frame) :
         sco2.grid(row=1,column=0,sticky=tkinter.W+tkinter.E)
         frame_m10.pack()
 
-        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1).pack()
+        c1 = tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1) ; c1.pack()
 
         frame_m4 = tkinter.Frame(self)
         tkinter.Button(frame_m4,text="执行", bg='pink',fg='black',font=tk_tool.get_default_font(11), width=5, height=1, 
@@ -903,7 +911,8 @@ class Game_Terminal(tkinter.Frame) :
         tkinter.Button(frame_m4,text='退出',bg='pink',font=tk_tool.get_default_font(11), width=5, height=1,
                        command=self.exit_world).pack(side='left')
         frame_m4.pack()
-        #self.add_can_change_hight_component([self.input_box2,a1,sco2,9,frame_m4])
+
+        main_win.add_can_change_hight_component([self.input_box2, c0,c1,sco2,c1,frame_m4])
 
     def join_world(self) : 
         game_process:Minecraft_BE.RunTime.minecraft_thread = self.main_win.game_process
@@ -948,12 +957,12 @@ class Choose_Expand(tkinter.Frame) :
         a1 = tkinter.Label(self,text="拓展包安装",bg='#82aaff',fg='black',font=tk_tool.get_default_font(20),width=15,height=1)
         a1.pack()
 
-        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1).pack()
+        c1 = tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1) ; c1.pack()
 
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
         self.expand_select = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(12),selectmode=tkinter.SINGLE,
-            height=15,width=23,yscrollcommand=sco1.set)
+            height=17,width=23,yscrollcommand=sco1.set)
         self.expand_select.grid()
         sco1.config(command=self.expand_select.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
@@ -973,6 +982,7 @@ class Choose_Expand(tkinter.Frame) :
         frame_m6.pack()
         
         threading.Thread(target=self.flash_expand_pack_list).start()
+        main_win.add_can_change_hight_component([self.expand_select, a1,c1,c1,frame_m6])
         #self.add_can_change_hight_component([self.expand_select,a1,8,frame_m5,8,10,frame_m6])
 
 
@@ -1057,7 +1067,7 @@ class Choose_Expand(tkinter.Frame) :
         dir_name = self.expand_pack_list[uid]["dir_name"]
 
         def installing() :
-            data1 = {"userdata":user_manager.get_account(), 'expand_id':uid}
+            data1 = {"userdata":user_manager.get_account(), 'expand_pack_uuid':uid}
             if data1["userdata"] == None : tkinter.messagebox.showerror("Error","用户需要登录才能下载") ; return None
 
             if connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL) != None : 
@@ -1359,7 +1369,7 @@ class Policy(tkinter.Frame) :
         self.policy_title.pack()
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-        self.input_box4 = tkinter.Text(frame_m10,show=None,height=19,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
+        self.input_box4 = tkinter.Text(frame_m10,show=None,height=22,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
         self.input_box4.grid()
         sco1.config(command=self.input_box4.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
@@ -1367,6 +1377,8 @@ class Policy(tkinter.Frame) :
         a2 = tkinter.Button(self,text='返      回', font=tk_tool.get_default_font(12), bg='#d19275', width=17, height=1,
             command=lambda:self.main_win.set_display_frame('setting_frame'))
         a2.pack()
+
+        main_win.add_can_change_hight_component([self.input_box4, self.policy_title,a2])
         #self.add_can_change_hight_component([self.input_box4,a1,frame_m3,a2])
 
 
