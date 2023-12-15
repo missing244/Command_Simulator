@@ -5,7 +5,7 @@
 from idlelib.calltip_w import CalltipWindow
 import webbrowser,http.server,ssl
 import json,tkinter,tkinter.font,time,threading,sys,base64,gzip
-import zipfile,copy,os,re,types,io,gc,subprocess,traceback,importlib
+import platform,copy,os,re,types,io,gc,subprocess,traceback,importlib
 import random,functools,pickle,hmac,tkinter.messagebox,importlib.util
 from tkinter import ttk
 from typing import List,Dict,Union,Literal
@@ -89,11 +89,17 @@ class control_windows :
         self.window.geometry('300x600')
         self.calltip_win = CalltipWindow(self.window)
 
+        self.display_frame:Dict[str,tkinter.Frame] = {}
+        self.now_display_frame = ""
+        self.focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry] = None
+        self.expand_pack_open_list:Dict[str,Dict[Literal["frame","module","object"],
+            Union[tkinter.Frame,types.ModuleType,object]]] = {}
+        self.change_hight_component_list = [] #可变高度组件列表
+
         Announcement = app_tk_frame.Announcement(self)
         Announcement.pack()
 
         self.user_manager = app_function.user_manager() #用户管理
-        self.runtime_variable = app_function.main_window_variable()
         self.initialization_log = [app_function.initialization_log() for i in range(3)]
         self.initialization_process:List[threading.Thread] = [
             threading.Thread(target=app_function.get_app_infomation_and_login, args=(Announcement, self.user_manager, self.initialization_log[0])),
@@ -102,17 +108,15 @@ class control_windows :
         ]
         self.game_process:Minecraft_BE.RunTime.minecraft_thread = None #模拟世界线程
 
-        self.display_frame:Dict[str,tkinter.Frame] = {}
-        self.now_display_frame = ""
-        self.focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry] = None
-        self.expand_pack_open_list:Dict[str,Dict[Literal["frame","module","object"],
-            Union[tkinter.Frame,types.ModuleType,object]]] = {}
-        self.change_hight_component_list = [] #可变高度组件列表
-
         #self.windows_constant()
         for i in self.initialization_process : i.start()
         self.window.protocol("WM_DELETE_WINDOW", lambda:[self.user_manager.write_back(), os._exit(0)])
 
+        self.paset_thread_time = 0  #输入降频计时
+        self.platform:Literal["windows","android"] = None #系统名称
+        system_info = platform.uname()
+        if system_info.system.lower() == 'windows' : self.platform = 'windows'
+        elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : self.platform = 'android'
 
 
     def creat_windows(self):
@@ -144,13 +148,13 @@ class control_windows :
 
     def set_paste_thread(self) :
         def aaa():
-            while self.runtime_variable.paset_thread_time : 
-                self.runtime_variable.paset_thread_time -= 1
+            while self.paset_thread_time : 
+                self.paset_thread_time -= 1
                 time.sleep(0.01)
-        if self.runtime_variable.paset_thread_time == 0 : 
-            self.runtime_variable.paset_thread_time = 10
+        if self.paset_thread_time == 0 : 
+            self.paset_thread_time = 10
             threading.Thread(target=aaa).start()
-        self.runtime_variable.paset_thread_time = 10
+        self.paset_thread_time = 10
 
     def set_focus_input(self,event:tkinter.Event) :
         compont = event.widget
@@ -179,18 +183,13 @@ class control_windows :
 
         def cccc(event : tkinter.Event) :
             if event.keycode == -1 : self.set_paste_thread()
-            if self.runtime_variable.paset_thread_time and event.keycode != -1 : return 'break'
+            if self.paset_thread_time and event.keycode != -1 : return 'break'
 
         if not hasattr(compont, "is_bind_click") :
             compont.bind("<Button-1>",aaaa,add="+")
             if app_constants.jnius : compont.bind("<KeyPress>",cccc,add="+")
             if hasattr(compont,"can_copy_tk_component") : compont.bind("<B1-Motion>",bbbb,add="+")
             compont.is_bind_click = True
-
-    def add_can_change_hight_component(self,component_list:list) :
-        # 第一个为变高元素，其他为基准元素
-        self.change_hight_component_list.append([-1,-1] + component_list)
-        #List[ 像素每行, 最大行数, component_list ]
 
 
     def set_display_frame(self, name:str) :
@@ -203,12 +202,13 @@ class control_windows :
                 if data["frame"] != self.display_frame["expand_pack"] : continue
                 test_flag = True ; break
             if test_flag and self.now_display_frame == "expand_pack" and name != "expand_pack" : #退出拓展包界面
-                right_click_menu = self.display_frame["right_click_menu"]
+                right_click_menu:app_tk_frame.Right_Click_Menu = self.display_frame["right_click_menu"]
                 while right_click_menu.item_counter > 4 : right_click_menu.remove_item()
-                if hasattr(self.expand_pack_class,"exit_method") : self.expand_pack_class.exit_method()
+                if hasattr(data["object"],"exit_method") : data["object"].exit_method()
             if test_flag and self.now_display_frame != "expand_pack" and name == "expand_pack" :  #进入拓展包界面
-                if self.popupmenu.item_counter <= 4 and hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
-                if hasattr(self.expand_pack_class,"exit_method") : self.expand_pack_class.exit_method()
+                right_click_menu:app_tk_frame.Right_Click_Menu = self.display_frame["right_click_menu"]
+                if right_click_menu.item_counter <= 4 and hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
+                if hasattr(data["object"],"exit_method") : data["object"].exit_method()
         self.now_display_frame = name
         self.display_frame[self.now_display_frame].pack()
 
@@ -234,19 +234,28 @@ class control_windows :
         if mode == "use" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","use.txt"))
         elif mode == "privacy" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","privacy.txt"))
         elif mode == "about" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","about_app.txt"))
-        elif mode == "open" : text1 = "\n".join([i.log_text for i in self.initialization_log])
+        elif mode == "open" : 
+            text1 = "\n".join([i.log_text for i in self.initialization_log])
+            if not any([i.is_alive() for i in self.initialization_process]) : 
+                text1 += "\n初始化完毕，耗时%s秒" % (int(max([i.get_spend_time() for i in self.initialization_log]) * 1000) / 1000)
         self.display_frame["policy_frame"].input_box4.insert("end",text1)
         self.set_display_frame("policy_frame")
 
 
+    def add_can_change_hight_component(self,component_list:list) :
+        # 第一个为变高元素，其他为基准元素
+        self.change_hight_component_list.append([-1,-1] + component_list)
+        #List[ 像素每行, 最大行数, component_list ]
+
     def all_time_loop_event(self) :
         while 1 :
             try : 
-                for i in list(self.expand_pack_open_list.keys()) :
+                for i in list(self.expand_pack_open_list) :
                     if i not in self.expand_pack_open_list : continue
-                    self.expand_pack_open_list[i]['class'].debug_windows = self
-                    self.expand_pack_open_list[i]['class'].game_process = self.game_process
-                    if hasattr(self.expand_pack_open_list[i]['class'],'loop_method') : self.expand_pack_open_list[i]['class'].loop_method()
+                    self.expand_pack_open_list[i]['object'].debug_windows = self
+                    self.expand_pack_open_list[i]['object'].game_process = self.game_process
+                    if hasattr(self.expand_pack_open_list[i]['object'],'loop_method') : 
+                        self.expand_pack_open_list[i]['object'].loop_method()
             except : traceback.print_exc()
             for list1 in self.change_hight_component_list :
                 try :
@@ -254,20 +263,14 @@ class control_windows :
                     if list1[0] == -1 : 
                         list1[0] = list1[2].winfo_reqheight() // list1[2].cget("height")
                         list1[1] = list1[2].cget("height")
-                    blank_height = self.message.winfo_rooty() - self.menu_frame.winfo_rooty() - self.menu_frame.winfo_height()
+                    try : blank_height = self.window.winfo_height() - self.button_bar.winfo_height()
+                    except : blank_height = self.window.winfo_height()
                     for i in list1[3:] : blank_height -= i if isinstance(i,int) else i.winfo_reqheight()
                     if list1[2].cget("height") != min(list1[1], blank_height // list1[0] - 1) :
                         list1[2].config(height = min(list1[1], blank_height // list1[0] - 1))
                 except : pass
 
             time.sleep(0.5)
-
-
-    def get_user(self) :
-        return self.user_manage.get_account()
-
-    def get_blank_height(self) :
-        return self.message.winfo_rooty() - self.menu_frame.winfo_rooty() - self.menu_frame.winfo_height()
 
 
     def post_data(self, data_1:bytes, pack_list:dict) :
@@ -289,14 +292,14 @@ class control_windows :
             return {"state" : 5 , "msg" : traceback.format_exc()}
 
     def post_to_expand_pack(self,post_json:dict) : 
-        if not hasattr(self.expand_pack_open_list[post_json["pack_id"]]['class'],"do_POST") : 
+        if not hasattr(self.expand_pack_open_list[post_json["pack_id"]]['object'],"do_POST") : 
             return {"state" : 6 , "msg" : "拓展包并没有指定Post处理方法"}
-        return self.expand_pack_open_list[post_json["pack_id"]]['class'].do_POST(post_json)
+        return self.expand_pack_open_list[post_json["pack_id"]]['object'].do_POST(post_json)
 
 
 debug_windows = control_windows()
+threading.Thread(target=debug_windows.all_time_loop_event).start()
 debug_windows.window.mainloop()
-debug_windows.game_process.minecraft_chunk.loading_chunk_pos
 
 
 
