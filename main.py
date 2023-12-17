@@ -3,10 +3,10 @@
 
 #原生模块加载与设置
 from idlelib.calltip_w import CalltipWindow
-import webbrowser,http.server,ssl
-import json,tkinter,tkinter.font,time,threading,sys,base64,gzip
-import platform,copy,os,re,types,io,gc,subprocess,traceback,importlib
-import random,functools,pickle,hmac,tkinter.messagebox,importlib.util
+import http.server,ssl,importlib
+import json,tkinter,tkinter.font,time,threading,sys,gzip
+import platform,os,types,traceback
+import functools,tkinter.messagebox
 from tkinter import ttk
 from typing import List,Dict,Union,Literal
 ssl._create_default_https_context = ssl._create_unverified_context
