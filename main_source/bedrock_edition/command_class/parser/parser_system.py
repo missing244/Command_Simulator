@@ -5,7 +5,7 @@ class Command_Parser
 
 from . import BaseMatch,SpecialMatch,JsonPaser
 
-from typing import Dict,Union,List,Tuple
+from typing import Dict,Union,List,Tuple,Literal
 import re,traceback,itertools
 escape_space = re.compile("[ ]{0,}")
 
@@ -66,7 +66,7 @@ class Command_Parser :
             if a == None : del _str1[i]
         return _str1
 
-    def _parser(self,command_str:str) -> List[re.Match] :
+    def _parser(self,command_str:str) -> List[Dict[Literal["type","token"],Union[str,re.Match]]] :
         command_str_pointer = 0 ; self.Token_list = Token_list = []
 
         while 1 :
@@ -118,7 +118,7 @@ class Command_Parser :
         except Exception as e : 
             s = "%s\n错误位于字符%s至%s" % (e.args[0], e.pos[0], e.pos[1])
             return (s,e)
-        else : return a
+        else : return [i for i in a if i["type"] != "Command_Start"] 
 
 
 

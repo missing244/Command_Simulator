@@ -321,6 +321,7 @@ class AnyString(Match_Base) :
 
     def _match_string(self, s:str, s_pointer:int): 
         _match = self.re_match.match(s, pos=s_pointer)
+        if len(_match.group()) == 0 : raise Not_Match(">>%s<< 需要参数" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
         return {"type":self.token_type, "token":_match}
 
     def _auto_complete(self) -> Dict[str,str] : 

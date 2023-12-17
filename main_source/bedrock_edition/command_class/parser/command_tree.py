@@ -107,8 +107,7 @@ Command_Title = [
 
 #后面打✓的是完整测试过的
 #加V的是检查过版本的
-
-Command_Tree = SpecialMatch.Command_Root().add_leaves(
+Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Command_Start","/").add_leaves(
     # ability ✓ V
     BaseMatch.Char("Command","ability").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
@@ -1164,7 +1163,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves(
     # execute ✓ V
     BaseMatch.Char("Command","execute").set_version(1,19,50,"max"),
     BaseMatch.Char("Command","execute").set_version(1,19,50,"min"),
-)
+))
+Command_Tree.add_leaves(*Command_Tree.tree_leaves[0].tree_leaves)
+
+
 
 Command_Tree.tree_leaves[-2].add_leaves(
     *SpecialMatch.BE_Selector_Tree(
@@ -1255,18 +1257,13 @@ Command_Execute[8].add_leaves(   # if unless
     BaseMatch.Char("Type","block").add_leaves(
         *SpecialMatch.Pos_Tree(
             BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
-                SpecialMatch.BE_BlockState_Tree(
-                    *Command_Execute
-                ),
+                SpecialMatch.BE_BlockState_Tree(*Command_Execute),
                 *Command_Execute
             ),
             BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
-                BaseMatch.Int("Block_Data").add_leaves(
-                    *Command_Execute
-                ),
-                SpecialMatch.BE_BlockState_Tree(
-                    *Command_Execute
-                )
+                BaseMatch.Int("Block_Data").add_leaves(*Command_Execute),
+                SpecialMatch.BE_BlockState_Tree(*Command_Execute),
+                *Command_Execute
             )
         )
     ),
