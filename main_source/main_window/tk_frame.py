@@ -1149,10 +1149,10 @@ class Choose_Expand(tkinter.Frame) :
             traceback.print_exc(file=open(os.path.join("log","enable_expand.txt"), "w+",encoding="utf-8"))
             tkinter.messagebox.showerror("Error", "%s\n拓展包加载出错，日志已保存" % name1)
 
+        dir_name = self.expand_pack_list[uid]["dir_name"]
+        save_path1 = os.path.join("expand_pack", dir_name, "saves.zip")
+        save_path2 = os.path.join("expand_pack", dir_name)
         if not app_constant.debug_testing :
-            dir_name = self.expand_pack_list[uid]["dir_name"]
-            save_path1 = os.path.join("expand_pack", dir_name, "saves.zip")
-            save_path2 = os.path.join("expand_pack", dir_name)
             try : 
                 with zipfile.ZipFile(save_path1,"r") as zip_file1 : zip_file1.extractall(save_path2)
             except Exception as err: _expand_error(err) ; return
@@ -1167,7 +1167,7 @@ class Choose_Expand(tkinter.Frame) :
 
         # 加载拓展包主文件main.py
         if uid not in expand_pack_open_list or reload1 :
-            main_path = os.path.join("expand_pack", uid, "main.py")
+            main_path = os.path.join("expand_pack", dir_name, "main.py")
             if not os.path.exists(main_path): tkinter.messagebox.showerror("Error", "%s\n拓展包未找到入口文件" % name1) ; return
             spec = importlib.util.spec_from_file_location("<expand %r>" % name1, main_path)
             module = importlib.util.module_from_spec(spec)
@@ -1177,7 +1177,7 @@ class Choose_Expand(tkinter.Frame) :
         # 读取main.py
         try :
             if uid not in expand_pack_open_list or reload1 :
-                if hasattr(expand_pack_open_list[uid]['object'],"reload_method") : 
+                if uid in expand_pack_open_list and hasattr(expand_pack_open_list[uid]['object'],"reload_method") : 
                     expand_pack_open_list[uid]['object'].reload_method()
                 reload_module(module) #重载拓展包模块
                 expand_pack_open_list[uid] = {}
