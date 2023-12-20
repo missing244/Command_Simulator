@@ -39,12 +39,15 @@ if True : #启用软件前的加载项目
                 if url_obj.path == "/" and url_obj.query != "" :
                     query_components = parse.parse_qs(url_obj.query)
                     if "pack" not in query_components : return None
-                    path1 = os.path.join("expand_pack",query_components['pack'][0],"index.html")
-                    if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                    self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
-                    self.end_headers()
-                    self.wfile.write(file_IO.read_a_file(path1,"readbyte"))
+                    for key,value in debug_windows.expand_pack_open_list.items() :
+                        if key != query_components['pack'][0] : continue
+                        path1 = os.path.join("expand_pack",value["dir_name"],"index.html")
+                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
+                        self.send_response(200)
+                        self.send_header('Content-type', 'text/html')
+                        self.end_headers()
+                        self.wfile.write(file_IO.read_a_file(path1,"readbyte"))
+                        break
                 else : super().do_GET()
 
             def do_POST(self):
@@ -53,7 +56,7 @@ if True : #启用软件前的加载项目
                 self.send_header('Content-Encoding', 'gzip')
                 self.end_headers()
                 datas = self.rfile.read(int(self.headers['content-length']))
-                respones = debug_windows.post_data(datas, debug_windows.user_manager.save_data['expand_packs'])
+                respones = debug_windows.post_data(datas, debug_windows.user_manager.save_data['install_pack_list'])
                 self.wfile.write(gzip.compress(json.dumps(respones,separators=(',', ':'),
                     default=Minecraft_BE.DataSave.encoding).encode('utf-8')))
         
@@ -92,8 +95,8 @@ class control_windows :
         self.display_frame:Dict[str,tkinter.Frame] = {}
         self.now_display_frame = ""
         self.focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry] = None
-        self.expand_pack_open_list:Dict[str,Dict[Literal["frame","module","object"],
-            Union[tkinter.Frame,types.ModuleType,object]]] = {}
+        self.expand_pack_open_list:Dict[str,Dict[Literal["dir_name","frame","module","object"],
+            Union[str,tkinter.Frame,types.ModuleType,object]]] = {}
         self.change_hight_component_list = [] #可变高度组件列表
 
         Announcement = app_tk_frame.Announcement(self)
@@ -176,8 +179,8 @@ class control_windows :
             else :
                 if self.calltip_win.anchor_widget != event.widget : self.calltip_win.anchor_widget = event.widget
                 aaa = "您选中了\n%s ~ %s"%(start_index,end_index)
-                start_index = "%s.0" % tuple(start_index.split(".")[0])
-                end_index = "%s.end" % tuple(end_index.split(".")[0])
+                start_index = "%s.0" % start_index.split(".")[0]
+                end_index = "%s.end" % end_index.split(".")[0]
                 self.calltip_win.showtip(aaa,start_index,end_index)
                 self.calltip_win.label.config(text=aaa)
 
@@ -188,7 +191,6 @@ class control_windows :
         if not hasattr(compont, "is_bind_click") :
             compont.bind("<Button-1>",aaaa,add="+")
             if app_constants.jnius : compont.bind("<KeyPress>",cccc,add="+")
-            if hasattr(compont,"can_copy_tk_component") : compont.bind("<B1-Motion>",bbbb,add="+")
             compont.is_bind_click = True
 
 
@@ -242,6 +244,11 @@ class control_windows :
         self.set_display_frame("policy_frame")
 
 
+    def get_expand_pack_class_object(self,uuid:str) -> object :
+        a = self.expand_pack_open_list.get(uuid, None)
+        if a == None : return None
+        return a.get('object')
+
     def add_can_change_hight_component(self,component_list:list) :
         # 第一个为变高元素，其他为基准元素
         self.change_hight_component_list.append([-1,-1] + component_list)
@@ -252,7 +259,7 @@ class control_windows :
             try : 
                 for i in list(self.expand_pack_open_list) :
                     if i not in self.expand_pack_open_list : continue
-                    self.expand_pack_open_list[i]['object'].debug_windows = self
+                    self.expand_pack_open_list[i]['object'].main_win = self
                     self.expand_pack_open_list[i]['object'].game_process = self.game_process
                     if hasattr(self.expand_pack_open_list[i]['object'],'loop_method') : 
                         self.expand_pack_open_list[i]['object'].loop_method()
@@ -302,4 +309,4 @@ threading.Thread(target=debug_windows.all_time_loop_event).start()
 debug_windows.window.mainloop()
 
 
-
+#debug_windows.game_process.minecraft_chunk.loading_chunk["overworld"][(0,0)]
