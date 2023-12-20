@@ -24,13 +24,13 @@ class visualization :
         self.Compiler = CommandCompiler.Selector.Selector_Compiler
 
         self.game_thread = game_thread
-        self.three_js_connect = False ; self.first_get_ready = False 
+        self.first_get_ready = False 
+        self.defalt_chunk = [0 for i in range(16 * 16 * 384)]
 
         self.start_x = 0 ; self.start_y = -64 ; self.start_z = 0
         self.area_x = 16 ; self.area_y = 64 ; self.area_z = 16
 
         self.track_entity = []
-
         self.debug_data = []
 
 
@@ -50,7 +50,7 @@ class visualization :
                 if isinstance(Token1, tuple) : error_var_list[var_name] = Token1[0] ; continue
                 try : selector_func = self.Compiler(self.game_thread, Token1, 0)
                 except Exception as e : error_var_list[var_name] = e.args[0] ; continue
-                self.track_entity.append({"entity": var_json[var_name], "color": color_name[var_name]})
+                self.track_entity.append({"entity": selector_func[1], "color": color_name[var_name]})
 
             else :
                 if int_test.search(var_json[var_name]) == None : 
@@ -62,15 +62,12 @@ class visualization :
                 setattr(self, var_name, int(var_json[var_name]))
         return error_var_list
 
-    def start_collect_debug(self) :
-        self.three_js_connect = True
-
 
     def save_a_test_data(self) :
         debug_dict = {
             "chunks": self.get_debug_chunks() if self.game_thread.in_game_tag else {},
             "entities": self.get_debug_entity() if self.game_thread.in_game_tag else [],
-            "particle": self.game_thread.minecraft_particle_alive["overworld"].copy(),
+            "particle": self.game_thread.runtime_variable.particle_alive["overworld"].copy(),
             "global_time" : int(self.game_thread.minecraft_world.game_time),
             "var_saves" : {"start_x":self.start_x, "start_y":self.start_y, "start_z":self.start_z, 
                            "area_x":self.area_x, "area_y":self.area_y, "area_z":self.area_z}
@@ -89,8 +86,8 @@ class visualization :
             while chunk_start[1] <= chunk_end[1] :
                 if not self.game_thread.in_game_tag : return {}
                 chunk_pos_1 = "(%s, %s)" % tuple(chunk_start)
-                if chunk_pos_1 in dimension_data : chunks[chunk_pos_1] = dimension_data[chunk_pos_1]['blocks'][0:self.area_y*16*16]
-                else : chunks[chunk_pos_1] = [0 for i in range(16 * 16 * 384)]
+                if tuple(chunk_start) in dimension_data : chunks[chunk_pos_1] = dimension_data[tuple(chunk_start)]['blocks'][0:self.area_y*16*16]
+                else : chunks[chunk_pos_1] = self.defalt_chunk
                 chunk_start[1] += 16
             chunk_start[0] += 16 ; chunk_start[1] = m1
         chunks["block_map"] = [i.Identifier for i in self.game_thread.minecraft_chunk.block_mapping]
@@ -99,7 +96,7 @@ class visualization :
     def get_debug_entity(self) :
         entity = []
         for entity_test in self.track_entity :
-            execute_var = {"executer":"Server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],
+            execute_var = {"executer":"Server","dimension":"overworld","pos":[0,0,0],"rotate":[0,0],
                            "version":self.game_thread.game_version}
             entity_list = entity_test['entity'](execute_var)
             if not isinstance(entity_list, list) : entity.append({"entity":[],"color":entity_test["color"]}) ; continue
@@ -111,6 +108,7 @@ class visualization :
 
     def set_test_end_flag(self) :
         self.debug_data.append("Test_End")
+        self.first_get_ready = False 
 
 
     def get_test_data(self,times:int) :

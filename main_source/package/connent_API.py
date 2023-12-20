@@ -243,7 +243,7 @@ def request_url_without_error(url:Union[str,List[str]],post_data:dict = None,coo
         for times1 in range(2) :
             req1 = request.Request(url1, headers=request_headers, data = post_data)
             try : response2:bytes = request.urlopen(req1,timeout=3).read()
-            except : response2 = None; print(url1) ; traceback.print_exc() ; continue
+            except : response2 = None; print(url1) ; print(traceback.format_exc().split("\n")[-2]) ; continue
             else :
                 if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :
                     request_headers["cookie"] = js_execute.decode(response2.decode("utf-8")) ; time.sleep(0.25)

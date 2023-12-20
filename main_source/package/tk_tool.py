@@ -96,7 +96,7 @@ class tk_Scrollbar_Text(tkinter.Frame) :
 
     def __init__(self, master: tkinter.Misc, vertical_scrollbar=True,horizontal_scrollbar=True, **karg ) -> None:
         super().__init__(master)
-        self.input_box = tkinter.Text(self,show=None,height=21,width=28,font=('Arial', 10),undo=True)
+        self.input_box = tkinter.Text(self,show=None,height=21,width=28,font=get_default_font(10),undo=True)
         self.input_box.config(**karg)
         self.input_box.grid()
         if vertical_scrollbar :
@@ -118,7 +118,7 @@ class tk_Scrollbar_ListBox(tkinter.Frame) :
 
     def __init__(self, master: tkinter.Misc, vertical_scrollbar=True,horizontal_scrollbar=True, **karg ) -> None:
         super().__init__(master)
-        self.input_box = tkinter.Listbox(self,show=None,height=21,width=28,font=('Arial', 10))
+        self.input_box = tkinter.Listbox(self,show=None,height=21,width=28,font=get_default_font(10))
         self.input_box.config(**karg)
         self.input_box.grid()
         if vertical_scrollbar :

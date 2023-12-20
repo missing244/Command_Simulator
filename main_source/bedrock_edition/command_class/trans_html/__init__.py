@@ -19,7 +19,7 @@ class generate_command_block_html :
                             "repeating_command_block","repeating_command_block_condition"]
         self.cb_list = cb_list1
         
-        html_file = open(os.path.join("main_source","bedrock_edition","command_class","html_example","command_block.html"),"r",encoding="utf-8")
+        html_file = open(os.path.join("main_source","bedrock_edition","command_class","trans_html","command_block.html"),"r",encoding="utf-8")
         self.example_html = html_file.read()
         html_file.close()
     
@@ -64,7 +64,7 @@ class generate_all_command_load_html :
         self.result_function_file_req:str = None
         self.result_command_block_file_req:str = None
 
-        html_file = open(os.path.join("main_source","bedrock_edition","command_class","html_example","command_block.html"),"r",encoding="utf-8")
+        html_file = open(os.path.join("main_source","bedrock_edition","command_class","trans_html","command_block.html"),"r",encoding="utf-8")
         self.example_html = html_file.read()
         html_file.close()
 
@@ -191,7 +191,7 @@ class generate_command_respones_html :
         self.html_detials_list:List[str] = []
         self.js_detial_class_list:List[str] = []
 
-        html_file = open(os.path.join("main_source","bedrock_edition","command_class","html_example","command_block.html"),"r",encoding="utf-8")
+        html_file = open(os.path.join("main_source","bedrock_edition","command_class","trans_html","command_block.html"),"r",encoding="utf-8")
         self.example_html = html_file.read()
         html_file.close()
 

@@ -5,40 +5,42 @@ import re,functools
 
 terminal_command_parser = CommandParser.ParserSystem.Command_Parser( 
     CommandParser.SpecialMatch.Command_Root().add_leaves(
-        CommandParser.BaseMatch.Char("Command","reload").add_leaves(
-            CommandParser.BaseMatch.Enum("Open_CB_View","true","false").add_leaves(
-                CommandParser.BaseMatch.Enum("Structure","none","bdx","mcstructure").add_leaves(
+        CommandParser.BaseMatch.KeyWord("Command","#").add_leaves(
+            CommandParser.BaseMatch.Char("Command","reload").add_leaves(
+                    CommandParser.BaseMatch.Enum("Open_CB_View","true","false").add_leaves(
+                        CommandParser.BaseMatch.Enum("Structure","none","bdx","mcstructure").add_leaves(
+                            CommandParser.BaseMatch.END_NODE
+                        ),
+                        CommandParser.BaseMatch.END_NODE
+                    ),
                     CommandParser.BaseMatch.END_NODE
                 ),
-                CommandParser.BaseMatch.END_NODE
-            ),
-            CommandParser.BaseMatch.END_NODE
-        ),
-        CommandParser.BaseMatch.Char("Command","setting").add_leaves(
-            CommandParser.BaseMatch.Char("Argument","command_version").add_leaves(
-                CommandParser.BaseMatch.Int("V1").add_leaves(
-                    CommandParser.BaseMatch.Int("V2").add_leaves(
-                        CommandParser.BaseMatch.Int("V3").add_leaves( CommandParser.BaseMatch.END_NODE )
-                    )   
-                )
-            ),
-            CommandParser.BaseMatch.Char("Argument","test_time").add_leaves(
-                CommandParser.BaseMatch.Int("Time").add_leaves( CommandParser.BaseMatch.END_NODE )
-            )
-        ),
-        CommandParser.BaseMatch.Char("Command","command").add_leaves(
-            CommandParser.BaseMatch.Char("Argument","loop").add_leaves(
-                *CommandParser.CommandTree.Command_Tree.tree_leaves
-            ),
-            CommandParser.BaseMatch.Char("Argument","delay").add_leaves(
-                CommandParser.BaseMatch.Int("Time").add_leaves(
+            CommandParser.BaseMatch.Char("Command","set").add_leaves(
+                    CommandParser.BaseMatch.Char("Argument","command_version").add_leaves(
+                        CommandParser.BaseMatch.Int("V1").add_leaves(
+                            CommandParser.BaseMatch.Int("V2").add_leaves(
+                                CommandParser.BaseMatch.Int("V3").add_leaves( CommandParser.BaseMatch.END_NODE )
+                            )   
+                        )
+                    ),
+                    CommandParser.BaseMatch.Char("Argument","test_time").add_leaves(
+                        CommandParser.BaseMatch.Int("Time").add_leaves( CommandParser.BaseMatch.END_NODE )
+                    )
+                ),
+            CommandParser.BaseMatch.Char("Command","command").add_leaves(
+                CommandParser.BaseMatch.Char("Argument","loop").add_leaves(
+                    *CommandParser.CommandTree.Command_Tree.tree_leaves
+                ),
+                CommandParser.BaseMatch.Char("Argument","delay").add_leaves(
+                    CommandParser.BaseMatch.Int("Time").add_leaves(
+                        *CommandParser.CommandTree.Command_Tree.tree_leaves
+                    )
+                ),
+                CommandParser.BaseMatch.Char("Argument","end").add_leaves(
                     *CommandParser.CommandTree.Command_Tree.tree_leaves
                 )
             ),
-            CommandParser.BaseMatch.Char("Argument","end").add_leaves(
-                *CommandParser.CommandTree.Command_Tree.tree_leaves
-            )
-        ),
+        )
     )
 )
 
@@ -51,7 +53,7 @@ def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) :
     }
     token_list = terminal_command_parser.parser(s, (255,0,0))
     if isinstance(token_list, tuple) : return token_list[1]
-
+    token_list.pop(0)
     return Terminal_Command[token_list[0]["token"].group()](_game, s, token_list)
 
 
@@ -93,9 +95,9 @@ def reload_doing(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, cb_vie
 
     if any(test_list) :
         HtmlGenerate.setTimeOut(1.5, lambda:HtmlGenerate.webbrowser.open("http://localhost:32323/command_load.html"))
-        return Response.Response_Template("文件含有语法或编码错误\n具体信息请在浏览器中查看")
+        return Response.Response_Template("文件含有语法或编码错误\n具体信息请在浏览器中查看").substitute({})
     CommandBlock.Command_Block_Compile.write_to_world(_game)
-    return Response.Response_Template("全部命令已重载完成", 1, 1)
+    return Response.Response_Template("全部命令已重载完成", 1, 1).substitute({})
 
 
 def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) :
@@ -110,11 +112,11 @@ def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dic
 
 def set_version(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, version:tuple) :
     _game.game_version = tuple(version)
-    return Response.Response_Template("游戏版本已设置完成", 1, 1)
+    return Response.Response_Template("游戏版本已设置完成", 1, 1).substitute({})
 
 def set_testTime(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, time:int) :
     _game.runtime_variable.how_times_run_all_command = time
-    return Response.Response_Template("测试时间已设置完成", 1, 1)
+    return Response.Response_Template("测试时间已设置完成", 1, 1).substitute({})
 
 
 def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) -> functools.partial :
@@ -136,16 +138,16 @@ def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List
 
 def command_loop(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:functools.partial) :
     _game.runtime_variable.command_will_loop.append( (command, command_obj) )
-    return Response.Response_Template("成功添加了循环命令", 1, 1)
+    return Response.Response_Template("成功添加了循环命令", 1, 1).substitute({})
 
 def command_delay(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, time:int, command:str, command_obj:functools.partial) :
     run_gt = time + _game.minecraft_world.game_time
     if run_gt not in _game.runtime_variable.command_will_run : _game.runtime_variable.command_will_run[run_gt] = []
     _game.runtime_variable.command_will_run[run_gt].append( (command, command_obj) )
-    return Response.Response_Template("成功添加了延时命令", 1, 1)
+    return Response.Response_Template("成功添加了延时命令", 1, 1).substitute({})
 
 def command_end(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:functools.partial) :
     _game.runtime_variable.command_will_run_test_end.append( (command, command_obj) )
-    return Response.Response_Template("成功添加了结束命令", 1, 1)
+    return Response.Response_Template("成功添加了结束命令", 1, 1).substitute({})
 
 

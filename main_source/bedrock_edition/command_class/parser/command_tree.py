@@ -409,16 +409,18 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                             BaseMatch.AnyString("Block_ID").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                                 BaseMatch.END_NODE
-                            )
+                            ),
+                            BaseMatch.END_NODE
                         ),
-                        BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline","replace").add_leaves( BaseMatch.END_NODE ),
+                        BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline").add_leaves( BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.Char("Fill_Mode","replace").add_leaves(
                         BaseMatch.AnyString("Block_ID").add_leaves(
                             SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                             BaseMatch.END_NODE
-                        )
+                        ),
+                        BaseMatch.END_NODE
                     ),
                     BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline").add_leaves( BaseMatch.END_NODE ),
                     BaseMatch.END_NODE
@@ -429,9 +431,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                             BaseMatch.AnyString("Block_ID").add_leaves(
                                 BaseMatch.Int("Block_Data").add_leaves(BaseMatch.END_NODE),
                                 BaseMatch.END_NODE
-                            )
+                            ),
+                            BaseMatch.END_NODE
                         ),
-                        BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline","replace").add_leaves( BaseMatch.END_NODE ),
+                        BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline").add_leaves( BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.END_NODE
@@ -1257,46 +1260,36 @@ Command_Execute[8].add_leaves(   # if unless
     BaseMatch.Char("Type","block").add_leaves(
         *SpecialMatch.Pos_Tree(
             BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
-                SpecialMatch.BE_BlockState_Tree(*Command_Execute),
-                *Command_Execute
+                SpecialMatch.BE_BlockState_Tree(BaseMatch.END_NODE, *Command_Execute),
+                *Command_Execute,
+                BaseMatch.END_NODE
             ),
             BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
-                BaseMatch.Int("Block_Data").add_leaves(*Command_Execute),
+                BaseMatch.Int("Block_Data").add_leaves(BaseMatch.END_NODE, *Command_Execute),
                 SpecialMatch.BE_BlockState_Tree(*Command_Execute),
-                *Command_Execute
+                *Command_Execute,
+                BaseMatch.END_NODE
             )
         )
     ),
     BaseMatch.Char("Type","blocks").add_leaves(
-        *SpecialMatch.Pos_Tree(
-            *SpecialMatch.Pos_Tree(
-                *SpecialMatch.Pos_Tree(
-                    BaseMatch.Enum("Scan_Mode","all","masked").add_leaves(
-                        *Command_Execute
-                    )
-                )
-            )
-        )
+        *SpecialMatch.Pos_Tree( *SpecialMatch.Pos_Tree( *SpecialMatch.Pos_Tree(
+            BaseMatch.Enum("Scan_Mode","all","masked").add_leaves(BaseMatch.END_NODE, *Command_Execute)
+        )))
     ),
     BaseMatch.Char("Type","entity").add_leaves(
-        *SpecialMatch.BE_Selector_Tree(
-            *Command_Execute
-        )
+        *SpecialMatch.BE_Selector_Tree(BaseMatch.END_NODE, *Command_Execute)
     ),
     BaseMatch.Char("Type","score").add_leaves(
         *SpecialMatch.Scoreboard_Entity_Name_Tree(
             *SpecialMatch.Scoreboard_Objective_Tree(
                 BaseMatch.KeyWord("Operation","=","<","<=",">",">=").add_leaves(
                     *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                        *SpecialMatch.Scoreboard_Objective_Tree(
-                            *Command_Execute
-                        )
+                        *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE, *Command_Execute)
                     )
                 ),
                 BaseMatch.Char("Operation","matches").add_leaves(
-                    *SpecialMatch.Range_Tree(
-                        *Command_Execute
-                    )
+                    *SpecialMatch.Range_Tree(BaseMatch.END_NODE, *Command_Execute)
                 )
             )
         )

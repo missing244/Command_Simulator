@@ -354,7 +354,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
             pass_times = mid1
         elif KEYWORD_COMMENTARY.match(command_text) : continue
         elif KEYWORD_TERMINAL_COMMAND.match(command_text) : 
-            a = TerminalCommand.Terminal_Compiler(command_text)
+            a = TerminalCommand.Terminal_Compiler(self,command_text)
             if isinstance(a, Exception) : feedback_list.append((lines, a.args[0], a.pos[0] if hasattr(a,"pos") else 0))
             else : command_function.append( (command_text,a) )
         else :
@@ -375,6 +375,9 @@ def terminal_running(self:RunTime.minecraft_thread) :
 
     #print(debug_windows.terminal_log) "[\u2714]" "[\u2718]"
     termial_end_hook(self)
+    if self.visualization_object : 
+        self.visualization_object.first_get_ready = True
+        self.visualization_object.save_a_test_data()
     self.runtime_variable.terminal_send_command = False
 
 #
@@ -401,6 +404,9 @@ def particle_alive(self:RunTime.minecraft_thread) :
 
 def command_run_end(self:RunTime.minecraft_thread) :
     from .. import HtmlGenerate
+    if self.runtime_variable.how_times_run_all_command > 0 and self.visualization_object : 
+        self.visualization_object.save_a_test_data()
+
     if self.runtime_variable.how_times_run_all_command == 0 :
         aaa = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":self.game_version}
         for command_str,func in self.runtime_variable.command_will_run_test_end : 
@@ -408,9 +414,15 @@ def command_run_end(self:RunTime.minecraft_thread) :
 
         test_end_hook(self)
 
-        a = HtmlGenerate.generate_command_respones_html(self.runtime_variable.all_command_response)
-        a.load_all_response()
-        a.generate_html(self.world_name, "command_respones.html")
+        if self.runtime_variable.all_command_response.__len__() :
+            a = HtmlGenerate.generate_command_respones_html(self.runtime_variable.all_command_response)
+            a.load_all_response()
+            a.generate_html(self.world_name, "command_respones.html")
+
+        if self.visualization_object : self.visualization_object.set_test_end_flag()
+    
+    if self.runtime_variable.how_times_run_all_command >= 0 :
+        self.runtime_variable.how_times_run_all_command -= 1
 
 
 

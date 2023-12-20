@@ -133,26 +133,13 @@ class Bottom_Bar_Menu(tkinter.Menu) :
 
         if mode == "select_all" : focus_input.event_generate("<<SelectAll>>")
         elif mode == "cut" : 
-            if isinstance(focus_input,tkinter.Text) and hasattr(focus_input,"can_copy_tk_component") : 
-                self.copy_text = tk_tool.get_selection_component(focus_input)
-                if self.copy_text != None : focus_input.event_generate("<<Clear>>")
-            else : 
-                focus_input.event_generate("<<Cut>>") ; self.copy_text = None
+            focus_input.event_generate("<<Cut>>") ; self.copy_text = None
             focus_input.event_generate("<ButtonRelease>")
-        elif mode == "copy" : 
-            if isinstance(focus_input,tkinter.Text) and hasattr(focus_input,"can_copy_tk_component") : 
-                self.copy_text = tk_tool.get_selection_component(focus_input)
-            else : focus_input.event_generate("<<Copy>>") ; self.copy_text = None
+        elif mode == "copy" : focus_input.event_generate("<<Copy>>") ; self.copy_text = None
         elif mode == "paste" : 
             try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
             except : pass
-            if self.copy_text : 
-                for i in self.copy_text :
-                    if type(i) == type("") : focus_input.insert(tkinter.INSERT,i)
-                    elif isinstance(focus_input,tkinter.Text) :
-                        if hasattr(focus_input,"can_copy_tk_component") and isinstance(i,type({})) : 
-                            if hasattr(self.expand_pack_module,"paste_event") : self.expand_pack_module.paste_event(i["key_arg"])
-            elif app_constant.PythonActivity and app_constant.Context :
+            if app_constant.PythonActivity and app_constant.Context :
                 clipboard = app_constant.PythonActivity.getSystemService(app_constant.Context.CLIPBOARD_SERVICE)
                 clip_data = clipboard.getPrimaryClip()
                 if clip_data :
@@ -771,6 +758,7 @@ class Creat_World(tkinter.Frame) :
                 json.dumps(scoreboard, ensure_ascii=False, default=Minecraft_BE.DataSave.encoding))
 
             chunk_data = Minecraft_BE.BaseNbtClass.chunk_nbt().__save__()
+            chunk_data['block_mapping'].extend(Minecraft_BE.Constants.DEFAULT_BLOCK_MAP)
             FileOperation.write_a_file(os.path.join("save_world",rand_text,"chunk_data"), 
                 json.dumps(chunk_data, ensure_ascii=False, default=Minecraft_BE.DataSave.encoding))
         except :
@@ -1181,17 +1169,21 @@ class Choose_Expand(tkinter.Frame) :
                     expand_pack_open_list[uid]['object'].reload_method()
                 reload_module(module) #重载拓展包模块
                 expand_pack_open_list[uid] = {}
+                expand_pack_open_list[uid]["dir_name"] = dir_name
                 expand_pack_open_list[uid]["frame"] = tkinter.Frame(self.main_win.window)
                 expand_pack_open_list[uid]['module'] = module
                 expand_pack_open_list[uid]['object'] = module.pack_class()
                 module.UI_set(self.main_win, expand_pack_open_list[uid]["frame"])
-            if hasattr(module, "Menu_set") : module.Menu_set(tkinter.Menu(tkinter.Tk(),tearoff=False))
+            if hasattr(expand_pack_open_list[uid]['module'], "Menu_set") : module.Menu_set(tkinter.Menu())
         except Exception as err: 
             _expand_error(err)
             if uid in expand_pack_open_list : del expand_pack_open_list[uid]
         else :
             self.main_win.display_frame["expand_pack"] = expand_pack_open_list[uid]["frame"]
-            self.main_win.set_display_frame('expand_pack')
+            class event :
+                x = self.main_win.button_bar.bbox(self.main_win.button_bar.menu_list[2])[0]
+                y = self.main_win.button_bar.bbox(self.main_win.button_bar.menu_list[2])[1]
+            self.main_win.button_bar.update_menu_text(event())
 
 class Expand_Pack_Example(tkinter.Frame) :
 
@@ -1380,5 +1372,4 @@ class Policy(tkinter.Frame) :
 
         main_win.add_can_change_hight_component([self.input_box4, self.policy_title,a2])
         #self.add_can_change_hight_component([self.input_box4,a1,frame_m3,a2])
-
 

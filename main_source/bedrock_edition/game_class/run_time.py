@@ -29,7 +29,7 @@ class runtime_variable :
     def __init__(self) -> None :
         from .. import Response
         self.scoreboard_score_remove:Dict[int,List[str]] = {}
-        self.particle_alive:dict[int,List[List[float]]] = {}
+        self.particle_alive:Dict[str,Dict[int,List[List[float]]]] = {i:{} for i in Constants.DIMENSION_INFO}
         self.all_command_response:Dict[int,Dict[Literal["command","command_block","function"],
         Union[List[Response.Response_Template],List[Response.Response_Template],List[Response.Response_Template]]]] = {}
 
@@ -55,7 +55,7 @@ class runtime_variable :
         self.last_activated_pulse_cb.clear()
 
         self.terminal_command_feedback.clear()
-        self.particle_alive.clear()
+        for i in self.particle_alive  : self.particle_alive[i].clear()
         self.all_command_response.clear()
 
 class minecraft_thread :
