@@ -467,15 +467,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     ),
     # gamemode ✓ V
     BaseMatch.Char("Command","gamemode").add_leaves(
-        BaseMatch.Enum("Game_Mode","survival","creative","adventure","default","spectator","s","c","a","d").set_version(1,17,30,"min").add_leaves(
-            *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE ),
-            BaseMatch.END_NODE
-        ),
-        BaseMatch.Char("Game_Mode","spectator").set_version(1,18,31,"min").add_leaves(
-            *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE ),
-            BaseMatch.END_NODE
-        ),
-        BaseMatch.Int("Game_Mode").add_leaves(
+        BaseMatch.Enum("Game_Mode","0","survival","1","creative","2","adventure","default","spectator","s","c","a","d").add_leaves(
             *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )

@@ -1,7 +1,7 @@
 import os,json,re,zlib
 from typing import List,Tuple,Dict
 from .. import RunTime,FileOperation
-from . import CommandParser,CommandCompiler
+from . import Command_Tokenizer_Compiler
 
 MCFUNCTION_FILE = re.compile("\\u002emcfunction$")
 
@@ -50,12 +50,7 @@ def Function_Checker(_game:RunTime.minecraft_thread, version:List[int], mcfuncti
         if mcfunc_path in function_save and file_crc32 == function_save[mcfunc_path]["crc32"] : continue
 
         for lines,function_command_str in enumerate(file_content.split("\n")) :
-            token_list = CommandParser.Start_Tokenizer(function_command_str, version)
-            if isinstance(token_list, tuple) : 
-                if mcfunc_path not in mcfunction_syntax_error : mcfunction_syntax_error[mcfunc_path] = []
-                mcfunction_syntax_error[mcfunc_path].append( (lines+1, version, function_command_str, token_list[0]) )
-                continue
-            func_object = CommandCompiler.Start_Compile(token_list, version, _game)
+            func_object = Command_Tokenizer_Compiler(_game, function_command_str, version)
             if isinstance(func_object, tuple) : 
                 if mcfunc_path not in mcfunction_syntax_error : mcfunction_syntax_error[mcfunc_path] = []
                 mcfunction_syntax_error[mcfunc_path].append( (lines+1, version, function_command_str, func_object[0]) )

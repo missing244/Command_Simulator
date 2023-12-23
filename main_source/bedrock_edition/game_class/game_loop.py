@@ -332,7 +332,7 @@ def entity_things(self:RunTime.minecraft_thread) :
         entity1.__sit_update__()
 
 def terminal_running(self:RunTime.minecraft_thread) :
-    from .. import CommandParser,CommandCompiler,TerminalCommand
+    from .. import Command_Tokenizer_Compiler,TerminalCommand
     if not self.runtime_variable.terminal_send_command : return None
     self.runtime_variable.terminal_clear()
 
@@ -358,11 +358,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
             if isinstance(a, Exception) : feedback_list.append((lines, a.args[0], a.pos[0] if hasattr(a,"pos") else 0))
             else : command_function.append( (command_text,a) )
         else :
-            token_list = CommandParser.Start_Tokenizer(command_text, self.game_version)
-            if isinstance(token_list, tuple) : 
-                feedback_list.append( (lines, token_list[0], token_list[1].pos[0]) )
-                continue
-            func_object = CommandCompiler.Start_Compile(token_list, self.game_version, self)
+            func_object = Command_Tokenizer_Compiler(self, command_text, self.game_version)
             if isinstance(func_object, tuple) : 
                 feedback_list.append( (lines, func_object[0], func_object[1].pos[0] if hasattr(func_object[1],"pos") else 0) )
                 continue

@@ -1,5 +1,5 @@
 import re,os,itertools
-from . import HtmlGenerate,CommandParser,CommandCompiler
+from . import HtmlGenerate,Command_Tokenizer_Compiler
 from .. import MathFunction,Constants,RunTime,FileOperation,np,BlockComponent
 import main_source.package.python_nbt as python_nbt
 from typing import Dict,List,Tuple
@@ -163,18 +163,14 @@ class command_block_compile_system :
             return list(self.default_property)
         elif command_str.replace(" ","") == "" : return None
 
-        token_list = CommandParser.Start_Tokenizer(command_str, self.game_version)
-        if isinstance(token_list, tuple) : return (lines, self.game_version, command_str, token_list[0])
-        command_object = CommandCompiler.Start_Compile(token_list, self.game_version, _game)
+        command_object = Command_Tokenizer_Compiler(_game, command_str, self.game_version)
         if isinstance(command_object, tuple) : return (lines, self.game_version, command_str, command_object[0])
 
         self.default_property[5] = command_str ; self.default_property[6] = command_object
         return list(self.default_property)
 
     def keyword_cb_command_syntax(self, _game:RunTime.minecraft_thread, lines:int, text:str) :
-        token_list = CommandParser.Start_Tokenizer(text, self.game_version)
-        if isinstance(token_list, tuple) : return (lines, self.game_version, text, token_list[0])
-        command_object = CommandCompiler.Start_Compile(token_list, self.game_version, _game)
+        command_object = Command_Tokenizer_Compiler(_game, text, self.game_version)
         if isinstance(command_object, tuple) : return (lines, self.game_version, text, command_object[0])
 
         self.default_property[5] = text ; self.default_property[6] = command_object

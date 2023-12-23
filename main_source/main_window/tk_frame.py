@@ -1174,7 +1174,8 @@ class Choose_Expand(tkinter.Frame) :
                 expand_pack_open_list[uid]['module'] = module
                 expand_pack_open_list[uid]['object'] = module.pack_class()
                 module.UI_set(self.main_win, expand_pack_open_list[uid]["frame"])
-            if hasattr(expand_pack_open_list[uid]['module'], "Menu_set") : module.Menu_set(tkinter.Menu())
+            if hasattr(expand_pack_open_list[uid]['module'], "Menu_set") : 
+                expand_pack_open_list[uid]['module'].Menu_set(tkinter.Menu())
         except Exception as err: 
             _expand_error(err)
             if uid in expand_pack_open_list : del expand_pack_open_list[uid]

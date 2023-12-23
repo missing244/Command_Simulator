@@ -153,13 +153,13 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
     elif selector_var['sort'] == "farnest" : result = entity_list_result[-1 : (-selector_var['limit']-1) : -1]
     elif selector_var['sort'] == "random" : result = entity_list_result[0 : selector_var['limit']]
 
-    if not result : return Response.Response_Template("没有与目标选择器匹配的目标")
+    if not result : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
     else : return result
 
 def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, 
                       token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], index:int) -> int :
     selector_argument = token_list[index]["token"].group()
-    
+
     if selector_argument in ("x","y","z") :
         search_index = ("x","y","z") ; index += 2
         set_index = search_index.index(selector_argument)
@@ -318,7 +318,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
     return index + 1
 
 def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], index:int, / ,
-                      is_player:bool=False, is_npc:bool=False) -> Tuple[int, functools.partial] : 
+                      is_player:bool=False, is_npc:bool=False, is_single=False) -> Tuple[int, functools.partial] : 
 
     selector_argument_all = ("x", "y", "z", "c", "dx", "dy", "dz", "rx", "ry", "rxm", "rym", "l", "lm", "r", "rm", "scores",
                              "hasitem", "haspermission", "tag", "name", "family", "type", "m")
@@ -332,7 +332,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
         "hasitem":[], "permission_test":{},
         "limit":200000, "sort":"nearest", "is_alive":True, "is_executer":False
     }
-
+    
     if token_list[index]["type"] == "Player_Name" :
         selector_save["name_if"].append(Quotation_String_transfor_2(token_list[index]["token"].group().lower()))
         selector_save["type_if"].append("minecraft:player")
@@ -356,6 +356,10 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
             selector_save["is_alive"] = False
             selector_save["is_executer"] = True
             selector_save["limit"] = 1
+            if is_player and "minecraft:player" not in selector_save["type_if"] : 
+                selector_save["type_if"].append("minecraft:player")
+            if is_npc and "minecraft:npc" not in selector_save["type_if"] : 
+                selector_save["type_if"].append("minecraft:npc")
     index += 1
 
     if index >= token_list.__len__() or token_list[index]["type"] != "Start_Selector_Argument" :
@@ -374,6 +378,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
 
             index = Selector_Save_Set(game_tread, selector_save, token_list, index)
 
+    if is_single and selector_save["limit"] > 1 : raise CompileError("选择器无法选择多个实体")
     if is_player and (len(selector_save["type_if"]) > 1 or selector_save["type_if"][0] != "minecraft:player") : raise CompileError("选择器只能为玩家类型")
     if is_npc and (len(selector_save["type_if"]) > 1 or selector_save["type_if"][0] != "minecraft:npc") : raise CompileError("选择器只能为NPC类型")
     if selector_save["distance"] and selector_save["distance"][0] > selector_save["distance"][1] : raise CompileError("距离参数上限不能小于下限")
@@ -388,9 +393,21 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
     return (index+1, functools.partial(RunTime_Selector,game_tread=game_tread,selector_var=selector_save))
 
 
-
-
-
+def Self_Actor_Fast_Compile(game_tread:RunTime.minecraft_thread, / ,is_player:bool=False, is_npc:bool=False) :
+    selector_save = {
+        "pos":[None, None, None], "pos_offset":[0, 0, 0], "dxdydz":[None, None, None],
+        "distance":None, "rotate_x":[-90.0, 90.0], "rotate_y":[-180.0, 180.0], "level": None,
+        "scores_if":[], "scores_unless":[], "tag_if":[],"tag_unless":[], "family_if":[], "family_unless":[],
+        "m_if":[], "m_unless":[], "name_if":[], "name_unless":[], "type_if":[], "type_unless":[],
+        "hasitem":[], "permission_test":{},
+        "limit":1, "sort":"nearest", "is_alive":False, "is_executer":True
+    }
+    if is_player and "minecraft:player" not in selector_save["type_if"] : 
+        selector_save["type_if"].append("minecraft:player")
+    if is_npc and "minecraft:npc" not in selector_save["type_if"] : 
+        selector_save["type_if"].append("minecraft:npc")
+    
+    return functools.partial(RunTime_Selector, game_tread=game_tread, selector_var=selector_save)
 
 
 

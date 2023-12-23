@@ -26,7 +26,7 @@ static_file_path = os.path.join("main_source", "update_source", "import_files")
 COMMAND_BLOCK_LOAD_CHUNK = set([(1600+i*16,1600+j*16) for i,j in itertools.product(range(6),repeat=2)])
 COMMAND_BLOCK_MAP_INDEX = [i for i in range(7,43) if (not(19 <= i <= 31))]
 
-ENCHAT_TEMPLATE = {"id":"","lvl":np.int16(-1)}
+ENCHANT_TEMPLATE = {"id":"","lvl":np.int16(-1)}
 EFFECT_TEMPLATE = {"id":"","lvl":np.int16(-1),"time":np.int32(-1)}
 WRITTEN_BOOK_TEMPLATE = {'author':"",'title':"",'pages':[]}
 
