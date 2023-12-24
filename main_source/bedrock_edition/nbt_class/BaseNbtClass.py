@@ -205,12 +205,9 @@ class entity_nbt :
         self.Identifier = "minecraft:%s" % Identifier if (":" not in Identifier) else Identifier
         self.Dimension = list(Constants.DIMENSION_INFO).index(dimension)
         self.Pos = [np.float32(pos[0]), np.float32(pos[1]), np.float32(pos[2])]
-        
+
         if (Identifier == "minecraft:player" or (hasattr(self,"CanModifyName")) and (getattr(self,"CanModifyName"))) and name : 
             self.CustomName = name
-        else : 
-            entity_name = self.Identifier.replace("minecraft:","",1)
-            self.CustomName = Constants.TRANSLATE_ID["[实体]"].get(entity_name, "entity.%s.name" % entity_name)
 
         return self
     
@@ -450,7 +447,7 @@ class scoreboard_nbt :
     def ID_tracker(self, entity:Union[entity_nbt,str]) -> str :
         """将对象转换为计分板假名"""
         if isinstance(entity, entity_nbt) and entity.Identifier == "minecraft:player" : name = entity.CustomName
-        elif isinstance(entity, entity_nbt) : name = "%s(%s)" % (entity.UniqueID, entity.CustomName)
+        elif isinstance(entity, entity_nbt) : name = "%s" % entity.UniqueID
         else : name = entity
         return name
 

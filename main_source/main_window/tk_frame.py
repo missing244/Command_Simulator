@@ -566,6 +566,7 @@ class Game_Ready(tkinter.Frame) :
         frame_m3.pack()
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
         self.list_select = tkinter.Listbox(self,font=tk_tool.get_default_font(13), selectmode=tkinter.SINGLE, height=13, width=22)
+        self.list_select.bind("<Double-ButtonRelease-1>", lambda e : self.join_world())
         self.list_select.pack()
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
 
@@ -951,6 +952,7 @@ class Choose_Expand(tkinter.Frame) :
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
         self.expand_select = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(12),selectmode=tkinter.SINGLE,
             height=17,width=23,yscrollcommand=sco1.set)
+        self.expand_select.bind("<Double-ButtonRelease-1>", lambda e : self.on_expand_enable(False))
         self.expand_select.grid()
         sco1.config(command=self.expand_select.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
