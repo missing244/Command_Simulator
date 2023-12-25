@@ -23,6 +23,9 @@ Command_to_Compiler = {
     "ability" : Command1.ability, "alwaysday" : Command1.alwaysday, "camera" : Command1.camera,
     "camerashake" : Command1.camerashake,
 
+    "tell" : Command1.tell,
+    "msg" : Command1.tell,
+    "w" : Command1.tell,
     "weather" : Command1.weather,
     "xp" : Command1.xp
 }
@@ -59,6 +62,6 @@ def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Matc
     except Exception as e :
         if hasattr(e,"pos") : s = "%s\n错误位于字符%s至%s" % (e.args[0], e.pos[0], e.pos[1])
         else : s = e.args[0]
-        if not isinstance(e, CompileError) : traceback.print_exc()
+        if not isinstance(e, CommandParser.BaseMatch.Command_Match_Exception) : traceback.print_exc()
         return (s,e)
     

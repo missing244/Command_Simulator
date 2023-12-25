@@ -30,11 +30,11 @@ Command_Structure = BaseMatch.Enum("Include_Entities","true","false").add_leaves
 
 #summon末尾的Event和Name
 Command_Summon = [
-BaseMatch.AnyString("Event_Type").add_leaves(
-    *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE ),
+    *SpecialMatch.String_Tree("Entity_Event",
+        *SpecialMatch.String_Tree( "Entity_Name", BaseMatch.END_NODE ),
+        BaseMatch.END_NODE
+    ),
     BaseMatch.END_NODE
-),
-BaseMatch.END_NODE
 ]
 
 #teleport和tp的Check_For_Blocks部分
@@ -52,7 +52,7 @@ Command_Loot = [
         )
     ),
     BaseMatch.Char("Argument","loot").add_leaves(
-        *SpecialMatch.Scoreboard_Objective_Tree(
+        *SpecialMatch.String_Tree("Loot_Table",
             BaseMatch.AnyString("Tool_Type").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
@@ -753,7 +753,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     )
                 ),
                 BaseMatch.Char("Argument","tickingarea").add_leaves(
-                    *SpecialMatch.Scoreboard_Objective_Tree(
+                    *SpecialMatch.String_Tree("Tickarea_Name",
                         BaseMatch.AnyString("Function").add_leaves( BaseMatch.END_NODE )
                     )
                 )
@@ -764,9 +764,9 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","scoreboard").set_version(1,7,0,"min").add_leaves(
         BaseMatch.Char("Argument","objectives").add_leaves(
             BaseMatch.Char("Argument","add").add_leaves(
-                *SpecialMatch.Scoreboard_Objective_Tree(
+                *SpecialMatch.String_Tree("Scoreboard_Name",
                     BaseMatch.Char("Argument","dummy").add_leaves(
-                        *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE ),
+                        *SpecialMatch.String_Tree( "Scoreboard_Display_Name", BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     )
                 )
@@ -775,18 +775,18 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 BaseMatch.END_NODE
             ),
             BaseMatch.Char("Argument","remove").add_leaves(
-                *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE )
+                *SpecialMatch.String_Tree( "Scoreboard_Name", BaseMatch.END_NODE )
             ),
             BaseMatch.Char("Argument","setdisplay").add_leaves(
                 BaseMatch.Enum("Show_Type","list","sidebar").add_leaves(
-                    *SpecialMatch.Scoreboard_Objective_Tree(
+                    *SpecialMatch.String_Tree("Scoreboard_Name",
                         BaseMatch.Enum("Sort","ascending","descending").add_leaves( BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.END_NODE
                 ),
                 BaseMatch.Char("Show_Type","belowname").add_leaves(
-                    *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE ),
+                    *SpecialMatch.String_Tree( "Scoreboard_Name", BaseMatch.END_NODE ),
                     BaseMatch.END_NODE
                 )
             )
@@ -794,7 +794,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.Char("Argument","players").add_leaves(
             BaseMatch.Enum("Argument","set","add","remove").add_leaves(
                 *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                    *SpecialMatch.Scoreboard_Objective_Tree(
+                    *SpecialMatch.String_Tree("Scoreboard_Name",
                         BaseMatch.Int("Count").add_leaves( BaseMatch.END_NODE )
                     )
                 )
@@ -805,10 +805,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             ),
             BaseMatch.Char("Argument","operation").add_leaves(
                 *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                    *SpecialMatch.Scoreboard_Objective_Tree(
+                    *SpecialMatch.String_Tree("Scoreboard_Name",
                         BaseMatch.KeyWord("Operate","+=","-=","*=","/=","%=","=","<",">","><").add_leaves(
                             *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                                *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE )
+                                *SpecialMatch.String_Tree( "Scoreboard_Name", BaseMatch.END_NODE )
                             )
                         )
                     )
@@ -816,7 +816,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             ),
             BaseMatch.Char("Argument","random").add_leaves(
                 *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                    *SpecialMatch.Scoreboard_Objective_Tree(
+                    *SpecialMatch.String_Tree("Scoreboard_Name",
                         BaseMatch.Int("min").add_leaves(
                             BaseMatch.Int("max").add_leaves( BaseMatch.END_NODE )
                         )
@@ -825,13 +825,13 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             ),
             BaseMatch.Char("Argument","reset").add_leaves(
                 *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                    *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE ),
+                    *SpecialMatch.String_Tree( "Scoreboard_Name", BaseMatch.END_NODE ),
                     BaseMatch.END_NODE
                 )
             ),
             BaseMatch.Char("Argument","test").add_leaves(
                 *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                    *SpecialMatch.Scoreboard_Objective_Tree(
+                    *SpecialMatch.String_Tree("Scoreboard_Name",
                         BaseMatch.Int("min").add_leaves(
                             BaseMatch.Int("max").add_leaves( BaseMatch.END_NODE ),
                             BaseMatch.KeyWord("max","*").add_leaves( BaseMatch.END_NODE ),
@@ -880,7 +880,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # structure ✓ V
     BaseMatch.Char("Command","structure").set_version(1,16,100,"min").add_leaves(
         BaseMatch.Char("Model","save").add_leaves(
-            *SpecialMatch.Scoreboard_Objective_Tree(
+            *SpecialMatch.String_Tree("Structure_Name",
                 *SpecialMatch.Pos_Tree(
                     *SpecialMatch.Pos_Tree(
                         BaseMatch.Enum("Save_Mode","memory","disk").add_leaves( BaseMatch.END_NODE ),
@@ -897,7 +897,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             )
         ),
         BaseMatch.Char("Model","load").add_leaves(
-            *SpecialMatch.Scoreboard_Objective_Tree(
+            *SpecialMatch.String_Tree("Structure_Name",
                 *SpecialMatch.Pos_Tree(
                     BaseMatch.Enum("Rotation","0_degrees","90_degrees","180_degrees","270_degrees").add_leaves(
                         BaseMatch.Enum("Mirror","none","x","z","xz").add_leaves(
@@ -918,16 +918,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             )
         ),
         BaseMatch.Char("Model","delete").add_leaves(
-            *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE )
+            *SpecialMatch.String_Tree("Structure_Name", BaseMatch.END_NODE )
         )
     ),
     # summon ✓ V
     BaseMatch.Char("Command","summon").set_version(1,19,70,"max").add_leaves(
         BaseMatch.AnyString("Entity_Type").add_leaves(
-            *SpecialMatch.Pos_Tree(
-                *Command_Summon
-            ),
-            *SpecialMatch.Scoreboard_Objective_Tree(
+            *SpecialMatch.Pos_Tree(*Command_Summon),
+            *SpecialMatch.String_Tree("Entity_Name",
                 *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             ),
@@ -937,12 +935,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","summon").set_version(1,19,70,"min").set_version(1,19,80,"max").add_leaves(
         BaseMatch.AnyString("Entity_Type").add_leaves(
             *SpecialMatch.Pos_Tree(
-                *SpecialMatch.Rotation_Tree(
-                    *Command_Summon
-                ),
+                *SpecialMatch.Rotation_Tree(*Command_Summon),
                 BaseMatch.END_NODE
             ),
-            *SpecialMatch.Scoreboard_Objective_Tree(
+            *SpecialMatch.String_Tree("Entity_Name",
                 *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             ),
@@ -952,20 +948,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","summon").set_version(1,19,80,"min").add_leaves(
         BaseMatch.AnyString("Entity_Type").add_leaves(
             *SpecialMatch.Pos_Tree(
-                *SpecialMatch.Rotation_Tree(
-                    *Command_Summon
-                ),
+                *SpecialMatch.Rotation_Tree(*Command_Summon),
                 BaseMatch.Char("Argument","facing").add_leaves(
-                    *SpecialMatch.BE_Selector_Tree(
-                        *Command_Summon
-                    ),
-                    *SpecialMatch.Pos_Tree(
-                        *Command_Summon
-                    )
+                    *SpecialMatch.BE_Selector_Tree(*Command_Summon),
+                    *SpecialMatch.Pos_Tree(*Command_Summon)
                 ),
                 BaseMatch.END_NODE
             ),
-            *SpecialMatch.Scoreboard_Objective_Tree(
+            *SpecialMatch.String_Tree("Entity_Name",
                 *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             ),
@@ -976,10 +966,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","tag").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Char("Argument","add").add_leaves(
-                *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE )
+                *SpecialMatch.String_Tree( "Tag", BaseMatch.END_NODE )
             ),
             BaseMatch.Char("Argument","remove").add_leaves(
-                *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE )
+                *SpecialMatch.String_Tree( "Tag", BaseMatch.END_NODE )
             ),
             BaseMatch.Char("Command","list").add_leaves( BaseMatch.END_NODE )
         )
@@ -1006,10 +996,8 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.Char("Argument","add").add_leaves(
             *SpecialMatch.Pos_Tree(
                 *SpecialMatch.Pos_Tree(
-                    *SpecialMatch.Scoreboard_Objective_Tree(
-                        BaseMatch.Enum("Preload","true","false").add_leaves(
-                            BaseMatch.END_NODE
-                        ),
+                    *SpecialMatch.String_Tree("Tickingarea_Name",
+                        BaseMatch.Enum("Preload","true","false").add_leaves(BaseMatch.END_NODE),
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.END_NODE
@@ -1018,10 +1006,8 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.Char("Model","circle").add_leaves(
                 *SpecialMatch.Pos_Tree(
                     BaseMatch.Int("Radius").add_leaves(
-                        *SpecialMatch.Scoreboard_Objective_Tree(
-                            BaseMatch.Enum("Preload","true","false").add_leaves(
-                                BaseMatch.END_NODE
-                            ),
+                        *SpecialMatch.String_Tree("Tickingarea_Name",
+                            BaseMatch.Enum("Preload","true","false").add_leaves(BaseMatch.END_NODE),
                             BaseMatch.END_NODE
                         ),
                         BaseMatch.END_NODE
@@ -1031,28 +1017,23 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         ),
         BaseMatch.Char("Argument","remove").add_leaves(
             *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
-            *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE )
+            *SpecialMatch.String_Tree( "Tickingarea_Name", BaseMatch.END_NODE )
         ),
         BaseMatch.Char("Argument","remove_all").add_leaves(
             BaseMatch.END_NODE
         ),
         BaseMatch.Char("Argument","preload").set_version(1,18,30,"min").add_leaves(
             *SpecialMatch.Pos_Tree(
-                BaseMatch.Enum("Preload","true","false").add_leaves(
-                    BaseMatch.END_NODE
-                ),
+                BaseMatch.Enum("Preload","true","false").add_leaves(BaseMatch.END_NODE),
                 BaseMatch.END_NODE
              ),
-            *SpecialMatch.Scoreboard_Objective_Tree(
-                BaseMatch.Enum("Preload","true","false").add_leaves(
-                ),
+            *SpecialMatch.String_Tree("Tickingarea_Name",
+                BaseMatch.Enum("Preload","true","false").add_leaves(BaseMatch.END_NODE),
                 BaseMatch.END_NODE
             )
         ),
         BaseMatch.Char("Argument","list").add_leaves(
-            BaseMatch.Char("All_Dimensions","all-dimensions").add_leaves(
-                BaseMatch.END_NODE
-            ),
+            BaseMatch.Char("All_Dimensions","all-dimensions").add_leaves(BaseMatch.END_NODE),
             BaseMatch.END_NODE
         )
     ),
@@ -1101,12 +1082,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # volumearea ✓ V
     BaseMatch.Char("Command","volumearea").set_version(1,18,30,"min").add_leaves(
         BaseMatch.Char("Argument","add").add_leaves(
-            BaseMatch.AnyString("Identifier").add_leaves(
+            *SpecialMatch.String_Tree("Identifier",
                 *SpecialMatch.Pos_Tree(
                     *SpecialMatch.Pos_Tree(
-                        *SpecialMatch.Scoreboard_Objective_Tree(
-                            BaseMatch.END_NODE
-                        )
+                        *SpecialMatch.String_Tree("Volumearea_Name", BaseMatch.END_NODE)
                     )
                 )
             )
@@ -1121,12 +1100,8 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.END_NODE
         ),
         BaseMatch.Char("Argument","remove").add_leaves(
-            *SpecialMatch.Pos_Tree(
-                BaseMatch.END_NODE
-            ),
-            *SpecialMatch.Scoreboard_Objective_Tree(
-                BaseMatch.END_NODE
-            )
+            *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
+            *SpecialMatch.String_Tree( "Identifier", BaseMatch.END_NODE )
         )
     ),
     # weather ✓ V
@@ -1275,10 +1250,10 @@ Command_Execute[8].add_leaves(   # if unless
     ),
     BaseMatch.Char("Type","score").add_leaves(
         *SpecialMatch.Scoreboard_Entity_Name_Tree(
-            *SpecialMatch.Scoreboard_Objective_Tree(
+            *SpecialMatch.String_Tree("Scoreboard_Name",
                 BaseMatch.KeyWord("Operation","=","<","<=",">",">=").add_leaves(
                     *SpecialMatch.Scoreboard_Entity_Name_Tree(
-                        *SpecialMatch.Scoreboard_Objective_Tree( BaseMatch.END_NODE, *Command_Execute)
+                        *SpecialMatch.String_Tree( "Scoreboard_Name", BaseMatch.END_NODE, *Command_Execute)
                     )
                 ),
                 BaseMatch.Char("Operation","matches").add_leaves(

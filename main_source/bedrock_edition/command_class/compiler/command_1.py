@@ -1,8 +1,24 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction
-from . import Selector,CompileError
-import functools,string,random
+from . import Selector,CompileError,CommandParser
+import functools,string,random,re
 from typing import Dict,Union,List,Tuple,Literal,Callable
+
+
+def replace_str(base:str, start:int, end:int, replace:str) -> str:
+    return "".join([ base[:start] , replace , base[end:] ])
+
+Selector_Parser = CommandParser.ParserSystem.Command_Parser(
+    CommandParser.SpecialMatch.Command_Root().add_leaves(
+        *CommandParser.SpecialMatch.BE_Selector_Tree(
+            CommandParser.BaseMatch.AnyMsg("Msg").add_leaves(CommandParser.BaseMatch.END_NODE)
+        )
+    )
+)
+
+
+
+
 
 
 class ability :
@@ -110,23 +126,23 @@ class camera :
                 if index >= token_list.__len__() or token_list[index]["token"].group() == "default" :
                     return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
                 elif token_list[index]["token"].group() == "facing" and token_list[index+1]["type"] in ("Selector","Player_Name") :
-                    _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1)
+                    _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
                     return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
                 elif token_list[index]["token"].group() == "pos" :
                     if (index+4) >= token_list.__len__() : 
                         return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
                     elif token_list[index+4]["token"].group() == "facing" and token_list[index+5]["type"] in ("Selector","Player_Name") :
-                        _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+5)
+                        _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+5, is_single=True)
                         return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
                     else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
                 else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
             elif token_list[index]["token"].group() == "facing" and token_list[index+1]["type"] in ("Selector","Player_Name") :
-                _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1)
+                _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
                 return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
             elif token_list[index]["token"].group() == "pos" :
                 if (index+4) >= token_list.__len__() : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
                 elif token_list[index+4]["token"].group() == "facing" and token_list[index+5]["type"] in ("Selector","Player_Name") :
-                    _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+5)
+                    _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+5, is_single=True)
                     return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
                 else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
             else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
@@ -221,12 +237,35 @@ class tell :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index,entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
-        msg_temp = token_list[index]["token"].group()
-        
-        return functools.partial(cls.set, game=_game, msg=weather_name, search_entity=time)
+        msg_temp = token_list[index]["token"].group() ; msg_temp_start = token_list[index]["token"].start()
+        search_entity_list = []
+        re_search = list(re.compile("@(p|a|r|e|s|initiator)").finditer(msg_temp))
+        re_search.reverse()
+        for re_obj in re_search :
+            token_1 = Selector_Parser.parser(msg_temp[re_obj.start():], (100,0,0))
+            if isinstance(token_1, tuple) : 
+                if hasattr(token_1[1], "pos") : 
+                    token_1[1].pos = tuple([i+re_obj.start()+msg_temp_start for i in token_1[1].pos])
+                raise token_1[1]
+            msg_temp = replace_str(msg_temp, re_obj.start()+token_1[0]["token"].start(), 
+                re_obj.start()+token_1[-2]["token"].end(), "%s")
+            search_entity_list.append( Selector.Selector_Compiler(_game, token_1, 0)[1] )
+        search_entity_list.reverse()
+        return functools.partial(cls.send_msg, entity_get=entity_func, msg=msg_temp, search_entity=search_entity_list)
 
     def send_msg(execute_var:COMMAND_CONTEXT, entity_get:functools.partial, msg:str, search_entity:List[Callable]) :
-        pass
+        entity_list = entity_get(execute_var)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        list1 = [i(execute_var) for i in search_entity]
+        msg_temp = msg % tuple([
+            (", ".join( (ID_tracker(i) for i in entities) ) if isinstance(entities, list) else "") for entities in list1
+        ])
+        return Response.Response_Template("$player1 向以下玩家发送了悄悄话：\n$player2\n$msg", 1, 1).substitute(
+            player1 = ID_tracker(execute_var["executer"]),
+            player2 = ", ".join( (ID_tracker(i) for i in entity_list) ),
+            msg = msg_temp
+        )
+
 
 class weather :
 

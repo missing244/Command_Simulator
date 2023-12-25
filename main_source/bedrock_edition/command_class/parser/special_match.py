@@ -50,31 +50,6 @@ class BE_Range_Int(BaseMatch.Int) :
         super().__init__(token_type)
         self.re_match = re.compile("[^%s\\.]{0,}" % terminator)
 
-
-def Scoreboard_Objective_Tree(*end_node:BaseMatch.Match_Base):
-    """
-    自动生成一个计分板名字匹配树\n
-    *end_node : 添加下一级匹配类\n
-    -------------------------------
-    返回匹配列表，请将该列表传入add_leaves时添加解包操作
-    """
-    return [
-        BE_String("Scoreboard_Name").add_leaves(*end_node),
-        BE_Quotation_String("Scoreboard_Name").add_leaves(*end_node)
-    ]
-
-def Scoreboard_Entity_Name_Tree(*end_node:BaseMatch.Match_Base):
-    """
-    自动生成一个计分板内项目名的匹配树\n
-    *end_node : 添加下一级匹配类\n
-    -------------------------------
-    返回匹配列表，请将该列表传入add_leaves时添加解包操作
-    """
-    return [
-        *BE_Selector_Tree(*end_node),
-        BaseMatch.KeyWord("Objective_Name","*").add_leaves(*end_node)
-    ]
-
 class BE_String(BaseMatch.Match_Base) :
     """
     MCBE版普通字符串匹配
@@ -195,6 +170,32 @@ class BE_BlockState_String(BE_Quotation_String) :
     def _set_auto_complete(self,auto_complete={}) :
         self.auto_complete = auto_complete
 
+
+
+
+def String_Tree(token_type:str="Scoreboard_Name",*end_node:BaseMatch.Match_Base):
+    """
+    自动生成一个计分板名字匹配树\n
+    *end_node : 添加下一级匹配类\n
+    -------------------------------
+    返回匹配列表，请将该列表传入add_leaves时添加解包操作
+    """
+    return [
+        BE_String(token_type).add_leaves(*end_node),
+        BE_Quotation_String(token_type).add_leaves(*end_node)
+    ]
+
+def Scoreboard_Entity_Name_Tree(*end_node:BaseMatch.Match_Base):
+    """
+    自动生成一个计分板内项目名的匹配树\n
+    *end_node : 添加下一级匹配类\n
+    -------------------------------
+    返回匹配列表，请将该列表传入add_leaves时添加解包操作
+    """
+    return [
+        *BE_Selector_Tree(*end_node),
+        BaseMatch.KeyWord("Objective_Name","*").add_leaves(*end_node)
+    ]
 
 
 

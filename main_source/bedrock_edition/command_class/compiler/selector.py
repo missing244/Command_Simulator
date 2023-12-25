@@ -4,7 +4,7 @@ from .. import COMMAND_CONTEXT,Response
 from . import CompileError
 import re,functools,math,random
 
-DIMENSION_LIST= Constants.DIMENSION_INFO
+DIMENSION_LIST= list(Constants.DIMENSION_INFO)
 DISTANCE_FUNC = lambda item,origin_x,origin_y,origin_z : ((item.Pos[0]-origin_x)**2 + (item.Pos[1]-origin_y)**2 + (item.Pos[2]-origin_z)**2) ** 0.5
 
 
@@ -61,10 +61,10 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
 
         if selector_var["tag_if"] :
             if "" in selector_var["tag_if"] and (len(selector_var["tag_if"]) > 1 or len(entity.Tags)) : continue
-            elif any([ i not in entity.Tags for i in selector_var["tag_if"] ]) : continue
+            elif any([ (i not in entity.Tags) for i in selector_var["tag_if"] ]) : continue
         if selector_var["tag_unless"] :
             if "" in selector_var["tag_unless"] and len(entity.Tags) == 0 : continue
-            elif any([ i in entity.Tags for i in selector_var["tag_unless"] ]) : continue
+            elif any([ (i in entity.Tags) for i in selector_var["tag_unless"] ]) : continue
 
         if selector_var["family_if"] and any([ i not in entity.FamilyType for i in selector_var["family_if"] ]) : continue
         if selector_var["family_unless"] and any([ i in entity.FamilyType for i in selector_var["family_unless"] ]) : continue
@@ -310,7 +310,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
     elif selector_argument in ("tag","name","family","type","m") :
         index += 2 ; mode = "%s_if" if token_list[index]["type"] != "Not" else "%s_unless"
         if token_list[index]["type"] == "Not" : index += 1
-        if selector_argument == "tag" and token_list[index]["type"] == "Next_Selector_Argument" :
+        if selector_argument == "tag" and token_list[index]["type"] in ("Next_Selector_Argument", "End_Selector_Argument") :
             selector_save[mode % selector_argument].append("")
             index -= 1
         else : selector_save[mode % selector_argument].append(Quotation_String_transfor_2( token_list[index]["token"].group()) )
