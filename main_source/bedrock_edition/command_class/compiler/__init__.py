@@ -1,5 +1,5 @@
 from typing import Dict,Union,List,Tuple,Literal
-import re,functools,types
+import re,functools,traceback
 from .. import CommandParser
 from ... import RunTime
 class CompileError(CommandParser.BaseMatch.Command_Match_Exception) : pass
@@ -20,10 +20,11 @@ be_command_list = [
 
 Command_to_Compiler = {
     # key:class or key:{tuple:class}
-    "ability" : Command1.ability,
-    "alwaysday" : Command1.alwaysday,
-    "camera" : Command1.camera,
+    "ability" : Command1.ability, "alwaysday" : Command1.alwaysday, "camera" : Command1.camera,
     "camerashake" : Command1.camerashake,
+
+    "weather" : Command1.weather,
+    "xp" : Command1.xp
 }
 
 def Quotation_String_transfor_1(s:str) -> str :
@@ -58,5 +59,6 @@ def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Matc
     except Exception as e :
         if hasattr(e,"pos") : s = "%s\n错误位于字符%s至%s" % (e.args[0], e.pos[0], e.pos[1])
         else : s = e.args[0]
+        if not isinstance(e, CompileError) : traceback.print_exc()
         return (s,e)
     

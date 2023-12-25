@@ -874,7 +874,7 @@ class Game_Terminal(tkinter.Frame) :
 
         tkinter.Label(self,text="",fg='black',font=tk_tool.get_default_font(3),width=15,height=1).pack()
 
-        c0 = tkinter.Label(self, text="终端执行返回界面",bg="green",fg="white",font=tk_tool.get_default_font(12), width=21, height=1)
+        self.test_time = c0 = tkinter.Label(self, text="终端执行返回界面",bg="green",fg="white",font=tk_tool.get_default_font(12), width=21, height=1)
         c0.pack()
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
@@ -917,6 +917,12 @@ class Game_Terminal(tkinter.Frame) :
                     Terminal.insert(tkinter.END, "[%s]%s\n%s\n\n" % ("\u2714" if feedback.success_count else "\u2718",
                     feedback.command, feedback.command_msg))
         Minecraft_BE.GameLoop.modify_termial_end_hook("add",aaaa)
+
+        def cccc(_game:Minecraft_BE.RunTime.minecraft_thread, Terminal = self.test_time) :
+            left_time = _game.runtime_variable.how_times_run_all_command
+            if _game.runtime_variable.how_times_run_all_command >= 0 : Terminal.config(text="测试剩余 %s 刻" % left_time)
+            else : Terminal.config(text="终端执行返回界面")
+        Minecraft_BE.GameLoop.modify_tick_end_hook("add",cccc)
 
     def clear_terminal(self) :
         self.input_box2.delete("1.0",'end')

@@ -337,7 +337,7 @@ def spawn_player(game:RunTime.minecraft_thread) :
             player1.HotBar = [{},{},{},{},{},{},{},{},{}]
             player1.GameMode = np.int8(1)
             player1.PlayerLevel = np.int32(0)
-            player1.PlayerLevelPoint = np.int32(0)
+            player1.PlayerLevelPoint = np.float32(0)
             player1.RespawnTime = np.int16(0)
             player1.SelectSlot = np.int16(0)
             player1.Health = np.float32(20)

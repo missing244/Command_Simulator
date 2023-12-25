@@ -393,24 +393,5 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
     return (index+1, functools.partial(RunTime_Selector,game_tread=game_tread,selector_var=selector_save))
 
 
-def Self_Actor_Fast_Compile(game_tread:RunTime.minecraft_thread, / ,is_player:bool=False, is_npc:bool=False) :
-    selector_save = {
-        "pos":[None, None, None], "pos_offset":[0, 0, 0], "dxdydz":[None, None, None],
-        "distance":None, "rotate_x":[-90.0, 90.0], "rotate_y":[-180.0, 180.0], "level": None,
-        "scores_if":[], "scores_unless":[], "tag_if":[],"tag_unless":[], "family_if":[], "family_unless":[],
-        "m_if":[], "m_unless":[], "name_if":[], "name_unless":[], "type_if":[], "type_unless":[],
-        "hasitem":[], "permission_test":{},
-        "limit":1, "sort":"nearest", "is_alive":False, "is_executer":True
-    }
-    if is_player and "minecraft:player" not in selector_save["type_if"] : 
-        selector_save["type_if"].append("minecraft:player")
-    if is_npc and "minecraft:npc" not in selector_save["type_if"] : 
-        selector_save["type_if"].append("minecraft:npc")
-    
-    return functools.partial(RunTime_Selector, game_tread=game_tread, selector_var=selector_save)
-
-
-
-
 
 

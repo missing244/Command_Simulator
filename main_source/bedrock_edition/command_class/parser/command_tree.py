@@ -215,7 +215,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             *SpecialMatch.BE_Selector_Tree(
                 BaseMatch.Float("Intensity").add_leaves(
                     BaseMatch.Float("Time").add_leaves(
-                        BaseMatch.Enum("Camerashake_Type","positional","rotational").set_version(1,16,100,"min").add_leaves(BaseMatch.END_NODE),
+                        BaseMatch.Enum("Camerashake_Type","positional","rotational").add_leaves(BaseMatch.END_NODE),
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.END_NODE
@@ -223,8 +223,9 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 BaseMatch.END_NODE
             )
         ),
-        BaseMatch.Char("Argument","stop").set_version(1,16,21,"min").add_leaves( 
-            *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
+        BaseMatch.Char("Argument","stop").add_leaves( 
+            *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE ),
+            BaseMatch.END_NODE
         )
     ),
     # clear ✓ V
