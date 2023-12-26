@@ -4,7 +4,7 @@
 #原生模块加载与设置
 from idlelib.calltip_w import CalltipWindow
 import http.server,ssl,importlib
-import json,tkinter,tkinter.font,time,threading,sys,gzip
+import json,tkinter,tkinter.font,time,threading,sys,gzip,gc
 import platform,os,types,traceback
 import functools,tkinter.messagebox
 from tkinter import ttk
@@ -164,33 +164,16 @@ class control_windows :
         if isinstance(compont,(tkinter.Text, tkinter.Entry, ttk.Entry)) : self.focus_input = compont
         else : self.focus_input = None ; return None
 
-        def aaaa(event : tkinter.Event) :
-            self.calltip_win.hidetip()
-            if app_constants.jnius :
-                inputMethodManager = app_constants.PythonActivity.getSystemService(app_constants.Context.INPUT_METHOD_SERVICE)
-                isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
-                if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
-
-        def bbbb(event : tkinter.Event) :
-            try : 
-                start_index = event.widget.index(tkinter.SEL_FIRST)
-                end_index = event.widget.index(tkinter.SEL_LAST)
-            except : pass
-            else :
-                if self.calltip_win.anchor_widget != event.widget : self.calltip_win.anchor_widget = event.widget
-                aaa = "您选中了\n%s ~ %s"%(start_index,end_index)
-                start_index = "%s.0" % start_index.split(".")[0]
-                end_index = "%s.end" % end_index.split(".")[0]
-                self.calltip_win.showtip(aaa,start_index,end_index)
-                self.calltip_win.label.config(text=aaa)
-
         def cccc(event : tkinter.Event) :
             if event.keycode == -1 : self.set_paste_thread()
             if self.paset_thread_time and event.keycode != -1 : return 'break'
 
         if not hasattr(compont, "is_bind_click") :
-            compont.bind("<Button-1>",aaaa,add="+")
-            if app_constants.jnius : compont.bind("<KeyPress>",cccc,add="+")
+            event_class = app_function.Text_Bind_Events(compont)
+            if app_constants.jnius : 
+                compont.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
+                compont.bind("<B1-Motion>", event_class.left_click_motion_event, add="+")
+                compont.bind("<KeyPress>", cccc, add="+")
             compont.is_bind_click = True
 
 
@@ -255,7 +238,9 @@ class control_windows :
         #List[ 像素每行, 最大行数, component_list ]
 
     def all_time_loop_event(self) :
+        will_remove_can_change_hight_component:List[int] = []
         while 1 :
+            #拓展包循环事件部分
             try : 
                 for i in list(self.expand_pack_open_list) :
                     if i not in self.expand_pack_open_list : continue
@@ -264,7 +249,10 @@ class control_windows :
                     if hasattr(self.expand_pack_open_list[i]['object'],'loop_method') : 
                         self.expand_pack_open_list[i]['object'].loop_method()
             except : traceback.print_exc()
-            for list1 in self.change_hight_component_list :
+            #变高组件循环事件部分
+            for index, list1 in enumerate(self.change_hight_component_list.copy()) :
+                if not list1[2].winfo_exists() : 
+                    will_remove_can_change_hight_component.append(index) ; continue
                 try :
                     list1 : List[Union[int,int,tkinter.Text,tkinter.Text,tkinter.Text]]
                     if list1[0] == -1 : 
@@ -276,7 +264,10 @@ class control_windows :
                     if list1[2].cget("height") != min(list1[1], blank_height // list1[0] - 1) :
                         list1[2].config(height = min(list1[1], blank_height // list1[0] - 1))
                 except : pass
-
+            if len(will_remove_can_change_hight_component) :
+                will_remove_can_change_hight_component.reverse()
+                for i in will_remove_can_change_hight_component : self.change_hight_component_list.pop(i)
+                will_remove_can_change_hight_component.clear()
             time.sleep(0.5)
 
 
@@ -308,5 +299,7 @@ debug_windows = control_windows()
 threading.Thread(target=debug_windows.all_time_loop_event).start()
 debug_windows.window.mainloop()
 
-
+Minecraft_BE.Command_Compile_Dict_Save
+importlib.reload(Minecraft_BE.CommandCompiler)
+importlib.reload(Minecraft_BE.CommandCompiler.Command1)
 #debug_windows.game_process.minecraft_chunk.loading_chunk["overworld"][(0,0)]
