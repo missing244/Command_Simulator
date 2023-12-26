@@ -1,4 +1,4 @@
-import os,traceback,json,time,threading,re,copy,random,base64,tarfile,platform,zlib
+import os,traceback,json,time,threading,re,base64,zlib
 import main_source.package.file_operation as FileOperation
 from typing import List,Literal,Union
 from tkinter import ttk ; import tkinter ; import tkinter.messagebox
@@ -97,6 +97,26 @@ class initialization_log :
 
     def get_spend_time(self) :
         return self.time_end - self.time_start
+
+class Text_Bind_Events :
+
+    def __init__(self,Text:tkinter.Text) -> None:
+        import main_source.main_window.constant as app_constant
+        self.app_constants = app_constant
+        self.Text = Text
+        self.is_left_motion = False
+    
+    def left_click_motion_event(self,e:tkinter.Event) :
+        self.is_left_motion = True
+
+    def left_click_release_event(self,e:tkinter.Event) :
+        if self.is_left_motion : self.is_left_motion = False ; return None
+        inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
+            self.app_constants.Context.INPUT_METHOD_SERVICE)
+        isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
+        if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
+
+
 
 
 

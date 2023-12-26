@@ -140,7 +140,7 @@ class Bottom_Bar_Menu(tkinter.Menu) :
             try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
             except : pass
             if app_constant.PythonActivity and app_constant.Context :
-                clipboard = app_constant.PythonActivity.getSystemService(app_constant.Context.CLIPBOARD_SERVICE)
+                clipboard = app_constant.PythonActivity.mActivity.getSystemService(app_constant.Context.CLIPBOARD_SERVICE)
                 clip_data = clipboard.getPrimaryClip()
                 if clip_data :
                     item = clip_data.getItemAt(0)

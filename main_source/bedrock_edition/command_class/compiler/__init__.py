@@ -7,6 +7,7 @@ class CompileError(CommandParser.BaseMatch.Command_Match_Exception) : pass
 from . import selector as Selector
 from . import rawtext as Rawtext
 from . import command_1 as Command1
+from . import command_2 as Command2
 
 be_command_list = [
     'ability', 'alwaysday', 'camera', 'camerashake', 'clear', 'clearspawnpoint', 'clone', 'damage', 'daylock', 'dialogue',
@@ -23,11 +24,11 @@ Command_to_Compiler = {
     "ability" : Command1.ability, "alwaysday" : Command1.alwaysday, "camera" : Command1.camera,
     "camerashake" : Command1.camerashake,
 
-    "tell" : Command1.tell,
-    "msg" : Command1.tell,
-    "w" : Command1.tell,
-    "weather" : Command1.weather,
-    "xp" : Command1.xp
+    "tell" : Command2.tell,
+    "msg" : Command2.tell,
+    "w" : Command2.tell,
+    "weather" : Command2.weather,
+    "xp" : Command2.xp
 }
 
 def Quotation_String_transfor_1(s:str) -> str :
