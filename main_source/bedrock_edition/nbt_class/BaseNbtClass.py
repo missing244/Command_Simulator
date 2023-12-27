@@ -721,7 +721,7 @@ class chunk_nbt :
         self.player:List[entity_nbt] = []
         self.disk_structure:Dict[str,structure_nbt] = {}
         self.tickingarea = {}  #name:{"dimension":"","force_load":[],"preload":False}
-        self.volumearea  = {}  #name:{"dimension":"","effect_area":[],"volume_name":""}
+        self.volumearea  = {}  #name:{"dimension":"","effect_area":[],"id":""}
 
         self.support_nbt = [i for i in dir(self) if (i[0:2] != "__")]
         self.support_nbt.append("__minecraft_type__")
@@ -1024,7 +1024,7 @@ class chunk_nbt :
                     self.loading_chunk_pos[keys].add(chunk_pos)
 
         for keys in self.tickingarea :
-            self.loading_chunk_pos[self.tickingarea[keys]['dimension']].update(*self.tickingarea[keys]['force_load'])
+            self.loading_chunk_pos[self.tickingarea[keys]['dimension']].update(*[tuple(i) for i in self.tickingarea[keys]['force_load']])
         self.loading_chunk_pos["overworld"].update(Constants.COMMAND_BLOCK_LOAD_CHUNK)
 
         for keys in self.loading_chunk_pos :

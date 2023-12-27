@@ -135,7 +135,8 @@ def mc_pos_compute(origin:List[float], pos_offset:List[str], rotate:List[float])
         for i in range(3) :
             if pos_offset[i][0] == "~" and len(pos_offset[i][1:]) == 0 : continue
             elif pos_offset[i][0] == "~" : pos_result[i] += np.float32(pos_offset[i][1:])
-            else : pos_result[i] = np.float32(pos_offset[i])
+            elif "."  in pos_offset[i] : pos_result[i] = np.float32(pos_offset[i])
+            else : pos_result[i] = np.float32(pos_offset[i]) + 0.5
         return pos_result
 
 

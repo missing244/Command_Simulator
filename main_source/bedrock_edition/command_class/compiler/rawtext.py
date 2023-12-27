@@ -24,7 +24,7 @@ def Rawtext_Analysis(_game:RunTime.minecraft_thread, version:List[int], rawtext_
         if "selector" in text_json : 
             if not isinstance(text_json["selector"], str) : raise CompileError("rawtext json的 selector 需要提供字符串")
             token_list = Parser.parser(text_json["selector"], version)
-            if isinstance(token_list, tuple) : raise CompileError("选择器" + token_list[0])
+            if isinstance(token_list, tuple) : raise CompileError("selector组件中的选择器" + token_list[0])
             _,entity_func = Selector.Selector_Compiler(_game, token_list, 0, is_player=True)
             text_json["selector"] = entity_func
 

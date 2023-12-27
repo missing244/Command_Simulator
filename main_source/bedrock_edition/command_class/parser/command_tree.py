@@ -92,14 +92,11 @@ Command_Teleport_Rotation = [
 
 #title和titleraw的非JSON部分
 Command_Title = [
-    BaseMatch.Enum("Model","clear","reset").add_leaves(
-        BaseMatch.END_NODE
-    ),
+    BaseMatch.Enum("Model","clear","reset").add_leaves(BaseMatch.END_NODE),
     BaseMatch.Char("Model","times").add_leaves(
         BaseMatch.Int("Fade_In").add_leaves(
             BaseMatch.Int("Fade_Out").add_leaves(
-                BaseMatch.Int("Fade_Out").add_leaves(
-                )
+                BaseMatch.Int("Fade_Out").add_leaves(BaseMatch.END_NODE)
             )
         )
     )
@@ -360,8 +357,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     ),
     # difficulty ✓ V
     BaseMatch.Char("Command","difficulty").add_leaves(
-        BaseMatch.Enum("Difficulty","peaceful","easy","normal","hard","p","e","n","h").add_leaves( BaseMatch.END_NODE ),
-        BaseMatch.Int("Difficulty").add_leaves( BaseMatch.END_NODE )
+        BaseMatch.Enum("Difficulty","peaceful","easy","normal","hard","p","e","n","h","0","1","2","3").add_leaves( BaseMatch.END_NODE ),
     ),
     # effect ✓ V
     BaseMatch.Char("Command","effect").add_leaves(
@@ -1067,7 +1063,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             )
         )
     ),
-    BaseMatch.Char("Command","titleraw").set_version(1,9,0,"min").add_leaves(
+    BaseMatch.Char("Command","titleraw").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             *Command_Title,
             BaseMatch.Enum("Model","title","subtitle","actionbar").add_leaves(
@@ -1101,7 +1097,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         ),
         BaseMatch.Char("Argument","remove").add_leaves(
             *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
-            *SpecialMatch.String_Tree( "Identifier", BaseMatch.END_NODE )
+            *SpecialMatch.String_Tree( "Volumearea_Name", BaseMatch.END_NODE )
         )
     ),
     # weather ✓ V

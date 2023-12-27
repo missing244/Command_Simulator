@@ -61,10 +61,10 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
 
         if selector_var["tag_if"] :
             if "" in selector_var["tag_if"] and (len(selector_var["tag_if"]) > 1 or len(entity.Tags)) : continue
-            elif any([ (i not in entity.Tags) for i in selector_var["tag_if"] ]) : continue
+            elif "" not in selector_var["tag_if"] and any([ (i not in entity.Tags) for i in selector_var["tag_if"] ]) : continue
         if selector_var["tag_unless"] :
             if "" in selector_var["tag_unless"] and len(entity.Tags) == 0 : continue
-            elif any([ (i in entity.Tags) for i in selector_var["tag_unless"] ]) : continue
+            elif "" not in selector_var["tag_unless"] and any([ (i in entity.Tags) for i in selector_var["tag_unless"] ]) : continue
 
         if selector_var["family_if"] and any([ i not in entity.FamilyType for i in selector_var["family_if"] ]) : continue
         if selector_var["family_unless"] and any([ i in entity.FamilyType for i in selector_var["family_unless"] ]) : continue

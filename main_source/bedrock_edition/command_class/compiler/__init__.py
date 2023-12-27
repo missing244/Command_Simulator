@@ -4,6 +4,25 @@ from .. import CommandParser
 from ... import RunTime
 class CompileError(CommandParser.BaseMatch.Command_Match_Exception) : pass
 
+def Quotation_String_transfor_1(s:str) -> str :
+    """用于名字中含有非法字符的转换 \"a\\na\" -> ana """
+    if s[0] != "\"" or s[-1] != "\"" : return s
+    s = s[1:len(s)-1]
+    s_list = [] ; index = 0
+    while index < len(s) :
+        if s[index] != "\\" :  s_list.append( s[index] )
+        else :
+            if s[index+1] == "\\" : s_list.append( "\n" )
+            elif s[index+1] == "\"" : s_list.append( "\"" )
+        index += 1
+    return "".join(s_list)
+
+def ID_transfor(s:str) -> str :
+    """ stone -> minecraft:stone """
+    a = s.split(":",1)
+    if len(a) == 1 : return "minecraft:%s" % a[0]
+    else : return s
+
 from . import selector as Selector
 from . import rawtext as Rawtext
 from . import command_1 as Command1
@@ -24,25 +43,10 @@ Command_to_Compiler = {
     "ability" : Command1.ability, "alwaysday" : Command1.alwaysday, "camera" : Command1.camera,
     "camerashake" : Command1.camerashake,
 
-    "tell" : Command2.tell,
-    "msg" : Command2.tell,
-    "w" : Command2.tell,
-    "weather" : Command2.weather,
-    "xp" : Command2.xp
+    "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
+    "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,
+    "w" : Command2.tell, "weather" : Command2.weather, "xp" : Command2.xp
 }
-
-def Quotation_String_transfor_1(s:str) -> str :
-    """用于名字中含有非法字符的转换 \"a\\na\" -> ana """
-    if s[0] != "\"" or s[-1] != "\"" : return s
-    s = s[1:len(s)-1]
-    s_list = [] ; index = 0
-    while index < (len(s) - 1) :
-        if s[index] != "\\" :  s_list.append( s[index] )
-        else :
-            if s[index+1] == "\\" : s_list.append( "\n" )
-            elif s[index+1] == "\"" : s_list.append( "\"" )
-        index += 1
-    return "".join(s_list)
 
 def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], 
                   version:Tuple[int], _game:RunTime.minecraft_thread) -> Union[functools.partial,Tuple[str,Exception],None] :
