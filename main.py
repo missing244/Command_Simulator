@@ -169,8 +169,9 @@ class control_windows :
             if self.paset_thread_time and event.keycode != -1 : return 'break'
 
         if not hasattr(compont, "is_bind_click") :
-            event_class = app_function.Text_Bind_Events(compont)
+            event_class = app_function.Text_Bind_Events(self, compont)
             if app_constants.jnius : 
+                compont.bind("<Double-ButtonRelease-1>", event_class.double_click_release_event, add="+")
                 compont.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
                 compont.bind("<B1-Motion>", event_class.left_click_motion_event, add="+")
                 compont.bind("<KeyPress>", cccc, add="+")
