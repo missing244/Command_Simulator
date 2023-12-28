@@ -100,8 +100,9 @@ class initialization_log :
 
 class Text_Bind_Events :
 
-    def __init__(self,Text:tkinter.Text) -> None:
+    def __init__(self, main_win, Text:tkinter.Text) -> None:
         import main_source.main_window.constant as app_constant
+        self.main_win = main_win
         self.app_constants = app_constant
         self.Text = Text
         self.is_left_motion = False
@@ -110,12 +111,21 @@ class Text_Bind_Events :
         self.is_left_motion = True
 
     def left_click_release_event(self,e:tkinter.Event) :
-        if self.is_left_motion : self.is_left_motion = False ; return None
+        if self.is_left_motion : 
+            self.main_win.button_bar.Menu.post(e.x_root, e.y_root)
+            self.is_left_motion = False ; return None
         inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
             self.app_constants.Context.INPUT_METHOD_SERVICE)
         isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
         if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
 
+    def double_click_release_event(self,e:tkinter.Event) :
+        if self.is_left_motion : 
+            self.main_win.button_bar.Menu.post(e.x_root, e.y_root)
+        inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
+            self.app_constants.Context.INPUT_METHOD_SERVICE)
+        isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
+        if isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
 
 
 

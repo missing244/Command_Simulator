@@ -96,7 +96,7 @@ class Bottom_Bar(tkinter.Canvas) :
             elif text_id_1 == self.menu_list[1] : self.main_win.set_display_frame('choose_expand')
             elif text_id_1 == self.menu_list[2] : self.main_win.set_display_frame('expand_pack')
             elif text_id_1 == self.menu_list[3] : self.main_win.set_display_frame('setting_frame')
-            elif text_id_1 == self.menu_list[4] : self.Menu.post(e.x_root, e.y_root)
+            elif text_id_1 == self.menu_list[4] : self.Menu.post(e.x_root, e.y_root-self.Menu.winfo_reqheight())
             if text_id_1 == self.menu_list[4] : continue
             self.itemconfig(text_id_1, fill="#00ff00")
             test_pass = True
