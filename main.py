@@ -5,7 +5,7 @@
 from idlelib.calltip_w import CalltipWindow
 import http.server,ssl,importlib
 import json,tkinter,tkinter.font,time,threading,sys,gzip,gc
-import platform,os,types,traceback
+import platform,os,types,traceback,itertools
 import functools,tkinter.messagebox
 from tkinter import ttk
 from typing import List,Dict,Union,Literal
@@ -20,7 +20,6 @@ import main_source.package.tk_tool as tk_tool
 
 #模拟世界模块加载
 import main_source.bedrock_edition as Minecraft_BE
-
 
 if True : #启用软件前的加载项目
     for i in app_constants.First_Load_Build_Dir : os.makedirs(i,exist_ok=True)
@@ -125,7 +124,8 @@ class control_windows :
     def creat_windows(self):
         self.button_bar = app_tk_frame.Bottom_Bar(self)
         self.button_bar.pack(side="bottom")
-        self.display_frame["right_click_menu"] = app_tk_frame.Right_Click_Menu(self)
+        self.display_frame["right_click_menu"] = app_tk_frame.Global_Right_Click_Menu(self)
+
         self.display_frame["game_ready"] = app_tk_frame.Game_Ready(self)
         self.display_frame["creat_world"] = app_tk_frame.Creat_World(self)
         self.display_frame["game_run"] = app_tk_frame.Game_Run(self)
@@ -137,14 +137,6 @@ class control_windows :
         self.display_frame["policy_frame"] = app_tk_frame.Policy(self)
         self.display_frame["user_info"] = app_tk_frame.User_Info(self)
         self.set_display_frame("game_ready")
-
-        if self.user_manager.save_data["open_app_count"] < 2 :
-            aaa = tkinter.messagebox.askquestion('Title', '第一次使用\n是否需要阅读文档教程？\n(新手用户必看！！)', )
-            if aaa == "yes" : self.open_browser("http://localhost:32323/tutorial/Instructions.html")
-
-        if self.user_manager.save_data["open_app_count"] < 2 :
-            aaa = tkinter.messagebox.askquestion('Title', '是否需要阅读常见疑问？\n(安卓用户必看！！)')
-            if aaa == "yes" : self.open_browser("https://missing254.github.io/cs-tool/tool/Question/")
 
         self.user_manager.save_data["open_app_count"] += 1
 
@@ -171,10 +163,10 @@ class control_windows :
         if not hasattr(compont, "is_bind_click") :
             event_class = app_function.Text_Bind_Events(self, compont)
             if app_constants.jnius : 
-                compont.bind("<Double-ButtonRelease-1>", event_class.double_click_release_event, add="+")
                 compont.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
                 compont.bind("<B1-Motion>", event_class.left_click_motion_event, add="+")
                 compont.bind("<KeyPress>", cccc, add="+")
+                compont.bind("<KeyPress>", event_class.key_press_event, add="+")
             compont.is_bind_click = True
 
 
@@ -188,11 +180,11 @@ class control_windows :
                 if data["frame"] != self.display_frame["expand_pack"] : continue
                 test_flag = True ; break
             if test_flag and self.now_display_frame == "expand_pack" and name != "expand_pack" : #退出拓展包界面
-                right_click_menu:app_tk_frame.Right_Click_Menu = self.display_frame["right_click_menu"]
+                right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
                 while right_click_menu.item_counter > 4 : right_click_menu.remove_item()
                 if hasattr(data["object"],"exit_method") : data["object"].exit_method()
             if test_flag and self.now_display_frame != "expand_pack" and name == "expand_pack" :  #进入拓展包界面
-                right_click_menu:app_tk_frame.Right_Click_Menu = self.display_frame["right_click_menu"]
+                right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
                 if right_click_menu.item_counter <= 4 and hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
                 if hasattr(data["object"],"exit_method") : data["object"].exit_method()
         self.now_display_frame = name
