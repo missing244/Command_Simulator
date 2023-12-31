@@ -4,6 +4,9 @@ from typing import List,Literal,Union
 from tkinter import ttk ; import tkinter ; import tkinter.messagebox
 import main_source.package.connent_API as connent_API
 
+import main_source.main_window.constant as app_constant
+import main_source.package.tk_tool as tk_tool
+
 class user_manager :
 
     save_timestemp = 0
@@ -100,33 +103,211 @@ class initialization_log :
 
 class Text_Bind_Events :
 
-    def __init__(self, main_win, Text:tkinter.Text) -> None:
+    class Local_Right_Click_Menu_1 :
+
+        def __init__(self, main_win, **karg) -> None:
+            self.main_win = main_win
+            self.is_post = False
+
+            list1 = {'删除':lambda:self.mode_using("clear"), "剪切":lambda:self.mode_using("cut"),
+                     '复制':lambda:self.mode_using("copy"),  '粘贴':lambda:self.mode_using("paste")}
+            self.menu_list:List[tkinter.Menu] = []
+            for key,value in list1.items() :
+                Menu = tkinter.Menu(main_win.window, tearoff=False, font=tk_tool.get_default_font(10), **karg)
+                Menu.add_command(label=key, command=value)
+                self.menu_list.append(Menu)
+                Menu.update()
+            if app_constant.jnius : 
+                Menu = tkinter.Menu(main_win.window, tearoff=False, font=tk_tool.get_default_font(10), **karg)
+                Menu.add_command(label='键盘', command=lambda:self.mode_using("weakup_keyboard"))
+                self.menu_list.append(Menu)
+            self.winfo_reqheight = self.menu_list[0].winfo_reqwidth()
+
+        def mode_using(self, mode) :
+            focus_input = self.main_win.focus_input
+            mode_using(focus_input, mode)
+            for index,item in enumerate(self.menu_list) : item.unpost()
+        
+        def post(self, x:int, y:int) :
+            only_width = self.winfo_reqheight
+            half_width = self.winfo_reqheight * len(self.menu_list) // 2
+            start_x = x - half_width
+            for index,item in enumerate(self.menu_list) : item.post(start_x + only_width * index, y)
+            self.is_post = True
+
+        def unpost(self) :
+            if not self.is_post : return None
+            for index,item in enumerate(self.menu_list) : item.unpost()
+            self.is_post = False
+
+    class Local_Right_Click_Menu_2 :
+
+        def __init__(self, main_win, **karg) -> None:
+            self.main_win = main_win
+            self.is_post = False
+
+            list1 = {"回车":lambda:self.mode_using("return"), '粘贴':lambda:self.mode_using("paste"),
+                     "行首":lambda:self.mode_using("jump_line_start"), '行尾':lambda:self.mode_using("jump_line_end"),
+                     "选行":lambda:self.mode_using("line_select")}
+            self.menu_list:List[tkinter.Menu] = []
+            for key,value in list1.items() :
+                Menu = tkinter.Menu(main_win.window, tearoff=False, font=tk_tool.get_default_font(10), **karg)
+                Menu.add_command(label=key, command=value)
+                self.menu_list.append(Menu)
+                Menu.update()
+            self.winfo_reqwidth = self.menu_list[0].winfo_reqwidth()
+
+        def mode_using(self, mode) :
+            focus_input = self.main_win.focus_input
+            mode_using(focus_input, mode)
+            for index,item in enumerate(self.menu_list) : item.unpost()
+
+        def post(self, x:int, y:int) :
+            only_width = self.winfo_reqwidth
+            half_width = self.winfo_reqwidth * len(self.menu_list) // 2
+            start_x = x - half_width
+            for index,item in enumerate(self.menu_list) : item.post(start_x + only_width * index, y)
+            self.is_post = True
+
+        def unpost(self) :
+            if not self.is_post : return None
+            for index,item in enumerate(self.menu_list) : item.unpost()
+            self.is_post = False
+
+    def __init__(self, main_win, Text:tkinter.Text) -> None :
         import main_source.main_window.constant as app_constant
+        import main_source.main_window.tk_frame as tk_frame
         self.main_win = main_win
         self.app_constants = app_constant
+        self.Right_Click_Menu_1 = self.Local_Right_Click_Menu_1(main_win)
+        self.Right_Click_Menu_2 = self.Local_Right_Click_Menu_2(main_win)
         self.Text = Text
+
         self.is_left_motion = False
+        self.is_have_select = False
+        self.insert_pos_save = None
     
+    def update_INSERT_pos(self, widget:Union[tkinter.Text, tkinter.Entry, ttk.Entry]) :
+        if isinstance(widget, tkinter.Text) : insert_pos = list(widget.bbox(tkinter.INSERT))[0:2]
+        else : insert_pos = [widget.index(tkinter.INSERT)*40, widget.winfo_rooty()]
+        
+        if self.insert_pos_save == None : self.insert_pos_save = insert_pos ; return None
+        if not(self.insert_pos_save[0]-100 <= insert_pos[0] <= self.insert_pos_save[0]+100) :
+            self.insert_pos_save = insert_pos ; return None
+        if not(self.insert_pos_save[1]-40 <= insert_pos[1] <= self.insert_pos_save[1]+40) :
+            self.insert_pos_save = insert_pos ; return None
+        Menu = self.Right_Click_Menu_2
+        if isinstance(widget, tkinter.Text) : x1,y1,x2,y2 = widget.bbox(tkinter.INSERT)
+        else : y1 = widget.winfo_rooty()
+        x1 = self.main_win.window.winfo_width() // 2
+        Menu.post(x1, y1 - (widget.winfo_height()-20 if isinstance(widget, (tkinter.Entry, ttk.Entry)) else 0))
+
+
     def left_click_motion_event(self,e:tkinter.Event) :
+        if not self.is_left_motion :
+            inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
+                self.app_constants.Context.INPUT_METHOD_SERVICE)
+            isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
+            if isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
         self.is_left_motion = True
 
-    def left_click_release_event(self,e:tkinter.Event) :
-        if self.is_left_motion : 
-            self.main_win.button_bar.Menu.post(e.x_root, e.y_root)
-            self.is_left_motion = False ; return None
+    def left_click_release_event(self, e:tkinter.Event) :
+        #显示选中文字的菜单
+        if self.is_left_motion and ((isinstance(e.widget, tkinter.Text) and e.widget.tag_ranges("sel")) or (
+        isinstance(e.widget, (tkinter.Entry, ttk.Entry)) and e.widget.select_present())) : 
+            Menu = self.Right_Click_Menu_1
+            if isinstance(e.widget, tkinter.Text) : x1,y1,x2,y2 = e.widget.bbox(tkinter.SEL_FIRST)
+            else : x1,y1 = e.widget.winfo_rootx(), e.widget.winfo_rooty()
+            x1 = self.main_win.window.winfo_width() // 2
+            Menu.post(x1, y1 - (e.widget.winfo_height()+20 if isinstance(e.widget, (tkinter.Entry, ttk.Entry)) else 0))
+            self.is_have_select=True
+            self.is_left_motion = False
+            return None
+
+        if self.is_left_motion : self.is_left_motion = False ; return None
+        if self.is_have_select : self.is_have_select = False ; return None
+        if isinstance(e,tkinter.Event) : self.update_INSERT_pos(e.widget)
+
         inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
             self.app_constants.Context.INPUT_METHOD_SERVICE)
         isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
         if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
 
-    def double_click_release_event(self,e:tkinter.Event) :
-        if self.is_left_motion : 
-            self.main_win.button_bar.Menu.post(e.x_root, e.y_root)
-        inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
-            self.app_constants.Context.INPUT_METHOD_SERVICE)
-        isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
-        if isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
+    def key_press_event(self, e:tkinter.Event) :
+        self.Right_Click_Menu_1.unpost()
+        self.Right_Click_Menu_2.unpost()
 
+
+def mode_using(focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry], mode, word=None) : 
+    import main_source.main_window.constant as app_constant
+    if focus_input == None : return None
+
+    if mode == "select_all" : focus_input.event_generate("<<SelectAll>>")
+    elif mode == "cut" : 
+        focus_input.event_generate("<<Cut>>")
+        focus_input.event_generate("<ButtonRelease>")
+    elif mode == "copy" : focus_input.event_generate("<<Copy>>")
+    elif mode == "paste" : 
+        try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
+        except : pass
+        if app_constant.PythonActivity and app_constant.Context :
+            clipboard = app_constant.PythonActivity.mActivity.getSystemService(app_constant.Context.CLIPBOARD_SERVICE)
+            clip_data = clipboard.getPrimaryClip()
+            if clip_data :
+                item = clip_data.getItemAt(0)
+                if len(item.getText()) : focus_input.insert(tkinter.INSERT,item.getText())
+                else : focus_input.event_generate("<<Paste>>")
+        else : focus_input.event_generate("<<Paste>>")
+        focus_input.event_generate("<ButtonRelease>")
+    elif mode == "undo" : 
+        try : focus_input.edit_undo()
+        except : pass
+        focus_input.event_generate("<ButtonRelease>")
+    elif mode == "redo" : 
+        try : focus_input.edit_redo()
+        except : pass
+        focus_input.event_generate("<ButtonRelease>")
+    elif mode == "return" : 
+        if not(isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry)) : 
+            try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
+            except : pass
+            focus_input.insert(tkinter.INSERT,"\n")
+        focus_input.event_generate("<ButtonRelease>")
+    elif mode == "clear_all" : 
+        focus_input.event_generate("<<SelectAll>>")
+        focus_input.event_generate("<<Clear>>")
+    elif mode == "clear" : 
+        focus_input.event_generate("<<Clear>>")
+    elif mode == "input" :
+        if isinstance(word,type("")) : return None
+        try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
+        except : pass
+        focus_input.insert(tkinter.INSERT,word)
+    elif mode == "line_select" :
+        if isinstance(focus_input,tkinter.Text) : 
+            line1 = focus_input.index(tkinter.INSERT).split(".")[0]
+            chr_count = len(focus_input.get("%s.0" % line1, "%s.end" % line1))
+            focus_input.tag_add("sel", "%s.0" % line1, "%s.%s" % (line1 , chr_count))
+        if isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry) : focus_input.event_generate("<<SelectAll>>")
+    elif mode == "jump_line_start" :
+        if isinstance(focus_input,tkinter.Text) : 
+            line1 = focus_input.index(tkinter.INSERT).split(".")[0]
+            focus_input.see("%s.0" % line1) ; focus_input.mark_set(tkinter.INSERT,"%s.0" % line1)
+        if isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry) : 
+            focus_input.icursor(0) ; focus_input.xview_moveto(0)
+    elif mode == "jump_line_end" :
+        if isinstance(focus_input,tkinter.Text) : 
+            line1 = focus_input.index(tkinter.INSERT).split(".")[0]
+            focus_input.see("%s.end" % line1) ; focus_input.mark_set(tkinter.INSERT,"%s.end" % line1)
+        if isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry) : 
+            focus_input.icursor(tkinter.END) ; focus_input.xview_moveto(1)
+    elif mode == "weakup_keyboard" :
+        import main_source.main_window.constant as app_constants
+        inputMethodManager = app_constants.PythonActivity.mActivity.getSystemService(
+            app_constants.Context.INPUT_METHOD_SERVICE)
+        isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
+        if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
+    focus_input.focus_set()
 
 
 
@@ -145,6 +326,7 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         user.save_data['online_get'] = response2
 
         Announcement.set_notification(response2['notification'])
+        connent_API.get_online_api(response2['api'])
         user.info_update = True ; log.write_log("软件信息同步完成",2) ; return True
 
     def test_network() :

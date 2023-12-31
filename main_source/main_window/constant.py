@@ -1,5 +1,7 @@
-import os,uuid
-try : import jnius
+import os,uuid,platform
+try : 
+    import jnius
+    if platform.system() == "Windows" : raise Exception
 except : jnius = None
 
 APP_VERSION = "2.0.0" ; debug_testing = True

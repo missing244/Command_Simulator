@@ -219,7 +219,7 @@ class js_execute :
         return js_execute.toHex(d)
 
 
-def request_API_url(url:Union[str,List[str]],post_data:dict = None,cookie_data:str = None) -> bytes: 
+def request_API_url(url:Union[str,List[str]], post_data:dict=None, cookie_data:str=None, timeout_s:float=3) -> bytes: 
     """产生异常\n这个函数一定要运行于多线程"""
     if cookie_data : request_headers["cookie"] = cookie_data
     if post_data != None : post_data = parse.urlencode(post_data).encode('utf-8')
@@ -233,7 +233,7 @@ def request_API_url(url:Union[str,List[str]],post_data:dict = None,cookie_data:s
                 request_headers["cookie"] = js_execute.decode(response2.decode("utf-8")) ; time.sleep(0.25)
             else : return response2
 
-def request_url_without_error(url:Union[str,List[str]],post_data:dict = None,cookie_data:str = None) -> Union[None,bytes] : 
+def request_url_without_error(url:Union[str,List[str]], post_data:dict=None, cookie_data:str=None, timeout_s:float=3) -> Union[None,bytes] : 
     """不产生异常,这个函数一定要运行于多线程"""
     if cookie_data : request_headers["cookie"] = cookie_data
     if post_data != None : post_data = parse.urlencode(post_data).encode('utf-8')
@@ -242,7 +242,7 @@ def request_url_without_error(url:Union[str,List[str]],post_data:dict = None,coo
     for url1 in url :
         for times1 in range(2) :
             req1 = request.Request(url1, headers=request_headers, data = post_data)
-            try : response2:bytes = request.urlopen(req1,timeout=3).read()
+            try : response2:bytes = request.urlopen(req1,timeout=timeout_s).read()
             except : response2 = None; print(url1) ; print(traceback.format_exc().split("\n")[-2]) ; continue
             else :
                 if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :

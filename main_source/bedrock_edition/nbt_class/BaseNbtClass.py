@@ -358,8 +358,8 @@ class block_nbt :
         return "<Block %s, %s>" % (self.Identifier,self.BlockState)
 
     def __init__(self) :
-        self.Identifier = ""
-        self.BlockState = {}
+        self.Identifier:str = ""
+        self.BlockState:dict = {}
 
         self.support_nbt = [i for i in dir(self) if (i[0:2] != "__")]
         self.support_nbt.append("__minecraft_type__")

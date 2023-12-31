@@ -122,3 +122,8 @@ class visualization :
         return a
 
 
+    def at_exit(self) :
+        self.debug_data.clear()
+        self.game_thread = None
+
+

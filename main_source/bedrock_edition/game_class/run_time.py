@@ -142,6 +142,8 @@ class minecraft_thread :
         GameLoop.modify_test_end_hook("clear")
         GameLoop.modify_tick_end_hook("clear")
 
+        if self.visualization_object : self.visualization_object.at_exit()
+
         if not self.game_load_over : return Warning("不保存退出世界成功")
         while self.loop_thread and self.loop_thread.is_alive() : time.sleep(0.25)
         try :

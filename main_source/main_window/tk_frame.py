@@ -113,7 +113,7 @@ class Bottom_Bar_Menu(tkinter.Menu) :
 
         self.add_command(label='撤销',command=lambda : self.mode_using("undo"))
         self.add_command(label='恢复',command=lambda : self.mode_using("redo"))
-        self.add_command(label='清空',command=lambda : self.mode_using("clear"))
+        self.add_command(label='清空',command=lambda : self.mode_using("clear_all"))
         self.add_command(label='回车',command=lambda : self.mode_using("return"))
         self.add_separator()
         self.add_command(label="全选",command=lambda : self.mode_using("select_all"))
@@ -125,87 +125,29 @@ class Bottom_Bar_Menu(tkinter.Menu) :
         self.add_command(label='行尾',command=lambda : self.mode_using("jump_line_end"))
         self.add_command(label='选行',command=lambda : self.mode_using("line_select"))
         self.add_separator()
+        if app_constant.jnius : self.add_command(label='键盘',command=lambda : self.mode_using("weakup_keyboard"))
         self.add_command(label='退出',command=lambda : self.exit())
 
-    def mode_using(self, mode, word=None) : 
-        focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry] = self.main_win.focus_input
-        if focus_input == None : return None
-
-        if mode == "select_all" : focus_input.event_generate("<<SelectAll>>")
-        elif mode == "cut" : 
-            focus_input.event_generate("<<Cut>>") ; self.copy_text = None
-            focus_input.event_generate("<ButtonRelease>")
-        elif mode == "copy" : focus_input.event_generate("<<Copy>>") ; self.copy_text = None
-        elif mode == "paste" : 
-            try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
-            except : pass
-            if app_constant.PythonActivity and app_constant.Context :
-                clipboard = app_constant.PythonActivity.mActivity.getSystemService(app_constant.Context.CLIPBOARD_SERVICE)
-                clip_data = clipboard.getPrimaryClip()
-                if clip_data :
-                    item = clip_data.getItemAt(0)
-                    if len(item.getText()) : focus_input.insert(tkinter.INSERT,item.getText())
-                    else : focus_input.event_generate("<<Paste>>")
-            else : focus_input.event_generate("<<Paste>>")
-            focus_input.event_generate("<ButtonRelease>")
-        elif mode == "undo" : 
-            try : focus_input.edit_undo()
-            except : pass
-            focus_input.event_generate("<ButtonRelease>")
-        elif mode == "redo" : 
-            try : focus_input.edit_redo()
-            except : pass
-            focus_input.event_generate("<ButtonRelease>")
-        elif mode == "return" : 
-            if not(isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry)) : 
-                try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
-                except : pass
-                focus_input.insert(tkinter.INSERT,"\n")
-            focus_input.event_generate("<ButtonRelease>")
-        elif mode == "clear" : 
-            focus_input.event_generate("<<SelectAll>>")
-            focus_input.event_generate("<<Clear>>")
-        elif mode == "input" :
-            if isinstance(word,type("")) : return None
-            try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
-            except : pass
-            focus_input.insert(tkinter.INSERT,word)
-        elif mode == "line_select" :
-            if isinstance(focus_input,tkinter.Text) : 
-                line1 = focus_input.index(tkinter.INSERT).split(".")[0]
-                chr_count = len(focus_input.get("%s.0" % line1, "%s.end" % line1))
-                focus_input.tag_add("sel", "%s.0" % line1, "%s.%s" % (line1 , chr_count))
-            if isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry) : focus_input.event_generate("<<SelectAll>>")
-        elif mode == "jump_line_start" :
-            if isinstance(focus_input,tkinter.Text) : 
-                line1 = focus_input.index(tkinter.INSERT).split(".")[0]
-                focus_input.see("%s.0" % line1) ; focus_input.mark_set(tkinter.INSERT,"%s.0" % line1)
-            if isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry) : 
-                focus_input.icursor(0) ; focus_input.xview_moveto(0)
-        elif mode == "jump_line_end" :
-            if isinstance(focus_input,tkinter.Text) : 
-                line1 = focus_input.index(tkinter.INSERT).split(".")[0]
-                focus_input.see("%s.end" % line1) ; focus_input.mark_set(tkinter.INSERT,"%s.end" % line1)
-            if isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry) : 
-                focus_input.icursor(tkinter.END) ; focus_input.xview_moveto(1)
-        focus_input.focus_set()
+    def mode_using(self, mode) :
+        focus_input = self.main_win.focus_input
+        app_function.mode_using(focus_input, mode)
 
     def exit(self) :
         user_manager:app_function.user_manager = self.main_win.user_manager
         aaa = tkinter.messagebox.askquestion("Question","是否退出本软件？？")
         if aaa == "yes" : user_manager.write_back() ; os._exit(0)
 
-class Right_Click_Menu(tk_tool.tk_Menu) :
+class Global_Right_Click_Menu(tk_tool.tk_Menu) :
 
     def __init__(self, main_win, **karg) -> None:
-        super().__init__(main_win.window,  tearoff=False, **karg)
+        super().__init__(main_win.window,  tearoff=False, font=tk_tool.get_default_font(10), **karg)
         small_win_width, small_win_height = int(self.master.winfo_width()*0.95), int(self.master.winfo_height()*0.43)
         self.add_command(label="复制特殊字符",command=lambda : Special_Char(main_win, small_win_width, small_win_height).mainloop())
         self.add_command(label="批量复制字符",command=lambda : Unicode_char(main_win, small_win_width, small_win_height).mainloop())
         self.add_command(label="查询游戏内ID",command=lambda : Find_Minecraft_ID(main_win, small_win_width, small_win_height).mainloop())
         self.add_command(label="复制文件命令",command=lambda : Copy_File_Command(main_win, small_win_width, small_win_height).mainloop())
 
-        main_win.window.bind("<Button-3>", lambda e : self.post(e.x_root, e.y_root))
+        main_win.window.bind("<Button-3>", lambda e : self.post(e.x_root, e.y_root-self.winfo_reqheight()))
 
 
 class Special_Char(tkinter.Toplevel) :
@@ -571,14 +513,16 @@ class Game_Ready(tkinter.Frame) :
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
 
         frame_m4 = tkinter.Frame(self)
-        tkinter.Button(frame_m4,text='帮助文档',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
-        command=lambda : webbrowser.open("http://localhost:32323")).pack(side='left')
+        tkinter.Button(frame_m4,text='使用须知',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
+        command=lambda : webbrowser.open("http://localhost:32323/tutorial/Instructions.html")).pack(side='left')
         tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
         tkinter.Button(frame_m4,text='常见问题',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
         command=lambda : webbrowser.open("https://missing254.github.io/cs-tool/tool/Question/")).pack(side='left')
         frame_m4.pack()
+        c2 = tkinter.Label(self, text="新用户一定要阅读 使用须知\n安卓用户一定要阅读 常见问题", font=tk_tool.get_default_font(10), height=2, fg="red")
+        c2.pack()
 
-        main_win.add_can_change_hight_component([self.list_select, a1,c1,frame_m3,c1,c1,frame_m4])
+        main_win.add_can_change_hight_component([self.list_select, a1,c1,frame_m3,c1,c1,frame_m4,c2])
         self.flash_world()
 
     def create_world(self):
@@ -1202,7 +1146,7 @@ class Expand_Pack_Example(tkinter.Frame) :
 
         tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=6).pack()
         tkinter.Label(self, text="该界面为拓展包的\n功能界面", bg='#6b6b6b', fg='white', font=tk_tool.get_default_font(12),
-            width=20, height=2).pack()
+            width=20, height=4).pack()
 
 
 class Setting(tkinter.Frame) :

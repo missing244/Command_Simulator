@@ -1,7 +1,7 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction
 from . import Selector,CompileError,CommandParser,Quotation_String_transfor_1,ID_transfor
-import functools,string,random,re,math,itertools
+import functools,string,random,re,math,itertools,array
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
 
@@ -282,12 +282,23 @@ class clear :
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
             if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
+        
+        success = string.Template("$player 清除了符合条件的 $count 个物品")
+        faild = string.Template("无法清除 $player 背包中的物品")
+        msg_list = []
         for entity in entity_list :
-            clear.clear_items(entity, "HotBar", name, data, max_count)
-            clear.clear_items(entity, "Inventory", name, data, max_count)
-            clear.clear_items(entity, "Armor", name, data, max_count)
-            clear.clear_items(entity, "Weapon", name, data, max_count)
+            count_list = [
+                clear.clear_items(entity, "HotBar", name, data, max_count),
+                clear.clear_items(entity, "Inventory", name, data, max_count),
+                clear.clear_items(entity, "Armor", name, data, max_count),
+                clear.clear_items(entity, "Weapon", name, data, max_count),
+            ]
+            if any(count_list) : msg_list.append( success.substitute(player=ID_tracker(entity), count=sum(count_list)) )
+            else : msg_list.append( faild.substitute(player=ID_tracker(entity)) )
 
+        return Response.Response_Template("已清除以下玩家的的物品：\n$msg", len(entity_list), 1).substitute(
+            msg="\n".join(msg_list)
+        )
 
 class clearspawnpoint :
 
@@ -298,15 +309,17 @@ class clearspawnpoint :
         return functools.partial(cls.clear, game=_game, entity_get=entity_func)
 
     def clear(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:functools.partial=None) :
-        entity_list = entity_get(execute_var) if entity_get else []
+        entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
+        if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
+            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
 
         for entity in entity_list:
             entity.SpawnPoint[0] = game.minecraft_world.world_spawn_x
             entity.SpawnPoint[1] = game.minecraft_world.world_spawn_y
             entity.SpawnPoint[2] = game.minecraft_world.world_spawn_z
 
-        return Response.Response_Template("$players 的生成点已清除", len(entity_list), 1).substitute(
+        return Response.Response_Template("已清除以下玩家的出生点：$players", len(entity_list), 1).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list)
         )
 
@@ -316,22 +329,10 @@ class clone :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
 
-        if 1: raise NotImplementedError("暂未实现该命令")
-
-        poses = (
-            token_list[1]["token"].group(),
-            token_list[2]["token"].group(),
-            token_list[3]["token"].group(),
-            token_list[4]["token"].group(),
-            token_list[5]["token"].group(),
-            token_list[6]["token"].group(),
-            token_list[7]["token"].group(),
-            token_list[8]["token"].group(),
-            token_list[9]["token"].group(),
-        )
-        lst_len = token_list.__len__()
-
-        if lst_len == 10: return functools.partial(cls.non_fliter, game=_game, poses=poses)
+        index = 10
+        poses = [ token_list[i]["token"].group() for i in range(1,10,1) ]
+        if index >= len(token_list) : 
+            return functools.partial(cls.non_fliter, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9])
 
         token_10 = token_list[10]["token"].group() #lst_len >= 11; index = 10
         if token_10 == "flitered":
@@ -347,10 +348,12 @@ class clone :
             clone_mode = token_list[index]["token"].group()
             return functools.partial(cls.non_fliter, game=_game, poses=poses, mask_mode=mask_mode, clone_mode=clone_mode)
 
-    def fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, poses:tuple, clone_mode:str, tile_name:str, block_states:str) :
+    def non_fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:tuple, end1:tuple, start2:tuple, 
+                   mask_mode:str="replace", clone_mode:str="normal") :
         return None
 
-    def non_fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, poses:tuple, mask_mode:str="replace", clone_mode:str="normal") :
+    def fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:tuple, end1:tuple, start2:tuple,
+               clone_mode:str, tile_name:str, block_states:str) :
         return None
 
 
