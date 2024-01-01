@@ -1,8 +1,12 @@
 from typing import Mapping,List
 from string import Template
+import json
 from . import COMMAND_CONTEXT,ID_tracker
 
 class Function_Response_Group :
+
+    def __repr__(self) -> str:
+        return "<%s Context:%s>" % (self.MCfunction_Name, self.Context)
 
     def __init__(self, func_name:str, context:COMMAND_CONTEXT) -> None:
         self.MCfunction_Name = func_name
@@ -22,6 +26,9 @@ class Function_Response_Group :
 
 
 class Response_Template(Template) :
+
+    def __repr__(self) -> str:
+        return "<Response %s>" % json.dumps(self.command_msg)
 
     def __init__(self, template:str, success_count:int=0, result_count:int=0, mcfunction:bool=False) :
         super().__init__(template)
