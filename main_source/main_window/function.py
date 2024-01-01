@@ -335,6 +335,7 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         else : return True
 
     def get_info() :
+        if app_constant.debug_testing : return None
         data1 = {"userdata":user.get_account()} if (user.get_account() != None) else None
         request1 = connent_API.request_url_without_error(connent_API.AUTO_LOGIN,data1,user.save_data['cookies']["api_web_cookie"])
         if request1 == None : log.write_log("自动登录连接失败",2) ; return False
