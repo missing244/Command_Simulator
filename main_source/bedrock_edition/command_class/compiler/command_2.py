@@ -1,36 +1,9 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction
-from . import Selector,Rawtext,CompileError,CommandParser,Quotation_String_transfor_1,ID_transfor
+from . import Selector,Rawtext,CompileError,CommandParser,Quotation_String_transfor_1,ID_transfor,BlockState_Transformer,Msg_Compiler
 import functools,string,random,re,math,itertools,json
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
-
-def replace_str(base:str, start:int, end:int, replace:str) -> str:
-    return "".join([ base[:start] , replace , base[end:] ])
-
-Selector_Parser = CommandParser.ParserSystem.Command_Parser(
-    CommandParser.SpecialMatch.Command_Root().add_leaves(
-        *CommandParser.SpecialMatch.BE_Selector_Tree(
-            CommandParser.BaseMatch.AnyMsg("Msg").add_leaves(CommandParser.BaseMatch.END_NODE)
-        )
-    )
-)
-
-def Msg_Compiler(_game:RunTime.minecraft_thread, msg_temp:str, msg_temp_start:int) :
-    search_entity_list:List[Callable] = []
-    re_search = list(re.compile("@(p|a|r|e|s|initiator)").finditer(msg_temp))
-    re_search.reverse()
-    for re_obj in re_search :
-        token_1 = Selector_Parser.parser(msg_temp[re_obj.start():], (100,0,0))
-        if isinstance(token_1, tuple) : 
-            if hasattr(token_1[1], "pos") : 
-                token_1[1].pos = tuple([i+re_obj.start()+msg_temp_start for i in token_1[1].pos])
-            raise token_1[1]
-        msg_temp = replace_str(msg_temp, re_obj.start()+token_1[0]["token"].start(), 
-            re_obj.start()+token_1[-2]["token"].end(), "%s")
-        search_entity_list.append( Selector.Selector_Compiler(_game, token_1, 0)[1] )
-    search_entity_list.reverse()
-    return (msg_temp, search_entity_list)
 
 
 
@@ -272,7 +245,7 @@ class xp :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
-            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
+            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
 
         for player1 in entity_list : player1.PlayerLevel = max(np.int32(0), player1.PlayerLevel + value)
         temp1 = string.Template("$player 的等级变为 $value")
@@ -284,7 +257,7 @@ class xp :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
-            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
+            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
 
         for player1 in entity_list :
             aaaaa = int(player1.PlayerLevel)

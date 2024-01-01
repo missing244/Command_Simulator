@@ -798,7 +798,7 @@ class chunk_nbt :
 
         self.loading_chunk[dimension_id][chunk_pos]['blocks'][self.____pos_to_index____(block_pos)] = block_index
 
-    def ____set_block_nbt____(self, dimension_id:Literal["overworld","nether","the_end"], block_pos:List[Union[float,np.float32,int]], nbt:dict) -> Union[dict,None] :
+    def ____set_block_nbt____(self, dimension_id:Literal["overworld","nether","the_end"], block_pos:List[Union[float,np.float32,int]], nbt:dict=None) -> Union[dict,None] :
         block_int_pos = (math.floor(block_pos[0]), math.floor(block_pos[1]), math.floor(block_pos[2]))
         pos_x, pos_y, pos_z = block_int_pos
 
@@ -807,8 +807,11 @@ class chunk_nbt :
         block_pos = (pos_x-chunk_pos[0], pos_y-world_height_min, pos_z-chunk_pos[1])
 
         index_str = str(self.____pos_to_index____(block_pos))
-        self.loading_chunk[dimension_id][chunk_pos]['nbt_save'][index_str] = nbt
+        saves = self.loading_chunk[dimension_id][chunk_pos]['nbt_save']
+        if nbt is None and index_str in saves : del saves[index_str]
+        else : saves[index_str] = nbt
     
+
     def __block_pickup_item__(self, dimension_id:Literal["overworld","nether","the_end"], block_pos:List[Union[float,np.float32,int]], item_obj:item_nbt):
         test_list = ("Identifier","Damage","CanDestroy","CanPlaceOn","LockInInventory","LockInSlot","KeepOnDeath","tags")
         replace_list = ("CanDestroy","CanPlaceOn","LockInInventory","LockInSlot","KeepOnDeath","tags")

@@ -1,24 +1,8 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction
-from . import Selector,CompileError,CommandParser,Quotation_String_transfor_1,ID_transfor
-import functools,string,random,re,math,itertools,array
+from . import Selector,CompileError,CommandParser,Quotation_String_transfor_1,ID_transfor,BlockState_Transformer
+import functools,string,random,re,math,itertools,array,copy
 from typing import Dict,Union,List,Tuple,Literal,Callable
-
-
-def replace_str(base:str, start:int, end:int, replace:str) -> str:
-    return "".join([ base[:start] , replace , base[end:] ])
-
-Selector_Parser = CommandParser.ParserSystem.Command_Parser(
-    CommandParser.SpecialMatch.Command_Root().add_leaves(
-        *CommandParser.SpecialMatch.BE_Selector_Tree(
-            CommandParser.BaseMatch.AnyMsg("Msg").add_leaves(CommandParser.BaseMatch.END_NODE)
-        )
-    )
-)
-
-
-
-
 
 
 class ability :
@@ -212,7 +196,7 @@ class camerashake :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
-            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
+            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
         return Response.Response_Template("以下玩家的摄像头停止摇晃：\n$players", 1, len(entity_list)).substitute(
             players=", ".join( (ID_tracker(i) for i in entity_list) )
         )
@@ -250,8 +234,7 @@ class clear :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        if 2 >= len(token_list) : raise NotImplementedError("暂未实现不带目标选择器运行该命令")
-        if index >= len(token_list) : return functools.partial(cls.clear_specific)
+        if 1 >= len(token_list) : return functools.partial(cls.clear_specific)
 
         index,entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
         if index >= len(token_list) : return functools.partial(cls.clear_specific, entity_get=entity_func)
@@ -281,7 +264,7 @@ class clear :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
-            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
+            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
         
         success = string.Template("$player 清除了符合条件的 $count 个物品")
         faild = string.Template("无法清除 $player 背包中的物品")
@@ -300,6 +283,7 @@ class clear :
             msg="\n".join(msg_list)
         )
 
+
 class clearspawnpoint :
 
     @classmethod
@@ -312,7 +296,7 @@ class clearspawnpoint :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
-            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
+            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
 
         for entity in entity_list:
             entity.SpawnPoint[0] = game.minecraft_world.world_spawn_x
@@ -329,32 +313,134 @@ class clone :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
 
-        index = 10
         poses = [ token_list[i]["token"].group() for i in range(1,10,1) ]
-        if index >= len(token_list) : 
+        if 10 >= len(token_list) : 
             return functools.partial(cls.non_fliter, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9])
 
-        token_10 = token_list[10]["token"].group() #lst_len >= 11; index = 10
-        if token_10 == "flitered":
-            clone_mode      = token_list[11]["token"].group()
-            tile_name       = token_list[12]["token"].group()
-            block_states    = token_list[13]["token"].group()
-            return functools.partial(cls.fliter, game=_game, poses=poses, clone_mode=clone_mode, tile_name=tile_name, block_states=block_states)
-        else:
-            index = 10
-            mask_mode = token_10; index += 1
-            if index >= lst_len: return functools.partial(cls.non_fliter, game=_game, poses=poses, mask_mode=mask_mode)
+        mask_mode = token_list[10]["token"].group()
+        if mask_mode != "filtered" and 11 >= len(token_list) : 
+            return functools.partial(cls.non_fliter, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
+            mask_mode=mask_mode)
+        elif mask_mode != "filtered" : 
+            return functools.partial(cls.non_fliter, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
+            mask_mode=mask_mode, clone_mode = token_list[11]["token"].group())
+        else : 
+            block_id = ID_transfor( token_list[12]["token"].group() )
+            if block_id not in _game.minecraft_ident.blocks:
+                raise CompileError("不存在的方块ID：%s" % block_id,pos=(token_list[12]["token"].start(), token_list[12]["token"].end()))
 
-            clone_mode = token_list[index]["token"].group()
-            return functools.partial(cls.non_fliter, game=_game, poses=poses, mask_mode=mask_mode, clone_mode=clone_mode)
+            if 13 >= len(token_list) : block_state = {}
+            elif token_list[13]["type"] == "Block_Data" : 
+                block_state = int(token_list[12]["token"].group())
+                if not(-1 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
+                pos=(token_list[13]["token"].start(), token_list[13]["token"].end()))
+            else : block_state = BlockState_Transformer( block_id, token_list, 13 )
+            return functools.partial(cls.fliter, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
+            clone_mode = token_list[11]["token"].group(), block_id=block_id, block_state= {} if block_state == -1 else block_state)
+
+    def error_test(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start_pos1, end_pos1, start_pos2, end_pos2) :
+        height_test = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"]
+        for i,j in [("起始位置", start_pos1),("结束位置", end_pos1),("复制起始位置", start_pos2),("复制结束位置", end_pos2)] :
+            if not(height_test[1] <= j[1] < height_test[1]) :
+                return Response.Response_Template("$id$pos处于世界之外").substitute(id=i, pos=tuple(start_pos1))
+
+        for j in itertools.product(range(start_pos1[0], end_pos1[0], 16), range(start_pos1[2], end_pos1[2], 16)) :
+            if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], (j[0],0,j[1])) :
+                return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], end_pos1) :
+            return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+
+        for j in itertools.product(range(start_pos2[0], end_pos2[0], 16), range(start_pos2[2], end_pos2[2], 16)) :
+            if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], (j[0],0,j[1])) :
+                return Response.Response_Template("复制区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], end_pos2) :
+            return Response.Response_Template("复制区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
 
     def non_fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:tuple, end1:tuple, start2:tuple, 
                    mask_mode:str="replace", clone_mode:str="normal") :
-        return None
+        start_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start1, execute_var["rotate"])]
+        end_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], end1, execute_var["rotate"])]
+        for index,(pos_1,pos_2) in enumerate(itertools.zip_longest(start_pos1, end_pos1)) :
+            if pos_1 > pos_2 : start_pos1[index] = pos_2; end_pos1[index] = pos_1
+        start_pos2 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start2, execute_var["rotate"])]
+        end_pos2 = [start_pos2[i] + end_pos1[i] - start_pos1[i] for i in range(3)]
+        
+        aaa = clone.error_test(execute_var, game, start_pos1, end_pos1, start_pos2, end_pos2)
+        if isinstance(aaa, Response.Response_Template) : return aaa
+
+        if clone_mode != "force" and max(start_pos1[0],end_pos1[0]) <= min(start_pos2[0],end_pos2[0]) and \
+            max(start_pos1[1],end_pos1[1]) <= min(start_pos2[1],end_pos2[1]) and \
+            max(start_pos1[2],end_pos1[2]) <= min(start_pos2[2],end_pos2[2]) :
+            return Response.Response_Template("非force模式下无法区域重叠复制").substitute()
+
+        volue = [end_pos1[i] - start_pos1[i] + 1 for i in range(3)]
+        if volue[0] * volue[1] * volue[2] > 655360 : return Response.Response_Template("区域大小超过655360个方块").substitute()
+
+        
+        block_index_list = [0] * (volue[0] * volue[1] * volue[2]) ; block_nbt_list = [None] * (volue[0] * volue[1] * volue[2])
+        for index,pos_xyz in enumerate(itertools.product( range(start_pos1[0], end_pos1[0]+1), range(start_pos1[1], end_pos1[1]+1), 
+            range(start_pos1[2], end_pos1[2]+1) )) :
+            block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], pos_xyz)
+            if mask_mode == "masked" and block_index == 0 : continue
+            block_nbt = game.minecraft_chunk.____find_block_nbt____(execute_var["dimension"], pos_xyz)
+            block_index_list[index] = block_index
+            if block_nbt is not None : block_nbt_list[index] = copy.deepcopy(block_nbt)
+        
+        for index,pos_xyz in enumerate(itertools.product( range(start_pos2[0], end_pos2[0]+1), range(start_pos2[1], end_pos2[1]+1), 
+            range(start_pos2[2], end_pos2[2]+1) )) :
+            if mask_mode == "masked" and block_index_list[index] == 0 : continue
+            game.minecraft_chunk.____set_block____(execute_var["dimension"], pos_xyz, block_index_list[index])
+            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, block_nbt_list[index])
+        
+        if mask_mode != "masked" : success_counter = len(block_index_list)
+        else : success_counter = len(block_index_list) - block_index_list.count(0)
+        return Response.Response_Template("在$start ~ $end复制了$count个方块", success_counter, 1).substitute(
+            start=tuple(start_pos2), end=tuple(end_pos2), count=success_counter)
 
     def fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:tuple, end1:tuple, start2:tuple,
-               clone_mode:str, tile_name:str, block_states:str) :
-        return None
+               clone_mode:str, block_id:str, block_states:Union[int,dict]) :
+        start_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start1, execute_var["rotate"])]
+        end_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], end1, execute_var["rotate"])]
+        for index,(pos_1,pos_2) in enumerate(itertools.zip_longest(start_pos1, end_pos1)) :
+            if pos_1 > pos_2 : start_pos1[index] = pos_2; end_pos1[index] = pos_1
+        start_pos2 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start2, execute_var["rotate"])]
+        end_pos2 = [start_pos2[i] + end_pos1[i] - start_pos1[i] for i in range(3)]
+        
+        aaa = clone.error_test(execute_var, game, start_pos1, end_pos1, start_pos2, end_pos2)
+        if isinstance(aaa, Response.Response_Template) : return aaa
+
+        if clone_mode != "force" and max(start_pos1[0],end_pos1[0]) <= min(start_pos2[0],end_pos2[0]) and \
+            max(start_pos1[1],end_pos1[1]) <= min(start_pos2[1],end_pos2[1]) and \
+            max(start_pos1[2],end_pos1[2]) <= min(start_pos2[2],end_pos2[2]) :
+            return Response.Response_Template("非force模式下无法区域重叠复制").substitute()
+
+        volue = [end_pos1[i] - start_pos1[i] + 1 for i in range(3)]
+        if volue[0] * volue[1] * volue[2] > 655360 : return Response.Response_Template("区域大小超过655360个方块").substitute()
+
+
+        block_index_list = [None] * (volue[0] * volue[1] * volue[2]) ; block_nbt_list = [None] * (volue[0] * volue[1] * volue[2])
+        for index,pos_xyz in enumerate(itertools.product( range(start_pos1[0], end_pos1[0]+1), range(start_pos1[1], end_pos1[1]+1), 
+            range(start_pos1[2], end_pos1[2]+1) )) :
+            block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], pos_xyz)
+            block_obj = game.minecraft_chunk.block_mapping[block_index]
+            if block_obj.Identifier != block_id : continue
+            if isinstance(block_states, dict) and any([block_obj.BlockState[i] != block_id[i] for i in block_states]) : continue
+            elif isinstance(block_states, int) and block_states != -1 :
+                test_block_obj = BaseNbtClass.block_nbt().__create__(block_id, block_states)
+                if any([block_obj.BlockState[i] != test_block_obj.BlockState[i] for i in block_states]) : continue
+            block_nbt = game.minecraft_chunk.____find_block_nbt____(execute_var["dimension"], pos_xyz)
+            block_index_list[index] = block_index
+            if block_nbt is not None : block_nbt_list[index] = copy.deepcopy(block_nbt)
+        
+        for index,pos_xyz in enumerate(itertools.product( range(start_pos2[0], end_pos2[0]+1), range(start_pos2[1], end_pos2[1]+1), 
+            range(start_pos2[2], end_pos2[2]+1) )) :
+            if block_index_list[index] is None : continue
+            game.minecraft_chunk.____set_block____(execute_var["dimension"], pos_xyz, block_index_list[index])
+            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, block_nbt_list[index])
+
+        success_counter = len(block_index_list) - block_index_list.count(None)
+        return Response.Response_Template("在$start ~ $end复制了$count个方块", success_counter, min(1,success_counter)).substitute(
+            start=tuple(start_pos2), end=tuple(end_pos2), count=success_counter)
 
 
 class damage:

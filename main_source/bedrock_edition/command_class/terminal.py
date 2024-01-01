@@ -76,8 +76,8 @@ def reload_doing(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, cb_vie
     McFunction.Function_Compiler(_game)
 
     if cb_view == "true" : CommandBlock.Command_Block_Compile.generate_command_block_view().generate_html("command_block_view.html")
-    if structure == "bdx" : CommandBlock.Command_Block_Compile.transfor_bdx_file()
-    elif structure == "mcstructure" : CommandBlock.Command_Block_Compile.transfor_mcstructure_file()
+    if structure == "bdx" : CommandBlock.Command_Block_Compile.transfor_bdx_file(_game)
+    elif structure == "mcstructure" : CommandBlock.Command_Block_Compile.transfor_mcstructure_file(_game)
 
     test_list = (
         CommandBlock.Command_Block_Compile.get_command_block_error()["encoding_error"],
@@ -95,9 +95,9 @@ def reload_doing(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, cb_vie
 
     if any(test_list) :
         HtmlGenerate.setTimeOut(1.5, lambda:HtmlGenerate.webbrowser.open("http://localhost:32323/command_load.html"))
-        return Response.Response_Template("文件含有语法或编码错误\n具体信息请在浏览器中查看").substitute({})
+        return Response.Response_Template("文件含有语法或编码错误\n具体信息请在浏览器中查看").substitute()
     CommandBlock.Command_Block_Compile.write_to_world(_game)
-    return Response.Response_Template("全部命令已重载完成", 1, 1).substitute({})
+    return Response.Response_Template("全部命令已重载完成", 1, 1).substitute()
 
 
 def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) :
@@ -112,11 +112,11 @@ def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dic
 
 def set_version(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, version:tuple) :
     _game.game_version = tuple(version)
-    return Response.Response_Template("游戏版本已设置完成", 1, 1).substitute({})
+    return Response.Response_Template("游戏版本已设置完成", 1, 1).substitute()
 
 def set_testTime(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, time:int) :
     _game.runtime_variable.how_times_run_all_command = time
-    return Response.Response_Template("测试时间已设置完成", 1, 1).substitute({})
+    return Response.Response_Template("测试时间已设置完成", 1, 1).substitute()
 
 
 def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) -> functools.partial :
@@ -138,16 +138,16 @@ def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List
 
 def command_loop(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:functools.partial) :
     _game.runtime_variable.command_will_loop.append( (command, command_obj) )
-    return Response.Response_Template("成功添加了循环命令", 1, 1).substitute({})
+    return Response.Response_Template("成功添加了循环命令", 1, 1).substitute()
 
 def command_delay(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, time:int, command:str, command_obj:functools.partial) :
     run_gt = time + _game.minecraft_world.game_time
     if run_gt not in _game.runtime_variable.command_will_run : _game.runtime_variable.command_will_run[run_gt] = []
     _game.runtime_variable.command_will_run[run_gt].append( (command, command_obj) )
-    return Response.Response_Template("成功添加了延时命令", 1, 1).substitute({})
+    return Response.Response_Template("成功添加了延时命令", 1, 1).substitute()
 
 def command_end(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:functools.partial) :
     _game.runtime_variable.command_will_run_test_end.append( (command, command_obj) )
-    return Response.Response_Template("成功添加了结束命令", 1, 1).substitute({})
+    return Response.Response_Template("成功添加了结束命令", 1, 1).substitute()
 
 

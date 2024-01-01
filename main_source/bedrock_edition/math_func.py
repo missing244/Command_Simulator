@@ -137,7 +137,7 @@ def mc_pos_compute(origin:List[float], pos_offset:List[str], rotate:List[float])
             elif pos_offset[i][0] == "~" : pos_result[i] += np.float32(pos_offset[i][1:])
             elif "."  in pos_offset[i] : pos_result[i] = np.float32(pos_offset[i])
             else : pos_result[i] = np.float32(pos_offset[i]) + 0.5
-        return pos_result
+        return [float(i) for i in pos_result]
 
 
 def version_compare(version1:List[int], version2:List[int]) :

@@ -7,8 +7,8 @@ from typing import Dict,List,Tuple
 
 KEYWORD_COMMENTARY = re.compile("^[ ]{0,}//")
 KEYWORD_START = (
-    re.compile("^[ ]{0,}start"), re.compile("[ ]{0,}[0-9]{0,}"), re.compile("[ ]{0,}[0-9]{0,}"), 
-    re.compile("[ ]{0,}[0-9]{0,}"), re.compile("[ ]{0,}$")
+    re.compile("^[ ]{0,}start"), re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), 
+    re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), re.compile("[ ]{0,}$")
 )
 INT_RE_TEST = re.compile("^[0-9]{1,}$")
 KEYWORD_EMPTY = re.compile("^[ ]{0,}empty")
@@ -143,12 +143,13 @@ class command_block_compile_system :
         if cb_property_str == None : return (lines, self.game_version, text, "命令方块属性语法错误")
 
         command_str = text[cb_property_str.end():]
+        cb_property_str = cb_property_str.group()
         cb_property = re.split("[,，;；]",cb_property_str[1:len(cb_property_str)-1])
 
         re_test1 = None if (cb_property[0] not in self.command_block_facing_str) else cb_property[0]
         if re_test1 == None : return (lines, self.game_version, text, "非法的命令方块朝向参数")
 
-        self.default_property[0] = self.command_block_facing_str.index(re_test1)
+        self.default_property[0] = self.command_block_facing_str.index(re_test1) % 6
         for info1 in cb_property[1:] :
             if (info1 in self.cb_type_id) : self.default_property[1] = info1
             elif (info1 in self.cb_condition_id) : self.default_property[2] = info1

@@ -37,6 +37,7 @@ class generate_command_block_html :
         file1 = open(os.path.join("html_output",file_name),"w+",encoding="utf-8")
         file1.write(Template(self.example_html).substitute(cb_list = json.dumps(self.cb_list_for_js, separators=(',', ':'))))
         file1.close()
+        setTimeOut(1.5, lambda: webbrowser.open("http://localhost:32323/%s" % file_name))
 
 
 class generate_all_command_load_html :
@@ -64,7 +65,7 @@ class generate_all_command_load_html :
         self.result_function_file_req:str = None
         self.result_command_block_file_req:str = None
 
-        html_file = open(os.path.join("main_source","bedrock_edition","command_class","trans_html","command_block.html"),"r",encoding="utf-8")
+        html_file = open(os.path.join("main_source","bedrock_edition","command_class","trans_html","command_load.html"),"r",encoding="utf-8")
         self.example_html = html_file.read()
         html_file.close()
 
@@ -145,7 +146,7 @@ class generate_all_command_load_html :
         )
         file1.close()
         if self.command_block_file_encode or self.function_file_encode or self.command_block_file_syntax or self.function_file_syntax :
-            setTimeOut(1.5,lambda: webbrowser.open("http://localhost:32323/command_load.html"))
+            setTimeOut(1.5, lambda: webbrowser.open("http://localhost:32323/command_load.html"))
 
 
 class generate_command_respones_html : 
@@ -191,7 +192,7 @@ class generate_command_respones_html :
         self.html_detials_list:List[str] = []
         self.js_detial_class_list:List[str] = []
 
-        html_file = open(os.path.join("main_source","bedrock_edition","command_class","trans_html","command_block.html"),"r",encoding="utf-8")
+        html_file = open(os.path.join("main_source","bedrock_edition","command_class","trans_html","command_run.html"),"r",encoding="utf-8")
         self.example_html = html_file.read()
         html_file.close()
 

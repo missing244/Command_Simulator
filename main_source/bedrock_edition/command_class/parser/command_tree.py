@@ -311,9 +311,13 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     ),
                     BaseMatch.Enum("Mask_Mode","filtered").add_leaves(
                         BaseMatch.Enum("Clone_Mode","force","move","normal").add_leaves(
-                            BaseMatch.AnyString("Block_ID").add_leaves(
+                            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
-                                BaseMatch.Int("Block_Data").set_version(1,19,70,"max").add_leaves( BaseMatch.END_NODE )
+                                BaseMatch.Int("Block_Data").add_leaves( BaseMatch.END_NODE )
+                            ),
+                            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
+                                SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
+                                BaseMatch.END_NODE
                             )
                         )
                     ),

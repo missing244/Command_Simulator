@@ -153,7 +153,7 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
     elif selector_var['sort'] == "farnest" : result = entity_list_result[-1 : (-selector_var['limit']-1) : -1]
     elif selector_var['sort'] == "random" : result = entity_list_result[0 : selector_var['limit']]
 
-    if not result : return Response.Response_Template("没有与目标选择器匹配的目标").substitute({})
+    if not result : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
     else : return result
 
 def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, 

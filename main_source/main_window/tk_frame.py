@@ -547,7 +547,11 @@ class Game_Ready(tkinter.Frame) :
             tkinter.messagebox.showerror("Error", "正在加载软件,请稍后....") ; return None
         
         if len(self.list_select.curselection()) == 0 : return None
-        try : import brotli
+        try : 
+            import brotli 
+            user_manager:app_function.user_manager = self.main_win.user_manager
+            pack_uuid = "c0414919-e6ed-4b41-b2ac-130119684144"
+            if pack_uuid not in user_manager.save_data["install_pack_list"] : raise Exception
         except : tkinter.messagebox.showerror("Error", "未安装完整原版拓展\n请在拓展包界面中安装") ; return None
         else : importlib.reload(Minecraft_BE.Constants)
         game_process = Minecraft_BE.RunTime.minecraft_thread()
@@ -986,6 +990,7 @@ class Choose_Expand(tkinter.Frame) :
             except : tkinter.messagebox.showerror("Error", "原版拓展安装失败")
             else : msg_laber.config(text=msg_laber.cget("text") + "原版拓展安装成功")
             user_manager.save_data["install_pack_list"][uid] = None
+            user_manager.write_back()
             self.flash_expand_pack_list()
             return True
 
@@ -1049,6 +1054,7 @@ class Choose_Expand(tkinter.Frame) :
             
             msg_laber.config(text=msg_laber.cget("text") + ("%s 安装成功" % name1))
             user_manager.save_data["install_pack_list"][uid] = None
+            user_manager.write_back()
             self.flash_expand_pack_list()
             return True
 
@@ -1267,8 +1273,7 @@ class Login(tkinter.Frame) :
         tkinter.Label(msg_box, text="", fg='black', font=tk_tool.get_default_font(3), height=1).pack()
         self.in_login = True
         msg_laber.config(text=msg_laber.cget("text") + "正在登录...\n")
-        if start_login() : 
-            self.main_win.user_was_login()
+        if start_login() : self.main_win.user_was_login()
         self.in_login = False
         time.sleep(1.5)
         msg_box.destroy()

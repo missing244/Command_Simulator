@@ -1,7 +1,7 @@
 from typing import Dict,Union,List,Tuple,Literal
-import re,functools,traceback
-from .. import CommandParser
-from ... import RunTime
+import re,functools,traceback,json
+from .. import CommandParser,COMMAND_TOKEN
+from ... import RunTime,Constants
 class CompileError(CommandParser.BaseMatch.Command_Match_Exception) : pass
 
 def Quotation_String_transfor_1(s:str) -> str :
@@ -22,6 +22,59 @@ def ID_transfor(s:str) -> str :
     a = s.split(":",1)
     if len(a) == 1 : return "minecraft:%s" % a[0]
     else : return s
+
+def BlockState_Transformer(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tuple[str,int] :
+    block_id = ID_transfor(block_id)
+    block_id_state = {} if (block_id not in Constants.BLOCK_STATE) else Constants.BLOCK_STATE[block_id]
+    block_id_state : Dict[Literal["default","support_value"], Union[Dict,Dict]]
+    block_state_token : List[str] = []
+    if token_list[index]["type"] != "Start_BlockState_Argument" : return ({}, index)
+    index += 1 ; block_state_token.append("{")
+
+    while 1 :
+        if token_list[index]["type"] in ("BlockState","Value","Next_BlockState_Argument") : 
+            block_state_token.append( token_list[index]["token"].group() )
+        elif token_list[index]["type"] == "Equal" : 
+            block_state_token.append(":")
+        elif token_list[index]["type"] == "End_BlockState_Argument" : 
+            block_state_token.append("}") ; index += 1 ; break
+        index += 1
+
+    input_block_state = json.loads("".join(block_state_token))
+    for state in input_block_state :
+        if state not in block_id_state["support_value"] : 
+            raise CompileError("方块 %s 不存在 %s 状态" % (block_id,state))
+        if input_block_state[state] not in block_id_state["support_value"][state] : 
+            raise CompileError("方块状态 %s 不存在值 %s" % (state,input_block_state[state]))
+
+    return input_block_state
+
+def replace_str(base:str, start:int, end:int, replace:str) -> str:
+    return "".join([ base[:start] , replace , base[end:] ])
+
+def Msg_Compiler(_game:RunTime.minecraft_thread, msg_temp:str, msg_temp_start:int) :
+    search_entity_list:List = []
+    re_search = list(re.compile("@(p|a|r|e|s|initiator)").finditer(msg_temp))
+    re_search.reverse()
+    for re_obj in re_search :
+        token_1 = Selector_Parser.parser(msg_temp[re_obj.start():], (100,0,0))
+        if isinstance(token_1, tuple) : 
+            if hasattr(token_1[1], "pos") : 
+                token_1[1].pos = tuple([i+re_obj.start()+msg_temp_start for i in token_1[1].pos])
+            raise token_1[1]
+        msg_temp = replace_str(msg_temp, re_obj.start()+token_1[0]["token"].start(), 
+            re_obj.start()+token_1[-2]["token"].end(), "%s")
+        search_entity_list.append( Selector.Selector_Compiler(_game, token_1, 0)[1] )
+    search_entity_list.reverse()
+    return (msg_temp, search_entity_list)
+
+Selector_Parser = CommandParser.ParserSystem.Command_Parser(
+    CommandParser.SpecialMatch.Command_Root().add_leaves(
+        *CommandParser.SpecialMatch.BE_Selector_Tree(
+            CommandParser.BaseMatch.AnyMsg("Msg").add_leaves(CommandParser.BaseMatch.END_NODE)
+        )
+    )
+)
 
 from . import selector as Selector
 from . import rawtext as Rawtext
