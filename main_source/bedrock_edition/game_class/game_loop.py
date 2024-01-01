@@ -17,9 +17,9 @@ RUN_TICK_END:Dict[int,Callable] = {}
 
 class runing_command_block_obj:
 
-    DIM = "overworld" # Dimension where the command block is in
-    ID_REDSTONE_BLOCK = 43 # Block id of Redstone Block
-    ID_CB_OFFSET = 7 # Offset of block id of Command Blocks
+    DIM = "overworld"  # Dimension where the command block is in
+    ID_REDSTONE_BLOCK = 43  # Block id of Redstone Block
+    ID_CB_OFFSET = 7  # Offset of block id of Command Blocks
 
     # CB Types
     CB_PULSE = 0
@@ -27,7 +27,7 @@ class runing_command_block_obj:
     CB_REPEATING = 2
 
     # Block facing
-    DOWN, UP, NORTH, SOUTH, WEST, EAST = tuple(range(6))
+    DOWN, UP, NORTH, SOUTH, WEST, EAST = range(6)
     FACING_OPPOSITE = {
         DOWN: UP, UP: DOWN, NORTH: SOUTH, SOUTH: NORTH, WEST: EAST, EAST: WEST
     }
@@ -38,32 +38,38 @@ class runing_command_block_obj:
     }
     OFFSETS = tuple(FACING2OFFSET.values())
 
-    executed_count = 0 # How many CBs have been executed
+    executed_count = 0  # Number of CBs executed
 
     # Rule of schedule:
-    # Every elements in running_object.command_block_schedules is a `list`
+    # Every elements in runtime_variable.command_block_schedules is a `list`
     # with 2 elements. The first element is the block position.
-    # The second element is how many ticks left until the command runs
+    # The second element is how many ticks left until the command runs.
 
-    def __init__(self,game_process1,debug_windows1) :
-        self.game_process = game_process1
-        self.debug_windows = debug_windows1
-        self.cb_to_run = []
-        # last_activated_nbt_update: {tuple: bool} tuple is pos, bool is value
-        self.last_activated_nbt_update = {}
-    
+    def __init__(self, game_process1) :
+        self.game_process = game_process1  # minecraft_thread
+        self.cb_to_run: List[Tuple[int, int, int]] = []
+        self.last_activated_nbt_update: Dict[Tuple[int, int, int], bool] = {}
+
+    @property
+    def cb_schedules(self) -> List[list]:
+        return self.game_process.runtime_variable.command_block_schedules
+
+    @property
+    def mc_chunk(self) -> BaseNbtClass.chunk_nbt:
+        return self.game_process.minecraft_chunk
+
     def main(self):
         """Entry of the program."""
-        for schedule in self.game_process.command_block_schedules.copy():
+        for schedule in self.cb_schedules.copy():
             self.schedule_tick(schedule)
-        for pos in self.game_process.purple_and_orange_command_block.copy():
+        for pos in self.mc_chunk.purple_and_orange_command_block.copy():
             ret = self.load(pos)
             if ret is True:
                 self.cb_to_run.append(pos)
             elif isinstance(ret, list):
-                self.game_process.command_block_schedules.append(ret)
-        # load and schedule_tick will filter which CBs can be ran, and store
-        # the pos of those CBs which can run in `self.cb_to_run`
+                self.cb_schedules.append(ret)
+        # `load` and `schedule_tick` will tell us what CBs to run and
+        # put them in `self.cb_to_run`.
         for pos in self.cb_to_run:
             self.run(pos)
         for pos, value in self.last_activated_nbt_update.items():
@@ -73,7 +79,7 @@ class runing_command_block_obj:
                 continue
             nbt["LastTickActivated"] = value
 
-    def apply_offset(self,pos, offset) -> tuple:
+    def apply_offset(self, pos, offset) -> Tuple[int, int, int]:
         """
         Return `pos` affected by `offset`.
         >>> apply_offset((10, 20, -1), (2, 0, 1))
@@ -81,22 +87,22 @@ class runing_command_block_obj:
         """
         return tuple(map(sum, zip(pos, offset)))
 
-    def get_cb_data(self,pos):
+    def get_cb_data(self, pos):
         """Return data of CB"""
-        block_id = self.game_process.minecraft_chunk.____find_chunk_block_2____(pos, self.DIM)
-        nbt = self.game_process.minecraft_chunk.____find_chunk_block_nbt_2____(pos, self.DIM)
+        block_id = self.mc_chunk.____find_block____(self.DIM, pos)
+        nbt = self.mc_chunk.____find_block_nbt____(self.DIM, pos)
         i = block_id - self.ID_CB_OFFSET
         if not (0 <= i <= 35):
-            raise ValueError # Block at `pos` is not CB now
+            raise ValueError  # Block at `pos` is not CB now
         cb_type = i // 12
         cb_direction = i % 6
         cb_conditional = bool(i // 6 % 2)
         return (cb_type, cb_direction, cb_conditional, nbt)
 
-    def has_schedule(self,pos) -> bool:
+    def has_schedule(self, pos) -> bool:
         """Return whether CB has a schedule"""
-        for schedule in self.game_process.command_block_schedules:
-            if schedule[0] == pos:
+        for pos_got, _ in self.cb_schedules:
+            if pos_got == pos:
                 return True
         return False
 
@@ -111,17 +117,16 @@ class runing_command_block_obj:
                 if not (1600 <= check_pos[0] <= 1695 and
                         -64 <= check_pos[1] <= 319 and
                         1600 <= check_pos[2] <= 1695):
-                    continue # Redstone Block out of range
-                if self.game_process.minecraft_chunk.____find_chunk_block_2____(
-                    check_pos, self.DIM
-                ) == self.ID_REDSTONE_BLOCK:
+                    continue  # Redstone Block out of range
+                if (self.mc_chunk.____find_block____(self.DIM, check_pos)
+                    == self.ID_REDSTONE_BLOCK):
                     return True
             return False
 
-    def load(self, pos):
+    def load(self, pos) -> Union[list, bool]:
         """
         Load CB at `pos`.
-        Return list, True or None. When None is returned, the CB should
+        Return list, True or False. When False is returned, the CB should
         not be executed. When True is returned, the CB should be ran in
         this tick. When a list is returned, it is referring to a schedule,
         so the CB should be executed when the schedule fires.
@@ -129,37 +134,36 @@ class runing_command_block_obj:
         try:
             cb_type, _, _, nbt = self.get_cb_data(pos)
         except ValueError:
-            return # Not a CB at `pos`
+            return False  # Not a CB at `pos`
         cb_auto = nbt["auto"]
         cb_delay = nbt["TickDelay"]
         # Check schedule for repeating CBs
         if cb_type == self.CB_REPEATING and self.has_schedule(pos):
-            return
+            return False
         # Decide whether it can run
         activate = self.can_activate(pos, cb_auto)
         if cb_type == self.CB_PULSE:
-            can_run = False
-            if activate and (not nbt["LastTickActivated"]):
-                can_run = True
+            can_run = activate and (not nbt["LastTickActivated"])
             self.last_activated_nbt_update[pos] = activate
-        else: # REPEATING or CHAIN
+        else:  # REPEATING or CHAIN
             can_run = activate
         # Run if `can_run`
         if can_run:
             if cb_delay <= 0:
-                return True # Run in this tick
+                return True  # Run in this tick
             else:
-                return [pos, cb_delay] # Schedule
+                return [pos, cb_delay]  # Schedule
+        return False
 
-    def run(self,pos):
-        """Run the CB and the chained CBs to it."""
+    def run(self, pos) -> None:
+        """Run the CB and the subsequent chain CBs."""
         cur = pos
         load_successful = True
         while True:
             try:
                 _, cb_direction, cb_conditional, nbt = self.get_cb_data(cur)
             except ValueError:
-                break # Not a CB at `cur`
+                break  # Not a CB at `cur`
             cb_last_exe = nbt["LastExecution"]
             cb_command = nbt["Command"]
             # Check limit
@@ -174,7 +178,7 @@ class runing_command_block_obj:
                     check_pos = self.apply_offset(cur, opposite_offset)
                     try:
                         _, _, _, opposite_nbt = self.get_cb_data(check_pos)
-                    except ValueError: # Not a CB at `check_pos`
+                    except ValueError:  # Not a CB at `check_pos`
                         condition_ok = False
                     else:
                         condition_ok = opposite_nbt["Success"]
@@ -184,61 +188,61 @@ class runing_command_block_obj:
                 condition_ok = False
             # Run command
             if condition_ok:
-                # execute_var['execute_pos'] 需要填入命令方块的坐标,给xyz都加0.5
-                execute_var = {
+                func = self.mc_chunk.command_block_compile_function[cb_command]
+                response = func({
                     "executer": "command_block",
-                    "execute_dimension": self.DIM,
-                    "execute_pos": [cur[0]+0.5,cur[1]+0.5,cur[2]+0.5],
-                    "execute_rotate": [0, 0]
-                }
-                if cb_command.replace(" ","") and cb_command.replace(" ","")[0] == "#" : 
-                    response = self.game_process.debug_command.intro(execute_var,cb_command)
-                else :
-                    response = self.game_process.command_system.intro(self.game_process.game_command_version,execute_var,cb_command)
-                self.game_process.be_register_response(("command_block",cb_command,response))
-                #print("Tick %d: %s" % (self.game_process.minecraft_world.game_time, response))
-
+                    "dimension": self.DIM,
+                    # 需要填入命令方块的坐标,给xyz都加0.5
+                    "pos": [cur[0]+0.5, cur[1]+0.5, cur[2]+0.5],
+                    "rotate": [0.0, 0.0],
+                    "version": self.game_process.game_version
+                })
+                self.game_process.register_response(
+                    "command_block", cb_command, response
+                )
                 nbt["Success"] = bool(response.success_count)
                 nbt["LastExecution"] = self.game_process.minecraft_world.game_time
+                # print("run %d %r success=%s" % (
+                #     self.game_process.minecraft_world.game_time,
+                #     cb_command, response.success_count
+                # ))
                 self.executed_count += 1
             # Try to trigger the pointing chain CB
-            pointing_offset = self.FACING2OFFSET[cb_direction]
-            point_pos = self.apply_offset(cur, pointing_offset)
+            next_pos = self.apply_offset(cur, self.FACING2OFFSET[cb_direction])
             try:
-                point_cb_type, _, _, _ = self.get_cb_data(point_pos)
+                next_cb_type, _, _, _ = self.get_cb_data(next_pos)
             except ValueError:
-                break # The pointing block is not CB, pass
+                break  # The next block is not CB, pass
             else:
-                if point_cb_type == self.CB_CHAIN:
-                    ret = self.load(point_pos)
+                if next_cb_type == self.CB_CHAIN:
+                    ret = self.load(next_pos)
                     if ret is True:
-                        cur = point_pos
+                        cur = next_pos
                         load_successful = True
                     elif isinstance(ret, list):
-                        self.game_process.command_block_schedules.append(ret)
+                        self.cb_schedules.append(ret)
                         break
                     elif ret is None:
-                        cur = point_pos
+                        cur = next_pos
                         load_successful = False
 
-    def schedule_tick(self,schedule):
+    def schedule_tick(self, schedule) -> None:
         """Runs every tick for every schedules"""
         pos = schedule[0]
         try:
             _, _, _, nbt = self.get_cb_data(pos)
         except ValueError:
             # If it is not a CB here, delete the schedule
-            self.game_process.command_block_schedules.remove(schedule)
+            self.cb_schedules.remove(schedule)
             return
         cb_auto = nbt["auto"]
         if not self.can_activate(pos, cb_auto):
-            self.game_process.command_block_schedules.remove(schedule)
+            self.cb_schedules.remove(schedule)
             return
-        
         schedule[1] -= 1
         if schedule[1] == 0:
             self.cb_to_run.append(pos)
-            self.game_process.command_block_schedules.remove(schedule)
+            self.cb_schedules.remove(schedule)
 
 
 
@@ -379,6 +383,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
 #
 
 def command_running(self:RunTime.minecraft_thread) :
+    if self.runtime_variable.how_times_run_all_command <= 0 : return None
     aaa = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":self.game_version}
     if self.minecraft_world.game_time in self.runtime_variable.command_will_run :
         for command_str,func in self.runtime_variable.command_will_run[self.minecraft_world.game_time] :
@@ -387,7 +392,7 @@ def command_running(self:RunTime.minecraft_thread) :
     for command_str,func in self.runtime_variable.command_will_loop : self.register_response("loop_command",command_str,func(aaa))
 
 def command_block_running(self:RunTime.minecraft_thread) :
-    return None
+    if self.runtime_variable.how_times_run_all_command <= 0 : return None
     if not self.minecraft_world.commandblocksenabled : return None
     run_cb_obj = runing_command_block_obj(self)
     run_cb_obj.main()
