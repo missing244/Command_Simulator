@@ -45,7 +45,7 @@ class runing_command_block_obj:
     # with 2 elements. The first element is the block position.
     # The second element is how many ticks left until the command runs.
 
-    def __init__(self, game_process1) :
+    def __init__(self, game_process1:RunTime.minecraft_thread) :
         self.game_process = game_process1  # minecraft_thread
         self.cb_to_run: List[Tuple[int, int, int]] = []
         self.last_activated_nbt_update: Dict[Tuple[int, int, int], bool] = {}
@@ -464,7 +464,6 @@ loop_function_list = [
     command_running, command_block_running, particle_alive, command_run_end, 
     tick_end_hook
 ]
-
 
 
 

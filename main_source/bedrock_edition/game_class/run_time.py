@@ -81,12 +81,10 @@ class minecraft_thread :
         #visualization_API
         self.visualization_object:ExpandPackAPI.visualization = None
 
-    def register_response(self, response_type:Literal["delay_command","loop_command","command_block","delay_function","loop_function",
-                          "end_command"], command:str, response) :
+    def register_response(self, response_type:Literal["delay_command","loop_command","command_block","end_command"], command:str, response) :
         now_time = self.minecraft_world.game_time
         if now_time not in self.runtime_variable.all_command_response : 
-            self.runtime_variable.all_command_response[now_time] = {
-                "delay_command":[],"loop_command":[],"command_block":[],"delay_function":[],"loop_function":[],"end_command":[]}
+            self.runtime_variable.all_command_response[now_time] = {"delay_command":[],"loop_command":[],"command_block":[],"end_command":[]}
         self.runtime_variable.all_command_response[now_time][response_type].append(response.set_command(command))
 
     def __game_loading__(self, word_name:str, func:Callable) :

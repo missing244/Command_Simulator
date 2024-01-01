@@ -153,7 +153,7 @@ class generate_command_respones_html :
     
     def __init__(self, all_respones) -> None:
         self.details_template = Template("""
-			<details class="details_1" id="gametick_$tick"><summary>第$tick游戏刻</summary>
+			<details class="details_1" id="gametick_$tick"><summary>第$tick游戏刻测试</summary>
 
 				<div class="buttom_area">
 					<div class="buttom" onclick="detail_class_list[$tick].add_page()">←</div>
@@ -175,19 +175,18 @@ class generate_command_respones_html :
 
 			</details>
                 """)# $command_response $tick
-        self.function_stack = Template("""<div id="gametick_$tick->$count" class="normal_color" style="display:none;">$response</div>""")
+        self.function_stack = Template("""<div id="gametick_$tick->$index" class="normal_color" style="display:none;">$response</div>""")
         self.command_template = Template("""
-				<div id="gametick_$tick->$count" class="$msgcolor" >
+				<div id="gametick_$tick->$index" class="$msgcolor" >
 					<div style="display: flex;"><div style="width: 50%; border-right: 3px solid black;">第$count条</div><div style="width: 50%;">$types</div></div>
 					<div style="border-top: 3px solid black;">$command<div style="height: 3px;"></div></div>
 					<div style="border-top: 3px solid black;">$response<div style="height: 3px;"></div></div>
 				</div>
-                    """)# $tick $count $msgcolor $types $command $response
+                    """)# $tick $count $msgcolor $types $command $response $index
 
         self.all_respones:Dict[int,Dict[Literal["delay_command","loop_command","command_block","delay_function","loop_function","end_command"],
         Union[List[Response.Response_Template],List[Response.Response_Template],List[Response.Response_Template]]]] = all_respones
-        self.types = {"delay_command":"延时命令","loop_command":"循环命令","command_block":"命令方块","function""函数"
-                      "delay_function":"延时函数","loop_function":"循环函数","end_command":"结束命令"}
+        self.types = {"delay_command":"延时命令","loop_command":"循环命令","command_block":"命令方块","end_command":"结束命令"}
 
         self.html_detials_list:List[str] = []
         self.js_detial_class_list:List[str] = []
@@ -212,6 +211,7 @@ class generate_command_respones_html :
                 detial_list.append( self.command_template.substitute(
                     tick = test_tick,
                     count = command_counter,
+                    index = command_counter-1,
                     msgcolor = "success_color" if template_or_group.success_count else "error_color",
                     types = self.types["function"],
                     command = self.html_word_replace(template_or_group.command),
@@ -220,19 +220,19 @@ class generate_command_respones_html :
                 if template_or_group.Function_Feedback == None : continue
                 respones_list.extend(template_or_group.Function_Feedback[::-1])
             elif isinstance(template_or_group, Response.Function_Response_Group) : 
+                command_counter += 1
                 detial_list.append( self.function_stack.substitute(
                     tick = test_tick,
-                    count = command_counter,
+                    index = command_counter - 1,
                     response = self.html_word_replace(template_or_group.push_context())
                 ))
-                command_counter += 1
                 extend_response = template_or_group.Response_List[::-1]
                 function_out_stack.append(id(extend_response[0]))
                 respones_list.extend(extend_response)
             if id(template_or_group) == function_out_stack[-1] :
                 detial_list.append( self.function_stack.substitute(
                     tick = test_tick,
-                    count = command_counter,
+                    index = command_counter - 1,
                     response = self.html_word_replace(template_or_group.pop_context())
                 ))
                 function_out_stack.pop()
@@ -241,22 +241,24 @@ class generate_command_respones_html :
     def load_all_response(self) :
         self.html_detials_list.clear() ; self.js_detial_class_list.clear()
         test_tick_min = min(list(self.all_respones)) ; single_detial_msg:List[str] = []
-        for test_tick,respones_type in itertools.product(list(self.all_respones), list(self.types)) :
-            command_counter = 0 ; test_tick = test_tick - test_tick_min ; single_detial_msg.clear()
-            for response in self.all_respones[test_tick][respones_type] :
-                single_detial_msg.append( self.command_template.substitute(
-                    tick = test_tick,
-                    count = command_counter,
-                    msgcolor = "success_color" if response.success_count else "error_color",
-                    types = self.types[respones_type],
-                    command = self.html_word_replace(response.command),
-                    response = self.html_word_replace(response.command_msg)
-                ))
-                command_counter += 1
-                if response.Function_Feedback == None : continue
-                command_counter = self.mcfunction_respones_reader(single_detial_msg, response, test_tick, command_counter)
-            self.html_detials_list.append(self.details_template.substitute(tick=test_tick, command_response="\n".join(single_detial_msg)))
-            self.js_detial_class_list.append("new detail_class(%s,%s)" % (test_tick, command_counter))
+        for test_tick in list(self.all_respones) :
+            command_counter = 0 ; single_detial_msg.clear() ; display_test_tick = test_tick - test_tick_min
+            for respones_type in list(self.types) :
+                for response in self.all_respones[test_tick][respones_type] :
+                    command_counter += 1
+                    single_detial_msg.append( self.command_template.substitute(
+                        tick = display_test_tick,
+                        count = command_counter,
+                        index = command_counter-1,
+                        msgcolor = "success_color" if response.success_count else "error_color",
+                        types = self.types[respones_type],
+                        command = self.html_word_replace(response.command),
+                        response = self.html_word_replace(response.command_msg)
+                    ))
+                    if response.Function_Feedback == None : continue
+                    command_counter = self.mcfunction_respones_reader(single_detial_msg, response, display_test_tick, command_counter)
+            self.html_detials_list.append(self.details_template.substitute(tick=display_test_tick, command_response="\n".join(single_detial_msg)))
+            self.js_detial_class_list.append("new detail_class(%s,%s)" % (display_test_tick, command_counter))
 
 
     def generate_html(self, world1:str, file_name:str) :
