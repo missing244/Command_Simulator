@@ -160,7 +160,7 @@ class generate_command_respones_html :
 					<div class="buttom" onclick="detail_class_list[$tick].remove_page()">→</div>
 					<div style="margin: auto 10px;" id="gametick_page_info1_$tick">第1234页<br>共1234页</div>
 					<input type="text" class="jump_page" id="gametick_input1_$tick" placeholder="跳转至"
-					onkeypress="detail_class_list[$tick].set_display_page(document.getElementById(gametick_input1_$tick).value)">
+					oninput="detail_class_list[$tick].set_display_page(document.getElementById('gametick_input1_$tick').value)">
 				</div>
 				
 				$command_response
@@ -170,7 +170,7 @@ class generate_command_respones_html :
 					<div class="buttom" onclick="detail_class_list[$tick].remove_page()">→</div>
 					<div style="margin: auto 10px;" id="gametick_page_info2_$tick">第1234页<br>共1234页</div>
 					<input type="text" class="jump_page" id="gametick_input2_$tick" placeholder="跳转至"
-					onkeypress="detail_class_list[$tick].set_display_page(document.getElementById(gametick_input2_$tick).value)">
+					oninput="detail_class_list[$tick].set_display_page(document.getElementById('gametick_input2_$tick').value)">
 				</div>
 
 			</details>
