@@ -116,7 +116,6 @@
 				this.set_display_page(1);
 			}
 			set_display_page(page_id) {
-				console.log(page_id)
 				if ((typeof page_id == "string") & (this.int_test.test(page_id) == false)) return null
 				let page1 = parseInt(page_id)
 				if ((page1 <= 0) | (((page1 - 1) * this.every_detail_in_page) >= this.max_detial)) return null
