@@ -112,7 +112,7 @@ class control_windows :
 
         #self.windows_constant()
         for i in self.initialization_process : i.start()
-        self.window.protocol("WM_DELETE_WINDOW", lambda:[self.user_manager.write_back(), os._exit(0)])
+        self.window.protocol("WM_DELETE_WINDOW", self.window_exit)
 
         self.paset_thread_time = 0  #输入降频计时
         self.platform:Literal["windows","android"] = None #系统名称
@@ -140,6 +140,16 @@ class control_windows :
 
         self.user_manager.save_data["open_app_count"] += 1
 
+    def window_exit(self) :
+        threading.Thread(target=lambda:[time.sleep(10), os._exit(0)]).start()
+        self.user_manager.write_back()
+        if self.game_process is not None :
+            text = self.display_frame["game_run"].input_box1.get("0.0","end")[:-1]
+            self.game_process.world_infomation['terminal_command'] = text
+            self.game_process.__exit_world__()
+        time.sleep(0.5)
+        os._exit(0)
+
 
     def set_paste_thread(self) :
         def aaa():
@@ -161,8 +171,8 @@ class control_windows :
             if self.paset_thread_time and event.keycode != -1 : return 'break'
 
         if not hasattr(compont, "is_bind_click") :
-            event_class = app_function.Text_Bind_Events(self, compont)
             if app_constants.jnius : 
+                event_class = app_function.Text_Bind_Events(self, compont)
                 compont.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
                 compont.bind("<B1-Motion>", event_class.left_click_motion_event, add="+")
                 compont.bind("<KeyPress>", cccc, add="+")
