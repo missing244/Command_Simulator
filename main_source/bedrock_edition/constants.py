@@ -2,7 +2,7 @@ import itertools,json,os
 from . import FileOperation,np
 
 DIMENSION_INFO = {
-    "overworld":{"scale":1, "height":[-64,319]},
+    "overworld":{"scale":1, "height":[-64,320]},
     "nether":{"scale":8, "height":[0,128]},
     "the_end":{"scale":1, "height":[0,256]}
 }
@@ -27,7 +27,7 @@ COMMAND_BLOCK_LOAD_CHUNK = set([(1600+i*16,1600+j*16) for i,j in itertools.produ
 COMMAND_BLOCK_MAP_INDEX = [i for i in range(7,43) if (not(19 <= i <= 31))]
 
 ENCHANT_TEMPLATE = {"id":"","lvl":np.int16(-1)}
-EFFECT_TEMPLATE = {"id":"","lvl":np.int16(-1),"time":np.int32(-1)}
+EFFECT_TEMPLATE = {"Id":"","Amplifier":np.int16(-1),"Duration":np.int32(-1)}
 WRITTEN_BOOK_TEMPLATE = {'author':"",'title':"",'pages':[]}
 
 

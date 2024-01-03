@@ -1,6 +1,6 @@
 from . import CommandParser,HtmlGenerate,Response,COMMAND_CONTEXT,CommandCompiler
 from .. import RunTime
-from typing import List,Dict,Union,Literal,Tuple
+from typing import List,Dict,Union,Literal,Tuple,Callable
 import re,functools
 
 terminal_command_parser = CommandParser.ParserSystem.Command_Parser( 
@@ -45,7 +45,7 @@ terminal_command_parser = CommandParser.ParserSystem.Command_Parser(
 )
 
 
-def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) :
+def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) -> Union[Exception, functools.partial] :
     Terminal_Command = {
         "reload" : command_reload,
         "set" : command_set,
@@ -102,7 +102,7 @@ def reload_doing(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, cb_vie
 
 def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) :
     if token_list[1]["token"].group() == "command_version" : 
-        if all([int(token_list[1+i]["token"].group()) >= 0 for i in range(1,4,1)]) :
+        if any([int(token_list[1+i]["token"].group()) < 0 for i in range(1,4,1)]) :
             return CommandCompiler.CompileError("版本号不能为负数", pos=(token_list[2]["token"].start(),token_list[4]["token"].end()))
         return functools.partial(set_version, _game=_game, version=[int(token_list[1+i]["token"].group()) for i in range(1,4,1)])
     elif token_list[1]["token"].group() == "test_time" : 
@@ -136,17 +136,17 @@ def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List
         if isinstance(command_object, tuple) : return command_object[1]
         return functools.partial(command_end, _game=_game, command=command[token_list[2]["token"].start()], command_obj=command_object)
 
-def command_loop(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:functools.partial) :
+def command_loop(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:Callable) :
     _game.runtime_variable.command_will_loop.append( (command, command_obj) )
     return Response.Response_Template("成功添加了循环命令", 1, 1).substitute()
 
-def command_delay(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, time:int, command:str, command_obj:functools.partial) :
+def command_delay(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, time:int, command:str, command_obj:Callable) :
     run_gt = time + _game.minecraft_world.game_time
     if run_gt not in _game.runtime_variable.command_will_run : _game.runtime_variable.command_will_run[run_gt] = []
     _game.runtime_variable.command_will_run[run_gt].append( (command, command_obj) )
     return Response.Response_Template("成功添加了延时命令", 1, 1).substitute()
 
-def command_end(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:functools.partial) :
+def command_end(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:Callable) :
     _game.runtime_variable.command_will_run_test_end.append( (command, command_obj) )
     return Response.Response_Template("成功添加了结束命令", 1, 1).substitute()
 

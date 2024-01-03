@@ -135,7 +135,15 @@ class Bottom_Bar_Menu(tkinter.Menu) :
     def exit(self) :
         user_manager:app_function.user_manager = self.main_win.user_manager
         aaa = tkinter.messagebox.askquestion("Question","是否退出本软件？？")
-        if aaa == "yes" : user_manager.write_back() ; os._exit(0)
+        if aaa == "yes" : 
+            threading.Thread(target=lambda:[time.sleep(10), os._exit(0)]).start()
+            user_manager.write_back()
+            game_process:Minecraft_BE.RunTime.minecraft_thread = self.main_win.game_process
+            if game_process is not None :
+                text = self.main_win.display_frame["game_run"].input_box1.get("0.0","end")[:-1]
+                game_process.world_infomation['terminal_command'] = text
+                game_process.__exit_world__()
+            time.sleep(0.5) ; os._exit(0)
 
 class Global_Right_Click_Menu(tk_tool.tk_Menu) :
 
@@ -787,9 +795,8 @@ class Game_Run(tkinter.Frame) :
             self.send_command_button.config(state="disabled")
             self.see_feedback_button.config(state="disabled")
 
-    def exit_world(self):
+    def exit_world(self) :
         game_process:Minecraft_BE.RunTime.minecraft_thread = self.main_win.game_process
-        game_process.in_game_tag = False
         game_process.world_infomation['terminal_command'] = self.input_box1.get("0.0","end")[:-1]
 
         aaa = game_process.__exit_world__()
@@ -866,11 +873,11 @@ class Game_Terminal(tkinter.Frame) :
                     feedback.command, feedback.command_msg))
         Minecraft_BE.GameLoop.modify_termial_end_hook("add",aaaa)
 
-        def cccc(_game:Minecraft_BE.RunTime.minecraft_thread, Terminal = self.test_time) :
+        def print_gt(_game:Minecraft_BE.RunTime.minecraft_thread, Terminal = self.test_time) :
             left_time = _game.runtime_variable.how_times_run_all_command
-            if _game.runtime_variable.how_times_run_all_command >= 0 : Terminal.config(text="测试剩余 %s 刻" % left_time)
-            else : Terminal.config(text="终端执行返回界面")
-        Minecraft_BE.GameLoop.modify_tick_end_hook("add",cccc)
+            if _game.runtime_variable.how_times_run_all_command > 0 : Terminal.config(text="测试剩余 %s 刻" % left_time)
+            elif _game.runtime_variable.how_times_run_all_command == 0 : Terminal.config(text="终端执行返回界面")
+        Minecraft_BE.GameLoop.modify_tick_end_hook("add", print_gt)
 
     def clear_terminal(self) :
         self.input_box2.delete("1.0",'end')

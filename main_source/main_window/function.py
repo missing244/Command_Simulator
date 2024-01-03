@@ -108,6 +108,7 @@ class Text_Bind_Events :
         def __init__(self, main_win, **karg) -> None:
             self.main_win = main_win
             self.is_post = False
+            self.last_post_x = 0 ; self.last_post_y = 0
 
             list1 = {'删除':lambda:self.mode_using("clear"), "剪切":lambda:self.mode_using("cut"),
                      '复制':lambda:self.mode_using("copy"),  '粘贴':lambda:self.mode_using("paste")}
@@ -134,17 +135,22 @@ class Text_Bind_Events :
             start_x = x - half_width
             for index,item in enumerate(self.menu_list) : item.post(start_x + only_width * index, y)
             self.is_post = True
+            self.last_post_x = x ; self.last_post_y = y
 
         def unpost(self) :
             if not self.is_post : return None
             for index,item in enumerate(self.menu_list) : item.unpost()
             self.is_post = False
 
+        def set_other_menu(self, other_menu) :
+            self.other_menu = other_menu
+
     class Local_Right_Click_Menu_2 :
 
-        def __init__(self, main_win, **karg) -> None:
+        def __init__(self, main_win, **karg) -> None :
             self.main_win = main_win
             self.is_post = False
+            self.last_post_x = 0 ; self.last_post_y = 0
 
             list1 = {"回车":lambda:self.mode_using("return"), '粘贴':lambda:self.mode_using("paste"),
                      "行首":lambda:self.mode_using("jump_line_start"), '行尾':lambda:self.mode_using("jump_line_end"),
@@ -161,6 +167,7 @@ class Text_Bind_Events :
             focus_input = self.main_win.focus_input
             mode_using(focus_input, mode)
             for index,item in enumerate(self.menu_list) : item.unpost()
+            if mode == "line_select" : self.other_menu.post(self.last_post_x, self.last_post_y)
 
         def post(self, x:int, y:int) :
             only_width = self.winfo_reqwidth
@@ -168,11 +175,15 @@ class Text_Bind_Events :
             start_x = x - half_width
             for index,item in enumerate(self.menu_list) : item.post(start_x + only_width * index, y)
             self.is_post = True
+            self.last_post_x = x ; self.last_post_y = y
 
         def unpost(self) :
             if not self.is_post : return None
             for index,item in enumerate(self.menu_list) : item.unpost()
             self.is_post = False
+
+        def set_other_menu(self, other_menu) :
+            self.other_menu = other_menu
 
     def __init__(self, main_win, Text:tkinter.Text) -> None :
         import main_source.main_window.constant as app_constant
@@ -181,6 +192,8 @@ class Text_Bind_Events :
         self.app_constants = app_constant
         self.Right_Click_Menu_1 = self.Local_Right_Click_Menu_1(main_win)
         self.Right_Click_Menu_2 = self.Local_Right_Click_Menu_2(main_win)
+        self.Right_Click_Menu_1.set_other_menu(self.Right_Click_Menu_2)
+        self.Right_Click_Menu_2.set_other_menu(self.Right_Click_Menu_1)
         self.Text = Text
 
         self.is_left_motion = False
@@ -236,6 +249,7 @@ class Text_Bind_Events :
     def key_press_event(self, e:tkinter.Event) :
         self.Right_Click_Menu_1.unpost()
         self.Right_Click_Menu_2.unpost()
+
 
 
 def mode_using(focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry], mode, word=None) : 

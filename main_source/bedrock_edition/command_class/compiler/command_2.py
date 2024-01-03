@@ -244,8 +244,8 @@ class xp :
     def modify_level(execute_var:COMMAND_CONTEXT, entity_get:Callable=None, value:int=0) :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
-            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
+        if not isinstance(entity_list[0], BaseNbtClass.entity_nbt) or entity_list[0].Identifier != "minecraft:player" : 
+            return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
 
         for player1 in entity_list : player1.PlayerLevel = max(np.int32(0), player1.PlayerLevel + value)
         temp1 = string.Template("$player 的等级变为 $value")
@@ -256,8 +256,8 @@ class xp :
     def modify_point(execute_var:COMMAND_CONTEXT, entity_get:Callable=None, value:int=0) :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        if entity_get is None and not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
-            if entity_list[0].Identifier != "minecraft:player" : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
+        if not isinstance(entity_list[0], BaseNbtClass.entity_nbt) or entity_list[0].Identifier != "minecraft:player" : 
+            return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
 
         for player1 in entity_list :
             aaaaa = int(player1.PlayerLevel)

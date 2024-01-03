@@ -1,4 +1,4 @@
-from typing import List,Dict,Union,Literal,Tuple
+from typing import List,Dict,Union,Literal,Tuple,Callable
 from .. import Constants,np,DataSave,MathFunction,FileOperation
 import random,copy,os,json,math,itertools,functools
 
@@ -190,7 +190,6 @@ class entity_nbt :
         self.FreezingTime = np.int16(0)
         self.Variant = np.int32(0)
         self.MarkVariant = np.int32(0)
-        self.entity_event = []
         self.Attributes = {}
         self.Collision = {'width':np.float32(0), 'height':np.float32(0)}
         self.FamilyType = []
@@ -201,6 +200,7 @@ class entity_nbt :
         self.damage = {"time_no_hurt":0, "type":None, "value":0, "source":None}
 
     def __create__(self, Identifier:str, dimension:Literal["overworld","nether","the_end"], pos:List[np.float32], name:str=None) :
+        from . import EntityComponent
         if len(Identifier) == 0 : return None
         self.Identifier = "minecraft:%s" % Identifier if (":" not in Identifier) else Identifier
         self.Dimension = list(Constants.DIMENSION_INFO).index(dimension)
@@ -352,6 +352,27 @@ class entity_nbt :
         return passengers_list
     
 
+    def __get_damage__(self, world:world_nbt, damage_type:str, value:Union[int,float], couser:"entity_nbt"=None) -> bool :
+        if self.Identifier == "minecraft:player" :
+            if self.GameMode == 1 : return False
+            if not world.falldamage and damage_type in "fall" : return False
+            if not world.firedamage and damage_type in ("fire","lava","fire_tick") : return False
+            if not world.freezedamage and damage_type == "freezing" : return False
+        if (not hasattr(self, "Health")) or (not hasattr(self, "ActiveEffects")) : return False
+        if "fire_resistance" in self.ActiveEffects and damage_type in ["fire","lava","fire_tick"] : return False
+
+        if Constants.DAMAGE_CAUSE[damage_type]['modify_in_tick'] : 
+            self.Health -= value ; return True
+        else : 
+            if self.damage["type"] is None :
+                self.Health -= value
+                self.damage["type"] = damage_type
+                self.damage["time_no_hurt"] = 6
+                self.damage["value"] = value
+                self.damage["source"] = couser
+            return True
+
+
 class block_nbt :
 
     def __repr__(self) -> str :
@@ -365,7 +386,7 @@ class block_nbt :
         self.support_nbt.append("__minecraft_type__")
         self.__minecraft_type__ = "block_nbt"
 
-    def __create__ (self, Identifier:str, block_state_info:dict={}) :
+    def __create__(self, Identifier:str, block_state_info:dict={}) :
         if len(Identifier) == 0 : return None
         Identifier = "minecraft:%s" % Identifier if (":" not in Identifier) else Identifier
 
@@ -922,7 +943,7 @@ class chunk_nbt :
     def ____clear_all_runtime_command____(self) :
         self.command_block_compile_function.clear()
 
-    def ____register_runtime_command____(self, command:str, compile_func:functools.partial) :
+    def ____register_runtime_command____(self, command:str, compile_func:Callable) :
         self.command_block_compile_function[command] = compile_func
 
 
@@ -934,8 +955,8 @@ class chunk_nbt :
         if "mob" in entity_1.FamilyType :
             entity_1.Armor = [{},{},{},{}]
             entity_1.Weapon = [{},{}]
-            entity_1.CustomEffects = {}
-            entity_1.support_nbt += ['Armor','Weapon','CustomEffects']
+            entity_1.ActiveEffects = {}
+            entity_1.support_nbt += ['Armor','Weapon','ActiveEffects']
 
         EntityComponent.set_component(source, entity_1)
         if difficulty == 0 and ("monster" in entity_1.FamilyType) : return Exception
@@ -1056,7 +1077,7 @@ class chunk_nbt :
                 if load_chunk in Constants.COMMAND_BLOCK_LOAD_CHUNK : continue #不进行储存
                 if load_chunk in self.loading_chunk_pos[keys] : continue
                 db_tuple = (load_chunk[0]//400*400, load_chunk[1]//400*400)
-                data_base_name = "db%s" % db_tuple
+                data_base_name = "db%s" % str(db_tuple)
                 db_file_path = os.path.join("save_world", world_name, "chunk_info", keys, data_base_name)
 
                 save_chunk_pos = ((load_chunk[0] - db_tuple[0])//16, (load_chunk[1] - db_tuple[1])//16)

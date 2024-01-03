@@ -305,6 +305,7 @@ def player_things(self:RunTime.minecraft_thread) :
         
         if player1.SelectSlot > len(player1.HotBar) : player1.SelectSlot = 0
         player1.Weapon[0] = player1.HotBar[player1.SelectSlot]
+        player1.__update_mainhand__()
 
 def entity_things(self:RunTime.minecraft_thread) :
     entity_list = self.minecraft_chunk.__get_all_load_entity__()
@@ -328,10 +329,10 @@ def entity_things(self:RunTime.minecraft_thread) :
         if entity1.damage['time_no_hurt'] == 1 : entity1.damage['value'] = 0
         if entity1.damage['time_no_hurt'] > 0 : entity1.damage['time_no_hurt'] -= 1
 
-        if hasattr(entity1,"CustomEffects") :
-            for effect1 in entity1.CustomEffects :
-                if entity1.CustomEffects[effect1]["Duration"] < 1 : del entity1.CustomEffects[effect1]
-                elif entity1.CustomEffects[effect1]["Duration"] > 0 : entity1.CustomEffects[effect1]["Duration"] -= 1
+        if hasattr(entity1,"ActiveEffects") :
+            for effect1 in list(entity1.ActiveEffects) :
+                if entity1.ActiveEffects[effect1]["Duration"] < 1 : del entity1.ActiveEffects[effect1]
+                elif entity1.ActiveEffects[effect1]["Duration"] > 0 : entity1.ActiveEffects[effect1]["Duration"] -= 1
 
         entity1.__sit_update__()
 
@@ -360,7 +361,9 @@ def terminal_running(self:RunTime.minecraft_thread) :
         elif KEYWORD_TERMINAL_COMMAND.match(command_text) : 
             a = TerminalCommand.Terminal_Compiler(self,command_text)
             if isinstance(a, Exception) : feedback_list.append((lines, a.args[0], a.pos[0] if hasattr(a,"pos") else 0))
-            else : command_function.append( (command_text,a) )
+            else : 
+                command_function.append( (command_text,a) )
+                if id(a.func) == id(TerminalCommand.set_version) : a(context)
         else :
             func_object = Command_Tokenizer_Compiler(self, command_text, self.game_version)
             if isinstance(func_object, tuple) : 
@@ -370,8 +373,9 @@ def terminal_running(self:RunTime.minecraft_thread) :
 
     if len(feedback_list) == 0 :
         for command,function in command_function : 
-            feedback = function(context)
-            feedback_list.append( feedback.set_command(command) )
+            try : feedback = function(context)
+            except Exception as e : print(command, function) ; raise e
+            else : feedback_list.append( feedback.set_command(command) )
 
     #print(debug_windows.terminal_log) "[\u2714]" "[\u2718]"
     termial_end_hook(self)

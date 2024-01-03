@@ -5,7 +5,7 @@ from .. import np,Constants
 
 class entity_buliding :
 
-    def entity_creating(self,source,entity_object):
+    def entity_creating(self, source, entity_object):
         self.source = source
         self.entity_obj = entity_object
         self.entity_component_json = entity_component_json = self.source.entities[entity_object.Identifier]
@@ -22,7 +22,13 @@ class entity_buliding :
         
         self.trigger_entity_event('minecraft:entity_spawned')
 
-    def trigger_entity_event(self,event_name:str) :
+    def entity_trigger(self, source, entity_object, event_name:str):
+        self.source = source
+        self.entity_obj = entity_object
+        self.entity_component_json = self.source.entities[entity_object.Identifier]
+        self.trigger_entity_event(event_name)
+
+    def trigger_entity_event(self, event_name:str) :
         events_json = self.entity_component_json["events"]
         component_groups_json = self.entity_component_json["component_groups"]
         if event_name not in events_json : return None
@@ -440,3 +446,6 @@ Entity_Construct = entity_buliding()
 
 def set_component(source,entity_object) :
     Entity_Construct.entity_creating(source,entity_object)
+
+def trigger_event(source, entity_object, event_name:str) :
+    Entity_Construct.entity_creating(source, entity_object, event_name)

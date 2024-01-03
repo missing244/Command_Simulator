@@ -313,17 +313,21 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
         if selector_argument == "tag" and token_list[index]["type"] in ("Next_Selector_Argument", "End_Selector_Argument") :
             selector_save[mode % selector_argument].append("")
             index -= 1
-        else : selector_save[mode % selector_argument].append(Quotation_String_transfor_2( token_list[index]["token"].group()) )
+        else : 
+            str1 = Quotation_String_transfor_2( token_list[index]["token"].group())
+            if selector_argument == "type" : str1 = minecraft_ID_transfor(str1)
+            selector_save[mode % selector_argument].append(str1)
 
     return index + 1
 
 def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], index:int, / ,
                       is_player:bool=False, is_npc:bool=False, is_single=False) -> Tuple[int, functools.partial] : 
 
+    start_index_save = token_list[index]["token"].start()
     selector_argument_all = ("x", "y", "z", "c", "dx", "dy", "dz", "rx", "ry", "rxm", "rym", "l", "lm", "r", "rm", "scores",
                              "hasitem", "haspermission", "tag", "name", "family", "type", "m")
     selector_argument_single = ("x","y","z","c","dx","dy","dz","rx","ry","rxm","rym","l","lm","r","rm","scores","hasitem","haspermission")
-    selector_argument_count = { i:0 for i in selector_argument_all  }
+    selector_argument_count = { i:0 for i in selector_argument_all }
     selector_save = {
         "pos":[None, None, None], "pos_offset":[0, 0, 0], "dxdydz":[None, None, None],
         "distance":None, "rotate_x":[-90.0, 90.0], "rotate_y":[-180.0, 180.0], "level": None,
@@ -332,7 +336,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
         "hasitem":[], "permission_test":{},
         "limit":200000, "sort":"nearest", "is_alive":True, "is_executer":False
     }
-    
+
     if token_list[index]["type"] == "Player_Name" :
         selector_save["name_if"].append(Quotation_String_transfor_2(token_list[index]["token"].group().lower()))
         selector_save["type_if"].append("minecraft:player")
@@ -360,35 +364,34 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
                 selector_save["type_if"].append("minecraft:player")
             if is_npc and "minecraft:npc" not in selector_save["type_if"] : 
                 selector_save["type_if"].append("minecraft:npc")
-    index += 1
 
-    if index >= token_list.__len__() or token_list[index]["type"] != "Start_Selector_Argument" :
-        return (index, functools.partial(RunTime_Selector,game_tread=game_tread,selector_var=selector_save))
 
-    while token_list[index]["type"] != "End_Selector_Argument" :
+    if (index+1) < token_list.__len__() and token_list[index+1]["type"] == "Start_Selector_Argument" :
         index += 1
-        if token_list[index]["type"] == "Next_Selector_Argument" : continue
-        if token_list[index]["type"] == "Selector_Argument" : 
+        while token_list[index]["type"] != "End_Selector_Argument" :
+            index += 1
+            if token_list[index]["type"] == "Next_Selector_Argument" : continue
+            if token_list[index]["type"] == "Selector_Argument" : 
+                selector_argument_token = token_list[index]["token"]
+                selector_argument = selector_argument_token.group()
+                selector_argument_count[selector_argument] += 1
+                if any( [selector_argument_count[i] > 1 for i in selector_argument_single] ) :
+                    raise CompileError("重复的选择器 %s 参数" % selector_argument, 
+                    pos=(selector_argument_token.start(),selector_argument_token.end()))
+                index = Selector_Save_Set(game_tread, selector_save, token_list, index)
+    end_index_save = token_list[-1]["token"].end()
 
-            selector_argument_token = token_list[index]["token"]
-            selector_argument = selector_argument_token.group()
-            selector_argument_count[ selector_argument ] += 1
-            if any( [selector_argument_count[i] > 1 for i in selector_argument_single] ) :
-                raise CompileError("重复的选择器 %s 参数" % selector_argument, pos=(selector_argument_token.start(),selector_argument_token.end()))
-
-            index = Selector_Save_Set(game_tread, selector_save, token_list, index)
-
-    if is_single and selector_save["limit"] > 1 : raise CompileError("选择器无法选择多个实体")
-    if is_player and (len(selector_save["type_if"]) > 1 or selector_save["type_if"][0] != "minecraft:player") : raise CompileError("选择器只能为玩家类型")
-    if is_npc and (len(selector_save["type_if"]) > 1 or selector_save["type_if"][0] != "minecraft:npc") : raise CompileError("选择器只能为NPC类型")
-    if selector_save["distance"] and selector_save["distance"][0] > selector_save["distance"][1] : raise CompileError("距离参数上限不能小于下限")
-    if selector_save["level"] and selector_save["level"][0] > selector_save["level"][1] : raise CompileError("等级参数上限不能小于下限")
-    if len(selector_save["name_if"]) > 1 : raise CompileError("选择器参数 name 具有重复指定的正选条件")
-    if len(selector_save["name_if"]) == 1 and len(selector_save["name_unless"]) > 0 : raise CompileError("选择器参数 name 同时存在正反选条件")
-    if len(selector_save["type_if"]) > 1 : raise CompileError("选择器参数 type 具有重复指定的正选条件")
-    if len(selector_save["type_if"]) == 1 and len(selector_save["type_unless"]) > 0 : raise CompileError("选择器参数 type 同时存在正反选条件")
-    if len(selector_save["m_if"]) > 1 : raise CompileError("选择器参数 m 具有重复指定的正选条件")
-    if len(selector_save["m_if"]) == 1 and len(selector_save["m_unless"]) > 0 : raise CompileError("选择器参数 m 同时存在正反选条件")
+    if is_single and selector_save["limit"] > 1 : raise CompileError("选择器无法选择多个实体", pos=(start_index_save, end_index_save))
+    if is_player and (len(selector_save["type_if"]) != 1 or selector_save["type_if"][0] != "minecraft:player") : raise CompileError("选择器只能为玩家类型", pos=(start_index_save, end_index_save))
+    if is_npc and (len(selector_save["type_if"]) != 1 or selector_save["type_if"][0] != "minecraft:npc") : raise CompileError("选择器只能为NPC类型", pos=(start_index_save, end_index_save))
+    if selector_save["distance"] and selector_save["distance"][0] > selector_save["distance"][1] : raise CompileError("距离参数上限不能小于下限", pos=(start_index_save, end_index_save))
+    if selector_save["level"] and selector_save["level"][0] > selector_save["level"][1] : raise CompileError("等级参数上限不能小于下限", pos=(start_index_save, end_index_save))
+    if len(selector_save["name_if"]) > 1 : raise CompileError("选择器参数 name 具有重复指定的正选条件", pos=(start_index_save, end_index_save))
+    if len(selector_save["name_if"]) > 0 and len(selector_save["name_unless"]) > 0 : raise CompileError("选择器参数 name 同时存在正反选条件", pos=(start_index_save, end_index_save))
+    if len(selector_save["type_if"]) > 1 : raise CompileError("选择器参数 type 具有重复指定的正选条件", pos=(start_index_save, end_index_save))
+    if len(selector_save["type_if"]) > 0 and len(selector_save["type_unless"]) > 0 : raise CompileError("选择器参数 type 同时存在正反选条件", pos=(start_index_save, end_index_save))
+    if len(selector_save["m_if"]) > 1 : raise CompileError("选择器参数 m 具有重复指定的正选条件", pos=(start_index_save, end_index_save))
+    if len(selector_save["m_if"]) > 0 and len(selector_save["m_unless"]) > 0 : raise CompileError("选择器参数 m 同时存在正反选条件", pos=(start_index_save, end_index_save))
 
     return (index+1, functools.partial(RunTime_Selector,game_tread=game_tread,selector_var=selector_save))
 

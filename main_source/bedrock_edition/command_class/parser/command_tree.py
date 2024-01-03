@@ -315,7 +315,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                                 BaseMatch.Int("Block_Data").add_leaves( BaseMatch.END_NODE )
                             ),
-                            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
+                            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                                 BaseMatch.END_NODE
                             )
@@ -382,18 +382,18 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # enchant 附魔 ✓ V
     BaseMatch.Char("Command","enchant").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.AnyString("Effect_Type").add_leaves(
+            BaseMatch.Int("Enchantment_ID").add_leaves(
                 BaseMatch.Int("Level").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             ),
-            BaseMatch.Int("Enchantment_ID").add_leaves(
+            BaseMatch.AnyString("Enchant_Type").add_leaves(
                 BaseMatch.Int("Level").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             )
         )
     ),
     # event ✓ V
-    BaseMatch.Char("Command","event").set_version(1,16,100,"min").add_leaves(
+    BaseMatch.Char("Command","event").add_leaves(
         BaseMatch.Char("Argument","entity").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
                 BaseMatch.AnyString("Event_ID").add_leaves( BaseMatch.END_NODE )
@@ -444,13 +444,13 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # tellraw ✓ V
-    BaseMatch.Char("Command","tellraw").set_version(1,9,0,"min").add_leaves(
+    BaseMatch.Char("Command","tellraw").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             JsonPaser.Json_Tree( BaseMatch.END_NODE )
         )
     ),
     # fog ✓ V
-    BaseMatch.Char("Command","fog").set_version(1,16,100,"min").add_leaves(
+    BaseMatch.Char("Command","fog").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Char("Mode_Delete","push").add_leaves(
                 BaseMatch.AnyString("Fog_Type").add_leaves(
@@ -514,7 +514,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # kick ✓ V
-    BaseMatch.Char("Command","kick").set_version(1,16,0,"min").add_leaves(
+    BaseMatch.Char("Command","kick").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.AnyMsg("Msg").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
@@ -591,7 +591,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.AnyMsg("Msg").add_leaves( BaseMatch.END_NODE )
     ),
     # mobevent 生物事件 ✓ V
-    BaseMatch.Char("Command","mobevent").set_version(1,11,00,"min").add_leaves(
+    BaseMatch.Char("Command","mobevent").add_leaves(
         BaseMatch.AnyString("Event_ID").add_leaves(
             BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
@@ -604,7 +604,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # music ✓ V
-    BaseMatch.Char("Command","music").set_version(1,16,100,"min").add_leaves(
+    BaseMatch.Char("Command","music").add_leaves(
         BaseMatch.Enum("Argument","play","queue").add_leaves(
             BaseMatch.AnyString("Track_Name").add_leaves(
                 BaseMatch.Float("Volume").add_leaves(
@@ -626,14 +626,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # particle ✓ V
-    BaseMatch.Char("Command","particle").set_version(1,8,00,"min").add_leaves(
+    BaseMatch.Char("Command","particle").add_leaves(
         BaseMatch.AnyString("Particle_Type").add_leaves(
             *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
     ),
     # playanimation ✓ V
-    BaseMatch.Char("Command","playanimation").set_version(1,16,100,"min").add_leaves(
+    BaseMatch.Char("Command","playanimation").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.AnyString("animation_Type").add_leaves(
                 BaseMatch.AnyString("Next_State_Type").add_leaves(
@@ -701,7 +701,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # ride ✓ V
-    BaseMatch.Char("Command","ride").set_version(1,16,100,"min").add_leaves(
+    BaseMatch.Char("Command","ride").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Char("Argument","start_riding").add_leaves(
                 *SpecialMatch.BE_Selector_Tree(
@@ -737,7 +737,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # schedule ✓ V
-    BaseMatch.Char("Command","schedule").set_version(1,16,100,"min").add_leaves(
+    BaseMatch.Char("Command","schedule").add_leaves(
         BaseMatch.Char("Argument","on_area_loaded").add_leaves(
             BaseMatch.Char("Argument","add").add_leaves(
                 *SpecialMatch.Pos_Tree(
@@ -761,7 +761,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # scoreboard ✓ V
-    BaseMatch.Char("Command","scoreboard").set_version(1,7,0,"min").add_leaves(
+    BaseMatch.Char("Command","scoreboard").add_leaves(
         BaseMatch.Char("Argument","objectives").add_leaves(
             BaseMatch.Char("Argument","add").add_leaves(
                 *SpecialMatch.String_Tree("Scoreboard_Name",
@@ -878,7 +878,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # structure ✓ V
-    BaseMatch.Char("Command","structure").set_version(1,16,100,"min").add_leaves(
+    BaseMatch.Char("Command","structure").add_leaves(
         BaseMatch.Char("Model","save").add_leaves(
             *SpecialMatch.String_Tree("Structure_Name",
                 *SpecialMatch.Pos_Tree(
@@ -992,7 +992,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         ),
     ),
     # tickingarea ✓ V
-    BaseMatch.Char("Command","tickingarea").set_version(1,2,0,"min").add_leaves(
+    BaseMatch.Char("Command","tickingarea").add_leaves(
         BaseMatch.Char("Argument","add").add_leaves(
             *SpecialMatch.Pos_Tree(
                 *SpecialMatch.Pos_Tree(
@@ -1080,7 +1080,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.END_NODE
     ),
     # volumearea ✓ V
-    BaseMatch.Char("Command","volumearea").set_version(1,18,30,"min").add_leaves(
+    BaseMatch.Char("Command","volumearea").add_leaves(
         BaseMatch.Char("Argument","add").add_leaves(
             *SpecialMatch.String_Tree("Identifier",
                 *SpecialMatch.Pos_Tree(

@@ -68,6 +68,7 @@ class minecraft_thread :
         self.world_name:str = None
         self.in_game_tag:bool = True
         self.game_load_over:bool = False
+        self.game_over = False
 
         self.infomation:dict = None
         self.minecraft_ident = dynamic_source()
@@ -127,26 +128,22 @@ class minecraft_thread :
         try :
             while self.in_game_tag :
                 func_set(self.minecraft_world.game_time)
-                for func in GameLoop.loop_function_list : 
-                    if self.in_game_tag : func(self)
+                for func in GameLoop.loop_function_list : func(self)
                 time.sleep(0.25)
         except : 
             traceback.print_exc(file=open(os.path.join("log","game_run.txt"), "w+",encoding="utf-8"))
             tkinter.messagebox.showerror("Error", "游戏运行出现错误\n日志 game_run.txt 已保存")
 
+        self.game_over = True
+
     def __exit_world__(self) :
         from . import GameLoop
-        GameLoop.modify_termial_end_hook("clear")
-        GameLoop.modify_test_end_hook("clear")
-        GameLoop.modify_tick_end_hook("clear")
-
+        self.in_game_tag = False
         if self.visualization_object : self.visualization_object.at_exit()
 
         if not self.game_load_over : return Warning("不保存退出世界成功")
-        while self.loop_thread and self.loop_thread.is_alive() : time.sleep(0.25)
+        while not self.game_over : time.sleep(0.33)
         try :
-            self.minecraft_chunk.____save_and_write_db_file____(self.world_name)
-
             save_file = os.path.join("save_world", self.world_name, "level_name")
             json1 = json.dumps(self.world_infomation)
             FileOperation.write_a_file(save_file, json1)
@@ -163,8 +160,11 @@ class minecraft_thread :
             json1 = json.dumps(self.minecraft_chunk.__save__(), default=DataSave.encoding)
             FileOperation.write_a_file(save_file, json1)
 
-            return "退出世界成功"
+            self.minecraft_chunk.____save_and_write_db_file____(self.world_name)
         except : 
             traceback.print_exc(file=open(os.path.join("log","save_world.txt"), "w", encoding="utf-8"))
             return Exception("世界保存出错\n日志save_world.txt已保存")
 
+        GameLoop.modify_termial_end_hook("clear")
+        GameLoop.modify_test_end_hook("clear")
+        GameLoop.modify_tick_end_hook("clear")

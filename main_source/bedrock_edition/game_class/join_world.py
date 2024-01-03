@@ -1,5 +1,5 @@
 import os,json,re,random
-from .. import FileOperation,np,BaseNbtClass
+from .. import FileOperation,np,BaseNbtClass,EntityComponent
 from . import RunTime
 from typing import List,Dict,Union,Literal,Tuple
 
@@ -329,10 +329,11 @@ def spawn_player(game:RunTime.minecraft_thread) :
             player1 = BaseNbtClass.entity_nbt().__create__("minecraft:player", 'overworld', 
                 [random.randint(-100,100)+0.5, -50, random.randint(-100,100)+0.5],
                 "Steve%s" % ("00000%s" % random.randint(1,9999))[-4:])
+            EntityComponent.set_component(game.minecraft_ident, player1)
             player1.SpawnPoint = [np.float32(0.5),np.float32(-50.0),np.float32(0.5)]
             player1.Armor = [{},{},{},{}]
             player1.Weapon = [{},{}]
-            player1.CustomEffects = {}
+            player1.ActiveEffects = {}
             player1.EnderChest = [{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
             player1.HotBar = [{},{},{},{},{},{},{},{},{}]
             player1.GameMode = np.int8(1)
@@ -345,7 +346,7 @@ def spawn_player(game:RunTime.minecraft_thread) :
             'op':1,'opencontainers':1,'teleport':1,'worldbuilder':1,'mute':1}
             player1.Attributes['max_health'] = {'Name': 'generic.max_health', 'Base': 20, 'AttributeModifiers': []}
             player1.Inventory = {'Items':[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}],'container_type':"player","private":False}
-            player1.support_nbt += ['SpawnPoint','Armor','Weapon','CustomEffects',"EnderChest","HotBar","Inventory","GameMode","Ability",
+            player1.support_nbt += ['SpawnPoint','Armor','Weapon','ActiveEffects',"EnderChest","HotBar","Inventory","GameMode","Ability",
             "PlayerLevel","PlayerLevelPoint","RespawnTime","Health","SelectSlot"]
 
             game.minecraft_chunk.player.append(player1)

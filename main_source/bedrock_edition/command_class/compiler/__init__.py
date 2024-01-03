@@ -93,8 +93,12 @@ be_command_list = [
 
 Command_to_Compiler = {
     # key:class or key:{tuple:class}
-    "ability" : Command1.ability, "alwaysday" : Command1.alwaysday, "camera" : Command1.camera,
-    "camerashake" : Command1.camerashake,
+    "ability": Command1.ability, "alwaysday": Command1.alwaysday, "camera": Command1.camera,
+    "camerashake": Command1.camerashake, "clear": Command1.clear, "clearspawnpoint": Command1.clearspawnpoint,
+    "clone": Command1.clone, "damage": Command1.damage, "daylock": Command1.daylock,
+    "dialogue": Command1.dialogue, "effect":Command1.effect, "enchant":Command1.enchant,
+    "event": Command1.event, #"fill":Command1.fill, "fog":Command1.fog,
+    "dialogue": Command1.dialogue, "effect":Command1.effect, "enchant":Command1.enchant,
 
     "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,
