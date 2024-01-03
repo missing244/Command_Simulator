@@ -1038,7 +1038,7 @@ class Choose_Expand(tkinter.Frame) :
 
             save_path = os.path.join("expand_pack", dir_name, "saves.zip")
             msg_laber.config(text=msg_laber.cget("text") + "正在下载安装包...(2/3)\n")
-            response2 = connent_API.request_url_without_error(json1['url'])
+            response2 = connent_API.request_url_without_error(json1['url'], timeout_s=4)
             if response2 == None : tkinter.messagebox.showerror("Error",'获取文件失败，请重试') ; return None
             os.makedirs(os.path.join("expand_pack", dir_name), exist_ok=True)
             FileOperation.write_a_file(save_path, response2, "wb")
