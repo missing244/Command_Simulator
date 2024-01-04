@@ -4,7 +4,7 @@ from .. import RunTime,FileOperation
 from . import Command_Tokenizer_Compiler
 
 MCFUNCTION_FILE = re.compile("\\u002emcfunction$")
-
+MCFUNCTION_COMMAND_ERROR_START = re.compile("[ ]{0,}/")
 
 
 mcfunction_encoding_error:List[str] = []
@@ -50,6 +50,10 @@ def Function_Checker(_game:RunTime.minecraft_thread, version:List[int], mcfuncti
         if mcfunc_path in function_save and file_crc32 == function_save[mcfunc_path]["crc32"] : continue
 
         for lines,function_command_str in enumerate(file_content.split("\n")) :
+            if MCFUNCTION_COMMAND_ERROR_START.match(function_command_str) :
+                mcfunction_syntax_error[mcfunc_path].append( (lines+1, version, function_command_str, "mcfunction命令不能以/开头") )
+                continue
+
             func_object = Command_Tokenizer_Compiler(_game, function_command_str, version)
             if isinstance(func_object, tuple) : 
                 if mcfunc_path not in mcfunction_syntax_error : mcfunction_syntax_error[mcfunc_path] = []

@@ -186,7 +186,6 @@ class entity_nbt :
         self.PortalCooldown = np.int32(0)
         self.IsAutonomous = bool(0)
         self.Tags = []
-        self.fogCommandStack = []
         self.FreezingTime = np.int16(0)
         self.Variant = np.int32(0)
         self.MarkVariant = np.int32(0)

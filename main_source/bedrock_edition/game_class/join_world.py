@@ -342,12 +342,13 @@ def spawn_player(game:RunTime.minecraft_thread) :
             player1.RespawnTime = np.int16(0)
             player1.SelectSlot = np.int16(0)
             player1.Health = np.float32(20)
+            player1.fogCommandStack = []
             player1.Ability = {'attackmobs':1,'attackplayer':1,'bulid':1,'flyspeed':0.05,'mayfly':1,'mine':1,
             'op':1,'opencontainers':1,'teleport':1,'worldbuilder':1,'mute':1}
             player1.Attributes['max_health'] = {'Name': 'generic.max_health', 'Base': 20, 'AttributeModifiers': []}
             player1.Inventory = {'Items':[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}],'container_type':"player","private":False}
             player1.support_nbt += ['SpawnPoint','Armor','Weapon','ActiveEffects',"EnderChest","HotBar","Inventory","GameMode","Ability",
-            "PlayerLevel","PlayerLevelPoint","RespawnTime","Health","SelectSlot"]
+            "PlayerLevel","PlayerLevelPoint","RespawnTime","Health","SelectSlot","fogCommandStack"]
 
             game.minecraft_chunk.player.append(player1)
 

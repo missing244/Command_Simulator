@@ -1,6 +1,7 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,EntityComponent
-from . import Selector,CompileError,CommandParser,Quotation_String_transfor_1,ID_transfor,BlockState_Transformer
+from . import Selector,CompileError,CommandParser
+from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler
 import functools,string,random,re,math,itertools,array,copy
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
@@ -289,7 +290,7 @@ class clearspawnpoint :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        if 2 >= token_list.__len__() : return functools.partial(cls.clear, game=_game)
+        if 1 >= token_list.__len__() : return functools.partial(cls.clear, game=_game)
         _, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
         return functools.partial(cls.clear, game=_game, entity_get=entity_func)
 
@@ -335,7 +336,7 @@ class clone :
                 block_state = int(token_list[13]["token"].group())
                 if not(-1 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
                 pos=(token_list[13]["token"].start(), token_list[13]["token"].end()))
-            else : block_state = BlockState_Transformer( block_id, token_list, 13 )
+            else : _,block_state = BlockState_Compiler( block_id, token_list, 13 )
             return functools.partial(cls.fliter, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
             clone_mode = token_list[11]["token"].group(), block_id=block_id, block_state={} if block_state == -1 else block_state)
 
@@ -422,15 +423,16 @@ class clone :
         if volue[0] * volue[1] * volue[2] > 655360 : return Response.Response_Template("区域大小超过655360个方块").substitute()
 
 
+        if isinstance(block_state, int) and block_state != -1 :
+            test_block_obj = BaseNbtClass.block_nbt().__create__(block_id, block_state)
         block_index_list = [None] * (volue[0] * volue[1] * volue[2]) ; block_nbt_list = [None] * (volue[0] * volue[1] * volue[2])
         for index,pos_xyz in enumerate(itertools.product( range(start_pos1[0], end_pos1[0]+1), range(start_pos1[1], end_pos1[1]+1), 
             range(start_pos1[2], end_pos1[2]+1) )) :
             block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], pos_xyz)
             block_obj = game.minecraft_chunk.block_mapping[block_index]
             if block_obj.Identifier != block_id : continue
-            if isinstance(block_state, dict) and any([block_obj.BlockState[i] != block_id[i] for i in block_state]) : continue
+            if isinstance(block_state, dict) and any([block_obj.BlockState[i] != block_state[i] for i in block_state]) : continue
             elif isinstance(block_state, int) and block_state != -1 :
-                test_block_obj = BaseNbtClass.block_nbt().__create__(block_id, block_state)
                 if any([block_obj.BlockState[i] != test_block_obj.BlockState[i] for i in test_block_obj.BlockState]) : continue
             block_nbt = game.minecraft_chunk.____find_block_nbt____(execute_var["dimension"], pos_xyz)
             block_index_list[index] = block_index
@@ -733,6 +735,224 @@ class event :
             fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
 
 
+class fill_1_0_0 :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+
+        poses = [ token_list[i]["token"].group() for i in range(1,7,1) ]
+        block_id = ID_transfor(token_list[7]["token"].group())
+        if block_id not in _game.minecraft_ident.blocks :
+            raise CompileError("不存在的方块ID：%s" % block_id, pos=(token_list[7]["token"].start(), token_list[7]["token"].end()))
+        if 8 >= len(token_list) : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6],
+            block_id=block_id)
+
+        index = 8
+        if token_list[index]["type"] == "Block_Data" : 
+            block_state = int(token_list[index]["token"].group())
+            if not(0 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
+            pos=(token_list[index]["token"].start(), token_list[13]["token"].end()))
+            if block_state == -1 : block_state = {}
+            index += 1
+        else : index, block_state = BlockState_Compiler( block_id, token_list, index )
+        if index >= len(token_list) : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6],
+            block_id=block_id, block_state=block_state)
+
+        fill_mode = token_list[index]["token"].group() ; index += 1
+        if fill_mode != "replace" : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6],
+            block_id=block_id, block_state=block_state, fill_mode=fill_mode)
+        elif fill_mode == "replace" and index >= len(token_list) : return functools.partial(cls.fill_block, game=_game, 
+            start1=poses[0:3], end1=poses[3:6], block_id=block_id, block_state=block_state)
+        elif fill_mode == "replace" : 
+            test_block_id = ID_transfor(token_list[index]["token"].group()) ; index += 1
+            if test_block_id not in _game.minecraft_ident.blocks :
+                raise CompileError("不存在的方块ID：%s" % test_block_id, pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+            if index >= len(token_list) : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], 
+                end1=poses[3:6], block_id=block_id, block_state=block_state, test_block=test_block_id)
+
+            if token_list[index]["type"] == "Block_Data" : 
+                test_block_state = int(token_list[index]["token"].group())
+                if not(-1 <= test_block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % test_block_state,
+                pos=(token_list[index]["token"].start(), token_list[13]["token"].end()))
+                if test_block_state == -1 : test_block_state = {}
+                index += 1
+            else : index, block_state = BlockState_Compiler( block_id, token_list, index )
+            return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6], block_id=block_id,
+                block_state=block_state, test_block=test_block_id, test_block_state=test_block_state)
+
+    def error_test(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start_pos1, end_pos1) :
+        height_test = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"]
+        for i,j in [("起始位置", start_pos1),("结束位置", end_pos1)] :
+            if not(height_test[0] <= j[1] < height_test[1]) :
+                return Response.Response_Template("$id$pos处于世界之外").substitute(id=i, pos=tuple(start_pos1))
+
+        for j in itertools.product(range(start_pos1[0], end_pos1[0], 16), range(start_pos1[2], end_pos1[2], 16)) :
+            if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], (j[0],0,j[1])) :
+                return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], end_pos1) :
+            return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+
+    def fill_block(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:List[str], end1:List[str], block_id:str,
+            block_state:Union[int,dict]=0, fill_mode:str="replace", test_block:str=None, test_block_state:Union[int,dict]={}) :
+        start_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start1, execute_var["rotate"])]
+        end_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], end1, execute_var["rotate"])]
+        for index,(pos_1,pos_2) in enumerate(itertools.zip_longest(start_pos1, end_pos1)) :
+            if pos_1 > pos_2 : start_pos1[index] = pos_2; end_pos1[index] = pos_1
+
+        aaa = fill_1_0_0.error_test(execute_var, game, start_pos1, end_pos1)
+        if isinstance(aaa, Response.Response_Template) : return aaa
+
+        volue = [end_pos1[i] - start_pos1[i] + 1 for i in range(3)]
+        if volue[0] * volue[1] * volue[2] > 32768 : return Response.Response_Template("区域大小超过32768个方块").substitute()
+
+
+        new_block_index = game.minecraft_chunk.____find_block_mapping____(block_id, block_state)
+        success = [False] * (volue[0] * volue[1] * volue[2])
+        if test_block and isinstance(test_block_state, int) and test_block_state != -1 :
+            test_block_obj = BaseNbtClass.block_nbt().__create__(test_block, test_block_state)
+        for index,pos_xyz in enumerate(itertools.product( range(start_pos1[0], end_pos1[0]+1), range(start_pos1[1], end_pos1[1]+1), 
+            range(start_pos1[2], end_pos1[2]+1) )) :
+            block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], pos_xyz)
+            if fill_mode != "hollow" and block_index == new_block_index : continue
+            block_obj = game.minecraft_chunk.block_mapping[block_index]
+
+            if fill_mode == "replace" and test_block and isinstance(test_block_state, dict) :
+                if any((block_obj.BlockState[i] != test_block_state[i] for i in test_block_state)) : continue
+            elif fill_mode == "replace" and test_block and isinstance(test_block_state, int) and test_block_state != -1 :
+                if any((block_obj.BlockState[i] != test_block_obj.BlockState[i] for i in test_block_obj.BlockState)) : continue
+            elif fill_mode == "outline" :
+                if not all( (start_pos1[i] < pos_xyz[i] < end_pos1[i] for i in range(3)) ) : continue
+            elif fill_mode == "keep" and block_index != 0 : continue
+            elif fill_mode == "hollow" :
+                aaa = all( (start_pos1[i] < pos_xyz[i] < end_pos1[i] for i in range(3)) )
+                if aaa and block_index == 0 : continue
+                elif not aaa and block_index == new_block_index : continue
+                game.minecraft_chunk.____set_block____(execute_var["dimension"], pos_xyz, 0)
+                game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, None)
+                success[index] = True
+                continue
+            elif fill_mode == "destroy" :
+                block_obj.__change_to_entity__(execute_var["dimension"], [i+0.5 for i in pos_xyz])
+
+            game.minecraft_chunk.____set_block____(execute_var["dimension"], pos_xyz, new_block_index)
+            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, None)
+            success[index] = True
+
+        success_counter = len(success) - success.count(False)
+        return Response.Response_Template("在$start ~ $end填充了$count个方块", success_counter, min(1,success_counter)).substitute(
+            start=tuple(start_pos1), end=tuple(end_pos1), count=success_counter)
+
+
+class fill_1_19_80 :
+
+    fill_block:Callable = fill_1_0_0.fill_block
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+
+        poses = [ token_list[i]["token"].group() for i in range(1,7,1) ]
+        block_id = ID_transfor(token_list[7]["token"].group())
+        if block_id not in _game.minecraft_ident.blocks :
+            raise CompileError("不存在的方块ID：%s" % block_id, pos=(token_list[7]["token"].start(), token_list[7]["token"].end()))
+        if 8 >= len(token_list) : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6],
+            block_id=block_id)
+
+        index = 8
+        if token_list[index]["type"] == "Start_BlockState_Argument" : 
+            index, block_state = BlockState_Compiler( block_id, token_list, index )
+        else : block_state = 0
+        if index >= len(token_list) : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6],
+            block_id=block_id, block_state=block_state)
+
+        fill_mode = token_list[index]["token"].group() ; index += 1
+        if fill_mode != "replace" : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6],
+            block_id=block_id, block_state=block_state, fill_mode=fill_mode)
+        elif fill_mode == "replace" and index >= len(token_list) : return functools.partial(cls.fill_block, game=_game, 
+            start1=poses[0:3], end1=poses[3:6], block_id=block_id, block_state=block_state)
+        elif fill_mode == "replace" : 
+            test_block_id = ID_transfor(token_list[index]["token"].group()) ; index += 1
+            if test_block_id not in _game.minecraft_ident.blocks :
+                raise CompileError("不存在的方块ID：%s" % test_block_id, pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+            if index >= len(token_list) : return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], 
+                end1=poses[3:6], block_id=block_id, block_state=block_state, test_block=test_block_id)
+
+            if token_list[index]["type"] == "Start_BlockState_Argument" : 
+                index, test_block_state = BlockState_Compiler( block_id, token_list, index )
+            else : test_block_state = {}
+            return functools.partial(cls.fill_block, game=_game, start1=poses[0:3], end1=poses[3:6], block_id=block_id,
+                block_state=block_state, test_block=test_block_id, test_block_state=test_block_state)
+
+
+class fog :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
+        mode = token_list[index]["token"].group() ; index += 1
+        if mode == "push" : 
+            fog_id = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+            if fog_id not in _game.minecraft_ident.fogs : raise CompileError("不存在的迷雾ID：%s" % fog_id, 
+                pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+            user_id = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+            return functools.partial(cls.push, entity_get=entity_func, fog_id=fog_id, user_id=user_id)
+        else : 
+            user_id = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+            return functools.partial(cls.pop, entity_get=entity_func, user_id=user_id)
+    
+    def push(execute_var:COMMAND_CONTEXT, entity_get:Callable, fog_id:str, user_id:str) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+
+        for player in entity_list : player.fogCommandStack.append({"user_id":user_id, "id":fog_id})
+        return Response.Response_Template("以下玩家已将迷雾添加至栈内:\n$players", len(entity_list), 1).substitute(
+            players=", ".join(ID_tracker(i) for i in entity_list)
+        )
+
+    def pop(execute_var:COMMAND_CONTEXT, entity_get:Callable, user_id:str) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+
+        success = string.Template("以下实体成功的移除了最后添加的迷雾:\n$entity")
+        faild = string.Template("以下实体不存在添加的迷雾:\n$entity")
+        success_list, faild_list = [], []
+
+        for player in entity_list :
+            if any((i["user_id"] == user_id for i in player.fogCommandStack)) :
+                for index,item in enumerate(list(player.fogCommandStack)) :
+                    if item["user_id"] != user_id : continue
+                    del player.fogCommandStack[index] ; break
+                success_list.append(ID_tracker(player))
+            else : faild_list.append(ID_tracker(player))
+        return Response.Response_Template("$success$is_line$fiald", len(success_list), min(1,len(success_list))).substitute(
+            success=success.substitute(entity=", ".join(success_list)) if success_list else "",
+            is_line = "\n" if success_list and faild_list else "",
+            fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
+
+
+class gamemode :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        mode = Constants.GAME_DATA["gamemode_type"].index( token_list[1]["token"].group() ) // 3
+        if 2 >= len(token_list) : return functools.partial(cls.set_gamemode, gamemode_value=mode)
+
+        _, player_get = Selector.Selector_Compiler(_game, token_list, 2, is_player=True)
+        return functools.partial(cls.set_gamemode, gamemode_value=mode, entity_get=player_get)
+    
+    def set_gamemode(execute_var:COMMAND_CONTEXT, gamemode_value:int, entity_get:Callable=None) :
+        entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        if not isinstance(entity_list[0], BaseNbtClass.entity_nbt) or entity_list[0].Identifier != "minecraft:player" : 
+            return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
+        
+        for player in entity_list : player.GameMode = np.int8(gamemode_value)
+        translate = ["生存", "创造", "冒险", "旁观"][gamemode_value]
+        return Response.Response_Template("以下玩家已将游戏模式更改为$mode:\n$players", len(entity_list), 1).substitute(
+            players=", ".join(ID_tracker(i) for i in entity_list), mode=translate
+        )
+
+
+
 class give :
 
     @classmethod
@@ -743,7 +963,7 @@ class give :
         #Selector
         index = 1
         index, kargs["entity_func"] = Selector.Selector_Compiler(_game, token_list, index, is_player=True)
-        
+
         #Item
         item_name = ID_transfor(token_list[index]["token"].group())
         if item_name not in _game.minecraft_ident.items:

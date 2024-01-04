@@ -404,7 +404,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","fill").add_leaves(
         *SpecialMatch.Pos_Tree(
             *SpecialMatch.Pos_Tree(
-                BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
+                BaseMatch.AnyString("Block_ID").set_version(1,19,80,"min").add_leaves(
                     SpecialMatch.BE_BlockState_Tree(
                         BaseMatch.Char("Fill_Mode","replace").add_leaves(
                             BaseMatch.AnyString("Block_ID").add_leaves(
@@ -426,11 +426,36 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline").add_leaves( BaseMatch.END_NODE ),
                     BaseMatch.END_NODE
                 ),
+                BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").set_version(1,19,80,"max").add_leaves(
+                    SpecialMatch.BE_BlockState_Tree(
+                        BaseMatch.Char("Fill_Mode","replace").add_leaves(
+                            BaseMatch.AnyString("Block_ID").add_leaves(
+                                SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
+                                BaseMatch.END_NODE
+                            ),
+                            BaseMatch.END_NODE
+                        ),
+                        BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline").add_leaves( BaseMatch.END_NODE ),
+                        BaseMatch.END_NODE
+                    ),
+                    BaseMatch.END_NODE
+                ),
                 BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
                     BaseMatch.Int("Block_Data").add_leaves(
                         BaseMatch.Char("Fill_Mode","replace").add_leaves(
                             BaseMatch.AnyString("Block_ID").add_leaves(
                                 BaseMatch.Int("Block_Data").add_leaves(BaseMatch.END_NODE),
+                                BaseMatch.END_NODE
+                            ),
+                            BaseMatch.END_NODE
+                        ),
+                        BaseMatch.Enum("Fill_Mode","destroy","hollow","keep","outline").add_leaves( BaseMatch.END_NODE ),
+                        BaseMatch.END_NODE
+                    ),
+                    SpecialMatch.BE_BlockState_Tree(
+                        BaseMatch.Char("Fill_Mode","replace").add_leaves(
+                            BaseMatch.AnyString("Block_ID").add_leaves(
+                                SpecialMatch.BE_BlockState_Tree(BaseMatch.END_NODE),
                                 BaseMatch.END_NODE
                             ),
                             BaseMatch.END_NODE
@@ -452,13 +477,13 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # fog ✓ V
     BaseMatch.Char("Command","fog").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Char("Mode_Delete","push").add_leaves(
+            BaseMatch.Char("Mode","push").add_leaves(
                 BaseMatch.AnyString("Fog_Type").add_leaves(
-                    BaseMatch.AnyString("User_Provided_Id").add_leaves( BaseMatch.END_NODE )
+                    *SpecialMatch.String_Tree("User_Provided_Id", BaseMatch.END_NODE)
                 )
             ),
-            BaseMatch.Enum("Mode_Delete","pop","remove").add_leaves(
-                BaseMatch.AnyString("User_Provided_Id").add_leaves( BaseMatch.END_NODE )
+            BaseMatch.Enum("Mode","pop","remove").add_leaves(
+                *SpecialMatch.String_Tree("User_Provided_Id", BaseMatch.END_NODE)
             )
         )
     ),

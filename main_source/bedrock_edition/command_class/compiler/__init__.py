@@ -23,7 +23,7 @@ def ID_transfor(s:str) -> str :
     if len(a) == 1 : return "minecraft:%s" % a[0]
     else : return s
 
-def BlockState_Transformer(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tuple[str,int] :
+def BlockState_Compiler(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tuple[int,dict] :
     block_id = ID_transfor(block_id)
     block_id_state = {} if (block_id not in Constants.BLOCK_STATE) else Constants.BLOCK_STATE[block_id]
     block_id_state : Dict[Literal["default","support_value"], Union[Dict,Dict]]
@@ -47,7 +47,7 @@ def BlockState_Transformer(block_id:str, token_list:COMMAND_TOKEN, index:int) ->
         if input_block_state[state] not in block_id_state["support_value"][state] : 
             raise CompileError("方块状态 %s 不存在值 %s" % (state,input_block_state[state]))
 
-    return input_block_state
+    return (index, input_block_state)
 
 def replace_str(base:str, start:int, end:int, replace:str) -> str:
     return "".join([ base[:start] , replace , base[end:] ])
@@ -97,8 +97,8 @@ Command_to_Compiler = {
     "camerashake": Command1.camerashake, "clear": Command1.clear, "clearspawnpoint": Command1.clearspawnpoint,
     "clone": Command1.clone, "damage": Command1.damage, "daylock": Command1.daylock,
     "dialogue": Command1.dialogue, "effect":Command1.effect, "enchant":Command1.enchant,
-    "event": Command1.event, #"fill":Command1.fill, "fog":Command1.fog,
-    "dialogue": Command1.dialogue, "effect":Command1.effect, "enchant":Command1.enchant,
+    "event": Command1.event, "fill":{(1,0,0):Command1.fill_1_0_0, (1,19,80):Command1.fill_1_19_80}, "fog":Command1.fog,
+    "gamemode": Command1.gamemode, "effect":Command1.effect, "enchant":Command1.enchant,
 
     "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,

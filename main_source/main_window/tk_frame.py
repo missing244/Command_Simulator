@@ -1047,7 +1047,7 @@ class Choose_Expand(tkinter.Frame) :
                 tkinter.messagebox.showerror("Error","安装失败\n未收录的拓展包") ; os.remove(save_path) ; return None
             if 'crc32' not in self.expand_pack_list[uid] : 
                 tkinter.messagebox.showerror("Error","安装失败\n拓展包无法校验") ; os.remove(save_path) ; return None
-            if self.expand_pack_list[uid]['crc32'] != zlib.crc32(FileOperation.read_a_file(save_path, "readbyte")) : 
+            if self.expand_pack_list[uid]['crc32'] != zlib.crc32(response2) : 
                 tkinter.messagebox.showerror("Error","安装失败\n拓展包校验未通过") ; os.remove(save_path) ; return None
 
             if len(self.expand_pack_list[uid]['import']) : msg_laber.config(text=msg_laber.cget("text") + "正在下载依赖库...(3/3)\n")

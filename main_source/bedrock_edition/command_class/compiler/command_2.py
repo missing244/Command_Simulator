@@ -1,6 +1,7 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction
-from . import Selector,Rawtext,CompileError,CommandParser,Quotation_String_transfor_1,ID_transfor,BlockState_Transformer,Msg_Compiler
+from . import Selector,Rawtext,CompileError,CommandParser
+from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler,Msg_Compiler
 import functools,string,random,re,math,itertools,json
 from typing import Dict,Union,List,Tuple,Literal,Callable
 

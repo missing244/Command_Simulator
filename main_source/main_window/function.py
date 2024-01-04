@@ -213,7 +213,7 @@ class Text_Bind_Events :
         if isinstance(widget, tkinter.Text) : x1,y1,x2,y2 = widget.bbox(tkinter.INSERT)
         else : y1 = widget.winfo_rooty()
         x1 = self.main_win.window.winfo_width() // 2
-        Menu.post(x1, y1 - (widget.winfo_height()-20 if isinstance(widget, (tkinter.Entry, ttk.Entry)) else 0))
+        Menu.post(x1, y1 - (widget.winfo_height()-40 if isinstance(widget, (tkinter.Entry, ttk.Entry)) else 0))
 
 
     def left_click_motion_event(self,e:tkinter.Event) :
