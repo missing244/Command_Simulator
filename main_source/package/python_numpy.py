@@ -31,24 +31,24 @@ class float32(ctypes.c_float) :
 
 
     def __radd__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value + other)
-        else : return self.__class__(self.value + other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other + self.value)
+        else : return self.__class__(other.value + self.value)
 
     def __rsub__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value - other)
-        else : return self.__class__(self.value - other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other - self.value)
+        else : return self.__class__(other.value - self.value)
 
     def __rmul__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value * other)
-        else : return self.__class__(self.value * other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other * self.value)
+        else : return self.__class__(other.value * self.value)
 
     def __rtruediv__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value / other)
-        else : return self.__class__(self.value / other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other / self.value)
+        else : return self.__class__(other.value / self.value)
 
     def __rpow__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(pow(self.value , other))
-        else : return self.__class__(pow(self.value , other.value))
+        if isinstance(other,(int,float)) : return self.__class__(pow(other, self.value))
+        else : return self.__class__(pow(other.value, self.value))
 
 
     def __iadd__(self,other) :
@@ -175,24 +175,24 @@ class float64(ctypes.c_double) :
 
 
     def __radd__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value + other)
-        else : return self.__class__(self.value + other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other + self.value)
+        else : return self.__class__(other.value + self.value)
 
     def __rsub__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value - other)
-        else : return self.__class__(self.value - other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other - self.value)
+        else : return self.__class__(other.value - self.value)
 
     def __rmul__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value * other)
-        else : return self.__class__(self.value * other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other * self.value)
+        else : return self.__class__(other.value * self.value)
 
     def __rtruediv__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value / other)
-        else : return self.__class__(self.value / other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other / self.value)
+        else : return self.__class__(other.value / self.value)
 
     def __rpow__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(pow(self.value , other))
-        else : return self.__class__(pow(self.value , other.value))
+        if isinstance(other,(int,float)) : return self.__class__(pow(other, self.value))
+        else : return self.__class__(pow(other.value, self.value))
 
 
     def __iadd__(self,other) :
@@ -351,56 +351,56 @@ class int8(ctypes.c_int8) :
 
 
     def __radd__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value + other)
-        else : return self.__class__(self.value + other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other + self.value)
+        else : return self.__class__(other.value + self.value)
 
     def __rsub__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value - other)
-        else : return self.__class__(self.value - other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other - self.value)
+        else : return self.__class__(other.value - self.value)
 
     def __rmul__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value * other)
-        else : return self.__class__(self.value * other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other * self.value)
+        else : return self.__class__(other.value * self.value)
 
     def __rtruediv__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value / other)
-        else : return self.__class__(self.value / other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other / self.value)
+        else : return self.__class__(other.value / self.value)
 
     def __rfloordiv__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value // other)
-        else : return self.__class__(self.value // other.value)
+        if isinstance(other,(int)) : return self.__class__(other // self.value)
+        else : return self.__class__(other.value // self.value)
 
     def __rmod__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value % other)
-        else : return self.__class__(self.value % other.value)
+        if isinstance(other,(int)) : return self.__class__(other % self.value)
+        else : return self.__class__(other.value % self.value)
 
     def __rdivmod__(self,other) :
-        if isinstance(other,(int)) : return divmod(self.value,other)
-        else : return divmod(self.value,other.value)
+        if isinstance(other,(int)) : return divmod(other, self.value)
+        else : return divmod(other.value, self.value)
 
     def __rpow__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(pow(self.value , other))
-        else : return self.__class__(pow(self.value , other.value))
+        if isinstance(other,(int,float)) : return self.__class__(pow(other, self.value))
+        else : return self.__class__(pow(other.value, self.value))
 
     def __rlshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value >> other)
-        else : return self.__class__(self.value >> other.value)
+        if isinstance(other,(int)) : return self.__class__(other >> self.value)
+        else : return self.__class__(other.value >> self.value)
 
     def __rshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value << other)
-        else : return self.__class__(self.value << other.value)
+        if isinstance(other,(int)) : return self.__class__(other << self.value)
+        else : return self.__class__(other.value << self.value)
 
     def __rand__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value & other)
-        else : return self.__class__(self.value & other.value)
+        if isinstance(other,(int)) : return self.__class__(other & self.value)
+        else : return self.__class__(other.value & self.value)
 
     def __rxor__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value ^ other)
-        else : return self.__class__(self.value ^ other.value)
+        if isinstance(other,(int)) : return self.__class__(other ^ self.value)
+        else : return self.__class__(other.value ^ self.value)
 
     def __ror__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value | other)
-        else : return self.__class__(self.value | other.value)
+        if isinstance(other,(int)) : return self.__class__(other | self.value)
+        else : return self.__class__(other.value | self.value)
 
 
     def __iadd__(self,other) :
@@ -591,56 +591,52 @@ class int16(ctypes.c_int16) :
 
 
     def __radd__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value + other)
-        else : return self.__class__(self.value + other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other + self.value)
+        else : return self.__class__(other.value + self.value)
 
     def __rsub__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value - other)
-        else : return self.__class__(self.value - other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other - self.value)
+        else : return self.__class__(other.value - self.value)
 
     def __rmul__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value * other)
-        else : return self.__class__(self.value * other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other * self.value)
+        else : return self.__class__(other.value * self.value)
 
     def __rtruediv__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value / other)
-        else : return self.__class__(self.value / other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other / self.value)
+        else : return self.__class__(other.value / self.value)
 
     def __rfloordiv__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value // other)
-        else : return self.__class__(self.value // other.value)
+        if isinstance(other,(int)) : return self.__class__(other // self.value)
+        else : return self.__class__(other.value // self.value)
 
     def __rmod__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value % other)
-        else : return self.__class__(self.value % other.value)
+        if isinstance(other,(int)) : return self.__class__(other % self.value)
+        else : return self.__class__(other.value % self.value)
 
     def __rdivmod__(self,other) :
-        if isinstance(other,(int)) : return divmod(self.value,other)
-        else : return divmod(self.value,other.value)
+        if isinstance(other,(int)) : return divmod(other, self.value)
+        else : return divmod(other.value, self.value)
 
     def __rpow__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(pow(self.value , other))
-        else : return self.__class__(pow(self.value , other.value))
+        if isinstance(other,(int,float)) : return self.__class__(pow(other, self.value))
+        else : return self.__class__(pow(other.value, self.value))
 
     def __rlshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value >> other)
-        else : return self.__class__(self.value >> other.value)
+        if isinstance(other,(int)) : return self.__class__(other >> self.value)
+        else : return self.__class__(other.value >> self.value)
 
     def __rshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value << other)
-        else : return self.__class__(self.value << other.value)
+        if isinstance(other,(int)) : return self.__class__(other << self.value)
+        else : return self.__class__(other.value << self.value)
 
     def __rand__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value & other)
-        else : return self.__class__(self.value & other.value)
+        if isinstance(other,(int)) : return self.__class__(other & self.value)
+        else : return self.__class__(other.value & self.value)
 
     def __rxor__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value ^ other)
-        else : return self.__class__(self.value ^ other.value)
-
-    def __ror__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value | other)
-        else : return self.__class__(self.value | other.value)
+        if isinstance(other,(int)) : return self.__class__(other ^ self.value)
+        else : return self.__class__(other.value ^ self.value)
 
 
     def __iadd__(self,other) :
@@ -831,56 +827,52 @@ class int32(ctypes.c_int32) :
 
 
     def __radd__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value + other)
-        else : return self.__class__(self.value + other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other + self.value)
+        else : return self.__class__(other.value + self.value)
 
     def __rsub__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value - other)
-        else : return self.__class__(self.value - other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other - self.value)
+        else : return self.__class__(other.value - self.value)
 
     def __rmul__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value * other)
-        else : return self.__class__(self.value * other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other * self.value)
+        else : return self.__class__(other.value * self.value)
 
     def __rtruediv__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value / other)
-        else : return self.__class__(self.value / other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other / self.value)
+        else : return self.__class__(other.value / self.value)
 
     def __rfloordiv__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value // other)
-        else : return self.__class__(self.value // other.value)
+        if isinstance(other,(int)) : return self.__class__(other // self.value)
+        else : return self.__class__(other.value // self.value)
 
     def __rmod__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value % other)
-        else : return self.__class__(self.value % other.value)
+        if isinstance(other,(int)) : return self.__class__(other % self.value)
+        else : return self.__class__(other.value % self.value)
 
     def __rdivmod__(self,other) :
-        if isinstance(other,(int)) : return divmod(self.value,other)
-        else : return divmod(self.value,other.value)
+        if isinstance(other,(int)) : return divmod(other, self.value)
+        else : return divmod(other.value, self.value)
 
     def __rpow__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(pow(self.value , other))
-        else : return self.__class__(pow(self.value , other.value))
+        if isinstance(other,(int,float)) : return self.__class__(pow(other, self.value))
+        else : return self.__class__(pow(other.value, self.value))
 
     def __rlshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value >> other)
-        else : return self.__class__(self.value >> other.value)
+        if isinstance(other,(int)) : return self.__class__(other >> self.value)
+        else : return self.__class__(other.value >> self.value)
 
     def __rshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value << other)
-        else : return self.__class__(self.value << other.value)
+        if isinstance(other,(int)) : return self.__class__(other << self.value)
+        else : return self.__class__(other.value << self.value)
 
     def __rand__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value & other)
-        else : return self.__class__(self.value & other.value)
+        if isinstance(other,(int)) : return self.__class__(other & self.value)
+        else : return self.__class__(other.value & self.value)
 
     def __rxor__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value ^ other)
-        else : return self.__class__(self.value ^ other.value)
-
-    def __ror__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value | other)
-        else : return self.__class__(self.value | other.value)
+        if isinstance(other,(int)) : return self.__class__(other ^ self.value)
+        else : return self.__class__(other.value ^ self.value)
 
 
     def __iadd__(self,other) :
@@ -1071,52 +1063,52 @@ class int64(ctypes.c_int64) :
 
 
     def __radd__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value + other)
-        else : return self.__class__(self.value + other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other + self.value)
+        else : return self.__class__(other.value + self.value)
 
     def __rsub__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value - other)
-        else : return self.__class__(self.value - other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other - self.value)
+        else : return self.__class__(other.value - self.value)
 
     def __rmul__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value * other)
-        else : return self.__class__(self.value * other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other * self.value)
+        else : return self.__class__(other.value * self.value)
 
     def __rtruediv__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(self.value / other)
-        else : return self.__class__(self.value / other.value)
+        if isinstance(other,(int,float)) : return self.__class__(other / self.value)
+        else : return self.__class__(other.value / self.value)
 
     def __rfloordiv__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value // other)
-        else : return self.__class__(self.value // other.value)
+        if isinstance(other,(int)) : return self.__class__(other // self.value)
+        else : return self.__class__(other.value // self.value)
 
     def __rmod__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value % other)
-        else : return self.__class__(self.value % other.value)
+        if isinstance(other,(int)) : return self.__class__(other % self.value)
+        else : return self.__class__(other.value % self.value)
 
     def __rdivmod__(self,other) :
-        if isinstance(other,(int)) : return divmod(self.value,other)
-        else : return divmod(self.value,other.value)
+        if isinstance(other,(int)) : return divmod(other, self.value)
+        else : return divmod(other.value, self.value)
 
     def __rpow__(self,other) :
-        if isinstance(other,(int,float)) : return self.__class__(pow(self.value , other))
-        else : return self.__class__(pow(self.value , other.value))
+        if isinstance(other,(int,float)) : return self.__class__(pow(other, self.value))
+        else : return self.__class__(pow(other.value, self.value))
 
     def __rlshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value >> other)
-        else : return self.__class__(self.value >> other.value)
+        if isinstance(other,(int)) : return self.__class__(other >> self.value)
+        else : return self.__class__(other.value >> self.value)
 
     def __rshift__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value << other)
-        else : return self.__class__(self.value << other.value)
+        if isinstance(other,(int)) : return self.__class__(other << self.value)
+        else : return self.__class__(other.value << self.value)
 
     def __rand__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value & other)
-        else : return self.__class__(self.value & other.value)
+        if isinstance(other,(int)) : return self.__class__(other & self.value)
+        else : return self.__class__(other.value & self.value)
 
     def __rxor__(self,other) :
-        if isinstance(other,(int)) : return self.__class__(self.value ^ other)
-        else : return self.__class__(self.value ^ other.value)
+        if isinstance(other,(int)) : return self.__class__(other ^ self.value)
+        else : return self.__class__(other.value ^ self.value)
 
     def __ror__(self,other) :
         if isinstance(other,(int)) : return self.__class__(self.value | other)
