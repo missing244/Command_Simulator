@@ -222,11 +222,11 @@ class entity_nbt :
         if self.Identifier != "minecraft:player" : return None
         self.Weapon[0] = self.HotBar[self.SelectSlot if self.SelectSlot < len(self.HotBar) else self.HotBar]
 
-    def __pickup_item__(self,item_obj:item_nbt):
+    def __pickup_item__(self,item_obj:item_nbt) -> bool :
         test_list = ("Identifier","Damage","CanDestroy","CanPlaceOn","LockInInventory","LockInSlot","KeepOnDeath","tags")
         replace_list = ("CanDestroy","CanPlaceOn","LockInInventory","LockInSlot","KeepOnDeath","tags")
 
-        def place_item(list1:List[item_nbt], index:int):
+        def place_item(list1:List[item_nbt], index:int) :
             if isinstance(list1[index], item_nbt) :
                 for attr_test in test_list :
                     if getattr(list1[index], attr_test) != getattr(item_obj, attr_test) : return None
@@ -235,7 +235,7 @@ class entity_nbt :
                 elif list1[index].Identifier in Constants.GAME_DATA['max_count_16_item'] : max_count = 16
                 else : max_count = 64
 
-                add_count = min(max_count - list1[index].Count ,item_obj.Count)
+                add_count = min(max_count - int(list1[index].Count), int(item_obj.Count))
                 list1[index].Count += np.int8(add_count)
                 item_obj.Count -= np.int8(add_count)
             else :
@@ -243,9 +243,9 @@ class entity_nbt :
                 elif item_obj.Identifier in Constants.GAME_DATA['max_count_16_item'] : max_count = 16
                 else : max_count = 64
 
-                add_count = min(max_count, item_obj.Count)
+                add_count = min(max_count, int(item_obj.Count))
                 item_new = item_nbt().__create__(item_obj.Identifier, add_count, item_obj.Damage)
-                for attr in replace_list : setattr(item_new, attr, getattr(item_obj, attr))
+                for attr in replace_list : setattr(item_new, attr, copy.deepcopy(getattr(item_obj, attr)))
                 item_obj.Count -= np.int8(add_count)
                 list1[index] = item_new
 
@@ -253,10 +253,11 @@ class entity_nbt :
             for index in range(self.HotBar.__len__()) : 
                 if item_obj.Count > 0 : place_item(self.HotBar, index)
 
-        if not hasattr(self, "Inventory") : return None
-
-        for index in range(self.Inventory['Items'].__len__()) : 
-            if item_obj.Count > 0 : place_item(self.Inventory['Items'], index)
+        if hasattr(self, "Inventory") :
+            for index in range(self.Inventory['Items'].__len__()) : 
+                if item_obj.Count > 0 : place_item(self.Inventory['Items'], index)
+        
+        return item_obj.Count > 0
 
     def __save__(self) :
         all_data = {}
@@ -845,7 +846,7 @@ class chunk_nbt :
                 elif list1[index].Identifier in Constants.GAME_DATA['max_count_16_item'] : max_count = 16
                 else : max_count = 64
 
-                add_count = min(max_count - list1[index].Count ,item_obj.Count)
+                add_count = min(max_count - int(list1[index].Count), int(item_obj.Count))
                 list1[index].Count += np.int8(add_count)
                 item_obj.Count -= np.int8(add_count)
             else :
@@ -853,9 +854,9 @@ class chunk_nbt :
                 elif item_obj.Identifier in Constants.GAME_DATA['max_count_16_item'] : max_count = 16
                 else : max_count = 64
 
-                add_count = min(max_count, item_obj.Count)
+                add_count = min(max_count, int(item_obj.Count))
                 item_new = item_nbt().__create__(item_obj.Identifier, add_count, item_obj.Damage)
-                for attr in replace_list : setattr(item_new, attr, getattr(item_obj, attr))
+                for attr in replace_list : setattr(item_new, attr, copy.deepcopy(getattr(item_obj, attr)))
                 item_obj.Count -= np.int8(add_count)
                 list1[index] = item_new
 

@@ -2,7 +2,7 @@ from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,EntityComponent
 from . import Selector,CompileError,CommandParser
 from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler
-import functools,string,random,re,math,itertools,array,copy
+import functools,string,random,re,math,itertools,json,copy
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
 
@@ -222,7 +222,7 @@ class clear :
             if name is None : clear_count += int(item.Count) ; clear_list[index] = fill_blank ; continue
             if item.Identifier != name : continue
             if data != -1 and item.Identifier in Constants.GAME_DATA["damage_tool"] and item.tags["damage"] != data : continue
-            elif data != -1 and item.Damage["damage"] != data : continue
+            elif data != -1 and item.Damage != data : continue
 
             if max_count == 0 : clear_count += int(item.Count) ; continue
             if clear_count < max_count :              #Case1: The max clear num is enough to delete this item
@@ -258,8 +258,7 @@ class clear :
         item_max_clear = int(token_list[index]["token"].group())
         if not(0 <= item_max_clear <= 2147483647): 
             raise CompileError("%s 不是一个有效的最大数量" % item_max_clear, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-        if index >= len(token_list) : return functools.partial(cls.clear_specific, entity_get=entity_func, 
-            name=item_name, data=item_damage, max_count=item_max_clear)
+        return functools.partial(cls.clear_specific, entity_get=entity_func, name=item_name, data=item_damage, max_count=item_max_clear)
 
     def clear_specific(execute_var:COMMAND_CONTEXT, entity_get:Callable=None, name:str=None, data:int=-1, max_count:int=2147483647) :
         entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
@@ -952,48 +951,81 @@ class gamemode :
         )
 
 
+class gamerule :
+
+    int_gamerule = {"randomtickspeed":None, "spawnradius":None, "playerssleepingpercentage":None,
+                    "functioncommandlimit": 10000, "maxcommandchainlength":None}
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        gamerule_name = token_list[1]["token"].group().lower()
+        if gamerule_name not in Constants.GAMERULE : raise CompileError("不存在的游戏规则：%s" % gamerule_name, 
+            pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+        if 2 >= len(token_list) : return functools.partial(cls.set_gamerule, game=_game, gamerule_name=gamerule_name)
+
+        if gamerule_name in cls.int_gamerule and token_list[2]["type"] != "Int_Value" :
+            raise CompileError("游戏规则%s不是布尔值类型" % gamerule_name, 
+            pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+
+        if token_list[2]["type"] == "Int_Value" : value = int(token_list[2]["token"].group())
+        else : value = bool(("false","true").index(token_list[2]["token"].group()))
+        if gamerule_name in cls.int_gamerule :
+            if value < 0 : raise CompileError("游戏规则%s不能为负数" % gamerule_name, 
+            pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+            if (cls.int_gamerule[gamerule_name] is not None) and value > cls.int_gamerule[gamerule_name] : 
+                raise CompileError("游戏规则%s不能超过%s" % (gamerule_name, cls.int_gamerule[gamerule_name]), 
+                pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+        return functools.partial(cls.set_gamerule, game=_game, gamerule_name=gamerule_name, value=value)
+    
+    def set_gamerule(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, gamerule_name:str, value:Union[bool,int]=None) :
+        if value is None : return Response.Response_Template("游戏规则 $rule 为 $value1", 1, 1).substitute(
+            rule=gamerule_name, value1=game.minecraft_world.__getattribute__(gamerule_name))
+        type1 = type(game.minecraft_world.__getattribute__(gamerule_name))
+        setattr(game.minecraft_world, gamerule_name, type1(value))
+        return Response.Response_Template("游戏规则 $rule 已修改为 $value1", 1, 1).substitute(
+            rule=gamerule_name, value1=game.minecraft_world.__getattribute__(gamerule_name)
+        )
+
 
 class give :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-
-        kargs = {"game":_game}; lst_len = token_list.__len__()
+        lst_len = token_list.__len__()
         
-        #Selector
-        index = 1
-        index, kargs["entity_func"] = Selector.Selector_Compiler(_game, token_list, index, is_player=True)
-
-        #Item
-        item_name = ID_transfor(token_list[index]["token"].group())
-        if item_name not in _game.minecraft_ident.items:
-            raise CompileError(f"不存在名为{item_name}的物品",
-                               pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-        kargs["item_name"] = item_name; index += 1
-        if index >= lst_len : return functools.partial(cls.do, **kargs)
+        index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
+        item_name = ID_transfor(token_list[index]["token"].group()) ; index += 1
+        if item_name not in _game.minecraft_ident.items: raise CompileError("不存在名为 %s 的物品" % item_name,
+            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name)
 
         #Data
-        item_data = int(token_list[index]["token"].group())
-        if not(0 <= item_data <= 32767):
-            raise CompileError(f"'{item_data}' 不是一个有效的数字",
-                               pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-        kargs["item_data"] = item_data; index += 1
-        if index >= lst_len : return functools.partial(cls.do, **kargs)
+        item_data = int(token_list[index]["token"].group()) ; index += 1
+        if not(0 <= item_data <= 32767): raise CompileError("%s不是一个有效的数据值" % item_data,
+            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data)
 
         #Count
-        item_count = int(token_list[index]["token"].group())
-        if not(1 <= item_count <= 32767):
-            raise CompileError(f"'{item_count}' 不是一个有效的数字",
-                               pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-        kargs["item_count"] = item_count; index += 1
-        if index >= lst_len : return functools.partial(cls.do, **kargs)
+        item_count = int(token_list[index]["token"].group()) ; index += 1
+        if not(1 <= item_count <= 32767): raise CompileError("%s 不是一个有效的数量" % item_count,
+            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data, count=item_count)
 
         #Nbt
-        kargs["item_nbt"] = int(token_list[index]["token"].group())
-        return functools.partial(cls.do, **kargs)
+        item_nbt = json.loads("".join( [i["token"].group() for i in token_list[index:]] ))
+        return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data, count=item_count, nbt=item_nbt)
 
+    def give_item(execute_var:COMMAND_CONTEXT, entity_get:Callable, item_id:str, data:int=0, count:int=1, nbt:dict={}) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
 
+        itme_obj = BaseNbtClass.item_nbt().__create__(item_id, count, data, nbt)
+        itme_obj.Count = count
 
-
+        for player in entity_list : 
+            if player.__pickup_item__(itme_obj) : itme_obj.__change_to_entity__(execute_var["dimension"], player.Pos)
+        return Response.Response_Template("以下玩家已给予 $item * $count :\n$players", len(entity_list), 1).substitute(
+            players=", ".join(ID_tracker(i) for i in entity_list), item=item_id, count=count
+        )
 
 

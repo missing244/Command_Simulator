@@ -160,10 +160,8 @@ class runing_command_block_obj:
         cur = pos
         load_successful = True
         while True:
-            try:
-                _, cb_direction, cb_conditional, nbt = self.get_cb_data(cur)
-            except ValueError:
-                break  # Not a CB at `cur`
+            try: _, cb_direction, cb_conditional, nbt = self.get_cb_data(cur)
+            except ValueError: break  # Not a CB at `cur`
             cb_last_exe = nbt["LastExecution"]
             cb_command = nbt["Command"]
             # Check limit
@@ -176,18 +174,14 @@ class runing_command_block_obj:
                 if cb_conditional:
                     opposite_offset = self.FACING2OFFSET[self.FACING_OPPOSITE[cb_direction]]
                     check_pos = self.apply_offset(cur, opposite_offset)
-                    try:
-                        _, _, _, opposite_nbt = self.get_cb_data(check_pos)
-                    except ValueError:  # Not a CB at `check_pos`
-                        condition_ok = False
-                    else:
-                        condition_ok = opposite_nbt["Success"]
-                else:
-                    condition_ok = True
-            else:
-                condition_ok = False
+                    try: _, _, _, opposite_nbt = self.get_cb_data(check_pos)
+                    except ValueError: condition_ok = False # Not a CB at `check_pos`
+                    else: condition_ok = opposite_nbt["Success"]
+                else : condition_ok = True
+            else : condition_ok = False
             # Run command
             if condition_ok:
+                if cb_command not in self.mc_chunk.command_block_compile_function : continue
                 func = self.mc_chunk.command_block_compile_function[cb_command]
                 response = func({
                     "executer": "command_block",
@@ -209,10 +203,8 @@ class runing_command_block_obj:
                 self.executed_count += 1
             # Try to trigger the pointing chain CB
             next_pos = self.apply_offset(cur, self.FACING2OFFSET[cb_direction])
-            try:
-                next_cb_type, _, _, _ = self.get_cb_data(next_pos)
-            except ValueError:
-                break  # The next block is not CB, pass
+            try: next_cb_type, _, _, _ = self.get_cb_data(next_pos)
+            except ValueError: break  # The next block is not CB, pass
             else:
                 if next_cb_type == self.CB_CHAIN:
                     ret = self.load(next_pos)

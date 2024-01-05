@@ -501,9 +501,11 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # gamerule ✓ V
     BaseMatch.Char("Command","gamerule").add_leaves(
         BaseMatch.AnyString("Gamerule_Type").add_leaves(
-            BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
-            BaseMatch.Int("Gamerule_Value").add_leaves( BaseMatch.END_NODE )
-        )
+            BaseMatch.Enum("Bool_Value","true","false").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.Int("Int_Value").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.END_NODE
+        ),
+        BaseMatch.END_NODE
     ),
     # give ✓ V
     BaseMatch.Char("Command","give").add_leaves(

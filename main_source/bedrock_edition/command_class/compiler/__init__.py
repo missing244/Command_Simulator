@@ -84,10 +84,10 @@ from . import command_2 as Command2
 be_command_list = [
     'ability', 'alwaysday', 'camera', 'camerashake', 'clear', 'clearspawnpoint', 'clone', 'damage', 'daylock', 'dialogue',
     'difficulty', 'effect', 'enchant', 'event', 'execute', 'fill', 'fog', 'function', 'gamemode', 'gamerule', 
-    'give', 'inputpermission', 'kick', 'kill', 'list', 'locate', 'loot', 'structure', 'me', 'mobevent',
+    'give', 'inputpermission', 'kick', 'kill', 'list', 'locate', 'loot', 'me', 'mobevent',
     'msg', 'music', 'particle', 'playanimation', 'playsound', 'replaceitem', "recipe", 'ride', 'say', 'schedule',
-    'scoreboard', 'setblock', 'setworldspawn', 'spawnpoint', 'spreadplayers', 'stopsound', 'summon', 'tag', 'teleport', 'tell',
-    'tellraw', 'testfor', 'testforblock', 'testforblocks', 'tickingarea', 'time', 'title', 'titleraw', 'toggledownfall', 'tp',
+    'scoreboard', 'setblock', 'setworldspawn', 'spawnpoint', 'spreadplayers', 'structure', 'stopsound', 'summon', 'tag', 'teleport',
+    'tell', 'tellraw', 'testfor', 'testforblock', 'testforblocks', 'tickingarea', 'time', 'title', 'titleraw', 'toggledownfall', 'tp',
     'volumearea', 'w', 'weather', 'xp'
 ]
 
@@ -98,7 +98,7 @@ Command_to_Compiler = {
     "clone": Command1.clone, "damage": Command1.damage, "daylock": Command1.daylock,
     "dialogue": Command1.dialogue, "effect":Command1.effect, "enchant":Command1.enchant,
     "event": Command1.event, "fill":{(1,0,0):Command1.fill_1_0_0, (1,19,80):Command1.fill_1_19_80}, "fog":Command1.fog,
-    "gamemode": Command1.gamemode, "effect":Command1.effect, "enchant":Command1.enchant,
+    "gamemode": Command1.gamemode, "gamerule":Command1.gamerule, "give":Command1.give,
 
     "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,
