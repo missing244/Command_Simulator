@@ -79,6 +79,7 @@ for i in List.tree_leaves :
     ),
 List.add_leaves( BaseMatch.KeyWord("List_End","]") )
 
+
 def Json_Tree(*end_node) :
     return Json_Start("Json_Start","{").add_leaves(*end_node)
 
@@ -138,6 +139,7 @@ class Json_Parser :
         self.command_str = command_str
         self.read_pointers = pointer
         self._parser(self.parser_json_root, Token_list)
+        Token_list[-1]["type"] = "All_Json_End"
 
 
 

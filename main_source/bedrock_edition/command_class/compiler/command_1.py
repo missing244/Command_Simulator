@@ -1,7 +1,7 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,EntityComponent
 from . import Selector,CompileError,CommandParser
-from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler
+from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler,ItemComponent_Compiler
 import functools,string,random,re,math,itertools,json,copy
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
@@ -268,7 +268,7 @@ class clear :
 
         success = string.Template("$player 清除了符合条件的 $count 个物品")
         faild = string.Template("无法清除 $player 背包中的物品")
-        msg_list = []
+        msg_list = [] ; all_count = []
         for entity in entity_list :
             count_list = [
                 clear.clear_items(entity, "HotBar", name, data, max_count),
@@ -279,8 +279,9 @@ class clear :
             entity.__update_mainhand__()
             if any(count_list) : msg_list.append( success.substitute(player=ID_tracker(entity), count=sum(count_list)) )
             else : msg_list.append( faild.substitute(player=ID_tracker(entity)) )
+            all_count.append(sum(count_list))
 
-        return Response.Response_Template("已清除以下玩家的的物品：\n$msg", len(entity_list), 1).substitute(
+        return Response.Response_Template("已清除以下玩家的的物品：\n$msg", 1, sum(all_count)).substitute(
             msg="\n".join(msg_list)
         )
 
@@ -304,7 +305,7 @@ class clearspawnpoint :
             entity.SpawnPoint[1] = game.minecraft_world.world_spawn_y
             entity.SpawnPoint[2] = game.minecraft_world.world_spawn_z
 
-        return Response.Response_Template("已清除以下玩家的出生点：$players", len(entity_list), 1).substitute(
+        return Response.Response_Template("已清除以下玩家的出生点：$players", 1, len(entity_list)).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list)
         )
 
@@ -398,7 +399,7 @@ class clone :
         
         if mask_mode != "masked" : success_counter = len(block_index_list)
         else : success_counter = len(block_index_list) - block_index_list.count(0)
-        return Response.Response_Template("在$start ~ $end复制了$count个方块", success_counter, 1).substitute(
+        return Response.Response_Template("在$start ~ $end复制了$count个方块", 1, success_counter).substitute(
             start=tuple(start_pos2), end=tuple(end_pos2), count=success_counter)
 
     def fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:tuple, end1:tuple, start2:tuple,
@@ -447,7 +448,7 @@ class clone :
             game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, block_nbt_list[index])
 
         success_counter = len(block_index_list) - block_index_list.count(None)
-        return Response.Response_Template("在$start ~ $end复制了$count个方块", success_counter, min(1,success_counter)).substitute(
+        return Response.Response_Template("在$start ~ $end复制了$count个方块", min(1,success_counter), success_counter).substitute(
             start=tuple(start_pos2), end=tuple(end_pos2), count=success_counter)
 
 
@@ -483,7 +484,7 @@ class damage :
             a = entity.__get_damage__(game.minecraft_world, damage_type, amount, entity_couse_list[0])
             if a : success_list.append(ID_tracker(entity))
             else : faild_list.append(ID_tracker(entity))
-        return Response.Response_Template("$success$is_line$fiald", len(success_list), min(1,len(success_list))).substitute(
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",
             fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
@@ -540,7 +541,7 @@ class dialogue:
         npc_list = entity_npc(execute_var)
         if isinstance(npc_list, Response.Response_Template) : return npc_list
 
-        return Response.Response_Template("对话已发送至以下玩家:\n$players", len(entity_list), 1).substitute(
+        return Response.Response_Template("对话已发送至以下玩家:\n$players", 1, len(entity_list)).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list)
         )
 
@@ -552,7 +553,7 @@ class dialogue:
         if not isinstance(entity_list[0], BaseNbtClass.entity_nbt) or entity_list[0].Identifier != "minecraft:player" : 
             return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
 
-        return Response.Response_Template("已更改以下玩家的对话:\n $players", len(entity_list), 1).substitute(
+        return Response.Response_Template("已更改以下玩家的对话:\n $players", 1, len(entity_list)).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list)
         )
 
@@ -613,7 +614,7 @@ class effect :
                 continue
             if effect_id in entity.ActiveEffects : del entity.ActiveEffects[effect_id]
             success_list.append(ID_tracker(entity))
-        return Response.Response_Template("$success$is_line$fiald", len(success_list), min(1,len(success_list))).substitute(
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",
             fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
@@ -639,7 +640,7 @@ class effect :
                 aaa["Id"] = effect_id ; aaa["Amplifier"] = np.int32(amplifier) ; aaa["Duration"] = np.int16(times)
                 entity.ActiveEffects[effect_id] = aaa
             success_list.append(ID_tracker(entity))
-        return Response.Response_Template("$success$is_line$fiald", len(success_list), min(1,len(success_list))).substitute(
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",
             fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
@@ -700,7 +701,7 @@ class enchant :
                 item_obj.tags["ench"][index]["id"] = enchant_id
                 item_obj.tags["ench"][index]["lvl"] = np.int16(enchant_level)
             success_list.append(ID_tracker(entity))
-        return Response.Response_Template("$success$is_line$fiald", len(success_list), min(1,len(success_list))).substitute(
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",
             fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
@@ -728,7 +729,7 @@ class event :
                 faild_list.append(ID_tracker(entity)) ; continue
             EntityComponent.trigger_event(game.minecraft_ident, entity, event_id)
             success_list.append(ID_tracker(entity))
-        return Response.Response_Template("$success$is_line$fiald", len(success_list), min(1,len(success_list))).substitute(
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",
             fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
@@ -838,7 +839,7 @@ class fill_1_0_0 :
             success[index] = True
 
         success_counter = len(success) - success.count(False)
-        return Response.Response_Template("在$start ~ $end填充了$count个方块", success_counter, min(1,success_counter)).substitute(
+        return Response.Response_Template("在$start ~ $end填充了$count个方块", min(1,success_counter), success_counter).substitute(
             start=tuple(start_pos1), end=tuple(end_pos1), count=success_counter)
 
 
@@ -903,7 +904,7 @@ class fog :
         if isinstance(entity_list, Response.Response_Template) : return entity_list
 
         for player in entity_list : player.fogCommandStack.append({"user_id":user_id, "id":fog_id})
-        return Response.Response_Template("以下玩家已将迷雾添加至栈内:\n$players", len(entity_list), 1).substitute(
+        return Response.Response_Template("以下玩家已将迷雾添加至栈内:\n$players", 1, len(entity_list)).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list)
         )
 
@@ -922,7 +923,7 @@ class fog :
                     del player.fogCommandStack[index] ; break
                 success_list.append(ID_tracker(player))
             else : faild_list.append(ID_tracker(player))
-        return Response.Response_Template("$success$is_line$fiald", len(success_list), min(1,len(success_list))).substitute(
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",
             fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
@@ -946,7 +947,7 @@ class gamemode :
         
         for player in entity_list : player.GameMode = np.int8(gamemode_value)
         translate = ["生存", "创造", "冒险", "旁观"][gamemode_value]
-        return Response.Response_Template("以下玩家已将游戏模式更改为$mode:\n$players", len(entity_list), 1).substitute(
+        return Response.Response_Template("以下玩家已将游戏模式更改为$mode:\n$players", 1, len(entity_list)).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list), mode=translate
         )
 
@@ -999,20 +1000,20 @@ class give :
             pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
         if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name)
 
-        #Data
-        item_data = int(token_list[index]["token"].group()) ; index += 1
-        if not(0 <= item_data <= 32767): raise CompileError("%s不是一个有效的数据值" % item_data,
-            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
-        if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data)
-
         #Count
         item_count = int(token_list[index]["token"].group()) ; index += 1
         if not(1 <= item_count <= 32767): raise CompileError("%s 不是一个有效的数量" % item_count,
             pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data)
+
+        #Data
+        item_data = int(token_list[index]["token"].group()) ; index += 1
+        if not(0 <= item_data <= 32767): raise CompileError("%s不是一个有效的数据值" % item_data,
+            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
         if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data, count=item_count)
 
         #Nbt
-        item_nbt = json.loads("".join( [i["token"].group() for i in token_list[index:]] ))
+        item_nbt = ItemComponent_Compiler(_game, token_list, index)
         return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data, count=item_count, nbt=item_nbt)
 
     def give_item(execute_var:COMMAND_CONTEXT, entity_get:Callable, item_id:str, data:int=0, count:int=1, nbt:dict={}) :
@@ -1024,7 +1025,7 @@ class give :
 
         for player in entity_list : 
             if player.__pickup_item__(itme_obj) : itme_obj.__change_to_entity__(execute_var["dimension"], player.Pos)
-        return Response.Response_Template("以下玩家已给予 $item * $count :\n$players", len(entity_list), 1).substitute(
+        return Response.Response_Template("以下玩家已给予 $item * $count :\n$players", 1, len(entity_list)).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list), item=item_id, count=count
         )
 

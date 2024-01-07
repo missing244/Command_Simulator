@@ -34,8 +34,8 @@ class Response_Template(Template) :
         super().__init__(template)
         self.command = ""
         self.command_msg = ""
-        self.success_count = success_count
-        self.result_count  = result_count
+        self.success_count = int(success_count)
+        self.result_count  = int(result_count)
         self.Function_Feedback:List[Function_Response_Group] = [] if mcfunction else None
 
     def set_command(self, command:str) :

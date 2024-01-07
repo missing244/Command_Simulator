@@ -1067,22 +1067,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # time ✓ V
     BaseMatch.Char("Command","time").add_leaves(
         BaseMatch.Char("Time_Model","add").add_leaves(
-            BaseMatch.Int("Amount").add_leaves(
-                BaseMatch.END_NODE
-            )
+            BaseMatch.Int("Amount").add_leaves( BaseMatch.END_NODE )
         ),
         BaseMatch.Char("Time_Model","query").add_leaves(
-            BaseMatch.Enum("Time_Type","daytime","gametime","day").add_leaves(
-                BaseMatch.END_NODE
-            )
+            BaseMatch.Enum("Time_Type","daytime","gametime","day").add_leaves( BaseMatch.END_NODE )
         ),
         BaseMatch.Char("Time_Model","set").add_leaves(
-            BaseMatch.Enum("Time","day","noon","sunrise","sunset","night","midnight").add_leaves(
-                BaseMatch.END_NODE
-            ),
-            BaseMatch.Int("Time").add_leaves(
-                BaseMatch.END_NODE
-            )
+            BaseMatch.Enum("Time","day","noon","sunrise","sunset","night","midnight").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.Int("Time_Int").add_leaves( BaseMatch.END_NODE )
         )
     ),
     # title titleraw ✓ V

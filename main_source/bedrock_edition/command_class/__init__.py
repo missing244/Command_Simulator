@@ -32,9 +32,13 @@ def Command_Tokenizer_Compiler(_game:RunTime.minecraft_thread, Command:str, Vers
         return Command_Compile_Dict_Save[Version][Command]
 
     token_list = CommandParser.Start_Tokenizer(Command, Version)
-    if isinstance(token_list, tuple) : return token_list
+    if isinstance(token_list, tuple) : 
+        Command_Compile_Dict_Save[Version][Command] = token_list
+        return token_list
     func_object = CommandCompiler.Start_Compile(token_list, Version, _game)
-    if isinstance(func_object, tuple) : return func_object
+    if isinstance(func_object, tuple) : 
+        Command_Compile_Dict_Save[Version][Command] = func_object
+        return func_object
 
     if Version not in Command_Compile_Dict_Save : Command_Compile_Dict_Save[Version] = {}
     Command_Compile_Dict_Save[Version][Command] = func_object

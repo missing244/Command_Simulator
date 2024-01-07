@@ -1,5 +1,5 @@
 from typing import Dict,Union,List,Tuple,Literal
-import re,functools,traceback,json
+import re,functools,traceback,json,itertools
 from .. import CommandParser,COMMAND_TOKEN
 from ... import RunTime,Constants
 class CompileError(CommandParser.BaseMatch.Command_Match_Exception) : pass
@@ -48,6 +48,42 @@ def BlockState_Compiler(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tu
             raise CompileError("方块状态 %s 不存在值 %s" % (state,input_block_state[state]))
 
     return (index, input_block_state)
+
+def ItemComponent_Compiler(_game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, index:int) -> Tuple[int,dict] :
+    json_str_list = [i["token"].group() for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
+    json_str_list.append(token_list[index + len(json_str_list) + 1])
+    index = index + len(json_str_list) + 1
+    item_nbt = json.loads(json_str_list)
+    key_list = set(("minecraft:keep_on_death", "minecraft:can_destroy", "minecraft:can_place_on", "minecraft:item_lock"))
+    if set(item_nbt) - key_list : raise CompileError("不存在的物品组件：%s" % ", ".join( set(item_nbt) - key_list ))
+    if "minecraft:keep_on_death" in item_nbt and (not isinstance(item_nbt["minecraft:keep_on_death"], dict) or 
+        item_nbt["minecraft:keep_on_death"].__len__() > 0) : raise CompileError("keep_on_death 物品组件的值应该为 {}")
+
+    if "minecraft:can_destroy" in item_nbt and (not isinstance(item_nbt["minecraft:can_destroy"], dict) or 
+        item_nbt["minecraft:can_destroy"].__len__() != 1 or "blocks" not in item_nbt["minecraft:can_destroy"] or 
+        not isinstance(item_nbt["minecraft:can_destroy"]["blocks"], list) or 
+        any( (not isinstance(i,str) for i in item_nbt["minecraft:can_destroy"]["blocks"]) )) : 
+        raise CompileError('can_destroy 物品组件的值应该为 {"blocks":["air", ...]}')
+    for i in item_nbt["minecraft:can_destroy"]["blocks"] :
+        if (i if ":" in i else ("minecraft:%s" % i)) not in _game.minecraft_ident.blocks :
+            raise CompileError('can_destroy 物品组件中存在不存在的方块ID%s' % i)
+
+    if "minecraft:can_place_on" in item_nbt and (not isinstance(item_nbt["minecraft:can_place_on"], dict) or 
+        item_nbt["minecraft:can_place_on"].__len__() != 1 or "blocks" not in item_nbt["minecraft:can_place_on"] or 
+        not isinstance(item_nbt["minecraft:can_place_on"]["blocks"], list) or 
+        any( (not isinstance(i,str) for i in item_nbt["minecraft:can_place_on"]["blocks"]) )) : 
+        raise CompileError('can_place_on 物品组件的值应该为 {"blocks":["air", ...]}')
+    for i in item_nbt["minecraft:can_place_on"]["blocks"] :
+        if (i if ":" in i else ("minecraft:%s" % i)) not in _game.minecraft_ident.blocks :
+            raise CompileError('can_place_on 物品组件中存在不存在的方块ID%s' % i)
+
+    if "minecraft:item_lock" in item_nbt and (not isinstance(item_nbt["minecraft:item_lock"], dict) or 
+        item_nbt["minecraft:item_lock"].__len__() != 1 or "mode" not in item_nbt["minecraft:item_lock"] or 
+        not isinstance(item_nbt["minecraft:item_lock"]["mode"], str) or 
+        item_nbt["minecraft:item_lock"]["mode"] not in ("lock_in_inventory", "lock_in_slot") ) : 
+        raise CompileError('item_lock 物品组件的值应该为 {"mode":"lock_in_inventory" 或 "lock_in_slot"}')
+    
+    return (index, item_nbt)
 
 def replace_str(base:str, start:int, end:int, replace:str) -> str:
     return "".join([ base[:start] , replace , base[end:] ])
@@ -100,6 +136,7 @@ Command_to_Compiler = {
     "event": Command1.event, "fill":{(1,0,0):Command1.fill_1_0_0, (1,19,80):Command1.fill_1_19_80}, "fog":Command1.fog,
     "gamemode": Command1.gamemode, "gamerule":Command1.gamerule, "give":Command1.give,
 
+    "time" : Command2.time, "time" : Command2.time, "time" : Command2.time, 
     "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,
     "w" : Command2.tell, "weather" : Command2.weather, "xp" : Command2.xp

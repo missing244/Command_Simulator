@@ -21,6 +21,132 @@ class teleport :
         pass
 
 
+class tickingarea :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        if token_list[1]["token"].group() == "add" : 
+            if token_list[2]["token"].group() == "circle" :
+                from_pos = [token_list[3+i]["token"].group() for i in range(3)]
+                radius = int(token_list[6]["token"].group())
+                if not(1 <= radius <= 4) : raise CompileError("区块半径只能在 1~4 范围内", pos=(token_list[6]["token"].start(), token_list[6]["token"].end()))
+                if 7 >= len(token_list) : return functools.partial(cls.add_circle, game=_game, from_pos=from_pos, radius=radius)
+                tickarea_name = Quotation_String_transfor_1(token_list[7]["token"].group())
+                if 8 >= len(token_list) : return functools.partial(cls.add_circle, game=_game, from_pos=from_pos, radius=radius, name=tickarea_name)
+                preload_value = bool( ("false","true").index(token_list[8]["token"].group()) )
+                return functools.partial(cls.add_circle, game=_game, from_pos=from_pos, radius=radius, name=tickarea_name, preload=preload_value)
+            else :
+                from_pos = [token_list[2+i]["token"].group() for i in range(3)]
+                to_pos = [token_list[5+i]["token"].group() for i in range(3)]
+                if 8 >= len(token_list) : return functools.partial(cls.add_area, game=_game, from_pos=from_pos, to_pos=to_pos)
+                tickarea_name = Quotation_String_transfor_1(token_list[8]["token"].group())
+                if 9 >= len(token_list) : return functools.partial(cls.add_area, game=_game, from_pos=from_pos, to_pos=to_pos, name=tickarea_name)
+                preload_value = bool( ("false","true").index(token_list[9]["token"].group()) )
+                return functools.partial(cls.add_area, game=_game, from_pos=from_pos, to_pos=to_pos, name=tickarea_name, preload=preload_value)
+        elif token_list[1]["token"].group() == "list" : 
+            if 2 >= token_list.__len__() : return functools.partial(cls.print_area, game=_game)
+            else : return functools.partial(cls.print_area, game=_game, print_all=True)
+        elif token_list[1]["token"].group() == "remove" : 
+            if token_list[2]["type"] == "Volumearea_Name" : return functools.partial(cls.remove_area, game=_game, 
+                name=Quotation_String_transfor_1(token_list[2]["token"].group()))
+            else : return functools.partial(cls.remove_area, game=_game, pos=[token_list[2+i]["token"].group() for i in range(3)])
+        elif token_list[1]["token"].group() == "remove_all" : 
+            return functools.partial(cls.remove_area, game=_game, remove_all=True)
+        elif token_list[1]["token"].group() == "preload" : 
+            return functools.partial(cls.preload_set, game=_game, remove_all=True)
+        
+    def add_circle(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, from_pos:List[str], to_pos:List[str], 
+        name:str=None, preload:bool=False) :
+        if game.minecraft_chunk.tickingarea.__len__() >= 10 : 
+            return Response.Response_Template("常加载区块数量已达到最大值10个").substitute()
+        if name in game.minecraft_chunk.tickingarea : 
+            return Response.Response_Template("已存在常加载区块 $name").substitute(name = name)
+    
+    def add_area(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, from_pos:List[str], to_pos:List[str], 
+        name:str=None, preload:bool=False) :
+        if game.minecraft_chunk.tickingarea.__len__() >= 10 : 
+            return Response.Response_Template("常加载区块数量已达到最大值10个").substitute()
+        if name in game.minecraft_chunk.tickingarea : 
+            return Response.Response_Template("已存在常加载区块 $name").substitute(name = name)
+
+        start_pos = [math.floor(i)//16*16 for i in MathFunction.mc_pos_compute(execute_var["pos"], from_pos, execute_var["rotate"])]
+        end_pos = [math.floor(i)//16*16 for i in MathFunction.mc_pos_compute(execute_var["pos"], to_pos, execute_var["rotate"])]
+        for index,(pos_1,pos_2) in enumerate(itertools.zip_longest(start_pos, end_pos)) :
+            if pos_1 > pos_2 : start_pos[index] = pos_2; end_pos[index] = pos_1
+        if len(range(start_pos[0], start_pos[2]+1, 16)) * len(range(end_pos[0], end_pos[2]+1, 16)) > 100 :
+            return Response.Response_Template("常加载区块内记录的区块数量大于100个").substitute()
+
+        template1 = {"type":"square", "dimension":execute_var["dimension"], "preload":preload, "force_load":[i for i in itertools.product(
+            range(start_pos[0], start_pos[2]+1, 16), range(end_pos[0], end_pos[2]+1, 16))]}
+        game.minecraft_chunk.tickingarea[name] = template1
+        return Response.Response_Template("成功添加了常加载区块 $name", 1, 1).substitute(name = name)
+
+    def print_area(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, print_all:bool=False) :
+        list1 = []
+        temp1 = string.Template("维度 $dimension 功能域 $name : $pos1 ~ $pos2")
+        for key,value in game.minecraft_chunk.volumearea.items() :
+            if not print_all and value["dimension"] != execute_var["dimension"] : continue
+            list1.append( temp1.substitute(dimension=value["dimension"], name=key, 
+                pos1=tuple(value["effect_area"][0]), pos2=tuple(value["effect_area"][1])) )
+        return Response.Response_Template("$len 个功能域正在运行：\n$detial", 1, 1).substitute(len=len(list1), detial = "\n".join(list1))
+
+    def remove_area(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str]=None, 
+                    name:str=None, remove_all:bool=None) :
+        remove_list = []
+        if pos :
+            start_pos = [math.floor(i)//16*16 for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
+            for key,value in game.minecraft_chunk.volumearea.items() :
+                if not(value["effect_area"][0][0] <= start_pos[0] <= value["effect_area"][1][0]) : continue
+                if not(value["effect_area"][0][1] <= start_pos[2] <= value["effect_area"][1][1]) : continue
+                remove_list.append(key)
+        if name :
+            if name not in game.minecraft_chunk.volumearea : return Response.Response_Template("不存在功能域 $name").substitute(name = name)
+            remove_list.append(name)
+        if remove_all : remove_list.extend(list(game.minecraft_chunk.volumearea))
+        
+        if len(remove_list) == 0 : return Response.Response_Template("没有可以移除的功能域").substitute()
+        for i in remove_list : del game.minecraft_chunk.volumearea[i]
+        return Response.Response_Template("已移除功能域：$name", 1, 1).substitute(name = ", ".join(remove_list))
+
+
+class time :
+
+    time_point = {"day":1000, "noon":6000, "sunset":12000, "night":13000, "midnight":18000, "sunrise":23000}
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        if token_list[1]["token"].group() == "query" : 
+            return functools.partial(cls.query, game=_game, mode=token_list[2]["token"].group())
+        if token_list[1]["token"].group() == "add" : 
+            return functools.partial(cls.add, game=_game, value=int(token_list[2]["token"].group()))
+        if token_list[1]["token"].group() == "set" : 
+            if token_list[2]["type"] == "Time_Int" : value = int(token_list[2]["token"].group())
+            else : value = token_list[2]["token"].group()
+            return functools.partial(cls.set, game=_game, value=value)
+            
+    def query(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, mode:Literal["daytime","gametime","day"]) :
+        success_msg = Response.Response_Template("查询到 $mode 的值为 $sss", 1, 1)
+        if mode == "daytime" : return success_msg.substitute(mode=mode, sss=game.minecraft_world.day_count%24000)
+        elif mode == "day" : return success_msg.substitute(mode=mode, sss=game.minecraft_world.day_time)
+        elif mode == "gametime" : return success_msg.substitute(mode=mode, sss=game.minecraft_world.game_time)
+
+    def add(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, value:int) :
+        game.minecraft_world.day_time += value
+        return Response.Response_Template("时间增加了 $sss", 1, value).substitute(value=value)
+
+    def set(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, value:Union[int,str]) :
+        if isinstance(value, int) : 
+            game.minecraft_world.day_count = np.int32(value)
+            game.minecraft_world.day_time = game.minecraft_world.day_count // 24000
+        else :
+            time1 = time.time_point[value]
+            if game.minecraft_world.day_count > (game.minecraft_world.day_time * 24000 + time1) :
+                game.minecraft_world.day_count = np.int32((game.minecraft_world.day_time + 1) * 24000 + time1)
+            else : game.minecraft_world.day_count = np.int32(game.minecraft_world.day_time * 24000 + time1)
+            game.minecraft_world.day_time = game.minecraft_world.day_count // 24000
+            return Response.Response_Template("将时间设定为 $sss").substitute(sss=game.minecraft_world.day_count)
+
+
 class titleraw :
     #{"rawtext":[{"text":"aaa "},{"selector":"@s[rm=1]"},{"text":" bbb "},{"selector":"@s"}]}
     @classmethod
@@ -40,7 +166,9 @@ class titleraw :
                 aa,bb = Msg_Compiler(_game, token_list[index + 1]["token"].group(), token_list[index + 1]["token"].start())
                 return functools.partial(cls.display_1, entity_get=entity_func, type1=ttt, msg=aa, search_entity=bb)
             else :
-                a = json.loads( "".join( [token_list[i]["token"].group() for i in range(index + 1, len(token_list), 1)] ) )
+                json_str_list = [i["token"].group() for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
+                json_str_list.append(token_list[index + len(json_str_list) + 1])
+                a = json.loads( "".join( json_str_list ))
                 b = Rawtext.Rawtext_Compiler(_game, (255,0,0), a)
                 return functools.partial(cls.display_2, entity_get=entity_func, type1=ttt, rawtext=b)
     

@@ -741,7 +741,7 @@ class chunk_nbt :
         self.block_mapping:List[block_nbt] = []
         self.player:List[entity_nbt] = []
         self.disk_structure:Dict[str,structure_nbt] = {}
-        self.tickingarea = {}  #name:{"dimension":"","force_load":[],"preload":False}
+        self.tickingarea = {}  #name:{"type":"circle|square","radius":1|None,"dimension":"","force_load":[],"preload":False}
         self.volumearea  = {}  #name:{"dimension":"","effect_area":[],"id":""}
 
         self.support_nbt = [i for i in dir(self) if (i[0:2] != "__")]
