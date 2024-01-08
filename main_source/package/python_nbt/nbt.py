@@ -3,7 +3,7 @@ from gzip import GzipFile
 from typing import Union,Literal
 from io import FileIO,BytesIO
 from . import _util
-import warnings
+import warnings,ast
 
 BIG_OR_LITTLE = True
 
@@ -258,19 +258,21 @@ class NBTTagString(NBTTagSingleValue):
 
     def __init__(self, value="", **kwargs):
         super().__init__(value=value, **kwargs)
+        self.is_error = False
 
     def _validate(self, v):
-        return isinstance(v, str) and len(v) < 0x8000
+        return len(v) < 0x8000
 
     def _read_buffer(self, buffer):
         length = NBTTagShort(buffer=buffer).value
-        s = buffer.read(length)
+        s:bytes = buffer.read(length)
         if len(s) != length:
             raise StructError()
-        self.value = s.decode("utf-8")
+        try : self.value = s.decode("utf-8")
+        except : self.value = s
 
     def _write_buffer(self, buffer):
-        byte_code = self.value.encode("utf-8")
+        byte_code = self.value.encode("utf-8") if isinstance(self.value, str) else self.value
         length = NBTTagShort(len(byte_code))
         length._write_buffer(buffer)
         buffer.write(byte_code)           
@@ -411,6 +413,7 @@ class NBTTagList(NBTTagContainerList):
         self.clear()
         self._tag_type_id = json_obj['tag_type_id']
         self.extend([self.tag_type(v) for v in json_obj['value']])
+
 
 class NBTTagCompound(NBTTagBase, _util.TypeRestrictedDict):
 

@@ -344,19 +344,15 @@ class clone :
         height_test = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"]
         for i,j in [("起始位置", start_pos1),("结束位置", end_pos1),("复制起始位置", start_pos2),("复制结束位置", end_pos2)] :
             if not(height_test[0] <= j[1] < height_test[1]) :
-                return Response.Response_Template("$id$pos处于世界之外").substitute(id=i, pos=tuple(start_pos1))
+                return Response.Response_Template("$id$pos处于世界之外").substitute(id=i, pos=tuple(j))
 
-        for j in itertools.product(range(start_pos1[0], end_pos1[0], 16), range(start_pos1[2], end_pos1[2], 16)) :
+        for j in itertools.product(range(start_pos1[0]//16*16, end_pos1[0]//16*16+16, 16), range(start_pos1[2]//16*16, end_pos1[2]//16*16+16, 16)) :
             if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], (j[0],0,j[1])) :
                 return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
-        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], end_pos1) :
-            return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
 
-        for j in itertools.product(range(start_pos2[0], end_pos2[0], 16), range(start_pos2[2], end_pos2[2], 16)) :
+        for j in itertools.product(range(start_pos2[0]//16*16, end_pos2[0]//16*16+16, 16), range(start_pos2[2]//16*16, end_pos2[2]//16*16+16, 16)) :
             if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], (j[0],0,j[1])) :
-                return Response.Response_Template("复制区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
-        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], end_pos2) :
-            return Response.Response_Template("复制区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+                return Response.Response_Template("目标区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
 
     def non_fliter(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:tuple, end1:tuple, start2:tuple, 
                    mask_mode:str="replace", clone_mode:str="normal") :

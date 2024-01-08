@@ -136,7 +136,8 @@ Command_to_Compiler = {
     "event": Command1.event, "fill":{(1,0,0):Command1.fill_1_0_0, (1,19,80):Command1.fill_1_19_80}, "fog":Command1.fog,
     "gamemode": Command1.gamemode, "gamerule":Command1.gamerule, "give":Command1.give,
 
-    "time" : Command2.time, "time" : Command2.time, "time" : Command2.time, 
+    "testforblocks" : Command2.testforblocks, "tickingarea" : Command2.tickingarea, "testforblock" : Command2.testforblock, 
+    "testforblocks" : Command2.testforblocks, "tickingarea" : Command2.tickingarea, "time" : Command2.time, 
     "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,
     "w" : Command2.tell, "weather" : Command2.weather, "xp" : Command2.xp

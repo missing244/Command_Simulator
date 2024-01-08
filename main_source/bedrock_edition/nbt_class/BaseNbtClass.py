@@ -1048,7 +1048,7 @@ class chunk_nbt :
                     self.loading_chunk_pos[keys].add(chunk_pos)
 
         for keys in self.tickingarea :
-            self.loading_chunk_pos[self.tickingarea[keys]['dimension']].update(*[tuple(i) for i in self.tickingarea[keys]['force_load']])
+            self.loading_chunk_pos[self.tickingarea[keys]['dimension']].update([tuple(i) for i in self.tickingarea[keys]['force_load']])
         self.loading_chunk_pos["overworld"].update(Constants.COMMAND_BLOCK_LOAD_CHUNK)
 
         for keys in self.loading_chunk_pos :

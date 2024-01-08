@@ -1,6 +1,6 @@
 from . import operation as OperationCode
 from typing import Union,Literal,List
-import io,brotli,os,sys
+import io,brotli,os,sys,traceback
 
 from .function import get_operation
 from .operation import match_string_bytes
@@ -76,8 +76,10 @@ class BDX_File :
                 b = get_operation(a).from_bytes(bdx_code)
                 self.operation_list.append(b)
                 if isinstance(b,OperationCode.Terminate) : break
-        except : print("51236781293716275371287391286312837123687129")
-        #print(len(bdx_code.getvalue()),bdx_code.tell(),bdx_code.getvalue()[bdx_code.tell()-1:])
+        except Exception as e :
+            #print(len(bdx_code.getvalue()),bdx_code.tell(),bdx_code.getvalue()[bdx_code.tell()-1:])
+            #traceback.print_exc()
+            raise e
 
     def closed_test(self) :
         if self.__closed : raise BXDFileClosed("BXDFile 已被关闭")
@@ -95,11 +97,11 @@ class BDX_File :
         if self.__mode == "rb" or isinstance(self._file,io.BytesIO) :
             Writer2 = open(save_path,'wb')
             Writer2.write(b"BD@")
-            Writer2.write(brotli.compress(Writer1.getvalue(),quality=4))
+            Writer2.write(brotli.compress(Writer1.getvalue(),quality=6))
             Writer1.close() ; Writer2.close()
         else :
             self._file.write(b"BD@")
-            self._file.write(brotli.compress(Writer1.getvalue(),quality=4))
+            self._file.write(brotli.compress(Writer1.getvalue(),quality=6))
             Writer1.close()
 
     def close(self) :
