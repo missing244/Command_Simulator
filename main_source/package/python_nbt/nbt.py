@@ -3,7 +3,7 @@ from gzip import GzipFile
 from typing import Union,Literal
 from io import FileIO,BytesIO
 from . import _util
-import warnings,ast
+import warnings
 
 BIG_OR_LITTLE = True
 
