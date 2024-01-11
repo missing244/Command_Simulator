@@ -1,0 +1,24 @@
+{
+    "linear": "Absolute smooth (linear)",
+    "spring": "Spring-like path",
+    "separator": ", ",
+
+    "range": {
+        "in": "In",
+        "out": "Out",
+        "in_out": "In & Out"
+    },
+
+    "func": {
+        "back": "Little back + fast go",
+        "bounce": "Back & forth, each time farther & faster",
+        "circ": "Slow -> Fast (1)",
+        "cubic": "Slow -> Fast (2)",
+        "elastic": "Tiny back + hyper fast go",
+        "expo": "Slow -> Fast (5)",
+        "quad": "Smooth (little slow -> fast)",
+        "quart": "Slow -> Fast (3)",
+        "quint": "Slow -> Fast (4)",
+        "sine": "Smooth (tiny slow -> fast)"
+    }
+}

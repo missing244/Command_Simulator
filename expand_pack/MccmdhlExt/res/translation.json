@@ -1,0 +1,961 @@
+{
+    "note": {
+        "_comment": "注释: 本行将被忽略",
+        "_empty_line": "空行",
+        "_selector": {
+            "player_name": "玩家名",
+            "complex": {
+                "root": "通过各种条件筛选实体",
+                "vars": {
+                    "e": "所有实体",
+                    "s": "执行者",
+                    "a": "所有玩家",
+                    "p": "最近的玩家",
+                    "r": "随机玩家",
+                    "initiator": "打开对话者(仅适用于NPC)"
+                },
+                "begin": "增加实体过滤条件",
+                "end": "实体过滤条件结束",
+                "separator": "下一个实体过滤条件",
+                "arg_names": {
+                    "r": "最大距离",
+                    "rm": "最小距离",
+                    "dx": "选择区域: X轴上的长度",
+                    "dy": "选择区域: Y轴上的长度",
+                    "dz": "选择区域: Z轴上的长度",
+                    "x": "基准坐标: X轴",
+                    "y": "基准坐标: Y轴",
+                    "z": "基准坐标: Z轴",
+                    "scores": "计分板分数",
+                    "tag": "实体标签",
+                    "name": "名称",
+                    "type": "类型",
+                    "family": "族",
+                    "rx": "最大垂直旋转角",
+                    "rxm": "最小垂直旋转角",
+                    "ry": "最大水平旋转角",
+                    "rym": "最小水平旋转角",
+                    "hasitem": "物品栏中物品",
+                    "l": "最大经验等级",
+                    "lm": "最小经验等级",
+                    "m": "玩家游戏模式",
+                    "c": "选中的最大实体数量",
+                    "haspermission": "输入权限"
+                },
+                "equals": "输入过滤参数值",
+                "scores": {
+                    "begin": "分数过滤开始",
+                    "end": "分数过滤结束",
+                    "separator": "下一项分数过滤"
+                },
+                "hasitem": {
+                    "begin": {
+                        "array": "指定多个物品过滤",
+                        "object": "指定一个物品过滤"
+                    },
+                    "separator": {
+                        "array": "下一个物品过滤",
+                        "object": "下一个物品过滤参数"
+                    },
+                    "equals": "输入物品过滤参数值",
+                    "end": {
+                        "array": "结束所有物品过滤",
+                        "object": "结束物品过滤项"
+                    },
+                    "item": "物品类型",
+                    "data": "物品数据值 (小心使用!)",
+                    "quantity": "数量 (0 -> 不拥有该物品)",
+                    "location": "物品栏",
+                    "slot": "物品栏槽位范围"
+                },
+                "tag": "实体标签; 省略参数 -> 选中无标签者",
+                "haspermission": {
+                    "begin": "输入权限过滤开始",
+                    "end": "输入权限过滤结束",
+                    "separator": "下一项输入权限过滤"
+                }
+            }
+        },
+        "_pos": {
+            "float_offset": "坐标偏移量",
+            "absolute": {
+                "x": "绝对坐标(X轴)",
+                "y": "绝对坐标(Y轴)",
+                "z": "绝对坐标(Z轴)"
+            },
+            "relative": {
+                "x": "相对坐标(X轴)",
+                "y": "相对坐标(Y轴)",
+                "z": "相对坐标(Z轴)"
+            },
+            "local": {
+                "x": "局部坐标(左)",
+                "y": "局部坐标(上)",
+                "z": "局部坐标(前)"
+            }
+        },
+        "_rot": {
+            "float_offset": "旋转角偏移量",
+            "absolute": {
+                "x": "垂直旋转角(-90: 上, 90: 下)",
+                "y": "水平旋转角(-180: Z-, -90: X+, 0: Z+, 90: X-)"
+            },
+            "relative": {
+                "x": "垂直旋转角(正方向向下)",
+                "y": "水平旋转角(正方向顺时针)"
+            }
+        },
+        "_space": "下一个参数",
+        "_invert": "反向选择",
+        "_wildcard": "通配符",
+        "_int_range": "整数范围",
+        "_scoreboard": "计分项",
+        "_gamemode": {
+            "_number": "数字ID (不推荐)",
+            "survival": "生存模式 (0)",
+            "creative": "创造模式 (1)",
+            "adventure": "冒险模式 (2)",
+            "spectator": "旁观模式",
+            "default": "世界默认游戏模式"
+        },
+        "_block_state": {
+            "begin": "方块状态开始",
+            "separator": "下一项方块状态",
+            "end": "方块状态结束",
+            "key": "方块状态名",
+            "value": "方块状态值"
+        },
+        "_item_data": "物品数据值",
+        "_block_data": "方块特殊值 (不推荐)",
+        "_slot_number": "物品栏槽位",
+        "_states": {
+            "enabled": "启用",
+            "disabled": "关闭"
+        },
+        "_name_tag": "实体命名",
+        "_wildcard_entity_event": "无实体事件",
+        "_wildcard_score_holder": "所有被追踪的分数持有者",
+        "_circle": {
+            "root": "通过中心坐标和半径指定一个球形范围",
+            "radius": "半径 (方块)"
+        },
+        "_facing": "朝向一个坐标或实体",
+        "_blocks_scan_mode": {
+            "all": "检查所有方块",
+            "masked": "不检查空气方块"
+        },
+        "_tickingarea": "常加载区域名称",
+        "_json": {
+            "_suggested": "*推荐的JSON类型*",
+            "_libs": {
+                "lock": {
+                    "lock_in_slot": "将物品固定在槽位里",
+                    "lock_in_inventory": "将物品固定在物品栏里"
+                }
+            },
+            "$item_components@object": {
+                "_keys": {
+                    "minecraft:item_lock": "无法丢弃、无法合成",
+                    "minecraft:can_destroy": "冒险模式下的方块破坏工具",
+                    "minecraft:can_place_on": "冒险模式下可放置/使用",
+                    "minecraft:keep_on_death": "死亡不掉落"
+                },
+                "!minecraft:item_lock@object": {
+                    "_keys": {
+                        "mode": "锁定模式"
+                    }
+                },
+                "!minecraft:can_destroy@object": {
+                    "_keys": {
+                        "blocks": "可以被该工具破坏的方块"
+                    }
+                },
+                "!minecraft:can_place_on@object": {
+                    "_keys": {
+                        "blocks": "可以放置此物品的方块"
+                    }
+                }
+            },
+            "$rawtext@object": {
+                "_keys": {
+                    "rawtext": "指定JSON文本"
+                },
+                "!rawtext@array": {
+                    "#value@object": {
+                        "_keys": {
+                            "text": "文本",
+                            "translate": "本地化/格式化字符串",
+                            "with": "格式化的参数 (与'translate'一起使用)",
+                            "score": "计分板的分值",
+                            "selector": "实体名称"
+                        },
+                        "!score@object": {
+                            "_keys": {
+                                "objective": "计分项",
+                                "name": "持有分数的目标"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "help": {
+            "root": "显示关于命令的帮助信息",
+            "on": {
+                "page": "显示命令列表的给定页",
+                "page_1": "显示命令列表第1页",
+                "command": "显示给定命令的用法"
+            }
+        },
+        "ability": {
+            "root": "[EDU] 管理玩家的能力",
+            "query": {
+                "unknown": "(未知查询)",
+                "ability": "查询是否拥有给定能力"
+            },
+            "set": "修改玩家是否拥有给定能力"
+        },
+        "alwaysday": {
+            "root": "启用/关闭“终为白日”",
+            "lock": "锁定白天",
+            "set": "设定“终为白日”为给定值"
+        },
+        "camera": {
+            "root": "管理摄像机 (玩家的视角)",
+            "clear": "让摄像机回到原本的状态",
+            "fade": {
+                "root": "让摄像机播放渐入淡出的动画",
+                "color": {
+                    "root": "设定视角的颜色",
+                    "r": "红色量",
+                    "g": "绿色量",
+                    "b": "蓝色量"
+                },
+                "time": {
+                    "root": "设定时间",
+                    "in": "渐入时长 (秒)",
+                    "hold": "持续时长 (秒)",
+                    "out": "淡出时长 (秒)"
+                }
+            },
+            "set": {
+                "root": "设定摄像机位置和旋转角",
+                "default": "使用预设的默认设定",
+                "pos": "设定摄像机位置",
+                "rot": "设定摄像机旋转角",
+                "ease": {
+                    "root": "设定摄像机变换时的平滑函数",
+                    "time": "变换的持续时间 (秒)"
+                }
+            }
+        },
+        "camerashake": {
+            "root": "管理玩家视角摇晃",
+            "add": {
+                "root": "摇晃玩家视角",
+                "intensity": "强度",
+                "seconds": "时间 (秒)",
+                "types": {
+                    "positional": "位置变换",
+                    "rotational": "旋转角变换"
+                }
+            },
+            "stop": "停止视角摇晃"
+        },
+        "clear": {
+            "root": "清空玩家物品栏",
+            "max_count": "最大物品数; -1 -> 无上限"
+        },
+        "clearspawnpoint": {
+            "root": "取消玩家设定的重生点"
+        },
+        "clone": {
+            "root": "复制粘贴方块",
+            "masks": {
+                "masked": "不要复制空气方块",
+                "replace": "用源区域替换目标区域的全部方块"
+            },
+            "clones": {
+                "force": "即使源区域和目标区域有重叠也复制",
+                "move": "将源区域被复制出的方块替换为空气",
+                "normal": "无特殊效果"
+            },
+            "filtered": "仅复制源区域里特定种类的方块"
+        },
+        "wsserver": {
+            "root": "管理与WebSocket服务器的连接",
+            "out": "与当前服务器断开连接",
+            "address": "服务器地址"
+        },
+        "damage": {
+            "root": "对实体造成伤害",
+            "amount": "伤害量 (1 = 半颗心)",
+            "damager": "设定伤害者"
+        },
+        "deop": {
+            "root": "移除玩家的管理员权限"
+        },
+        "dialogue": {
+            "root": "[EDU] 打开/更改玩家与NPC的对话",
+            "modes": {
+                "open": "打开一个对话",
+                "change": "切换一个对话的场景"
+            },
+            "npc": "NPC实体",
+            "player": "玩家实体",
+            "scene": "场景名称"
+        },
+        "difficulty": {
+            "root": "修改世界难度",
+            "int": "数字ID (不推荐)",
+            "diffs": {
+                "peaceful": "和平 (0)",
+                "easy": "简单 (1)",
+                "normal": "普通 (2)",
+                "hard": "困难 (3)"
+            }
+        },
+        "effect": {
+            "root": "管理状态效果 (buff)",
+            "clear": "清除玩家全部的效果",
+            "seconds": "时长 (秒为单位; 对于3个隐藏效果刻为单位)",
+            "amplifier": "增强值 (等级-1)",
+            "hide_particles": "是否隐藏药水粒子效果"
+        },
+        "enchant": {
+            "root": "给玩家手持物品附魔",
+            "int_id": "附魔数字ID (不推荐)",
+            "level": "附魔等级"
+        },
+        "event": {
+            "root": "触发实体事件"
+        },
+        "execute": {
+            "root": "在给定条件和情况下运行另一条命令",
+            "subcmds": {
+                "align": "将坐标转换为方块坐标 (向下取整)",
+                "anchored": "使用实体的脚部或眼部为局部坐标原点",
+                "as": "改变执行者",
+                "at": "改变执行坐标到一个实体的位置",
+                "facing": "根据朝向的坐标或实体改变执行旋转角",
+                "in": "改变执行维度",
+                "positioned": "改变执行坐标",
+                "rotated": "改变执行旋转角",
+                "if": "仅当条件满足时运行",
+                "unless": "仅当条件不满足时运行",
+                "run": "指定运行的命令"
+            },
+            "tests": {
+                "block": "检查方块类型",
+                "blocks": "检查两个区域是否一致",
+                "entity": "检查实体是否存在",
+                "score": {
+                    "root": "检查计分板分数是否满足条件",
+                    "matches": "指定一个范围",
+                    "compare_ops": {
+                        "=": "如果A = B则通过",
+                        ">=": "如果A >= B则通过",
+                        "<=": "如果A <= B则通过",
+                        ">": "如果A > B则通过",
+                        "<": "如果A < B则通过"
+                    }
+                }
+            },
+            "anchors": {
+                "eyes": "实体眼部",
+                "feet": "实体脚部"
+            },
+            "dims": {
+                "overworld": "主世界",
+                "nether": "下界",
+                "the_end": "末地"
+            },
+            "entity_variant": "使用来自实体的数据",
+            "old": {
+                "detect": "仅在某个方块类型满足时运行"
+            }
+        },
+        "fill": {
+            "root": "在一个区域内填充方块",
+            "modes": {
+                "replace": {
+                    "root": "替换某一种方块或全部方块",
+                    "all": "替换全部方块"
+                },
+                "destroy": "像玩家一样地破坏原有方块 (掉落物品、播放动画)",
+                "hollow": "填充一个空心立方体并把内部替换为空气",
+                "keep": "仅替换空气方块",
+                "outline": "填充一个空心立方体并让内部保持原有方块"
+            }
+        },
+        "fog": {
+            "root": "管理迷雾效果",
+            "modes": {
+                "remove": "移除所有有给定名称的迷雾",
+                "pop": "移除第一次以给定名称创建的迷雾",
+                "push": "创建一次迷雾效果"
+            },
+            "user_provided_name": "迷雾名称"
+        },
+        "function": {
+            "root": "运行一个函数文件",
+            "path": "函数文件路径"
+        },
+        "gamemode": {
+            "root": "设定玩家游戏模式"
+        },
+        "gamerule": {
+            "root": "管理游戏规则",
+            "query": "查询该游戏规则当前的值",
+            "value": "修改该规则的值"
+        },
+        "gametest": {
+            "root": "管理GameTest测试",
+            "runthis": "运行定义在15格半径内的结构方块中的测试",
+            "run": "创建并运行一个指定ID的测试",
+            "test_name": "测试ID <类名>:<测试名>",
+            "stop_on_failure": "是否在测试失败时停止进入下一次重复",
+            "repeat": "重复测试的次数",
+            "rotation": "将结构顺时针旋转<这个值>*90度",
+            "runthese": "运行定义在200格半径内的结构方块中的测试",
+            "runset": {
+                "root_regular": "创建并运行一个类中的所有测试",
+                "root_untilfail": "创建并运行一个类中的所有测试直到失败",
+                "tag": "类名",
+                "default": "运行所有\"suite:default\"类的测试"
+            },
+            "clearall": "清除所有测试",
+            "stopall": "停止所有正在运行的测试",
+            "create": {
+                "root": "创建测试 -- 放置结构方块并生成默认结构",
+                "len_x": "结构大小: X轴",
+                "len_y": "结构大小: Y轴",
+                "len_z": "结构大小: Z轴"
+            },
+            "pos": "找到200格半径内最近的结构方块"
+        },
+        "give": {
+            "root": "给予玩家物品",
+            "amount": "物品数量"
+        },
+        "immutableworld": {
+            "root": "[EDU] 管理世界是否能被修改",
+            "query": "查询世界是否是无法修改的",
+            "set": "设置世界是否是无法修改的"
+        },
+        "inputpermission": {
+            "root": "管理输入权限 (玩家控制他们角色的能力)",
+            "set": "设定玩家的输入权限",
+            "query": {
+                "root": "查询玩家的输入权限",
+                "equal": "如果该权限的值和给定值相等则成功运行",
+                "normal": "显示该权限的值"
+            }
+        },
+        "kick": {
+            "root": "将玩家踢出游戏",
+            "target": "目标 (玩家名/带有'name'参数的选择器)",
+            "reason": "原因"
+        },
+        "kill": {
+            "root": "击杀实体"
+        },
+        "list": {
+            "root": "显示服务器上的所有玩家"
+        },
+        "locate": {
+            "root": "查找世界中的结构或生物群系",
+            "biome": "查找生物群系",
+            "structure": {
+                "root": "查找结构",
+                "new_chunks": "是否仅在未加载查找"
+            }
+        },
+        "loot": {
+            "root": "将战利品表中的战利品生成进世界",
+            "origin": {
+                "kill": "使用某个实体死亡的掉落物",
+                "loot": "使用到战利品表的路径",
+                "tools": {
+                    "mainhand": "使用在执行者主手上的物品",
+                    "offhand": "使用在执行者副手上的物品"
+                }
+            },
+            "give": "将生成的物品给予玩家",
+            "insert": "将生成的物品分配到容器方块里",
+            "spawn": "将物品生成为掉落物",
+            "replace": {
+                "root": "将生成的物品放入指定槽位",
+                "entity": "替换实体物品栏",
+                "block": "替换容器方块的栏位",
+                "slot_count": "连续将被替换的槽位个数"
+            }
+        },
+        "me": {
+            "root": "展示关于执行者自己的一条消息"
+        },
+        "mobevent": {
+            "root": "管理生物事件",
+            "query": "查询事件当前的值",
+            "value": "修改事件当前的值",
+            "events_enabled": "当该值为false时所有生物事件关闭"
+        },
+        "tell": {
+            "root": "给指定玩家发送消息"
+        },
+        "music": {
+            "root": "管理音乐的播放",
+            "modes": {
+                "play": "播放音乐",
+                "queue": "将音乐加入播放队列",
+                "stop": "停止音乐",
+                "volume": "调整音乐的音量"
+            },
+            "volume": "音量",
+            "fade_in": "渐入时长 (秒)",
+            "fade_out": "淡出时长 (秒)",
+            "loop_modes": {
+                "play_once": "仅播放音乐一次",
+                "loop": "循环播放"
+            }
+        },
+        "op": {
+            "root": "将玩家设定为管理员"
+        },
+        "particle": {
+            "root": "生成粒子效果"
+        },
+        "playanimation": {
+            "root": "播放实体动画",
+            "blend": "淡出时长 (秒)",
+            "stop_exp": "当该Molang表达式为true时停止动画"
+        },
+        "playsound": {
+            "root": "播放声音",
+            "volume": "音量 (0~1; >1 -> 声音范围扩大至16*音量)",
+            "pitch": "音调",
+            "min_volume": "处于声音范围之外玩家听到声音的音量"
+        },
+        "recipe": {
+            "root": "管理玩家的配方",
+            "give": "给予/解锁一个配方",
+            "take": "剥夺/锁定一个配方",
+            "wildcard": "所有配方"
+        },
+        "reload": {
+            "root": "重新加载行为包内的函数和脚本文件"
+        },
+        "replaceitem": {
+            "root": "将给定物品槽位替换为给定物品",
+            "modes": {
+                "destroy": "替换槽位已有的物品",
+                "keep": "如果槽位中已有物品则停止替换"
+            },
+            "entity": "替换实体物品栏",
+            "block": "替换容器方块的栏位",
+            "amount": "物品数量"
+        },
+        "ride": {
+            "root": "管理实体之间的骑乘关系",
+            "mount": "让目标乘坐另一个实体",
+            "tp_modes": {
+                "teleport_rider": "传送骑乘者至被骑乘者",
+                "teleport_ride": "传送被骑乘者至骑乘者"
+            },
+            "fill_modes": {
+                "if_group_fits": "仅当所有骑乘者均可骑乘时执行",
+                "until_full": "尝试将骑乘者依次骑上被骑乘者直到座位满为止"
+            },
+            "dismount": "令目标停止骑乘",
+            "dismount_rider": "令骑乘在目标上的骑乘者停止骑乘",
+            "summon_rider": "生成一个实体并骑乘在目标上",
+            "summon_ride": "生成一个实体给目标骑乘",
+            "ride_modes": {
+                "skip_riders": "如果目标已经骑乘在实体上则跳过",
+                "no_ride_change": "如果目标已经骑乘在实体上或被骑乘则跳过",
+                "reassign_rides": "如果目标已经骑乘则先令其停止骑乘再执行"
+            }
+        },
+        "say": {
+            "root": "给所有玩家发送一条消息"
+        },
+        "schedule": {
+            "root": "延迟执行一个函数",
+            "area": {
+                "root": "当给定区域被加载时执行函数",
+                "tickingarea": "当给定名称的常加载区域被添加时执行函数"
+            },
+            "function": "函数文件路径"
+        },
+        "scoreboard": {
+            "root": "与计分板系统交互",
+            "players": {
+                "root": "管理分数持有者的分数",
+                "set": "设定一个分数至给定值",
+                "add": "将一个分数增加指定值",
+                "remove": "将一个分数减少指定值",
+                "random": {
+                    "root": "随机设定一个分数",
+                    "min": "随机范围最小值 (含)",
+                    "max": "随机范围最大值 (含)"
+                },
+                "reset": {
+                    "root": "停止追踪一个分数持有者",
+                    "all": "在所有计分项上停止追踪该目标"
+                },
+                "test": {
+                    "root": "测试一个分数是否在指定范围内",
+                    "min": "范围最小值 (含)",
+                    "max": "范围最大值 (含)",
+                    "wildcard": {
+                        "min": "32位整数负无穷 (-2147483648)",
+                        "max": "32位整数正无穷 (2147483647)"
+                    },
+                    "no_max": "测试分数是否>=给定值"
+                },
+                "operation": {
+                    "root": "对2个分数进行数学运算",
+                    "operators": {
+                        "=": "设定A为B",
+                        "+=": "设定A为A+B",
+                        "-=": "设定A为A-B",
+                        "*=": "设定A为A*B",
+                        "/=": "设定A为A/B",
+                        "%=": "设定A为A mod B(除以B的余数)",
+                        "><": "交换A和B的值",
+                        "<": "设定A为A与B中的最小值",
+                        ">": "设定A为A与B中的最大值"
+                    }
+                },
+                "list": {
+                    "root": "列出所有分数持有者/所有关于给定分数持有者的数据",
+                    "tracking": "列出系统正在追踪的所有分数持有者",
+                    "scores": "列出给定分数持有者在所有计分项上的分值"
+                }
+            },
+            "objectives": {
+                "root": "管理计分项",
+                "add": {
+                    "root": "添加计分项",
+                    "display": "设定该计分项的显示名称"
+                },
+                "remove": "移除计分项",
+                "setdisplay": {
+                    "root": "将计分项数据展示给玩家",
+                    "slots": {
+                        "sidebar": "屏幕最右侧",
+                        "list": "暂停菜单",
+                        "belowname": "玩家名称的下面"
+                    },
+                    "sort": {
+                        "ascending": "升序",
+                        "descending": "降序"
+                    },
+                    "clear": "清空这个显示区域"
+                },
+                "list": "列出系统中的所有计分项"
+            }
+        },
+        "script": {
+            "root": "与GameTest的调试工具交互",
+            "debugger": {
+                "root": "调试工具",
+                "close": "关闭调试工具",
+                "connect": "连接到一个调试工具",
+                "listen": "监听调试工具",
+                "host": "调试工具地址",
+                "port": "端口"
+            },
+            "profiler": {
+                "root": "性能分析器",
+                "start": "开始性能分析",
+                "stop": "停止性能分析"
+            },
+            "watchdog": {
+                "root": "Watchdog",
+                "exportstats": "导出Watchdog的统计项"
+            }
+        },
+        "scriptevent": {
+            "root": "触发GameTest的脚本事件",
+            "id": "事件ID (命名空间ID)",
+            "message": "消息"
+        },
+        "setblock": {
+            "root": "在指定位置放置一个方块",
+            "modes": {
+                "destroy": "像玩家一样地破坏原有方块 (掉落物品、播放动画)",
+                "keep": "仅替换空气方块",
+                "replace": "替换原有的方块"
+            }
+        },
+        "setmaxplayers": {
+            "root": "设定世界中允许的最大玩家数",
+            "value": "新最大玩家数"
+        },
+        "setworldspawn": {
+            "root": "设定世界生成点",
+            "here": "使用命令执行坐标作为世界生成点"
+        },
+        "spawnpoint": {
+            "root": "设定玩家重生点",
+            "here": "使用命令执行坐标作为重生点"
+        },
+        "spreadplayers": {
+            "root": "将实体散布到区域内的随机位置",
+            "distance": "任意2个目标之间的最小距离",
+            "max_range": "正方形散布区域边长的一半"
+        },
+        "stopsound": {
+            "root": "停止播放声音"
+        },
+        "structure": {
+            "root": "与结构系统交互",
+            "include_entity": "是否包含实体",
+            "include_block": "是否包含方块",
+            "name": "结构名称",
+            "save": {
+                "root": "保存结构",
+                "modes": {
+                    "disk": "保存在存档中",
+                    "memory": "保存在内存中 (离开世界时销毁)"
+                }
+            },
+            "load": {
+                "root": "加载结构",
+                "rotations": {
+                    "0_degrees": "无旋转",
+                    "90_degrees": "顺时针转90度",
+                    "180_degrees": "180度旋转",
+                    "270_degrees": "逆时针转90度"
+                },
+                "flip": {
+                    "none": "无翻折",
+                    "x": "沿X轴翻折",
+                    "z": "沿Z轴翻折",
+                    "xz": "沿X轴和Z轴翻折"
+                },
+                "anims": {
+                    "block_by_block": "播放逐方块的建造动画",
+                    "layer_by_layer": "播放逐层的建造动画"
+                },
+                "anim_sec": "动画持续时长 (秒)",
+                "water_logged": "是否令加载在水中的方块含水",
+                "integrity": "结构完整度 (方块被加载的可能性) (0~100)",
+                "seed": "根据完整度加载结构的随机算法的种子"
+            },
+            "delete": "删除结构"
+        },
+        "summon": {
+            "root": "召唤实体"
+        },
+        "tag": {
+            "root": "管理实体标签",
+            "tag": "标签名",
+            "wildcard_target": "所有被追踪的实体",
+            "add": "给予实体标签",
+            "remove": "清除实体标签",
+            "list": "列出实体拥有的所有标签"
+        },
+        "teleport": {
+            "root": "传送实体或/和改变它们的朝向",
+            "to_entity": "传送实体1到实体2",
+            "self2entity": "传送执行者至给定实体",
+            "check_for_blocks": "是否仅在目标不会陷入它不能处在其中的方块时传送"
+        },
+        "tellraw": {
+            "root": "给指定玩家发送JSON文本消息"
+        },
+        "testfor": {
+            "root": "检测满足给定条件的实体是否存在"
+        },
+        "testforblock": {
+            "root": "检测某个位置的方块是否为指定类型"
+        },
+        "testforblocks": {
+            "root": "检测两个区域的方块是否一致"
+        },
+        "tickingarea": {
+            "root": "管理常加载区域",
+            "set_preload": "是否预加载(优先加载)区域",
+            "add": "添加常加载区域",
+            "remove": "移除常加载区域",
+            "remove_all": "移除所有常加载区域",
+            "list": {
+                "root": "列出当前添加的常加载区域",
+                "cur_dim": "仅列出当前维度的常加载区域",
+                "all_dims": "列出所有维度的常加载区域"
+            },
+            "preload": {
+                "root": "管理区域是否预加载",
+                "query": "查询该区域是否是预加载区域"
+            }
+        },
+        "time": {
+            "root": "与游戏时间系统交互",
+            "amount": "值 (游戏刻)",
+            "add": "添加内部时间值",
+            "query": {
+                "root": "查看有关时间的统计项",
+                "types": {
+                    "daytime": "距离上一次日出的游戏刻 (内部时间值/24000)",
+                    "gametime": "世界的年龄 (游戏刻)",
+                    "day": "过去游戏日 (24000游戏刻) 的数量"
+                }
+            },
+            "set": {
+                "root": "直接修改内部时间值",
+                "alias": {
+                    "day": "白天 (1000)",
+                    "night": "夜晚 (13000)",
+                    "noon": "中午 (6000)",
+                    "midnight": "午夜 (18000)",
+                    "sunrise": "日出 (23000)",
+                    "sunset": "日落 (12000)"
+                }
+            }
+        },
+        "title": {
+            "root": "管理屏幕标题",
+            "title": "在屏幕中间显示标题",
+            "subtitle": "在标题下方显示 (仅在标题存在时有效)",
+            "actionbar": "在快捷栏上方显示",
+            "clear": "清除屏幕标题",
+            "times": {
+                "root": "修改标题的渐入、持续和淡出时长",
+                "fade_in": "渐入时长 (游戏刻)",
+                "hold": "持续时长 (游戏刻)",
+                "fade_out": "淡出时长 (游戏刻)"
+            },
+            "reset": "重置时间为默认时长"
+        },
+        "titleraw": {
+            "root": "使用JSON文本管理屏幕标题"
+        },
+        "toggledownfall": {
+            "root": "调整天气 (晴天 -> 雨/雪, 其它 -> 晴天)"
+        },
+        "volumearea": {
+            "root": "管理功能域",
+            "name": "功能域名称",
+            "add": {
+                "root": "添加功能域",
+                "id": "功能域ID"
+            },
+            "remove": "移除功能域",
+            "remove_all": "移除所有功能域",
+            "list": {
+                "root": "列出当前添加的功能域",
+                "cur_dim": "仅列出当前维度的功能域",
+                "all_dims": "列出所有维度的功能域"
+            }
+        },
+        "worldbuilder": {
+            "root": "调整玩家的世界建造者能力"
+        },
+        "weather": {
+            "root": "管理天气",
+            "set": {
+                "duration": "给定天气的持续时长 (游戏刻)",
+                "weathers": {
+                    "clear": "晴天",
+                    "rain": "雨天",
+                    "thunder": "雷暴"
+                }
+            },
+            "query": "查询天气"
+        },
+        "xp": {
+            "root": "增加/移除玩家的经验点/等级",
+            "level": "等级为单位",
+            "amount": "增加值 (<0 -> 减少)"
+        }
+    },
+    "error": {
+        "syntax": {
+            "_root": "字符{col}: {suberrs}",
+            "_separator": "; ",
+            "expect": {
+                "_root": "缺少{content}",
+                "_separator": " 或 ",
+                "char": "{char!r}",
+                "keyword": "{keyword!r}",
+                "terminator": "终止字符(比如空格)",
+                "enum": "{options}中的一个",
+                "quoted_str": "引号字符串",
+                "int": "整数",
+                "float": "小数",
+                "offset_float": "偏移值小数",
+                "word": "单词",
+                "bool": "布尔值 (true/false)",
+                "chars": "{chars!r}",
+                "swizzle": "x、y和z的组合",
+                "bare_text": "任何文本",
+                "json": "JSON表达式"
+            },
+            "unclosed_str": "未闭合的字符串",
+            "too_many_args": "过多参数",
+            "id_invalid": "命名空间中无效的字符{char!r}",
+            "json_str_u_escape": "\\u后需要4位十六进制数",
+            "illegal_word": "非法单词(如可以请尝试加上引号)"
+        },
+        "semantic": {
+            "_root": "字符{col1}~{col2}: {message}",
+            "number": {
+                "out_of_range": "数字超出范围: {min}~{max}",
+                "cant_be": "数字不能是{num}",
+                "must_be": "数字必须是{nums}中的一个"
+            }
+        }
+    },
+    "autocomp": {
+        "space": "(空格)",
+        "eol": "(行结束)",
+        "char": "{char}",
+        "integer": "(整数)",
+        "float": "(小数)",
+        "word": "(单词)",
+        "quoted_string": "(引号字符串)",
+        "keyword": "{keyword}",
+        "option": "{option}",
+        "bare_text": "(任何文本)",
+        "offset_float": "(小数)",
+        "true": "true",
+        "false": "false",
+        "chars": "{chars}",
+        "swizzle": "{swizzle}",
+        "no_idtable": {
+            "_hint": "(加载ID表来获取提示)",
+            "item": "[物品类型]",
+            "entity": "[实体类型]",
+            "family": "[实体族]",
+            "entity_slot": "[实体槽位]",
+            "block_slot": "[方块槽位]",
+            "block": "[方块类型]",
+            "damage": "[伤害原因]",
+            "effect": "[状态效果(Buff)]",
+            "entity_event": "[实体事件]",
+            "fog": "[迷雾]",
+            "game_rule": "[游戏规则]",
+            "permission": "[输入权限]",
+            "biome": "[生物群系]",
+            "structure": "[结构]",
+            "mob_event": "[生物事件]",
+            "music": "[声音(音乐类)]",
+            "sound": "[声音]",
+            "loot_table": "[战利品表路径]",
+            "rpac_state": "[动画控制器状态]",
+            "animation_ref": "[实体动画(ID/捷径)]",
+            "rpac": "[动画控制器]",
+            "recipe": "[配方]",
+            "camera_preset": "[摄像机预设]",
+            "ease_type": "[平滑函数]",
+            "ability": "[能力]",
+            "particle": "[粒子效果]"
+        },
+        "dynamic_id_fails": "(无法在ID表找到)"
+    },
+    "tkapp": {
+        "no_error": "没有发现错误 :)"
+    }
+}
