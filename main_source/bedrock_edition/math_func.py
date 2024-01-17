@@ -93,18 +93,17 @@ def normal_distribution(x:float) -> float :
 
 def rotation_angle(pos1:List[float], pos2:List[float]):
     v1 = [pos2[0]-pos1[0], pos2[1]-pos1[1], pos2[2]-pos1[2]]
-    if sum(v1) < 0.0000001 : return (0.0, 0.0)
+    if -0.0000001 < sum(v1) < 0.0000001 : return (0.0, 0.0)
 
     v3 = vector_unit(v1)
     rx = math.asin(v3[1]) / math.pi * 180 * -1
-    if sum((v3[0],v3[2])) < 0.0000001 : return (0.0, rx)
+    if -0.0000001 < sum((v3[0],v3[2])) < 0.0000001 : return (0.0, rx)
     
     ry = math.acos( v3[2] / ((v3[0] ** 2 + v3[2] ** 2) ** 0.5) )
     ry = ry / math.pi * 180 * (-1 if v1[0] > 0 else 1)
     return (ry,rx)
     
-def rotate_compute(rotate_start:float, rotate_offset:str, mode:Literal["rx","ry"]="ry", can_outside_limit:bool=False) -> np.float32 :
-    rotate_max = 180 if mode == "ry" else 90
+def mc_rotate_compute(rotate_start:float, rotate_offset:str, mode:Literal["rx","ry"]="ry", can_outside_limit:bool=False) -> np.float32 :
     if rotate_offset[0] != "~" : rotate_value = np.float32(rotate_offset)
     if len(rotate_offset) == 1 : rotate_value = np.float32(rotate_start)
     else : rotate_value = rotate_start + float(rotate_offset[1:])
@@ -117,7 +116,8 @@ def rotate_compute(rotate_start:float, rotate_offset:str, mode:Literal["rx","ry"
     else : 
         if not can_outside_limit : 
             if rotate_value > 90 : return np.float32(90.0)
-            if rotate_value < -90 : return np.float32(-90.0)
+            elif rotate_value < -90 : return np.float32(-90.0)
+            else : return np.float32(rotate_value)
         else : return np.float32(rotate_value)
 
 def mc_pos_compute(origin:List[float], pos_offset:List[str], rotate:List[float]):
@@ -136,8 +136,9 @@ def mc_pos_compute(origin:List[float], pos_offset:List[str], rotate:List[float])
             if pos_offset[i][0] == "~" and len(pos_offset[i][1:]) == 0 : continue
             elif pos_offset[i][0] == "~" : pos_result[i] += np.float32(pos_offset[i][1:])
             elif "."  in pos_offset[i] : pos_result[i] = np.float32(pos_offset[i])
+            elif i == 1 :  pos_result[i] = np.float32(pos_offset[i])
             else : pos_result[i] = np.float32(pos_offset[i]) + 0.5
-        return [float(i) for i in pos_result]
+        return [max(min(float(i),30000000.0), -30000000.0) for i in pos_result]
 
 
 def version_compare(version1:List[int], version2:List[int]) :

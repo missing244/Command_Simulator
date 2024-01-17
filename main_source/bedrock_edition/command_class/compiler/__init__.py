@@ -51,8 +51,8 @@ def BlockState_Compiler(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tu
 
 def ItemComponent_Compiler(_game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, index:int) -> Tuple[int,dict] :
     json_str_list = [i["token"].group() for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
-    json_str_list.append(token_list[index + len(json_str_list) + 1])
-    index = index + len(json_str_list) + 1
+    json_str_list.append(token_list[index + len(json_str_list)]["token"].group())
+    index = index + len(json_str_list)
     item_nbt = json.loads(json_str_list)
     key_list = set(("minecraft:keep_on_death", "minecraft:can_destroy", "minecraft:can_place_on", "minecraft:item_lock"))
     if set(item_nbt) - key_list : raise CompileError("不存在的物品组件：%s" % ", ".join( set(item_nbt) - key_list ))
@@ -116,14 +116,15 @@ from . import selector as Selector
 from . import rawtext as Rawtext
 from . import command_1 as Command1
 from . import command_2 as Command2
+from . import command_3 as Command3
 
 be_command_list = [
     'ability', 'alwaysday', 'camera', 'camerashake', 'clear', 'clearspawnpoint', 'clone', 'damage', 'daylock', 'dialogue',
     'difficulty', 'effect', 'enchant', 'event', 'execute', 'fill', 'fog', 'function', 'gamemode', 'gamerule', 
-    'give', 'inputpermission', 'kick', 'kill', 'list', 'locate', 'loot', 'me', 'mobevent',
-    'msg', 'music', 'particle', 'playanimation', 'playsound', 'replaceitem', "recipe", 'ride', 'say', 'schedule',
-    'scoreboard', 'setblock', 'setworldspawn', 'spawnpoint', 'spreadplayers', 'structure', 'stopsound', 'summon', 'tag', 'teleport',
-    'tell', 'tellraw', 'testfor', 'testforblock', 'testforblocks', 'tickingarea', 'time', 'title', 'titleraw', 'toggledownfall', 'tp',
+    'give', 'inputpermission', 'kick', 'kill', 'list', 'locate', 'loot', 'me', 'mobevent', 'msg', 
+    'music', 'particle', 'playanimation', 'playsound', 'replaceitem', "recipe", 'ride', 'say', 'schedule', 'scoreboard',
+    'setblock', 'setworldspawn', 'spawnpoint', 'spreadplayers', 'structure', 'stopsound', 'summon', 'tag', 'teleport', 'tell', 
+    'tellraw', 'testfor', 'testforblock', 'testforblocks', 'tickingarea', 'time', 'title', 'titleraw', 'toggledownfall', 'tp',
     'volumearea', 'w', 'weather', 'xp'
 ]
 
@@ -133,10 +134,15 @@ Command_to_Compiler = {
     "camerashake": Command1.camerashake, "clear": Command1.clear, "clearspawnpoint": Command1.clearspawnpoint,
     "clone": Command1.clone, "damage": Command1.damage, "daylock": Command1.daylock,
     "dialogue": Command1.dialogue, "effect":Command1.effect, "enchant":Command1.enchant,
-    "event": Command1.event, "fill":{(1,0,0):Command1.fill_1_0_0, (1,19,80):Command1.fill_1_19_80}, "fog":Command1.fog,
+    "event": Command1.event, "fill":{(0,0,0):Command1.fill_1_0_0, (1,19,80):Command1.fill_1_19_80}, "fog":Command1.fog,
     "gamemode": Command1.gamemode, "gamerule":Command1.gamerule, "give":Command1.give,
 
-    "testforblocks" : Command2.testforblocks, "tickingarea" : Command2.tickingarea, "testforblock" : Command2.testforblock, 
+    "inputpermission": Command3.inputpermission, "kick":Command3.kick, "kill":Command3.kill,
+    "list": Command3.list_command, "locate":Command3.locate, "loot":Command3.loot,
+
+    "structure": Command2.structure, "stopsound": Command2.stopsound, "summon": {(0,0,0):Command2.summon_1_0_0, (1,19,80):Command2.summon_1_70_0}, 
+    "tag": Command2.tag, "teleport" : Command2.teleport, "tp" : Command2.teleport, 
+    "tellraw": Command2.tellraw, "testfor" : Command2.testfor, "testforblock" : Command2.testforblock, 
     "testforblocks" : Command2.testforblocks, "tickingarea" : Command2.tickingarea, "time" : Command2.time, 
     "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,

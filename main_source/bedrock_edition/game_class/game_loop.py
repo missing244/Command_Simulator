@@ -1,7 +1,7 @@
 import re,random,math,functools
 from .. import np,BaseNbtClass,Constants
 from . import RunTime
-from typing import List,Dict,Union,Literal,Tuple,Callable
+from typing import List,Dict,Union,Literal,Tuple,Callable,Generator
 
 DIMENSION_LIST = list(Constants.DIMENSION_INFO)
 KEYWORD_END = re.compile("[ ]{0,}(e|E)(n|N)(d|D)[ ]{0,}$")
@@ -12,7 +12,7 @@ KEYWORD_TERMINAL_COMMAND = re.compile("[ ]{0,}#")
 RUN_TERMINAL_END:Dict[int,Callable] = {}
 RUN_TEST_END:Dict[int,Callable] = {}
 RUN_TICK_END:Dict[int,Callable] = {}
-
+ASYNC_FUNCTION:List[Union[Callable,Generator]] = []
 
 
 class runing_command_block_obj:
@@ -190,7 +190,7 @@ class runing_command_block_obj:
                     "pos": [cur[0]+0.5, cur[1]+0.5, cur[2]+0.5],
                     "rotate": [0.0, 0.0],
                     "version": self.game_process.game_version
-                })
+                }, self.game_process)
                 self.game_process.register_response(
                     "command_block", cb_command, response
                 )
@@ -241,8 +241,13 @@ class runing_command_block_obj:
 def remove_entity(game:RunTime.minecraft_thread, *entity_list:BaseNbtClass.entity_nbt) :
     for entity1 in entity_list :
         chunk_pos = (math.floor(entity1.Pos[0])//16*16, math.floor(entity1.Pos[2])//16*16)
-        entity_chunk_list = game.minecraft_chunk.loading_chunk[DIMENSION_LIST[entity1.Dimension]][chunk_pos]["entities"]
-        if entity1 in entity_chunk_list : entity_chunk_list.remove(entity1)
+        entity_chunk = game.minecraft_chunk.loading_chunk[DIMENSION_LIST[entity1.Dimension]]
+        if chunk_pos not in entity_chunk :
+            if entity1 not in game.minecraft_chunk.out_load_entity : continue
+            game.minecraft_chunk.out_load_entity.remove(entity1)
+        else :
+            entity_chunk_list = entity_chunk[chunk_pos]["entities"]
+            if entity1 in entity_chunk_list : entity_chunk_list.remove(entity1)
 
 def add_entity(game:RunTime.minecraft_thread, *entity_list:BaseNbtClass.entity_nbt) :
     for entity1 in entity_list :
@@ -270,7 +275,7 @@ def game_time_tick(self:RunTime.minecraft_thread) :
             self.minecraft_world.thunder_time = np.int32(list1[2])
     
     if gt1 in self.runtime_variable.scoreboard_score_remove :
-        for name in self.runtime_variable.scoreboard_score_remove[gt1] : self.minecraft_scoreboard.__reset_score__(name)
+        for name in self.runtime_variable.scoreboard_score_remove[gt1] : self.minecraft_scoreboard.__reset_score__((name,))
         del self.runtime_variable.scoreboard_score_remove[gt1]
 
 def loading_chunk(self:RunTime.minecraft_thread) :
@@ -355,7 +360,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
             if isinstance(a, Exception) : feedback_list.append((lines, a.args[0], a.pos[0] if hasattr(a,"pos") else 0))
             else : 
                 command_function.append( (command_text,a) )
-                if id(a.func) == id(TerminalCommand.set_version) : a(context)
+                if id(a.func) == id(TerminalCommand.set_version) : a(context, self)
         else :
             func_object = Command_Tokenizer_Compiler(self, command_text, self.game_version)
             if isinstance(func_object, tuple) : 
@@ -365,7 +370,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
 
     if len(feedback_list) == 0 :
         for command,function in command_function : 
-            try : feedback = function(context)
+            try : feedback = function(context, self)
             except Exception as e : print(command, function) ; raise e
             else : feedback_list.append( feedback.set_command(command) )
 
@@ -383,9 +388,9 @@ def command_running(self:RunTime.minecraft_thread) :
     aaa = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":self.game_version}
     if self.minecraft_world.game_time in self.runtime_variable.command_will_run :
         for command_str,func in self.runtime_variable.command_will_run[self.minecraft_world.game_time] :
-            self.register_response("delay_command",command_str,func(aaa))
+            self.register_response("delay_command",command_str,func(aaa, self))
 
-    for command_str,func in self.runtime_variable.command_will_loop : self.register_response("loop_command",command_str,func(aaa))
+    for command_str,func in self.runtime_variable.command_will_loop : self.register_response("loop_command",command_str,func(aaa, self))
 
 def command_block_running(self:RunTime.minecraft_thread) :
     if self.runtime_variable.how_times_run_all_command <= 0 : return None
@@ -407,7 +412,7 @@ def command_run_end(self:RunTime.minecraft_thread) :
     if self.runtime_variable.how_times_run_all_command == 0 :
         aaa = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":self.game_version}
         for command_str,func in self.runtime_variable.command_will_run_test_end : 
-            self.register_response("end_command",command_str,func(aaa))
+            self.register_response("end_command", command_str, func(aaa, self))
 
         test_end_hook(self)
 
@@ -432,6 +437,10 @@ def test_end_hook(self:RunTime.minecraft_thread) :
 def tick_end_hook(self:RunTime.minecraft_thread) :
     for func in list(RUN_TICK_END.values()) : func(self)
 
+def async_run(self:RunTime.minecraft_thread) :
+    for func in list(ASYNC_FUNCTION) : 
+        if func() == "end" : ASYNC_FUNCTION.remove(func)
+
 def modify_termial_end_hook(mode:Literal["add","remove","clear"]="add", _func:Callable=None) :
     if mode in ("add","remove") and not hasattr(_func, "__call__") : return
     if _func : dict_key = _func.__code__.co_code.__hash__()
@@ -453,12 +462,15 @@ def modify_tick_end_hook(mode:Literal["add","remove","clear"]="add", _func:Calla
     elif mode == "remove" and dict_key in RUN_TICK_END : del RUN_TICK_END[dict_key]
     elif mode == "clear" : RUN_TICK_END.clear()
 
+def modify_async_func(mode:Literal["add","clear"]="add", _func:Callable=None) :
+    if mode in ("add") and (not hasattr(_func, "__call__") and not hasattr(_func, "__next__")) : return
+    if mode == "add" : ASYNC_FUNCTION.append(_func)
+    elif mode == "clear" : ASYNC_FUNCTION.clear()
 
 
 loop_function_list = [
-    game_time_tick, loading_chunk, player_things, entity_things, terminal_running,
-    command_running, command_block_running, particle_alive, command_run_end, 
-    tick_end_hook
+    game_time_tick, loading_chunk, player_things, entity_things, async_run, terminal_running,
+    command_running, command_block_running, particle_alive, command_run_end, tick_end_hook
 ]
 
 

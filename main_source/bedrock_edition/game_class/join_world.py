@@ -329,7 +329,6 @@ def spawn_player(game:RunTime.minecraft_thread) :
             player1 = BaseNbtClass.entity_nbt().__create__("minecraft:player", 'overworld', 
                 [random.randint(-100,100)+0.5, -50, random.randint(-100,100)+0.5],
                 "Steve%s" % ("00000%s" % random.randint(1,9999))[-4:])
-            EntityComponent.set_component(game.minecraft_ident, player1)
             player1.SpawnPoint = [np.float32(0.5),np.float32(-50.0),np.float32(0.5)]
             player1.Armor = [{},{},{},{}]
             player1.Weapon = [{},{}]

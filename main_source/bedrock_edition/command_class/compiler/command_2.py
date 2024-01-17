@@ -6,19 +6,477 @@ import functools,string,random,re,math,itertools,json
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
 
+class structure :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        struc_name = token_list[2]["token"].group()
+        if token_list[1]["token"].group() == "save" :
+            pos1 = [token_list[3+i]["token"].group() for i in range(3)]
+            pos2 = [token_list[6+i]["token"].group() for i in range(3)]
+            if 9 >= len(token_list) : return functools.partial(cls.save, name=struc_name, start=pos1, end=pos2)
+            if token_list[9]["token"].group() in ("disk", "memory") : 
+                return functools.partial(cls.save, name=struc_name, start=pos1, end=pos2, save_mode=token_list[9]["token"].group())
+            has_entity = ("false","true").index(token_list[9]["token"].group())
+            if 10 >= len(token_list) : return functools.partial(cls.save, name=struc_name, start=pos1, end=pos2, has_entity=bool(has_entity))
+            save_mode = token_list[10]["token"].group()
+            if 11 >= len(token_list) : return functools.partial(cls.save, name=struc_name, start=pos1, end=pos2, has_entity=bool(has_entity), save_mode=save_mode)
+            has_block = ("false","true").index(token_list[11]["token"].group())
+            return functools.partial(cls.save, name=struc_name, start=pos1, end=pos2, has_entity=bool(has_entity), save_mode=save_mode, has_block=bool(has_block))
+        elif token_list[1]["token"].group() == "load" :
+            pos1 = [token_list[3+i]["token"].group() for i in range(3)]
+            if 6 >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1)
+            struc_rotate = token_list[6]["token"].group()
+            if 7 >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate)
+            struc_mirror = token_list[7]["token"].group()
+            if 8 >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror)
+            if token_list[8]["token"].group() in ("block_by_block", "layer_by_layer") : 
+                if 9 >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror)
+                if float(token_list[9]["token"].group()) < 0 : raise CompileError("动画时间 %s 应该为非负数" % token_list[9]["token"].group(), 
+                    pos=(token_list[9]["token"].start(), token_list[9]["token"].end()))
+                if 10 >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror)
+                index = 10
+            else : index = 9
+            if index >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror)
+            has_entity = ("false","true").index(token_list[index]["token"].group()) ; index += 1
+            if index >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror,
+                has_entity=has_entity)
+            has_block = ("false","true").index(token_list[index]["token"].group()) ; index += 1
+            if index >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror,
+                has_entity=has_entity, has_block=has_block)
+            has_water = ("false","true").index(token_list[index]["token"].group()) ; index += 1
+            if index >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror,
+                has_entity=has_entity, has_block=has_block)
+            integrity = float(token_list[index]["token"].group()) ; index += 1
+            if not(0 <= integrity <= 100) : raise CompileError("完整度 %s 应该在0 ~ 100的范围内" % integrity, 
+                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+            if index >= len(token_list) : return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror,
+                has_entity=has_entity, has_block=has_block, integrity=integrity)
+            seed = Quotation_String_transfor_1(token_list[index]["token"].group())
+            return functools.partial(cls.load, name=struc_name, start=pos1, rotation=struc_rotate, mirror=struc_mirror,
+                has_entity=has_entity, has_block=has_block, integrity=integrity, seed=seed)
+        elif token_list[1]["token"].group() == "delete" : 
+            return functools.partial(cls.delete, name=struc_name)
+
+    def save(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, name:str, start:List[str], end:List[str],
+             save_mode:Literal["disk","memory"]="memory", has_entity:bool=True, has_block:bool=True) :
+        start_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start, execute_var["rotate"])]
+        end_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], end, execute_var["rotate"])]
+        for index,(pos_1,pos_2) in enumerate(itertools.zip_longest(start_pos1, end_pos1)) :
+            if pos_1 > pos_2 : start_pos1[index] = pos_2; end_pos1[index] = pos_1
+        area = [(pos2-pos1+1) for pos1,pos2 in itertools.zip_longest(start_pos1, end_pos1)]
+        if not(0 <= area[0] <= 64) or not(0 <= area[2] <= 64) or not(0 <= area[1] <= 319) : 
+            return Response.Response_Template("区域$pos1 ~ $pos2超过64*320*64大小").substitute(pos1=tuple(start_pos1), pos2=tuple(end_pos1))
+        
+        structure_data = BaseNbtClass.structure_nbt().__create__(game.minecraft_chunk, execute_var["dimension"], 
+        start_pos1, end_pos1, has_entity, has_block)
+        if save_mode == "disk" : 
+            if name in game.minecraft_chunk.memory_structure : del game.minecraft_chunk.memory_structure[name]
+            game.minecraft_chunk.disk_structure[name] = structure_data
+        else : 
+            if name in game.minecraft_chunk.disk_structure : del game.minecraft_chunk.disk_structure[name]
+            game.minecraft_chunk.memory_structure[name] = structure_data
+        return Response.Response_Template("区域$pos1 ~ $pos2内保存为结构 $name", 1, 1).substitute(
+            pos1=tuple(start_pos1), pos2=tuple(end_pos1), name=name)
+
+    def load(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, name:str, start:List[str], rotation:str="0_degrees", 
+             mirror:str="none", has_entity:bool=True, has_block:bool=True, integrity:float=100, seed=None) :
+        if name in game.minecraft_chunk.disk_structure : structure_save = game.minecraft_chunk.disk_structure
+        elif name in game.minecraft_chunk.memory_structure : structure_save = game.minecraft_chunk.memory_structure
+        else : return Response.Response_Template("不存在结构 $name").substitute(name=name)
+
+        start_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start, execute_var["rotate"])]
+        world_height = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"]
+        if not(world_height[0] <= start_pos1[1] < world_height[1]) : 
+            return Response.Response_Template("无法在$pos位置加载结构").substitute(pos=tuple(start_pos1))
+
+        rotate_m,mirror_m = Constants.MITRAX["rotate"][rotation], Constants.MITRAX["mirror"][mirror]
+        end_m = MathFunction.mitrax_transform(rotate_m, mirror_m)
+        end_area = MathFunction.vector_transform(structure_save[name].Area, end_m)
+        place_pos_start = [i+abs(j)-1 for i,j in itertools.zip_longest(start_pos1, end_area)]
+
+        all_in_load = True
+        for i in itertools.product(range(start_pos1[0]//16*16, place_pos_start[0]//16*16 + 1, 16), range(1),
+        range(start_pos1[0]//16*16, place_pos_start[0]//16*16 + 1, 16)) :
+            if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], i) : all_in_load = False
+        
+        if all_in_load :
+            structure_save[name].__output__(game.minecraft_chunk, execute_var["dimension"], start_pos1, 
+                rotation, mirror, has_entity, has_block, integrity, seed)
+            return Response.Response_Template("已在$pos1加载结构 $name", 1, 1).substitute(pos1=tuple(start_pos1), name=name)
+        else :
+            from ... import GameLoop
+            def async_run() :
+                for i in itertools.product(range(start_pos1[0]//16*16, place_pos_start[0]//16*16 + 1, 16),  range(1),
+                range(start_pos1[0]//16*16, place_pos_start[0]//16*16 + 1, 16)) :
+                    if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], i) : return None
+                structure_save[name].__output__(game.minecraft_chunk, execute_var["dimension"], start_pos1, 
+                rotation, mirror, has_entity, has_block, integrity, seed)
+                return "end"
+            GameLoop.modify_async_func("add", async_run)
+            return Response.Response_Template("在$pos1加载的结构$name已放入等待队列", 1, 1).substitute(pos1=tuple(start_pos1), name=name)
+
+    def delete(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, name:str) :
+        if name in game.minecraft_chunk.disk_structure : del game.minecraft_chunk.disk_structure[name]
+        elif name in game.minecraft_chunk.memory_structure : del game.minecraft_chunk.memory_structure[name]
+        else : return Response.Response_Template("不存在结构 $name").substitute(name=name)
+
+        return Response.Response_Template("已删除结构 $name", 1, 1).substitute(name=name)
 
 
+class stopsound :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
+        if index >= len(token_list) : return functools.partial(cls.stop_all, entity_get=entity_func)
+        sound_name = Quotation_String_transfor_1(token_list[index]["token"].group())
+        if sound_name not in _game.minecraft_ident.entities :
+            raise CompileError("不存在的声音ID：%s" % sound_name, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+        return functools.partial(cls.stop_one, entity_get=entity_func, entity_name=sound_name)
+
+    def stop_all(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        return Response.Response_Template("以下玩家停止播放所有声音:\n$players", 1, len(entity_list)).substitute(
+            players=", ".join(ID_tracker(i) for i in entity_list)
+        )
+
+    def stop_one(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, sound_name:str) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        return Response.Response_Template("以下玩家已停止播放 $name 声音:\n$players", 1, len(entity_list)).substitute(
+            players=", ".join(ID_tracker(i) for i in entity_list), name=sound_name
+        )
 
 
+class summon_1_0_0 :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        entity_id = ID_transfor(token_list[1]["token"].group())
+        if entity_id not in _game.minecraft_ident.entities :
+            raise CompileError("不存在的实体ID：%s" % entity_id, pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+        if 2 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id)
+        elif token_list[2]["type"] == "Entity_Name" :
+            entity_name = Quotation_String_transfor_1(token_list[2]["token"].group())
+            if 3 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, entity_name=entity_name)
+            pos = [token_list[3+i]["token"].group() for i in range(3)]
+            return functools.partial(cls.summon_entity, entity_id=entity_id, entity_name=entity_name, pos=pos)
+        else :
+            pos = [token_list[2+i]["token"].group() for i in range(3)]
+            if 5 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos)
+            entity_event = Quotation_String_transfor_1(token_list[5]["token"].group())
+            if 6 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos, entity_event=entity_event)
+            entity_name = Quotation_String_transfor_1(token_list[6]["token"].group())
+            return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos, entity_event=entity_event, entity_name=entity_name)
+
+    def summon_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_id:str, 
+                      pos:List[str]=["~", "~", "~"], entity_event:str=None, entity_name:str=None) :
+        summon_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+
+        aaa = game.minecraft_chunk.__summon_entity__(game.minecraft_world.difficulty, 
+            execute_var["dimension"], entity_id, summon_pos, entity_name, entity_event
+        )
+        if aaa == Exception : return Response.Response_Template("无法在和平模式下召唤怪物").substitute()
+        return Response.Response_Template("成功召唤了实体 $name", 1, 1).substitute(name=ID_tracker(aaa))
 
 
+class summon_1_70_0 :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        entity_id = ID_transfor(token_list[1]["token"].group())
+        if entity_id not in _game.minecraft_ident.entities :
+            raise CompileError("不存在的实体ID：%s" % entity_id, pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+        if 2 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id)
+        elif token_list[2]["type"] == "Entity_Name" :
+            entity_name = Quotation_String_transfor_1(token_list[2]["token"].group())
+            if 3 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, entity_name=entity_name)
+            pos = [token_list[3+i]["token"].group() for i in range(3)]
+            return functools.partial(cls.summon_entity, entity_id=entity_id, entity_name=entity_name, pos=pos)
+        else :
+            pos = [token_list[2+i]["token"].group() for i in range(3)]
+            if token_list[5]["type"] in ("Absolute_Rotation", "Relative_Rotation") :
+                if 6 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, 
+                    pos=pos, facing=(token_list[5]["token"].group(),"~"))
+                if 7 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, 
+                    pos=pos, facing=(token_list[5]["token"].group(), token_list[6]["token"].group()))
+                entity_event = Quotation_String_transfor_1(token_list[7]["token"].group())
+                if 8 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos,
+                    facing=(token_list[5]["token"].group(), token_list[6]["token"].group()), entity_event=entity_event)
+                entity_name = Quotation_String_transfor_1(token_list[8]["token"].group())
+                return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos, 
+                    facing=(token_list[5]["token"].group(), token_list[6]["token"].group()), entity_event=entity_event, entity_name=entity_name)
+            if token_list[5]["token"].group() == "facing" :
+                if token_list[6]["type"] in ("Absolute_Pos", "Relative_Pos", "Local_Pos") :
+                    index, facing_var = 9, [token_list[6+i]["token"].group() for i in range(3)]
+                else : index, facing_var = Selector.Selector_Compiler(_game, token_list, 6, is_single=True)
+                if index >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos, facing=facing_var)
+                entity_event = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+                if index >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos, facing=facing_var, entity_event=entity_event)
+                entity_name = Quotation_String_transfor_1(token_list[index]["token"].group())
+                return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos, facing=facing_var, entity_event=entity_event, entity_name=entity_name)
+
+    def summon_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_id:str, 
+                      pos:List[str]=["~", "~", "~"], facing:List[str]=None, entity_event:str=None, entity_name:str=None) :
+        summon_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        if isinstance(facing, (list,tuple)) and len(facing) == 2 :
+            facing_x_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][0]), facing[0], "ry")
+            facing_y_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][1]), facing[1], "rx")
+            angle = (facing_x_var, facing_y_var)
+        elif isinstance(facing, (list,tuple)) and len(facing) == 3 :
+            pos_angle = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+            angle = MathFunction.rotation_angle(summon_pos, pos_angle)
+        elif facing :
+            entity_list:List[BaseNbtClass.entity_nbt] = facing(execute_var, game)
+            if isinstance(entity_list, Response.Response_Template) : return entity_list
+            angle = MathFunction.rotation_angle(summon_pos, entity_list[0].Pos)
+        else : angle = None
+
+        aaa = game.minecraft_chunk.__summon_entity__( game.minecraft_world.difficulty, 
+            execute_var["dimension"], entity_id, summon_pos, entity_name, entity_event
+        )
+        if angle is not None : aaa.Rotation = [np.float32(angle[0]), np.float32(angle[1])]
+        if aaa == Exception : return Response.Response_Template("无法在和平模式下召唤怪物").substitute()
+        return Response.Response_Template("成功在 $pos 召唤了\n实体 $name $rotate", 1, 1).substitute(
+            pos=tuple(aaa.Pos), name=ID_tracker(aaa), rotate=aaa.Rotation)
+
+
+class tag :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        index, entity_func = Selector.Selector_Compiler(_game, token_list, 1)
+        if token_list[index]["token"].group() == "add" : return functools.partial(cls.add, entity_get=entity_func, 
+            tag_name=Quotation_String_transfor_1(token_list[index+1]["token"].group()))
+        if token_list[index]["token"].group() == "remove" : return functools.partial(cls.remove, entity_get=entity_func, 
+            tag_name=Quotation_String_transfor_1(token_list[index+1]["token"].group()))
+        if token_list[index]["token"].group() == "list" : return functools.partial(cls.list, entity_get=entity_func)
+    
+    def add(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, tag_name:str) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+
+        success = string.Template("以下实体成功添加了标签:\n$entity")
+        faild = string.Template("以下实体无法添加标签:\n$entity")
+        success_list, faild_list = [], []
+
+        for entity in entity_list :
+            if tag_name in entity.Tags or len(entity.Tags) > 1000 :
+                faild_list.append(ID_tracker(entity)) ; continue
+            entity.Tags.append(tag_name)
+            success_list.append(ID_tracker(entity))
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
+            success=success.substitute(entity=", ".join(success_list)) if success_list else "",
+            is_line = "\n" if success_list and faild_list else "",
+            fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
+
+    def remove(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, tag_name:str) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+
+        success = string.Template("以下实体成功删除了标签:\n$entity")
+        faild = string.Template("以下实体无法删除标签:\n$entity")
+        success_list, faild_list = [], []
+
+        for entity in entity_list :
+            if tag_name not in entity.Tags :
+                faild_list.append(ID_tracker(entity)) ; continue
+            entity.Tags.remove(tag_name)
+            success_list.append(ID_tracker(entity))
+        return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
+            success=success.substitute(entity=", ".join(success_list)) if success_list else "",
+            is_line = "\n" if success_list and faild_list else "",
+            fiald=faild.substitute(entity=", ".join(faild_list)) if faild_list else "")
+
+    def list(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+
+        success = string.Template("$entity -> $tags")
+        success_list = []
+        for entity in entity_list :
+            success_list.append(success.substitute(entity=ID_tracker(entity), tags=entity.Tags))
+        return Response.Response_Template("以下实体打印标签：\n$success", min(1,len(success_list)), len(success_list)).substitute(
+            success = "\n".join(success_list)
+        )
 
 
 class teleport :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        pass
+        if token_list[1]["type"] in ("Absolute_Pos", "Relative_Pos", "Local_Pos") :
+            pos = [ token_list[i]["token"].group() for i in range(1,4,1) ]
+            if 4 >= len(token_list) : return functools.partial(cls.tp_self_pos, pos=pos)
+            if token_list[4]["type"] == "Check_For_Blocks" : 
+                return functools.partial(cls.tp_self_pos, pos=pos, check_block=("false","true").index(token_list[4]["token"].group()))
+            if token_list[4]["type"] in ("Absolute_Rotation", "Relative_Rotation") :
+                if 5 >= len(token_list) : return functools.partial(cls.tp_self_pos, pos=pos, facing=(token_list[4]["token"].group(),"~"))
+                if 6 >= len(token_list) : return functools.partial(cls.tp_self_pos, pos=pos, facing=(token_list[4]["token"].group(), token_list[5]["token"].group()))
+                return functools.partial( cls.tp_self_pos, pos=pos, facing=[token_list[4+i]["token"].group() for i in range(2)],
+                    check_block=("false","true").index(token_list[6]["token"].group()) )
+            if token_list[4]["token"].group() == "facing" :
+                if token_list[5]["type"] in ("Absolute_Pos", "Relative_Pos", "Local_Pos") :
+                    index, facing_var = 8, [token_list[5+i]["token"].group() for i in range(3)]
+                else : index, facing_var = Selector.Selector_Compiler(_game, token_list, 5, is_single=True)
+                if index >= len(token_list) : return functools.partial(cls.tp_self_pos, pos=pos, facing=facing_var)
+                return functools.partial( cls.tp_self_pos, pos=pos, facing=facing_var,
+                    check_block=("false","true").index(token_list[index]["token"].group()) )
+        else :
+            index, entity_get = Selector.Selector_Compiler(_game, token_list, 1)
+            if index >= len(token_list) :
+                index, entity_get = Selector.Selector_Compiler(_game, token_list, 1, is_single=True)
+                return functools.partial(cls.tp_self_entity, pos=entity_get)
+            if token_list[index]["type"] == "Check_For_Blocks" : 
+                index, entity_get = Selector.Selector_Compiler(_game, token_list, 1, is_single=True)
+                return functools.partial(cls.tp_self_entity, pos=entity_get, check_block=("false","true").index(token_list[index]["token"].group()))
+            if token_list[index]["type"] in ("Selector", "Player_Name") :
+                index, destination_entity_get = Selector.Selector_Compiler(_game, token_list, index, is_single=True)
+                if index >= len(token_list) : return functools.partial(cls.tp_entity_entity, victim=entity_get, pos=destination_entity_get)
+                return functools.partial(cls.tp_entity_entity, victim=entity_get, pos=destination_entity_get, 
+                                         check_block=("false","true").index(token_list[index]["token"].group()))
+            if token_list[index]["type"] in ("Absolute_Pos", "Relative_Pos", "Local_Pos") :
+                pos = [ token_list[i]["token"].group() for i in range(index, index+3, 1) ] ; index += 3
+                if index >= len(token_list) : return functools.partial(cls.tp_entity_pos, victim=entity_get, pos=pos)
+                if token_list[index]["type"] == "Check_For_Blocks" : 
+                    return functools.partial(cls.tp_entity_pos, victim=entity_get, pos=pos, check_block=("false","true").index(token_list[index]["token"].group()))
+                if token_list[index]["type"] in ("Absolute_Rotation", "Relative_Rotation") :
+                    if index+1 >= len(token_list) : return functools.partial(cls.tp_entity_pos, victim=entity_get, pos=pos, facing=(token_list[index]["token"].group(),"~"))
+                    if index+2 >= len(token_list) : return functools.partial(cls.tp_entity_pos, victim=entity_get, pos=pos, facing=(token_list[index]["token"].group(), token_list[index+1]["token"].group()))
+                    return functools.partial( cls.tp_entity_pos, victim=entity_get, pos=pos, facing=[token_list[index+i]["token"].group() for i in range(2)],
+                        check_block=("false","true").index(token_list[index+2]["token"].group()) )
+                if token_list[index]["token"].group() == "facing" : 
+                    index += 1
+                    if token_list[index]["type"] in ("Absolute_Pos", "Relative_Pos", "Local_Pos") :
+                        facing_var = [token_list[index+i]["token"].group() for i in range(3)] ; index += 3
+                    else : index, facing_var = Selector.Selector_Compiler(_game, token_list, index, is_single=True)
+                    if index >= len(token_list) : return functools.partial(cls.tp_entity_pos, victim=entity_get, pos=pos, facing=facing_var)
+                    return functools.partial( cls.tp_entity_pos, victim=entity_get, pos=pos, facing=facing_var,
+                        check_block=("false","true").index(token_list[index]["token"].group()) )
+
+    def tp_self_pos(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str], 
+                    facing:Union[List[str],Callable]=None, check_block:Literal[0,1]=False) :
+        victim_entity = execute_var["executer"]
+        if not isinstance(victim_entity, BaseNbtClass.entity_nbt) :
+            return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
+
+        tp_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        if isinstance(facing, (list,tuple)) and len(facing) == 2 :
+            facing_y_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][0]), facing[0], "ry")
+            facing_x_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][1]), facing[1], "rx")
+            angle = (facing_y_var, facing_x_var)
+        elif isinstance(facing, (list,tuple)) and len(facing) == 3 :
+            angle = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        elif facing :
+            entity_list:List[BaseNbtClass.entity_nbt] = facing(execute_var, game)
+            if isinstance(entity_list, Response.Response_Template) : return entity_list
+            angle = entity_list[0]
+        else : angle = None
+        
+        aaa = game.minecraft_chunk.__teleport_entity__([victim_entity], victim_entity.Dimension, tp_pos, angle, bool(check_block))
+        if aaa == Exception : return Response.Response_Template("$pos 无法进行碰撞检查").substitute(pos = tuple(tp_pos))
+        if len(aaa) > 0 : return Response.Response_Template("已将下列实体传送至$pos:\n $name", 1, 1).substitute(
+            name = ID_tracker(victim_entity) ,
+            pos = tuple(("%.4f" % i for i in tp_pos))
+        )
+        else : return Response.Response_Template("没有实体执行了传送").substitute()
+
+    def tp_self_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:Callable, check_block:Literal[0,1]=False) :
+        victim_entity = execute_var["executer"]
+        if not isinstance(victim_entity, BaseNbtClass.entity_nbt) :
+            return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
+        destination_entity:List[BaseNbtClass.entity_nbt] = pos(execute_var, game)
+        if isinstance(destination_entity, Response.Response_Template) : return destination_entity
+
+        aaa = game.minecraft_chunk.__teleport_entity__([victim_entity], destination_entity[0].Dimension, destination_entity[0].Pos, 
+            destination_entity[0].Rotation, bool(check_block))
+        if aaa == Exception : return Response.Response_Template("$pos 无法进行碰撞检查").substitute(pos = tuple(destination_entity[0].Pos))
+        if len(aaa) > 0 : return Response.Response_Template("已将下列实体传送至$pos:\n $name", 1, 1).substitute(
+            name = ID_tracker(victim_entity) ,
+            pos = tuple(("%.4f" % i for i in destination_entity[0].Pos))
+        )
+        else : return Response.Response_Template("没有实体执行了传送").substitute()
+
+    def tp_entity_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, victim:Callable, pos:Callable, check_block:Literal[0,1]=False) :
+        victim_entity:List[BaseNbtClass.entity_nbt] = victim(execute_var, game)
+        if isinstance(victim_entity, Response.Response_Template) : return victim_entity
+        destination_entity:List[BaseNbtClass.entity_nbt] = pos(execute_var, game)
+        if isinstance(destination_entity, Response.Response_Template) : return destination_entity
+
+        aaa = game.minecraft_chunk.__teleport_entity__(victim_entity, destination_entity[0].Dimension, destination_entity[0].Pos, 
+            destination_entity[0].Rotation, bool(check_block))
+        if aaa == Exception : return Response.Response_Template("$pos 无法进行碰撞检查").substitute(pos = tuple(destination_entity[0].Pos))
+        if len(aaa) > 0 : return Response.Response_Template("已将下列实体传送至$pos:\n $name", 1, len(aaa)).substitute(
+            name = ", ".join( (ID_tracker(i) for i in aaa) ) ,
+            pos = tuple(("%.4f" % i for i in destination_entity[0].Pos))
+        )
+        else : return Response.Response_Template("没有实体执行了传送").substitute()
+
+    def tp_entity_pos(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, victim:Callable, pos:List[str], 
+                         facing:Union[List[str],Callable]=None, check_block:Literal[0,1]=False) :
+        victim_entity:List[BaseNbtClass.entity_nbt] = victim(execute_var, game)
+        if isinstance(victim_entity, Response.Response_Template) : return victim_entity
+
+        tp_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        if isinstance(facing, (list,tuple)) and len(facing) == 2 :
+            facing_x_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][0]), facing[0], "ry")
+            facing_y_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][1]), facing[1], "rx")
+            angle = (facing_x_var, facing_y_var)
+        elif isinstance(facing, (list,tuple)) and len(facing) == 3 :
+            angle = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        elif facing :
+            entity_list:List[BaseNbtClass.entity_nbt] = facing(execute_var, game)
+            if isinstance(entity_list, Response.Response_Template) : return entity_list
+            angle = entity_list[0]
+        else : angle = None
+
+        aaa = game.minecraft_chunk.__teleport_entity__(victim_entity, execute_var["dimension"], tp_pos, angle, bool(check_block))
+        if aaa == Exception : return Response.Response_Template("$pos 无法进行碰撞检查").substitute(pos = tuple(tp_pos))
+        if len(aaa) > 0 : return Response.Response_Template("已将下列实体传送至$pos:\n $name", 1, len(aaa)).substitute(
+            name = ", ".join( (ID_tracker(i) for i in aaa) ) ,
+            pos = tuple(("%.4f" % i for i in tp_pos))
+        )
+        else : return Response.Response_Template("没有实体执行了传送").substitute()
+
+
+class tellraw :
+    #{"rawtext":[{"text":"aaa "},{"selector":"@s[rm=1]"},{"text":" bbb "},{"selector":"@s"}]}
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        index,entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
+
+        json_str_list = [i["token"].group() for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
+        json_str_list.append(token_list[index + len(json_str_list)]["token"].group())
+        a = json.loads( "".join( json_str_list ))
+        b = Rawtext.Rawtext_Compiler(_game, (255,0,0), a)
+        return functools.partial(cls.display, entity_get=entity_func, rawtext=b)
+
+    def display(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, rawtext:Callable) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        return Response.Response_Template("已为以下玩家显示聊天栏信息：$player\n$msg", 1, 1).substitute(
+            player = ", ".join( (ID_tracker(i) for i in entity_list) ),
+            msg = rawtext(execute_var, game)
+        )
+
+
+class testfor :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        index, entity_func = Selector.Selector_Compiler(_game, token_list, 1)
+        return functools.partial(cls.test, entity_get=entity_func)
+
+    def test(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        
+        return Response.Response_Template("发现了 $count 个实体：$entity", 1, len(entity_list)).substitute(
+            count = len(entity_list),
+            entity = ", ".join( (ID_tracker(i) for i in entity_list) ),
+        )
 
 
 class testforblock :
@@ -38,7 +496,7 @@ class testforblock :
             pos=(token_list[5]["token"].start(), token_list[5]["token"].end()))
             if block_state == -1 : block_state = {}
         else : _,block_state = BlockState_Compiler( block_id, token_list, 5 )
-        return functools.partial(cls.test, game=_game, pos=poses, block_id=block_id, block_state=block_state)
+        return functools.partial(cls.test, pos=poses, block_id=block_id, block_state=block_state)
     
     def test(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:tuple, block_id:str, block_state:Union[dict,int]={}) :
         start_pos = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
@@ -72,8 +530,8 @@ class testforblocks :
 
         poses = [ token_list[i]["token"].group() for i in range(1,10,1) ]
         if 10 >= len(token_list) : 
-            return functools.partial(cls.test, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9])
-        return functools.partial(cls.test, game=_game, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
+            return functools.partial(cls.test, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9])
+        return functools.partial(cls.test, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
             mask_mode=token_list[10]["token"].group())
     
     def error_test(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start_pos1, end_pos1, start_pos2, end_pos2) :
@@ -137,42 +595,42 @@ class tickingarea :
                 from_pos = [token_list[3+i]["token"].group() for i in range(3)]
                 radius = int(token_list[6]["token"].group())
                 if not(1 <= radius <= 4) : raise CompileError("区块半径只能在 1~4 范围内", pos=(token_list[6]["token"].start(), token_list[6]["token"].end()))
-                if 7 >= len(token_list) : return functools.partial(cls.add_circle, game=_game, from_pos=from_pos, radius=radius)
+                if 7 >= len(token_list) : return functools.partial(cls.add_circle, from_pos=from_pos, radius=radius)
                 tickarea_name = Quotation_String_transfor_1(token_list[7]["token"].group())
-                if 8 >= len(token_list) : return functools.partial(cls.add_circle, game=_game, from_pos=from_pos, radius=radius, name=tickarea_name)
+                if 8 >= len(token_list) : return functools.partial(cls.add_circle, from_pos=from_pos, radius=radius, name=tickarea_name)
                 preload_value = bool( ("false","true").index(token_list[8]["token"].group()) )
-                return functools.partial(cls.add_circle, game=_game, from_pos=from_pos, radius=radius, name=tickarea_name, preload=preload_value)
+                return functools.partial(cls.add_circle, from_pos=from_pos, radius=radius, name=tickarea_name, preload=preload_value)
             else :
                 from_pos = [token_list[2+i]["token"].group() for i in range(3)]
                 to_pos = [token_list[5+i]["token"].group() for i in range(3)]
-                if 8 >= len(token_list) : return functools.partial(cls.add_area, game=_game, from_pos=from_pos, to_pos=to_pos)
+                if 8 >= len(token_list) : return functools.partial(cls.add_area, from_pos=from_pos, to_pos=to_pos)
                 tickarea_name = Quotation_String_transfor_1(token_list[8]["token"].group())
-                if 9 >= len(token_list) : return functools.partial(cls.add_area, game=_game, from_pos=from_pos, to_pos=to_pos, name=tickarea_name)
+                if 9 >= len(token_list) : return functools.partial(cls.add_area, from_pos=from_pos, to_pos=to_pos, name=tickarea_name)
                 preload_value = bool( ("false","true").index(token_list[9]["token"].group()) )
-                return functools.partial(cls.add_area, game=_game, from_pos=from_pos, to_pos=to_pos, name=tickarea_name, preload=preload_value)
+                return functools.partial(cls.add_area, from_pos=from_pos, to_pos=to_pos, name=tickarea_name, preload=preload_value)
         elif token_list[1]["token"].group() == "list" : 
-            if 2 >= token_list.__len__() : return functools.partial(cls.print_area, game=_game)
-            else : return functools.partial(cls.print_area, game=_game, print_all=True)
+            if 2 >= token_list.__len__() : return cls.print_area
+            else : return functools.partial(cls.print_area, print_all=True)
         elif token_list[1]["token"].group() == "remove" : 
-            if token_list[2]["type"] == "Tickingarea_Name" : return functools.partial(cls.remove_area, game=_game, 
+            if token_list[2]["type"] == "Tickingarea_Name" : return functools.partial(cls.remove_area, 
                 name=Quotation_String_transfor_1(token_list[2]["token"].group()))
-            else : return functools.partial(cls.remove_area, game=_game, pos=[token_list[2+i]["token"].group() for i in range(3)])
+            else : return functools.partial(cls.remove_area, pos=[token_list[2+i]["token"].group() for i in range(3)])
         elif token_list[1]["token"].group() == "remove_all" : 
-            return functools.partial(cls.remove_area, game=_game, remove_all=True)
+            return functools.partial(cls.remove_area, remove_all=True)
         elif token_list[1]["token"].group() == "preload" : 
             if token_list[2]["type"] == "Tickingarea_Name" : 
-                if 3 >= len(token_list) : return functools.partial(cls.preload_set, game=_game, 
+                if 3 >= len(token_list) : return functools.partial(cls.preload_set, 
                     name=Quotation_String_transfor_1(token_list[2]["token"].group()))
                 else : 
                     preload_value = bool( ("false","true").index(token_list[3]["token"].group()) )
-                    return functools.partial(cls.preload_set, game=_game, 
+                    return functools.partial(cls.preload_set, 
                     name=Quotation_String_transfor_1(token_list[2]["token"].group()), preload=preload_value)
             else : 
-                if 5 >= len(token_list) : return functools.partial(cls.preload_set, game=_game, 
+                if 5 >= len(token_list) : return functools.partial(cls.preload_set, 
                     pos=[token_list[2+i]["token"].group() for i in range(3)])
                 else : 
                     preload_value = bool( ("false","true").index(token_list[5]["token"].group()) )
-                    return functools.partial(cls.preload_set, game=_game, 
+                    return functools.partial(cls.preload_set, 
                     pos=[token_list[2+i]["token"].group() for i in range(3)], preload=preload_value)
         
     def add_circle(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, from_pos:List[str], radius:int, 
@@ -288,13 +746,13 @@ class time :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         if token_list[1]["token"].group() == "query" : 
-            return functools.partial(cls.query, game=_game, mode=token_list[2]["token"].group())
+            return functools.partial(cls.query, mode=token_list[2]["token"].group())
         if token_list[1]["token"].group() == "add" : 
-            return functools.partial(cls.add, game=_game, value=int(token_list[2]["token"].group()))
+            return functools.partial(cls.add, value=int(token_list[2]["token"].group()))
         if token_list[1]["token"].group() == "set" : 
             if token_list[2]["type"] == "Time_Int" : value = int(token_list[2]["token"].group())
             else : value = token_list[2]["token"].group()
-            return functools.partial(cls.set, game=_game, value=value)
+            return functools.partial(cls.set, value=value)
             
     def query(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, mode:Literal["daytime","gametime","day"]) :
         success_msg = Response.Response_Template("查询到 $mode 的值为 $sss", 1, 1)
@@ -339,13 +797,13 @@ class titleraw :
                 return functools.partial(cls.display_1, entity_get=entity_func, type1=ttt, msg=aa, search_entity=bb)
             else :
                 json_str_list = [i["token"].group() for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
-                json_str_list.append(token_list[index + len(json_str_list) + 1])
+                json_str_list.append(token_list[index + len(json_str_list)]["token"].group())
                 a = json.loads( "".join( json_str_list ))
                 b = Rawtext.Rawtext_Compiler(_game, (255,0,0), a)
                 return functools.partial(cls.display_2, entity_get=entity_func, type1=ttt, rawtext=b)
     
-    def clear_or_reset(execute_var:COMMAND_CONTEXT, entity_get:Callable, mode:Literal["clear", "reset"]) :
-        entity_list = entity_get(execute_var)
+    def clear_or_reset(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, mode:Literal["clear", "reset"]) :
+        entity_list = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if mode == "clear" :
             return Response.Response_Template("已为以下玩家清除所有显示的标题：$player", 1, 1).substitute(
@@ -356,17 +814,17 @@ class titleraw :
                 player = ", ".join( (ID_tracker(i) for i in entity_list) )
             )
 
-    def set_time(execute_var:COMMAND_CONTEXT, entity_get:Callable) :
-        entity_list = entity_get(execute_var)
+    def set_time(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         return Response.Response_Template("已为以下玩家设置标题淡入淡出时间：$player", 1, 1).substitute(
             player = ", ".join( (ID_tracker(i) for i in entity_list) )
         )
 
-    def display_1(execute_var:COMMAND_CONTEXT, entity_get:Callable, type1:Literal["title", "subtitle", "actionbar"], msg:str, search_entity:List[Callable]) :
-        entity_list = entity_get(execute_var)
+    def display_1(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, type1:Literal["title", "subtitle", "actionbar"], msg:str, search_entity:List[Callable]) :
+        entity_list = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        list1 = [i(execute_var) for i in search_entity]
+        list1 = [i(execute_var, game) for i in search_entity]
         msg_temp = msg % tuple([
             (", ".join( (ID_tracker(i) for i in entities) ) if isinstance(entities, list) else "") for entities in list1
         ])
@@ -376,13 +834,13 @@ class titleraw :
             msg = msg_temp
         )
 
-    def display_2(execute_var:COMMAND_CONTEXT, entity_get:Callable, type1:Literal["title", "subtitle", "actionbar"], rawtext:Callable) :
-        entity_list = entity_get(execute_var)
+    def display_2(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, type1:Literal["title", "subtitle", "actionbar"], rawtext:Callable) :
+        entity_list = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         return Response.Response_Template("已为以下玩家设置 $type1 标题：$player\n$msg", 1, 1).substitute(
             type1 = type1,
             player = ", ".join( (ID_tracker(i) for i in entity_list) ),
-            msg = rawtext(execute_var)
+            msg = rawtext(execute_var, game)
         )
 
 
@@ -390,7 +848,7 @@ class toggledownfall :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        return functools.partial(cls.change_weather, game=_game)
+        return cls.change_weather
     
     def change_weather(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread) : 
         time = random.randint(10000,30000)
@@ -424,16 +882,16 @@ class volumearea :
             from_pos = [token_list[3+i]["token"].group() for i in range(3)]
             to_pos = [token_list[6+i]["token"].group() for i in range(3)]
             volume_name = Quotation_String_transfor_1(token_list[9]["token"].group())
-            return functools.partial(cls.add_area, game=_game, id=volume_id, from_pos=from_pos, to_pos=to_pos, name=volume_name)
+            return functools.partial(cls.add_area, id=volume_id, from_pos=from_pos, to_pos=to_pos, name=volume_name)
         elif token_list[1]["token"].group() == "list" : 
-            if 2 >= token_list.__len__() : return functools.partial(cls.print_area, game=_game)
-            else : return functools.partial(cls.print_area, game=_game, print_all=True)
+            if 2 >= token_list.__len__() : return cls.print_area
+            else : return functools.partial(cls.print_area, print_all=True)
         elif token_list[1]["token"].group() == "remove" : 
-            if token_list[2]["type"] == "Volumearea_Name" : return functools.partial(cls.remove_area, game=_game, 
+            if token_list[2]["type"] == "Volumearea_Name" : return functools.partial(cls.remove_area, 
                 name=Quotation_String_transfor_1(token_list[2]["token"].group()))
-            else : return functools.partial(cls.remove_area, game=_game, pos=[token_list[2+i]["token"].group() for i in range(3)])
+            else : return functools.partial(cls.remove_area, pos=[token_list[2+i]["token"].group() for i in range(3)])
         elif token_list[1]["token"].group() == "remove_all" : 
-            return functools.partial(cls.remove_area, game=_game, remove_all=True)
+            return functools.partial(cls.remove_area, remove_all=True)
     
     def add_area(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, id:str, from_pos:List[str],
                  to_pos:List[str], name:str) :
@@ -486,10 +944,10 @@ class tell :
         aa,bb = Msg_Compiler(_game, token_list[index]["token"].group(), token_list[index]["token"].start())
         return functools.partial(cls.send_msg, entity_get=entity_func, msg=aa, search_entity=bb)
 
-    def send_msg(execute_var:COMMAND_CONTEXT, entity_get:Callable, msg:str, search_entity:List[Callable]) :
-        entity_list = entity_get(execute_var)
+    def send_msg(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, msg:str, search_entity:List[Callable]) :
+        entity_list = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        list1 = [i(execute_var) for i in search_entity]
+        list1 = [i(execute_var, game) for i in search_entity]
         msg_temp = msg % tuple([
             (", ".join( (ID_tracker(i) for i in entities) ) if isinstance(entities, list) else "") for entities in list1
         ])
@@ -504,12 +962,12 @@ class weather :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        if token_list[1]["token"].group() == "query" : return functools.partial(cls.query, game=_game)
+        if token_list[1]["token"].group() == "query" : return cls.query
         weather_name = token_list[1]["token"].group()
-        if 2 >= token_list.__len__() : return functools.partial(cls.set, game=_game, weather_name=weather_name)
+        if 2 >= token_list.__len__() : return functools.partial(cls.set, weather_name=weather_name)
         time = int(token_list[2]["token"].group())
         if time <= 0 : raise CompileError("天气时长不能为非正整数", pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
-        return functools.partial(cls.set, game=_game, weather_name=weather_name, time=time)
+        return functools.partial(cls.set, weather_name=weather_name, time=time)
 
     def query(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread) :
         aaaa = Response.Response_Template("当前的天气：$weather", 1, 1)
@@ -543,8 +1001,8 @@ class xp :
         index,entity_func = Selector.Selector_Compiler(_game, token_list, 2, is_player=True)
         return functools.partial(func, entity_get=entity_func, value=lvl_value)
 
-    def modify_level(execute_var:COMMAND_CONTEXT, entity_get:Callable=None, value:int=0) :
-        entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
+    def modify_level(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable=None, value:int=0) :
+        entity_list = entity_get(execute_var, game) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if not isinstance(entity_list[0], BaseNbtClass.entity_nbt) or entity_list[0].Identifier != "minecraft:player" : 
             return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
@@ -555,8 +1013,8 @@ class xp :
             msg="\n".join( (temp1.substitute(player = ID_tracker(i), value=i.PlayerLevel) for i in entity_list) )
         )
 
-    def modify_point(execute_var:COMMAND_CONTEXT, entity_get:Callable=None, value:int=0) :
-        entity_list = entity_get(execute_var) if entity_get else [execute_var["executer"]]
+    def modify_point(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable=None, value:int=0) :
+        entity_list = entity_get(execute_var, game) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if not isinstance(entity_list[0], BaseNbtClass.entity_nbt) or entity_list[0].Identifier != "minecraft:player" : 
             return Response.Response_Template("没有与目标选择器匹配的目标").substitute()

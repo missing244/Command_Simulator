@@ -33,7 +33,7 @@ class tools :
 def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_thread, selector_var:dict) :
     entity_saves : List[BaseNbtClass.entity_nbt] = []
     if selector_var["is_executer"] : all_entity_test_list = (execute_var["executer"],) if isinstance(execute_var["executer"],BaseNbtClass.entity_nbt) else ()
-    else : all_entity_test_list = game_tread.minecraft_chunk.__get_all_load_entity__()
+    else : all_entity_test_list = game_tread.minecraft_chunk.__get_all_load_entity__(is_player= True if "minecraft:player" in selector_var["type_if"] else False)
 
     select_origin_x = (execute_var["pos"][0] + selector_var["pos_offset"][0]) if selector_var["pos"][0] == None else (selector_var["pos"][0] + selector_var["pos_offset"][0])
     select_origin_y = (execute_var["pos"][1] + selector_var["pos_offset"][1]) if selector_var["pos"][1] == None else (selector_var["pos"][1] + selector_var["pos_offset"][1])
@@ -85,11 +85,11 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
                 elif slot == "slot.armor.chest" : item_list = [entity.Armor[1]] if hasattr(entity, "Armor") else []
                 elif slot == "slot.armor.legs" : item_list = [entity.Armor[2]] if hasattr(entity, "Armor") else []
                 elif slot == "slot.armor.feet" : item_list = [entity.Armor[3]] if hasattr(entity, "Armor") else []
-                elif slot == "slot.armor.enderchest" : item_list = entity.EnderChest if hasattr(entity, "EnderChest") else []
-                elif slot == "slot.armor.hotbar" : item_list = entity.HotBar if hasattr(entity, "HotBar") else []
-                elif slot == "slot.armor.inventory" : item_list = entity.Inventory["Items"] if hasattr(entity, "Inventory") else []
-                elif slot == "slot.armor.saddle" : item_list = [entity.Equippable[0]["Item"]] if hasattr(entity, "Equippable") else []
-                elif slot == "slot.armor.armor" : item_list = [entity.Equippable[1]["Item"]] if hasattr(entity, "Equippable") else []
+                elif slot == "slot.enderchest" : item_list = entity.EnderChest if hasattr(entity, "EnderChest") else []
+                elif slot == "slot.hotbar" : item_list = entity.HotBar if hasattr(entity, "HotBar") else []
+                elif slot == "slot.inventory" : item_list = entity.Inventory["Items"] if hasattr(entity, "Inventory") else []
+                elif slot == "slot.saddle" : item_list = [entity.Equippable[0]["Item"]] if hasattr(entity, "Equippable") else []
+                elif slot == "slot.armor" : item_list = [entity.Equippable[1]["Item"]] if hasattr(entity, "Equippable") else []
                 elif slot == "slot.chest" : item_list = entity.Inventory["Items"] if hasattr(entity, "Inventory") and hasattr(entity, "isChested") and entity.isChested else []
                 elif slot == "slot.equippable" : item_list = [i["Item"] for i in entity.Equippable] if hasattr(entity, "Equippable") else []
 
@@ -102,10 +102,11 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
             for item_obj in slot_item_save :
                 if item_obj.Identifier == item_test["item"] and item_obj.Damage == item_test["data"] : item_count += int(item_obj.Count)
             
-            if ("quantity_unless" in item_test) and not(item_test["quantity_unless"][0] <= slot_index <= item_test["quantity_unless"][1]) : hasitem_test_save.append(True)
-            elif ("quantity_unless" not in item_test) and item_test["quantity_if"][0] <= slot_index <= item_test["quantity_if"][1] : hasitem_test_save.append(True)
+            if ("quantity_unless" in item_test) and not(item_test["quantity_unless"][0] <= item_count <= item_test["quantity_unless"][1]) : hasitem_test_save.append(True)
+            elif ("quantity_unless" not in item_test) and item_test["quantity_if"][0] <= item_count <= item_test["quantity_if"][1] : hasitem_test_save.append(True)
             else : hasitem_test_save.append(False)
         if not all(hasitem_test_save) : continue
+        
 
         if any([i != None for i in selector_var["dxdydz"]]) and MathFunction.version_compare(execute_var["version"], (1,19,70)) == -1 :
             if DIMENSION_LIST[entity.Dimension] != execute_var["dimension"] : continue
@@ -305,7 +306,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
         else : 
             while token_list[index]["type"] != "End_Item_Condition" :
                 index += 1 ; index = read_hasitem_condition(index) ; index += 1
-        print( selector_save, token_list[index] )
+        #print( selector_save, token_list[index] )
 
     elif selector_argument in ("tag","name","family","type","m") :
         index += 2 ; mode = "%s_if" if token_list[index]["type"] != "Not" else "%s_unless"
@@ -393,7 +394,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
     if len(selector_save["m_if"]) > 1 : raise CompileError("选择器参数 m 具有重复指定的正选条件", pos=(start_index_save, end_index_save))
     if len(selector_save["m_if"]) > 0 and len(selector_save["m_unless"]) > 0 : raise CompileError("选择器参数 m 同时存在正反选条件", pos=(start_index_save, end_index_save))
 
-    return (index+1, functools.partial(RunTime_Selector,game_tread=game_tread,selector_var=selector_save))
+    return (index+1, functools.partial(RunTime_Selector, selector_var=selector_save))
 
 
 

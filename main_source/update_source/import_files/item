@@ -3909,10 +3909,6 @@
     "damage_max": null,
     "can_enchant": []
   },
-  "minecraft:scute": {
-    "damage_max": null,
-    "can_enchant": []
-  },
   "minecraft:sea_lantern": {
     "damage_max": null,
     "can_enchant": []
@@ -4526,6 +4522,10 @@
       "thorns",
       "unbreaking"
     ]
+  },
+  "minecraft:turtle_scute": {
+    "damage_max": null,
+    "can_enchant": []
   },
   "minecraft:turtle_spawn_egg": {
     "damage_max": null,

@@ -98,7 +98,7 @@ class visualization :
         for entity_test in self.track_entity :
             execute_var = {"executer":"Server","dimension":"overworld","pos":[0,0,0],"rotate":[0,0],
                            "version":self.game_thread.game_version}
-            entity_list = entity_test['entity'](execute_var)
+            entity_list = entity_test['entity'](execute_var, self.game_thread)
             if not isinstance(entity_list, list) : entity.append({"entity":[],"color":entity_test["color"]}) ; continue
             entity.append({
                 "entity":[i.__save__() for i in entity_list if (

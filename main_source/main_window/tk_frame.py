@@ -541,12 +541,12 @@ class Game_Ready(tkinter.Frame) :
     def delete_world(self):
         if len(self.list_select.curselection()) == 0 : return
         text1 = self.list_select.get(self.list_select.curselection()).split("-->")[1]
-        FileOperation.delete_all_file(os.path.join('save_world', text1))
         aaa = tkinter.messagebox.askquestion('Question', '第1次确认\n是否删除选择的世界？\n所有文件都将会被删除!!!')
         if aaa != "yes" : return
         aaa = tkinter.messagebox.askquestion('Question', '第2次确认\n是否删除选择的世界？\n所有文件都将会被删除!!!')
         if aaa != "yes" : return
         tkinter.messagebox.showinfo("Success", "世界 %s \n已成功删除" % text1)
+        FileOperation.delete_all_file(os.path.join('save_world', text1))
         self.flash_world()
 
     def join_world(self):
@@ -985,7 +985,7 @@ class Choose_Expand(tkinter.Frame) :
                 m1 = subprocess.getstatusoutput("pip install %s" % element)
                 if not m1[0] : continue
                 FileOperation.write_a_file(os.path.join("log","install_pack.txt"),m1[1])
-                tkinter.messagebox.showerror("Error", "模块 %s 安装失败\n日志 install_pack.txt 已保存")
+                tkinter.messagebox.showerror("Error", "模块 %s 安装失败\n日志 install_pack.txt 已保存" % element)
                 return None
 
             msg_laber.config(text=msg_laber.cget("text") + "正在下载材质图片...\n")

@@ -333,7 +333,7 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         response2 = connent_API.request_url_without_error(connent_API.APP_INFO_URL)
         if response2 == None : 
             Announcement.set_notification(None)
-            log.write_log("软件信息获取失败", 2) ; return True
+            log.write_log("软件信息获取失败", 2) ; user.info_update = True ; return True
         response2 = connent_API.transfor_qq_share(response2.decode("utf-8"))
         response2 = zlib.decompress(base64.b64decode(response2.encode("utf-8"))).decode("utf-8")
         response2 = json.loads(response2)

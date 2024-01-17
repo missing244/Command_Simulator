@@ -11,7 +11,7 @@ selector_test = re.compile("^[ ]{0,}@")
 
 def Rawtext_Compiler(_game:RunTime.minecraft_thread, version:List[int], rawtext_json:dict):
     Rawtext_Analysis(_game, version, rawtext_json)
-    return functools.partial(RunTime_Rawtext, _game=_game, rawtext_json=rawtext_json)
+    return functools.partial(RunTime_Rawtext, rawtext_json=rawtext_json)
 
 def Rawtext_Analysis(_game:RunTime.minecraft_thread, version:List[int], rawtext_json:dict) :
     if "rawtext" not in rawtext_json : raise CompileError("rawtext json需要存在 rawtext 指定")
@@ -58,7 +58,7 @@ def RunTime_Analysis(execute_var:COMMAND_CONTEXT, _game:RunTime.minecraft_thread
         if "text" in text_json : text_list.append(text_json["text"])
 
         elif "selector" in text_json : 
-            entity_list = text_json["selector"](execute_var)
+            entity_list = text_json["selector"](execute_var, _game)
             if isinstance(entity_list, Response.Response_Template) : continue
             text_list.append(", ".join( (ID_tracker(i) for i in entity_list) ))
 
@@ -69,7 +69,7 @@ def RunTime_Analysis(execute_var:COMMAND_CONTEXT, _game:RunTime.minecraft_thread
 
         elif "scores" in text_json : 
             board = text_json["scores"]["objective"]
-            entity_list = text_json["scores"]["name"](execute_var)
+            entity_list = text_json["scores"]["name"](execute_var, _game)
             if isinstance(entity_list, Response.Response_Template) : continue
             text_list.append(", ".join( (_game.minecraft_scoreboard.____get_score____(board, i) for i in entity_list) ))
 

@@ -1,5 +1,6 @@
 from .. import np,Constants
 import copy,random
+from typing import List
 
 class loot_table :
     
@@ -176,4 +177,6 @@ class loot_table :
 
 generate_loot = loot_table()
 def generate(source, loot_table_str:str) :
-    return generate_loot.spawn_loot(source, loot_table_str)
+    from . import BaseNbtClass
+    aaa:List[BaseNbtClass.item_nbt] = generate_loot.spawn_loot(source, loot_table_str)
+    return aaa

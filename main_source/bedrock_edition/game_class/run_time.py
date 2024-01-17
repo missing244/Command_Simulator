@@ -62,6 +62,7 @@ class minecraft_thread :
 
     def __init__(self) :
         from . import ExpandPackAPI
+        from .. import EntityComponent
 
         self.loop_thread:threading.Thread = None
 
@@ -78,6 +79,7 @@ class minecraft_thread :
 
         self.game_version = (1, 20, 60)
         self.runtime_variable = runtime_variable()
+        EntityComponent.set_source(self.minecraft_ident)
 
         #visualization_API
         self.visualization_object:ExpandPackAPI.visualization = None
@@ -145,19 +147,19 @@ class minecraft_thread :
         while not self.game_over : time.sleep(0.33)
         try :
             save_file = os.path.join("save_world", self.world_name, "level_name")
-            json1 = json.dumps(self.world_infomation)
+            json1 = json.dumps(self.world_infomation, separators=(',', ':'))
             FileOperation.write_a_file(save_file, json1)
 
             save_file = os.path.join("save_world", self.world_name, "world_info")
-            json1 = json.dumps(self.minecraft_world.__save__(), default=DataSave.encoding)
+            json1 = json.dumps(self.minecraft_world.__save__(), default=DataSave.encoding, separators=(',', ':'))
             FileOperation.write_a_file(save_file, json1)
             
             save_file = os.path.join("save_world", self.world_name, "scoreboard")
-            json1 = json.dumps(self.minecraft_scoreboard.__save__(), default=DataSave.encoding)
+            json1 = json.dumps(self.minecraft_scoreboard.__save__(), default=DataSave.encoding, separators=(',', ':'))
             FileOperation.write_a_file(save_file, json1)
             
             save_file = os.path.join("save_world", self.world_name, "chunk_data")
-            json1 = json.dumps(self.minecraft_chunk.__save__(), default=DataSave.encoding)
+            json1 = json.dumps(self.minecraft_chunk.__save__(), default=DataSave.encoding, separators=(',', ':'))
             FileOperation.write_a_file(save_file, json1)
 
             self.minecraft_chunk.____save_and_write_db_file____(self.world_name)
@@ -168,3 +170,4 @@ class minecraft_thread :
         GameLoop.modify_termial_end_hook("clear")
         GameLoop.modify_test_end_hook("clear")
         GameLoop.modify_tick_end_hook("clear")
+        GameLoop.modify_async_func("clear")

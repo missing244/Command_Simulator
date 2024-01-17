@@ -1,6 +1,7 @@
 from typing import List,Dict,Union,Literal,Tuple,Callable
 from .. import Constants,np,DataSave,MathFunction,FileOperation
 import random,copy,os,json,math,itertools,functools
+DIMENSION_LIST = list(Constants.DIMENSION_INFO)
 
 
 class world_nbt :
@@ -205,7 +206,8 @@ class entity_nbt :
         self.Dimension = list(Constants.DIMENSION_INFO).index(dimension)
         self.Pos = [np.float32(pos[0]), np.float32(pos[1]), np.float32(pos[2])]
 
-        if (Identifier == "minecraft:player" or (hasattr(self,"CanModifyName")) and (getattr(self,"CanModifyName"))) and name : 
+        EntityComponent.set_component(self)
+        if (self.Identifier == "minecraft:player" or (hasattr(self,"CanModifyName")) and (getattr(self,"CanModifyName"))) and name : 
             self.CustomName = name
 
         return self
@@ -756,13 +758,13 @@ class chunk_nbt :
         self.purple_and_orange_command_block:Dict[Tuple[int],None] = {}
         self.command_block_compile_function:Dict[str,functools.partial] = {}
         self.out_load_entity:List[entity_nbt] = []
-        self.schedule_func_load_area = [] #{"function":"","will_load":[],"tickingarea":""}
-        self.schedule_func_gametick  = [] #{"function":"","gametick_run":int}
-        self.memory_strcture:Dict[str,structure_nbt] = {}
+        #self.schedule_func_load_area = [] {"function":"","will_load":[],"tickingarea":""}
+        #self.schedule_func_gametick  = [] {"function":"","gametick_run":int}
+        self.memory_structure:Dict[str,structure_nbt] = {}
         self.music_stack = []
         
 
-    def ____in_build_area____(self, dimension_id:Literal["overworld","nether","the_end"], block_pos:List[float]) :
+    def ____in_build_area____(self, dimension_id:Literal["overworld","nether","the_end"], block_pos:List[float]) -> bool :
         """位置是否处于可建筑区域"""
         hight_min = Constants.DIMENSION_INFO[dimension_id]["height"][0]
         hight_max = Constants.DIMENSION_INFO[dimension_id]["height"][1]
@@ -866,12 +868,13 @@ class chunk_nbt :
             if item_obj.Count > 0 : place_item(nbt['Items'], index)
 
 
-    def __get_all_load_entity__(self) :
+    def __get_all_load_entity__(self, is_player:bool=False) :
         entity_list : List[entity_nbt] = []
-        for dimension_id in self.loading_chunk :
-            for chunk_id in self.loading_chunk[dimension_id] :
-                entity_list.extend(self.loading_chunk[dimension_id][chunk_id]['entities'])
-        entity_list.extend(self.out_load_entity)
+        if not is_player :
+            for dimension_id in self.loading_chunk :
+                for chunk_id in self.loading_chunk[dimension_id] :
+                    entity_list.extend(self.loading_chunk[dimension_id][chunk_id]['entities'])
+            entity_list.extend(self.out_load_entity)
         entity_list.extend(self.player)
         
         start_index = 0
@@ -947,7 +950,18 @@ class chunk_nbt :
         self.command_block_compile_function[command] = compile_func
 
 
-    def __summon_entity__(self, source, difficulty:int, dimension_id:Literal["overworld","nether","the_end"], entity_id:str, 
+    def __remove_entity__(self, *entity_list:entity_nbt) :
+        for entity1 in entity_list :
+            chunk_pos = (math.floor(entity1.Pos[0])//16*16, math.floor(entity1.Pos[2])//16*16)
+            entity_chunk = self.loading_chunk[DIMENSION_LIST[entity1.Dimension]]
+            if chunk_pos not in entity_chunk :
+                if entity1 not in self.out_load_entity : continue
+                self.out_load_entity.remove(entity1)
+            else :
+                entity_chunk_list = entity_chunk[chunk_pos]["entities"]
+                if entity1 in entity_chunk_list : entity_chunk_list.remove(entity1)
+
+    def __summon_entity__(self, difficulty:int, dimension_id:Literal["overworld","nether","the_end"], entity_id:str, 
                           pos:List[Union[float,np.float32]], name:str=None, event:str=None) :
         from .. import EntityComponent
         entity_1 = entity_nbt().__create__(entity_id, dimension_id, pos, name)
@@ -958,7 +972,6 @@ class chunk_nbt :
             entity_1.ActiveEffects = {}
             entity_1.support_nbt += ['Armor','Weapon','ActiveEffects']
 
-        EntityComponent.set_component(source, entity_1)
         if difficulty == 0 and ("monster" in entity_1.FamilyType) : return Exception
         chunk_pos = (math.floor(pos[0])//16*16, math.floor(pos[2])//16*16)
 
@@ -966,9 +979,12 @@ class chunk_nbt :
         else : self.out_load_entity.append(entity_1)
         return entity_1
 
-    def __teleport_entity__(self, victim:List[entity_nbt], destination_dimension:Literal["overworld","nether","the_end"], 
-                            destination:Union[List[float],entity_nbt], set_angle:Union[List[float],entity_nbt]=None, check_block=False):
+    def __teleport_entity__(self, victim:List[entity_nbt], destination_dimension:Union[int,Literal["overworld","nether","the_end"]], 
+                            destination:Union[List[float],entity_nbt], set_angle:Union[List[float],entity_nbt]=None, check_block=False) :
+        DIMENSION = list(Constants.DIMENSION_INFO)
+        success_list:List[entity_nbt] = []
         if isinstance(destination,entity_nbt) : destination:List[float] = destination.Pos
+        if isinstance(destination_dimension,(int,np.int16)) : destination_dimension = DIMENSION[int(destination_dimension)]
 
         if check_block :
             if not self.____in_build_area____(destination_dimension, destination) : return Exception
@@ -982,13 +998,13 @@ class chunk_nbt :
             pos_start_z = math.floor(destination[2] - entity_obj.Collision['width']/2)
             pos_end_z = math.floor(destination[2] + entity_obj.Collision['width']/2)
 
-            a = range(pos_end_x - pos_start_x + 1)
-            b = range(pos_end_y - pos_start_y + 1)
-            c = range(pos_end_z - pos_start_z + 1)
+            a = range(pos_start_x, pos_end_x + 1, 1)
+            b = range(pos_start_y, pos_end_y + 1, 1)
+            c = range(pos_start_z, pos_end_z + 1, 1)
             for block_pos in itertools.product(a, b, c) :
-                if self.____find_block____(destination_dimension, block_pos) > 0 : return False
+                if self.____find_block____(destination_dimension, block_pos) > 0 : return True
 
-            return True
+            return False
 
         for entity in victim :
             if check_block and check_area_is_air(entity) : continue
@@ -1013,20 +1029,24 @@ class chunk_nbt :
 
             chunk_pos_1 = (math.floor(entity.Pos[0])//16*16, math.floor(entity.Pos[2])//16*16)
             chunk_pos_2 = (math.floor(destination[0])//16*16, math.floor(destination[2])//16*16)
-            chunk_data1 = self.loading_chunk[list(Constants.DIMENSION_INFO)[entity.Dimension]].get(chunk_pos_1,None)
+            chunk_data1 = self.loading_chunk[DIMENSION[entity.Dimension]].get(chunk_pos_1,None)
             chunk_data2 = self.loading_chunk[destination_dimension].get(chunk_pos_2,None)
 
             entity.__sit_stop_riding__(self.__get_all_load_entity__())
-            if entity.Dimension != list(Constants.DIMENSION_INFO).index(destination_dimension) :
+            if entity.Dimension != DIMENSION.index(destination_dimension) :
                 if chunk_data1 : chunk_data1['entities'].extend(entity.__sit_evict_riders__())
-                entity.Dimension = list(Constants.DIMENSION_INFO).index(destination_dimension)
+                entity.Dimension = DIMENSION.index(destination_dimension)
+            success_list.append(entity)
             if entity.Identifier == "minecraft:player" : continue
+            if DIMENSION[entity.Dimension] == destination_dimension : continue
 
             if chunk_data1 and (entity in chunk_data1[chunk_pos_1]['entities']) : chunk_data1[chunk_pos_1]['entities'].remove(entity)
             elif (chunk_data1 == None) and (entity in self.out_load_entity) : self.out_load_entity.remove(entity)
 
             if chunk_data2 and (entity not in chunk_data2[chunk_pos_2]['entities']) : chunk_data2[chunk_pos_2]['entities'].append(entity)
             elif (chunk_data2 == None) and (entity in self.out_load_entity) : self.out_load_entity.append(entity)
+        
+        return success_list
 
 
     def ____load_chunk_data____(self, world:world_nbt, world_name:str, chunk_radius:int) :
@@ -1141,7 +1161,7 @@ class structure_nbt :
         self.BlockMap = chunk.block_mapping.copy()
 
         if Entities :
-            entity_list = chunk.__get_all_load_entity__()
+            entity_list = [i for i in chunk.__get_all_load_entity__() if i.Identifier != "minecraft:player"]
             func = lambda posx,posy,posz : (
                 start_pos_setting[0] <= math.floor(posx) <= end_pos_setting[0] and
                 start_pos_setting[1] <= math.floor(posy) <= end_pos_setting[1] and
@@ -1153,15 +1173,19 @@ class structure_nbt :
                 return entity
             self.Entity = [change_pos(i) for i in entity_list if func(i.Pos[0], i.Pos[1], i.Pos[2])]
 
-        self.Area = [math.floor(i[1])-math.floor(i[0])+1 for i in itertools.zip_longest(start_pos, end_pos, fillvalue=0)]
+        self.Area = [i[1]-i[0]+1 for i in itertools.zip_longest(start_pos, end_pos, fillvalue=0)]
 
         if Blocks :
-            for pos in itertools.product(range(self.Area[1]), range(self.Area[2]), range(self.Area[0])) :
-                block_index = chunk.____find_block____(dimension_id, pos)
+            for index,pos in enumerate( itertools.product( range(start_pos_setting[0], end_pos_setting[0]+1), 
+            range(start_pos_setting[1], end_pos_setting[1]+1), range(start_pos_setting[2], end_pos_setting[2]+1) ) ) :
+                if not chunk.____in_build_area____(dimension_id, pos) : block_index = 0
+                elif not chunk.____in_load_chunk____(dimension_id, pos) : block_index = 0
+                else : block_index = chunk.____find_block____(dimension_id, pos)
                 self.Block.append(block_index if self.BlockMap[block_index].Identifier != "minecraft:structure_void" else -1)
-                index = str(pos[1] * self.Area[0] * self.Area[2] + pos[2] * self.Area[2] + pos[0])
-                self.BlockNbt[index] = copy.deepcopy(chunk.____find_block_nbt____(dimension_id, pos))
-        
+                nbt = chunk.____find_block_nbt____(dimension_id, pos)
+                if nbt is not None : self.BlockNbt[str(index)] = copy.deepcopy(nbt)
+        else : self.Block = [-1] * (self.Area[0] * self.Area[1] * self.Area[2])
+
         return self
 
     def __output__(self, chunk:chunk_nbt, dimension_id:Literal["overworld","nether","the_end"],
@@ -1173,22 +1197,19 @@ class structure_nbt :
         rotate_m,mirror_m = Constants.MITRAX["rotate"][Rotation], Constants.MITRAX["mirror"][Mirror]
         end_m = MathFunction.mitrax_transform(rotate_m, mirror_m)
         end_area = MathFunction.vector_transform(self.Area, end_m)
-        place_pos_start = [
-            start_pos_setting[0] + abs(end_area[0]) - 1 if end_area[0] < 0 else start_pos_setting[0],
-            start_pos_setting[1] + abs(end_area[1]) - 1 if end_area[1] < 0 else start_pos_setting[1],
-            start_pos_setting[2] + abs(end_area[2]) - 1 if end_area[1] < 0 else start_pos_setting[2],
-        ]
+        place_pos_start = [(i+abs(j)-1 if j < 0 else i) for i,j in itertools.zip_longest(start_pos_setting, end_area)]
         block_index_list = [chunk.____find_block_mapping____(None,None,i) for i in self.BlockMap]
 
         if Blocks :
-            for pos in itertools.product(range(self.Area[1]), range(self.Area[2]), range(self.Area[0])) :
+            for out_block_index,pos in enumerate( itertools.product(range(self.Area[1]), range(self.Area[2]), range(self.Area[0])) ) :
                 if Seed : random.seed("%s%s" % (Seed, pos))
                 if random.random() * 100 >= Present : continue
                 out_pos = MathFunction.vector_transform(pos, end_m)
-                
-                out_block_index = pos[1] * self.Area[0] * self.Area[2] + pos[2] * self.Area[2] + pos[0]
+
                 if self.Block[out_block_index] < 0 : continue
                 place_block_pos = [ i[0] + i[1] for i in itertools.zip_longest(place_pos_start, out_pos, fillvalue=0) ]
+                if not chunk.____in_build_area____(dimension_id, place_block_pos) : continue
+                if not chunk.____in_load_chunk____(dimension_id, place_block_pos) : continue
                 chunk.____set_block____(dimension_id, place_block_pos, block_index_list[self.Block[out_block_index]])
 
                 if str(out_block_index) in self.BlockNbt :
@@ -1231,3 +1252,4 @@ class structure_nbt :
             self.__setattr__(key1,json1[key1])
             self.support_nbt.append(key1)
         return self
+

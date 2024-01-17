@@ -1,6 +1,6 @@
 """
-命令词法器系统
-class Command_Parser
+命令词法器系统\n
+Command_Parser用于检查每个同级树分支中满足哪个匹配分支，然后载入满足分支的子分支匹配
 """
 
 from . import BaseMatch,SpecialMatch,JsonPaser

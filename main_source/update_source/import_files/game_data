@@ -2,7 +2,7 @@
     "number_enchant_id" : ["protection","fire_protection","feather_falling","blast_protection","projectile_protection","thorns",
     "respiration","depth_strider","aqua_affinity","sharpness","smite","bane_of_arthropods","knockback","fire_aspect",
     "looting","efficiency","silk_touch","unbreaking","fortune","power","punch","flame","infinity","luck_of_the_sea","lure",
-    "frost_walker","mending","binding_curse","vanishing_curse","impaling","riptide","loyalty","channeling","multishot",
+    "frost_walker","mending","binding","vanishing","impaling","riptide","loyalty","channeling","multishot",
     "piercing","quick_charge","soul_speed","swift_sneak"],
 
     "gamemode_type" : ["0","survival","s","1","creative","c","2","adventure","a","spectator"],

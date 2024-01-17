@@ -37,9 +37,37 @@ Command_Summon = [
     BaseMatch.END_NODE
 ]
 
-#teleport和tp的Check_For_Blocks部分
-Command_Teleport_Check_For_Blocks = [
-    BaseMatch.Enum("Check_For_Blocks","true","false").add_leaves( BaseMatch.END_NODE ),
+#summon末尾的朝向部分
+Command_Summon_Rotation_Old = [
+    BaseMatch.Float("Absolute_Rotation").add_leaves(
+        BaseMatch.Float("Absolute_Rotation").add_leaves( *Command_Summon ),
+        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves( *Command_Summon ),
+        BaseMatch.END_NODE
+    ),
+    SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves(
+        BaseMatch.Float("Absolute_Rotation").add_leaves( *Command_Summon ),
+        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves( *Command_Summon ),
+        BaseMatch.END_NODE
+    ),
+    BaseMatch.END_NODE
+]
+
+#summon末尾的朝向部分
+Command_Summon_Rotation_New = [
+    BaseMatch.Float("Absolute_Rotation").add_leaves(
+        BaseMatch.Float("Absolute_Rotation").add_leaves( *Command_Summon ),
+        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves( *Command_Summon ),
+        BaseMatch.END_NODE
+    ),
+    SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves(
+        BaseMatch.Float("Absolute_Rotation").add_leaves( *Command_Summon ),
+        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves( *Command_Summon ),
+        BaseMatch.END_NODE
+    ),
+    BaseMatch.Char("Argument","facing").add_leaves(
+        *SpecialMatch.Pos_Tree( *Command_Summon ),
+        *SpecialMatch.BE_Selector_Tree( *Command_Summon )
+    ),
     BaseMatch.END_NODE
 ]
 
@@ -47,45 +75,41 @@ Command_Teleport_Check_For_Blocks = [
 Command_Loot = [
     BaseMatch.Char("Argument","kill").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
+            BaseMatch.Enum("Tool_Type","mainhand","offhand").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.AnyString("Tool_Type").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
     ),
     BaseMatch.Char("Argument","loot").add_leaves(
         *SpecialMatch.String_Tree("Loot_Table",
+            BaseMatch.Enum("Tool_Type","mainhand","offhand").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.AnyString("Tool_Type").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
     )
 ]
 
+#teleport和tp的Check_For_Blocks部分
+Command_Teleport_Check_For_Blocks = [
+    BaseMatch.Enum("Check_For_Blocks","true","false").add_leaves( BaseMatch.END_NODE ),
+    BaseMatch.END_NODE
+]
+
 #teleport和tp的facing部分
 Command_Teleport_Rotation = [
     BaseMatch.Float("Absolute_Rotation").add_leaves(
-        BaseMatch.Float("Absolute_Rotation").add_leaves(
-            *Command_Teleport_Check_For_Blocks
-        ),
-        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves(
-            *Command_Teleport_Check_For_Blocks
-        ),
+        BaseMatch.Float("Absolute_Rotation").add_leaves( *Command_Teleport_Check_For_Blocks ),
+        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves( *Command_Teleport_Check_For_Blocks ),
         BaseMatch.END_NODE
     ),
     SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves(
-        BaseMatch.Float("Absolute_Rotation").add_leaves(
-            *Command_Teleport_Check_For_Blocks
-        ),
-        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves(
-            *Command_Teleport_Check_For_Blocks
-        ),
+        BaseMatch.Float("Absolute_Rotation").add_leaves( *Command_Teleport_Check_For_Blocks ),
+        SpecialMatch.Relative_Offset_Float("Relative_Rotation").add_leaves( *Command_Teleport_Check_For_Blocks ),
         BaseMatch.END_NODE
     ),
     BaseMatch.Char("Argument","facing").add_leaves(
-        *SpecialMatch.Pos_Tree(
-            *Command_Teleport_Check_For_Blocks
-        ),
-        *SpecialMatch.BE_Selector_Tree(
-            *Command_Teleport_Check_For_Blocks
-        )
+        *SpecialMatch.Pos_Tree( *Command_Teleport_Check_For_Blocks ),
+        *SpecialMatch.BE_Selector_Tree( *Command_Teleport_Check_For_Blocks )
     ),
     BaseMatch.END_NODE
 ]
@@ -254,51 +278,6 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","daylock").add_leaves( 
         BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ) ,
         BaseMatch.END_NODE
-    ),
-    # setblock ✓ V
-    BaseMatch.Char("Command","setblock").add_leaves(
-        *SpecialMatch.Pos_Tree(
-            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
-                SpecialMatch.BE_BlockState_Tree( 
-                    BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
-                    BaseMatch.END_NODE 
-                ),
-                BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
-                BaseMatch.END_NODE
-            ),
-            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
-                BaseMatch.Int("Block_Data").add_leaves(
-                    BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
-                    BaseMatch.END_NODE 
-                ),
-                BaseMatch.END_NODE
-            )
-        )
-    ),
-    # testfor ✓ V
-    BaseMatch.Char("Command","testfor").add_leaves(
-        *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
-    ),
-    # testforblock ✓ V
-    BaseMatch.Char("Command","testforblock").add_leaves(
-        *SpecialMatch.Pos_Tree(
-            BaseMatch.AnyString("Block_ID").add_leaves(
-                SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
-                BaseMatch.Int("Block_Data").set_version(1,19,70,"max").add_leaves( BaseMatch.END_NODE ),
-                BaseMatch.END_NODE
-            )
-        )    
-    ),
-    # testforblocks ✓ V
-    BaseMatch.Char("Command","testforblocks").add_leaves(
-        *SpecialMatch.Pos_Tree(
-            *SpecialMatch.Pos_Tree(
-                *SpecialMatch.Pos_Tree(
-                    BaseMatch.Enum("Model","masked","all").add_leaves( BaseMatch.END_NODE ),
-                    BaseMatch.END_NODE
-                )
-            )
-        )
     ),
     # clone ✓ V
     BaseMatch.Char("Command","clone").add_leaves(
@@ -571,30 +550,21 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     ),
     # loot ✓ V
     BaseMatch.Char("Command","loot").add_leaves(
-        BaseMatch.Char("Argument","give").set_version(1,18,30,"min").add_leaves(
-            *SpecialMatch.BE_Selector_Tree(
-                *Command_Loot
-            )
+        BaseMatch.Char("Argument","give").add_leaves(
+            *SpecialMatch.BE_Selector_Tree(*Command_Loot)
         ),
-        BaseMatch.Char("Argument","insert").set_version(1,18,30,"min").add_leaves(
-            *SpecialMatch.Pos_Tree(
-                *Command_Loot
-            )
+        BaseMatch.Char("Argument","insert").add_leaves(
+            *SpecialMatch.Pos_Tree(*Command_Loot)
         ),
         BaseMatch.Char("Argument","spawn").add_leaves(
-            *SpecialMatch.Pos_Tree(
-                *Command_Loot
-            )
+            *SpecialMatch.Pos_Tree(*Command_Loot)
         ),
         BaseMatch.Char("Argument","replace").add_leaves(
             BaseMatch.Char("Argument","block").set_version(1,19,40,"min").add_leaves(
                 *SpecialMatch.Pos_Tree(
                     BaseMatch.Char("Slot","slot.container").add_leaves(
                         BaseMatch.Int("Slot_ID").add_leaves(
-                            BaseMatch.Int("Count").add_leaves(
-                                *Command_Loot
-                            ),
-                            *Command_Loot
+                            BaseMatch.Int("Count").add_leaves(*Command_Loot)
                         )
                     )
                 )
@@ -603,10 +573,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 *SpecialMatch.BE_Selector_Tree(
                     BaseMatch.AnyString("Slot_Type").add_leaves(
                         BaseMatch.Int("Slot_ID").add_leaves(
-                            BaseMatch.Int("Count").add_leaves(
-                                *Command_Loot
-                            ),
-                            *Command_Loot
+                            BaseMatch.Int("Count").add_leaves(*Command_Loot),
                         )
                     )
                 )
@@ -879,6 +846,26 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),
         BaseMatch.END_NODE
     ),
+    # setblock ✓ V
+    BaseMatch.Char("Command","setblock").add_leaves(
+        *SpecialMatch.Pos_Tree(
+            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
+                SpecialMatch.BE_BlockState_Tree( 
+                    BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
+                    BaseMatch.END_NODE 
+                ),
+                BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
+                BaseMatch.END_NODE
+            ),
+            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
+                BaseMatch.Int("Block_Data").add_leaves(
+                    BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
+                    BaseMatch.END_NODE 
+                ),
+                BaseMatch.END_NODE
+            )
+        )
+    ),
     # spawnpoint ✓ V
     BaseMatch.Char("Command","spawnpoint").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
@@ -962,7 +949,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","summon").set_version(1,19,70,"min").set_version(1,19,80,"max").add_leaves(
         BaseMatch.AnyString("Entity_Type").add_leaves(
             *SpecialMatch.Pos_Tree(
-                *SpecialMatch.Rotation_Tree(*Command_Summon),
+                *Command_Summon_Rotation_Old,
                 BaseMatch.END_NODE
             ),
             *SpecialMatch.String_Tree("Entity_Name",
@@ -975,11 +962,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","summon").set_version(1,19,80,"min").add_leaves(
         BaseMatch.AnyString("Entity_Type").add_leaves(
             *SpecialMatch.Pos_Tree(
-                *SpecialMatch.Rotation_Tree(*Command_Summon),
-                BaseMatch.Char("Argument","facing").add_leaves(
-                    *SpecialMatch.BE_Selector_Tree(*Command_Summon),
-                    *SpecialMatch.Pos_Tree(*Command_Summon)
-                ),
+                *Command_Summon_Rotation_New,
                 BaseMatch.END_NODE
             ),
             *SpecialMatch.String_Tree("Entity_Name",
@@ -1004,19 +987,44 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     #tp ✓ V
     BaseMatch.Enum("Command","tp","teleport").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            *SpecialMatch.BE_Selector_Tree(
-                *Command_Teleport_Check_For_Blocks
-            ),
+            *Command_Teleport_Check_For_Blocks,
             *SpecialMatch.Pos_Tree(
                 *Command_Teleport_Check_For_Blocks,
                 *Command_Teleport_Rotation
             ),
-            *Command_Teleport_Check_For_Blocks
+            *SpecialMatch.BE_Selector_Tree(
+                *Command_Teleport_Check_For_Blocks
+            )
         ),
         *SpecialMatch.Pos_Tree(
             *Command_Teleport_Check_For_Blocks,
             *Command_Teleport_Rotation
         ),
+    ),    # testfor ✓ V
+    # testfor ✓ V
+    BaseMatch.Char("Command","testfor").add_leaves(
+        *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
+    ),
+    # testforblock ✓ V
+    BaseMatch.Char("Command","testforblock").add_leaves(
+        *SpecialMatch.Pos_Tree(
+            BaseMatch.AnyString("Block_ID").add_leaves(
+                SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
+                BaseMatch.Int("Block_Data").set_version(1,19,70,"max").add_leaves( BaseMatch.END_NODE ),
+                BaseMatch.END_NODE
+            )
+        )    
+    ),
+    # testforblocks ✓ V
+    BaseMatch.Char("Command","testforblocks").add_leaves(
+        *SpecialMatch.Pos_Tree(
+            *SpecialMatch.Pos_Tree(
+                *SpecialMatch.Pos_Tree(
+                    BaseMatch.Enum("Model","masked","all").add_leaves( BaseMatch.END_NODE ),
+                    BaseMatch.END_NODE
+                )
+            )
+        )
     ),
     # tickingarea ✓ V
     BaseMatch.Char("Command","tickingarea").add_leaves(
