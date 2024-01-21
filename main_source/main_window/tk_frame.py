@@ -46,7 +46,7 @@ class Announcement(tkinter.Frame) :
 
     def set_notification(self, response2:dict = None) :
         self.Announce_InputBox.delete("0.0", tkinter.END)
-        if response2 == None : 
+        if response2 is None : 
             self.Announce_InputBox.insert(tkinter.END,"推送信息获取失败\n\n\n请点击\"关闭本界面\"按钮\n退出该界面")
             return
 
@@ -355,7 +355,7 @@ class Find_Minecraft_ID(tkinter.Toplevel) :
     def search(self, search:Callable) :
         self.search_result.delete(0,tkinter.END)
         list1 = self.search_translate_id.search_str(search(), self.use_regx.get())
-        if list1 == None : self.label1.config(text = "正则表达式格式错误") ; return None
+        if list1 is None : self.label1.config(text = "正则表达式格式错误") ; return None
         self.search_result.insert(tkinter.END,*[i[0] for i in list1])
         if len(list1) : self.label1.config(text = "搜索成功")
 
@@ -469,7 +469,7 @@ class Copy_File_Command(tkinter.Toplevel) :
             self.find_command(add_value = 0)
 
     def check_name(self, file_name:str) :
-        if re.search(".txt$|.mcfunction$",file_name) == None : return False
+        if re.search(".txt$|.mcfunction$",file_name) is None : return False
         try : open(file_name,"r",encoding="utf-8").close()
         except : return False
         else : return True
@@ -478,8 +478,8 @@ class Copy_File_Command(tkinter.Toplevel) :
 
     def find_command(self, set_value = None , add_value = None) :
         try :
-            if set_value != None and int(set_value) : pass
-            if add_value != None and int(add_value) : pass
+            if set_value is not None and int(set_value) : pass
+            if add_value is not None and int(add_value) : pass
         except : return None
         value1 = self.read_file_data[self.file_name]['lines']
         if set_value : value1 = int(set_value)
@@ -782,7 +782,7 @@ class Game_Run(tkinter.Frame) :
 
         game_process:Minecraft_BE.RunTime.minecraft_thread = self.main_win.game_process
         self.input_box1.delete("1.0",'end')
-        while game_process.world_infomation == None : pass
+        while game_process.world_infomation is None : pass
         if ("verification_challenge" not in game_process.world_infomation) or (
             not game_process.world_infomation['verification_challenge']) : 
             self.input_box1.insert('end', game_process.world_infomation['terminal_command'])
@@ -1020,15 +1020,15 @@ class Choose_Expand(tkinter.Frame) :
 
         def installing() :
             data1 = {"userdata":user_manager.get_account(), 'expand_pack_uuid':uid}
-            if data1["userdata"] == None : tkinter.messagebox.showerror("Error","用户需要登录才能下载") ; return None
+            if data1["userdata"] is None : tkinter.messagebox.showerror("Error","用户需要登录才能下载") ; return None
 
-            if connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL) != None : 
+            if connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL) is not None : 
                 msg_laber.config(text=msg_laber.cget("text") + "正在获取安装包...(1/3)\n")
             else : tkinter.messagebox.showerror("Error","网络连接验证失败") ; return None 
 
             response1 = connent_API.request_url_without_error(connent_API.UPDATE_EXPAND_PACK, data1, 
             user_manager.save_data['cookies']["api_web_cookie"])
-            if response1 == None : tkinter.messagebox.showerror("Error","网络异常-1") ; return None
+            if response1 is None : tkinter.messagebox.showerror("Error","网络异常-1") ; return None
             user_manager.save_data['cookies']["api_web_cookie"] = connent_API.request_headers["cookie"]
 
             json1 = json.loads(response1)
@@ -1039,7 +1039,7 @@ class Choose_Expand(tkinter.Frame) :
             save_path = os.path.join("expand_pack", dir_name, "saves.zip")
             msg_laber.config(text=msg_laber.cget("text") + "正在下载安装包...(2/3)\n")
             response2 = connent_API.request_url_without_error(json1['url'], timeout_s=4)
-            if response2 == None : tkinter.messagebox.showerror("Error",'获取文件失败，请重试') ; return None
+            if response2 is None : tkinter.messagebox.showerror("Error",'获取文件失败，请重试') ; return None
             os.makedirs(os.path.join("expand_pack", dir_name), exist_ok=True)
             FileOperation.write_a_file(save_path, response2, "wb")
 
@@ -1114,7 +1114,7 @@ class Choose_Expand(tkinter.Frame) :
             pack_path = os.path.dirname(base_module.__file__)
             for keys in list(sys.modules.keys()) :
                 if not hasattr(sys.modules[keys],"__file__") : continue
-                if sys.modules[keys].__file__ == None : continue
+                if sys.modules[keys].__file__ is None : continue
                 if base_module.__file__ == sys.modules[keys].__file__ : continue
                 if pack_path in sys.modules[keys].__file__ : importlib.reload(sys.modules[keys])
 
@@ -1257,19 +1257,19 @@ class Login(tkinter.Frame) :
             login_info_1 = {"account":self.account_input_1.get(), "pass_code":self.account_input_2.get()}
             login_info_2 = base64.b64encode(json.dumps(login_info_1).encode("utf-8")).decode("utf-8")
 
-            if connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL) == None :
+            if connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL) is None :
                 msg_laber.config(text=msg_laber.cget("text") + "网络连接验证失败\n") ; return None 
 
             response2 = connent_API.request_url_without_error(connent_API.MANUAL_LOGIN,{"userdata":login_info_2},user_manager.save_data['cookies']["api_web_cookie"])
-            result1 = user_manager.login_account(login_info_1['account'],login_info_1['pass_code'],response2.decode("utf-8") if response2 != None else "")
+            result1 = user_manager.login_account(login_info_1['account'],login_info_1['pass_code'],response2.decode("utf-8") if response2 is not None else "")
             if result1 : 
                 user_manager.save_data['cookies']["api_web_cookie"] = connent_API.request_headers["cookie"]
                 msg_laber.config(text=msg_laber.cget("text") + "登录成功") ; user_manager.write_back() ; return True
             else : msg_laber.config(text=msg_laber.cget("text") + "登录失败")
 
-        if re.search("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$",self.account_input_1.get()) == None :
+        if re.search("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$",self.account_input_1.get()) is None :
             tkinter.messagebox.showerror("Error","用户邮箱格式不正确") ; return None
-        if re.search("^[a-zA-Z0-9]+$",self.account_input_2.get()) == None  :
+        if re.search("^[a-zA-Z0-9]+$",self.account_input_2.get()) is None  :
             tkinter.messagebox.showerror("Error","用户通行码格式不正确") ; return None
 
         user_manager:app_function.user_manager = self.main_win.user_manager

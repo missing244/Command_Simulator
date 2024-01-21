@@ -76,7 +76,7 @@ class BE_String(BaseMatch.Match_Base) :
         return {"type":self.token_type, "token":_match}
 
     def _auto_complete(self) -> Dict[str,str]: 
-        if self.auto_complete == None : return {"string":""}
+        if self.auto_complete is None : return {"string":""}
         else : return self.auto_complete.copy()
 
 class BE_Quotation_String(BaseMatch.Match_Base) :
@@ -107,7 +107,7 @@ class BE_Quotation_String(BaseMatch.Match_Base) :
         return {"type":self.token_type, "token":_match}
 
     def _auto_complete(self) -> Dict[str,str] : 
-        if self.auto_complete == None : return {'"string"':""}
+        if self.auto_complete is None : return {'"string"':""}
         else : return self.auto_complete.copy()
 
 class Relative_Offset_Float(BaseMatch.Match_Base) :
@@ -193,8 +193,8 @@ def Scoreboard_Entity_Name_Tree(*end_node:BaseMatch.Match_Base):
     返回匹配列表，请将该列表传入add_leaves时添加解包操作
     """
     return [
-        *BE_Selector_Tree(*end_node),
-        BaseMatch.KeyWord("Objective_Name","*").add_leaves(*end_node)
+        BaseMatch.KeyWord("Objective_Name","*").add_leaves(*end_node),
+        *BE_Selector_Tree(*end_node)
     ]
 
 
@@ -349,7 +349,7 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
             )
         ))
         hasitem[3].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
-            BaseMatch.Enum("Slot_ID","slot.weapon.mainhand","slot.weapon.offhand",
+            BaseMatch.Enum("Slot_Type","slot.weapon.mainhand","slot.weapon.offhand",
             "slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
             "slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
             "slot.armor","slot.chest","slot.equippable").add_leaves( 

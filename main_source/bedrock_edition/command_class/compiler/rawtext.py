@@ -35,7 +35,7 @@ def Rawtext_Analysis(_game:RunTime.minecraft_thread, version:List[int], rawtext_
             if "name" not in text_json["scores"] : raise CompileError("rawtext json的 scores 需要提供 name 指定")
             if not isinstance(text_json["scores"]["name"], str) : raise CompileError("rawtext json的 scores.name 需要提供字符串")
             a = selector_test.search(text_json["scores"]["name"]) 
-            if a == None : continue
+            if a is None : continue
             token_list = Parser.parser(text_json["selector"], version)
             if isinstance(token_list, tuple) : raise CompileError("选择器" + token_list[0])
             _,entity_func = Selector.Selector_Compiler(_game, token_list, 0, is_player=True)
@@ -88,7 +88,7 @@ def RunTime_Analysis(execute_var:COMMAND_CONTEXT, _game:RunTime.minecraft_thread
 
             while 1 :
                 re_test1 = re.search("%%[0-9]", translate_text)
-                if re_test1 == None : break
+                if re_test1 is None : break
                 replace_pointer = pointer + int(re_test1.group().replace("%%", "", 1)) - 1
                 if replace_pointer >= rawtext_list.__len__() : translate_text = translate_text.replace("%%s","",1)
                 else : translate_text = translate_text.replace("%%s",rawtext_list[replace_pointer],1)

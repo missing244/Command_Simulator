@@ -238,25 +238,6 @@ class runing_command_block_obj:
 
 
 
-def remove_entity(game:RunTime.minecraft_thread, *entity_list:BaseNbtClass.entity_nbt) :
-    for entity1 in entity_list :
-        chunk_pos = (math.floor(entity1.Pos[0])//16*16, math.floor(entity1.Pos[2])//16*16)
-        entity_chunk = game.minecraft_chunk.loading_chunk[DIMENSION_LIST[entity1.Dimension]]
-        if chunk_pos not in entity_chunk :
-            if entity1 not in game.minecraft_chunk.out_load_entity : continue
-            game.minecraft_chunk.out_load_entity.remove(entity1)
-        else :
-            entity_chunk_list = entity_chunk[chunk_pos]["entities"]
-            if entity1 in entity_chunk_list : entity_chunk_list.remove(entity1)
-
-def add_entity(game:RunTime.minecraft_thread, *entity_list:BaseNbtClass.entity_nbt) :
-    for entity1 in entity_list :
-        chunk_pos = (math.floor(entity1.Pos[0])//16*16, math.floor(entity1.Pos[2])//16*16)
-        entity_chunk_list = game.minecraft_chunk.loading_chunk[DIMENSION_LIST[entity1.Dimension]][chunk_pos]["entities"]
-        if entity1 in entity_chunk_list : entity_chunk_list.append(entity1)
-
-
-
 def game_time_tick(self:RunTime.minecraft_thread) :
     self.minecraft_world.game_time += 1
     gt1 = str(self.minecraft_world.game_time)
@@ -308,19 +289,20 @@ def entity_things(self:RunTime.minecraft_thread) :
     entity_list = self.minecraft_chunk.__get_all_load_entity__()
     for entity1 in entity_list :
 
-        if (self.minecraft_world.difficulty == 0) and ("monster" in entity1.FamilyType) : remove_entity(self, entity1)
+        if (self.minecraft_world.difficulty == 0) and ("monster" in entity1.FamilyType) : 
+            self.minecraft_chunk.__remove_entity__(entity1, scoreboard_obj=self.minecraft_scoreboard)
 
         if (entity1.Identifier == "minecraft:player") and (entity1.Health <= 0) : 
-            add_entity(self, *entity1.__sit_evict_riders__())
+            self.minecraft_chunk.__add_entity__(*entity1.__sit_evict_riders__())
             entity1.__sit_stop_riding__(entity_list)
 
-        if hasattr(entity1,"Health") and (entity1.Identifier != "minecraft:player") and (entity1.Health <= 0) : 
+        if hasattr(entity1, "Health") and (entity1.Identifier != "minecraft:player") and (entity1.Health <= 0) : 
             time = str(self.minecraft_world.game_time + 5)
             if time not in self.runtime_variable.scoreboard_score_remove : self.runtime_variable.scoreboard_score_remove[time] = []
             self.runtime_variable.scoreboard_score_remove[time].append(entity1)
-            add_entity(self, *entity1.__sit_evict_riders__())
-            entity1.__sit_stop_riding__(entity_list)
-            remove_entity(self, entity1)
+            self.minecraft_chunk.__add_entity__(*entity1.__sit_evict_riders__())
+            if entity1.__sit_stop_riding__(entity_list) : pass
+            else : self.minecraft_chunk.__remove_entity__(entity1)
             continue
 
         if entity1.damage['time_no_hurt'] == 1 : entity1.damage['value'] = 0
@@ -331,7 +313,7 @@ def entity_things(self:RunTime.minecraft_thread) :
                 if entity1.ActiveEffects[effect1]["Duration"] < 1 : del entity1.ActiveEffects[effect1]
                 elif entity1.ActiveEffects[effect1]["Duration"] > 0 : entity1.ActiveEffects[effect1]["Duration"] -= 1
 
-        entity1.__sit_update__()
+        entity1.__sit_update__(self.minecraft_chunk.player)
 
 def terminal_running(self:RunTime.minecraft_thread) :
     from .. import Command_Tokenizer_Compiler,TerminalCommand
@@ -351,7 +333,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
         elif KEYWORD_PASS[0].match(command_text) : #关键字
             keyword_end = KEYWORD_PASS[0].match(command_text).end()
             times = KEYWORD_PASS[1].search(command_text, keyword_end)
-            mid1 = int(0 if times == None else times)
+            mid1 = int(0 if times is None else times.group())
             if mid1 < 1 : feedback_list.append((lines, "pass 的参数应该为正整数", keyword_end)) ; continue
             pass_times = mid1
         elif KEYWORD_COMMENTARY.match(command_text) : continue

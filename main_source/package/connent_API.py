@@ -222,7 +222,7 @@ class js_execute :
 def request_API_url(url:Union[str,List[str]], post_data:dict=None, cookie_data:str=None, timeout_s:float=3) -> bytes: 
     """产生异常\n这个函数一定要运行于多线程"""
     if cookie_data : request_headers["cookie"] = cookie_data
-    if post_data != None : post_data = parse.urlencode(post_data).encode('utf-8')
+    if post_data is not None : post_data = parse.urlencode(post_data).encode('utf-8')
     if isinstance(url,str) : url = [url]
     
     for url1 in url :
@@ -236,7 +236,7 @@ def request_API_url(url:Union[str,List[str]], post_data:dict=None, cookie_data:s
 def request_url_without_error(url:Union[str,List[str]], post_data:dict=None, cookie_data:str=None, timeout_s:float=3) -> Union[None,bytes] : 
     """不产生异常,这个函数一定要运行于多线程"""
     if cookie_data : request_headers["cookie"] = cookie_data
-    if post_data != None : post_data = parse.urlencode(post_data).encode('utf-8')
+    if post_data is not None : post_data = parse.urlencode(post_data).encode('utf-8')
     if isinstance(url,str) : url = [url]
     
     for url1 in url :
@@ -252,9 +252,9 @@ def request_url_without_error(url:Union[str,List[str]], post_data:dict=None, coo
 
 def transfor_qq_share(a:str) -> str :
     b = qq_share_re_search[0].search(a)
-    if b == None : return None
+    if b is None : return None
     c = qq_share_re_search[1].search(a[b.end():])
-    if c == None : return None
+    if c is None : return None
     parser.feed(json.loads(a[b.end():b.end()+c.start()])['shareData']['html_content'])
     return parser.data1
 

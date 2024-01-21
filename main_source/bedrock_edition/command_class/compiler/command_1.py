@@ -1,8 +1,8 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
-from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,EntityComponent
+from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,EntityComponent,BlockComponent
 from . import Selector,CompileError,CommandParser
 from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler,ItemComponent_Compiler
-import functools,string,random,re,math,itertools,json,copy
+import functools,string,random,math,itertools,json,copy
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
 
@@ -214,7 +214,8 @@ class clear :
     
     def clear_items(entity:BaseNbtClass.entity_nbt, container:Literal["Armor","HotBar","Inventory","Weapon"],
                     name:str=None, data:int=-1, max_count:int=2147483647) :
-        clear_count = 0 ; clear_list = getattr(entity, container) ; fill_blank = {}
+        clear_count = 0  ; fill_blank = {}
+        clear_list = getattr(entity, container) if container != "Inventory" else getattr(entity, container)["Items"]
         for index,item in enumerate(clear_list) :
             if not isinstance(item, BaseNbtClass.item_nbt) : continue
             if container == "Weapon" and index == 0 : continue
@@ -281,7 +282,7 @@ class clear :
             else : msg_list.append( faild.substitute(player=ID_tracker(entity)) )
             all_count.append(sum(count_list))
 
-        return Response.Response_Template("已清除以下玩家的的物品：\n$msg", 1, sum(all_count)).substitute(
+        return Response.Response_Template("已清除以下玩家的物品：\n$msg", 1, sum(all_count)).substitute(
             msg="\n".join(msg_list)
         )
 
@@ -480,6 +481,7 @@ class damage :
             a = entity.__get_damage__(game.minecraft_world, damage_type, amount, entity_couse_list[0])
             if a : success_list.append(ID_tracker(entity))
             else : faild_list.append(ID_tracker(entity))
+
         return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",
@@ -723,7 +725,7 @@ class event :
             if entity.Identifier not in game.minecraft_ident.entities or \
             event_id not in game.minecraft_ident.entities[entity.Identifier]["events"] : 
                 faild_list.append(ID_tracker(entity)) ; continue
-            EntityComponent.trigger_event(game.minecraft_ident, entity, event_id)
+            EntityComponent.trigger_event(entity, event_id)
             success_list.append(ID_tracker(entity))
         return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
@@ -831,7 +833,7 @@ class fill_1_0_0 :
                 block_obj.__change_to_entity__(execute_var["dimension"], [i+0.5 for i in pos_xyz])
 
             game.minecraft_chunk.____set_block____(execute_var["dimension"], pos_xyz, new_block_index)
-            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, None)
+            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, BlockComponent.find_block_id_nbt(block_id))
             success[index] = True
 
         success_counter = len(success) - success.count(False)
@@ -1010,7 +1012,7 @@ class give :
 
         #Nbt
         item_nbt = ItemComponent_Compiler(_game, token_list, index)
-        return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data, count=item_count, nbt=item_nbt)
+        return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data, count=item_count, nbt=item_nbt[1])
 
     def give_item(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, item_id:str, data:int=0, count:int=1, nbt:dict={}) :
         entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
@@ -1021,6 +1023,7 @@ class give :
 
         for player in entity_list : 
             if player.__pickup_item__(itme_obj) : itme_obj.__change_to_entity__(execute_var["dimension"], player.Pos)
+            player.__update_mainhand__()
         return Response.Response_Template("以下玩家已给予 $item * $count :\n$players", 1, len(entity_list)).substitute(
             players=", ".join(ID_tracker(i) for i in entity_list), item=item_id, count=count
         )

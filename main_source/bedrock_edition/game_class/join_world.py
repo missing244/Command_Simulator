@@ -316,7 +316,7 @@ def bp_recipes(game:RunTime.minecraft_thread) :
                     try : content1["minecraft:recipe_shaped"]['description']['identifier']
                     except : continue
                     else: k = content1[ 'minecraft:recipe_shapeless']['description']['identifier']
-                if k == None : raise Exception
+                if k is None : raise Exception
             except : error.append("载入失败：%s" % file_path)
             else : game.minecraft_ident.recipes[k] = {}
     

@@ -4,10 +4,12 @@ from typing import List
 
 class loot_table :
     
-    def spawn_loot(self, source, loot_table_str:str) :
-        if loot_table_str not in source.loot_tables : return []
-        from .. import BaseNbtClass
+    def set_source(self, source) :
         self.source = source
+
+    def spawn_loot(self, loot_table_str:str) :
+        if loot_table_str not in self.source.loot_tables : return []
+        from .. import BaseNbtClass
         loot_json = self.source.loot_tables[loot_table_str]
         loot_item_list = self.loot_func(loot_json)
         result_item_list = []
@@ -15,16 +17,18 @@ class loot_table :
         for item_obj in loot_item_list :
             if 'name' not in item_obj : continue
             if item_obj['name'] == "minecraft:air" : continue
-            if item_obj['name'] not in source.items : continue
+            if item_obj['name'] not in self.source.items : continue
 
             item_info = {'id':item_obj['name'], 'count':1, 'damage':0}
             if 'functions' in item_obj :
                 for func_json in item_obj['functions'] : 
                     if hasattr(self,func_json['function']) : item_info = getattr(self,func_json['function'])(item_info,func_json)
             result_item_list.append(item_info)
+        
+        for item in list(result_item_list) :
+            if ('count' not in item) or (item['count'] <= 0) : result_item_list.remove(item)
 
         for index,item in enumerate(result_item_list) :
-            if ('count' not in item) or (item['count'] <= 0) : continue
             if item["id"] in Constants.GAME_DATA['max_count_1_item'] : item["count"] = min(item["count"],1)
             elif item["id"] in Constants.GAME_DATA['max_count_16_item'] : item["count"] = min(item["count"],16)
             else : item["count"] = min(item["count"],64)
@@ -63,6 +67,7 @@ class loot_table :
                         loot_list1 += self.loot_func(self.source.loot_tables[choose_loot['name']])
         
         return loot_list1
+
 
     def enchant_random_gear(self,item,func_json) :
         if not('ench' in item) : item['ench'] = {}
@@ -176,7 +181,10 @@ class loot_table :
 
 
 generate_loot = loot_table()
-def generate(source, loot_table_str:str) :
+def set_source(source) :
+    generate_loot.set_source(source)
+
+def generate(loot_table_str:str) :
     from . import BaseNbtClass
-    aaa:List[BaseNbtClass.item_nbt] = generate_loot.spawn_loot(source, loot_table_str)
+    aaa:List[BaseNbtClass.item_nbt] = generate_loot.spawn_loot(loot_table_str)
     return aaa

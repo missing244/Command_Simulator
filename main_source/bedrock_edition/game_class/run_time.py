@@ -62,7 +62,7 @@ class minecraft_thread :
 
     def __init__(self) :
         from . import ExpandPackAPI
-        from .. import EntityComponent
+        from .. import EntityComponent,LootTable
 
         self.loop_thread:threading.Thread = None
 
@@ -80,6 +80,7 @@ class minecraft_thread :
         self.game_version = (1, 20, 60)
         self.runtime_variable = runtime_variable()
         EntityComponent.set_source(self.minecraft_ident)
+        LootTable.set_source(self.minecraft_ident)
 
         #visualization_API
         self.visualization_object:ExpandPackAPI.visualization = None

@@ -1,4 +1,4 @@
-import copy,random,math
+import copy,random,math,traceback
 from .. import np,Constants
 
 
@@ -43,7 +43,7 @@ class entity_buliding :
                     for groups_0 in [ i for i in sequence_obj['remove']['component_groups'] if (i in component_groups_json) ] :
                         for component_0 in component_groups_json[groups_0] :
                             try : getattr(self,"remove_%s" % component_0.replace("minecraft:","").replace(".",""))(entity_object)
-                            except : pass
+                            except : pass ; #traceback.print_exc()
 
                 if 'add' in sequence_obj and 'component_groups' in sequence_obj['add'] :
                     for groups_1 in [ i for i in sequence_obj['add']['component_groups'] if (i in component_groups_json) ] :
@@ -52,17 +52,17 @@ class entity_buliding :
                         for component_1 in component_groups_json[groups_1] :
                             if component_1 == 'minecraft:rideable' : continue
                             try : func = getattr(self,"add_%s" % component_1.replace("minecraft:","").replace(".",""))
-                            except : pass
+                            except : pass ; #traceback.print_exc()
                             else : func(entity_object, component_groups_json[groups_1][component_1])
 
-        elif 'remove' in events_json[event_name] :
+        if 'remove' in events_json[event_name] :
             if 'component_groups' not in events_json[event_name]['remove'] : return None
             for groups_2 in [i for i in events_json[event_name]['remove']['component_groups'] if (i in component_groups_json)] :
                 for component_2 in component_groups_json[groups_2] :
                     try : getattr(self,"remove_%s" % component_2.replace("minecraft:","").replace(".",""))(entity_object)
-                    except : pass
+                    except : pass ; #traceback.print_exc()
 
-        elif 'add' in events_json[event_name] :
+        if 'add' in events_json[event_name] :
             if 'component_groups' not in events_json[event_name]['add'] : return None
             groups_list = [i for i in events_json[event_name]['add']['component_groups'] if (i in component_groups_json)]
             for groups_3 in groups_list :
@@ -71,7 +71,7 @@ class entity_buliding :
                 for component_3 in component_groups_json[groups_3] :
                     if component_3 == 'minecraft:rideable' : continue
                     try : func = getattr(self,"add_%s" % component_3.replace("minecraft:","").replace(".",""))
-                    except : pass
+                    except : pass ; #traceback.print_exc()
                     else : func(entity_object, component_groups_json[groups_3][component_3])
 
 
@@ -243,10 +243,8 @@ class entity_buliding :
         example = {'Items':[],'container_type':"","private":False}
         if 'container_type' in json2 : example['container_type'] = json2['container_type']
         if 'private' in json2 : example['private'] = bool(json2['private'])
-        if 'inventory_size' in json2 : 
-            for i in range(json2['inventory_size']) : example['Items'].append({})
-        else :
-            for i in range(5) : example['Items'].append({})
+        if 'inventory_size' in json2 : example['Items'] = [None for i in range(json2['inventory_size'])]
+        else : example['Items'] = [None for i in range(5)]
         entity_obj.Inventory = example
         if not('Inventory' in entity_obj.support_nbt) : entity_obj.support_nbt.append('Inventory')
 

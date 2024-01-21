@@ -81,12 +81,14 @@ class float32(ctypes.c_float) :
         else : return self.value <= other.value
 
     def __eq__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value == other
-        else : return self.value == other.value
+        if isinstance(other,(int,float)) : return self.value == other
+        elif isinstance(other,TYPE_TUPLE) : return self.value == other.value
+        else : return False
 
     def __ne__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value != other
-        else : return self.value != other.value
+        if isinstance(other,(int,float)) : return self.value != other
+        elif isinstance(other,TYPE_TUPLE) : return self.value != other.value
+        else : return False
 
     def __gt__(self, other) :
         if isinstance(other,(int,float)) : return self.value > other
@@ -225,12 +227,14 @@ class float64(ctypes.c_double) :
         else : return self.value <= other.value
 
     def __eq__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value == other
-        else : return self.value == other.value
+        if isinstance(other,(int,float)) : return self.value == other
+        elif isinstance(other,TYPE_TUPLE) : return self.value == other.value
+        else : return False
 
     def __ne__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value != other
-        else : return self.value != other.value
+        if isinstance(other,(int,float)) : return self.value != other
+        elif isinstance(other,TYPE_TUPLE) : return self.value != other.value
+        else : return False
 
     def __gt__(self, other) :
         if isinstance(other,(int,float)) : return self.value > other
@@ -465,12 +469,14 @@ class int8(ctypes.c_int8) :
         else : return self.value <= other.value
 
     def __eq__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value == other
-        else : return self.value == other.value
+        if isinstance(other,(int,float)) : return self.value == other
+        elif isinstance(other,TYPE_TUPLE) : return self.value == other.value
+        else : return False
 
     def __ne__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value != other
-        else : return self.value != other.value
+        if isinstance(other,(int,float)) : return self.value != other
+        elif isinstance(other,TYPE_TUPLE) : return self.value != other.value
+        else : return False
 
     def __gt__(self, other) :
         if isinstance(other,(int,float)) : return self.value > other
@@ -701,12 +707,14 @@ class int16(ctypes.c_int16) :
         else : return self.value <= other.value
 
     def __eq__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value == other
-        else : return self.value == other.value
+        if isinstance(other,(int,float)) : return self.value == other
+        elif isinstance(other,TYPE_TUPLE) : return self.value == other.value
+        else : return False
 
     def __ne__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value != other
-        else : return self.value != other.value
+        if isinstance(other,(int,float)) : return self.value != other
+        elif isinstance(other,TYPE_TUPLE) : return self.value != other.value
+        else : return False
 
     def __gt__(self, other) :
         if isinstance(other,(int,float)) : return self.value > other
@@ -937,12 +945,14 @@ class int32(ctypes.c_int32) :
         else : return self.value <= other.value
 
     def __eq__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value == other
-        else : return self.value == other.value
+        if isinstance(other,(int,float)) : return self.value == other
+        elif isinstance(other,TYPE_TUPLE) : return self.value == other.value
+        else : return False
 
     def __ne__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value != other
-        else : return self.value != other.value
+        if isinstance(other,(int,float)) : return self.value != other
+        elif isinstance(other,TYPE_TUPLE) : return self.value != other.value
+        else : return False
 
     def __gt__(self, other) :
         if isinstance(other,(int,float)) : return self.value > other
@@ -1177,12 +1187,14 @@ class int64(ctypes.c_int64) :
         else : return self.value <= other.value
 
     def __eq__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value == other
-        else : return self.value == other.value
+        if isinstance(other,(int,float)) : return self.value == other
+        elif isinstance(other,TYPE_TUPLE) : return self.value == other.value
+        else : return False
 
     def __ne__(self, other) :
-        if isinstance(other,(int,float,type(None))) : return self.value != other
-        else : return self.value != other.value
+        if isinstance(other,(int,float)) : return self.value != other
+        elif isinstance(other,TYPE_TUPLE) : return self.value != other.value
+        else : return False
 
     def __gt__(self, other) :
         if isinstance(other,(int,float)) : return self.value > other
@@ -1243,3 +1255,4 @@ class int64(ctypes.c_int64) :
         return self.value.__hash__()
 
 
+TYPE_TUPLE = (float32, float64, int8, int16, int32, int64)

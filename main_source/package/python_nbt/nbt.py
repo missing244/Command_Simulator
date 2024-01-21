@@ -385,7 +385,7 @@ class NBTTagList(NBTTagContainerList):
             self.append(TAGLIST[self._tag_type_id](buffer=buffer))
 
     def _write_buffer(self, buffer):
-        if self.tag_type_id == None:
+        if self.tag_type_id is None:
             raise ValueError("No type specified for NBTTagList: %s" % self.json_obj())
         NBTTagByte(self.tag_type_id)._write_buffer(buffer)
         length = NBTTagInt(len(self))

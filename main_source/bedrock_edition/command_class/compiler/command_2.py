@@ -2,7 +2,7 @@ from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
 from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,DataSave
 from . import Selector,Rawtext,CompileError,CommandParser
 from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler,Msg_Compiler
-import functools,string,random,re,math,itertools,json
+import functools,string,random,math,itertools,json
 from typing import Dict,Union,List,Tuple,Literal,Callable
 
 
@@ -157,6 +157,8 @@ class summon_1_0_0 :
         entity_id = ID_transfor(token_list[1]["token"].group())
         if entity_id not in _game.minecraft_ident.entities :
             raise CompileError("不存在的实体ID：%s" % entity_id, pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+        if not _game.minecraft_ident.entities[entity_id]["description"]["is_summonable"] :
+            raise CompileError("不能被召唤的实体ID：%s" % entity_id, pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
         if 2 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id)
         elif token_list[2]["type"] == "Entity_Name" :
             entity_name = Quotation_String_transfor_1(token_list[2]["token"].group())
@@ -189,6 +191,8 @@ class summon_1_70_0 :
         entity_id = ID_transfor(token_list[1]["token"].group())
         if entity_id not in _game.minecraft_ident.entities :
             raise CompileError("不存在的实体ID：%s" % entity_id, pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+        if not _game.minecraft_ident.entities[entity_id]["description"]["is_summonable"] :
+            raise CompileError("不能被召唤的实体ID：%s" % entity_id, pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
         if 2 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id)
         elif token_list[2]["type"] == "Entity_Name" :
             entity_name = Quotation_String_transfor_1(token_list[2]["token"].group())
@@ -483,12 +487,10 @@ class testforblock :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-
         poses = [ token_list[i]["token"].group() for i in range(1,4,1) ]
         block_id = ID_transfor(token_list[4]["token"].group())
         if block_id not in _game.minecraft_ident.blocks:
             raise CompileError("不存在的方块ID：%s" % block_id,pos=(token_list[5]["token"].start(), token_list[5]["token"].end()))
-        
         if 5 >= len(token_list) : block_state = {}
         elif token_list[5]["type"] == "Block_Data" : 
             block_state = int(token_list[5]["token"].group())

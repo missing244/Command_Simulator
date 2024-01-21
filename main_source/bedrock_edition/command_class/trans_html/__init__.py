@@ -217,7 +217,7 @@ class generate_command_respones_html :
                     command = self.html_word_replace(template_or_group.command),
                     response = self.html_word_replace(template_or_group.command_msg)
                 ))
-                if template_or_group.Function_Feedback == None : continue
+                if template_or_group.Function_Feedback is None : continue
                 respones_list.extend(template_or_group.Function_Feedback[::-1])
             elif isinstance(template_or_group, Response.Function_Response_Group) : 
                 command_counter += 1
@@ -255,7 +255,7 @@ class generate_command_respones_html :
                         command = self.html_word_replace(response.command),
                         response = self.html_word_replace(response.command_msg)
                     ))
-                    if response.Function_Feedback == None : continue
+                    if response.Function_Feedback is None : continue
                     command_counter = self.mcfunction_respones_reader(single_detial_msg, response, display_test_tick, command_counter)
             self.html_detials_list.append(self.details_template.substitute(tick=display_test_tick, command_response="\n".join(single_detial_msg)))
             self.js_detial_class_list.append("new detail_class(%s,%s)" % (display_test_tick, command_counter))

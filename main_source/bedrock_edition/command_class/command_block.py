@@ -107,25 +107,25 @@ class command_block_compile_system :
 
     def keyword_start_syntax(self, lines:int, text:str) : 
         string_match = KEYWORD_START[0].match(text)
-        if string_match == None : return (lines, self.game_version, text, "命令方块文件最开始需要指定start命令")
+        if string_match is None : return (lines, self.game_version, text, "命令方块文件最开始需要指定start命令")
         
         string_match = KEYWORD_START[1].match(text, string_match.end())
-        if string_match == None or not(0 <= int(string_match.group()) <= 95) : 
+        if string_match is None or not(0 <= int(string_match.group()) <= 95) : 
             return (lines, self.game_version, text, "start命令的x坐标需要在 0到95 之间")
         pos_x = int(string_match.group())
 
         string_match = KEYWORD_START[2].match(text, string_match.end())
-        if string_match == None or not(-64 <= int(string_match.group()) <= 319) : 
+        if string_match is None or not(-64 <= int(string_match.group()) <= 319) : 
             return (lines, self.game_version, text, "start命令的y坐标需要在 -64到319 之间")
         pos_y = int(string_match.group())
 
         string_match = KEYWORD_START[3].match(text, string_match.end())
-        if string_match == None or not(0 <= int(string_match.group()) <= 95) : 
+        if string_match is None or not(0 <= int(string_match.group()) <= 95) : 
             return (lines, self.game_version, text, "start命令的z坐标需要在 0到95 之间")
         pos_z = int(string_match.group())
 
         string_match = KEYWORD_START[4].match(text, string_match.end())
-        if string_match == None : return (lines, self.game_version, text, "start命令末尾含有多余的参数")
+        if string_match is None : return (lines, self.game_version, text, "start命令末尾含有多余的参数")
 
         return [pos_x, pos_y, pos_z]
 
@@ -140,14 +140,14 @@ class command_block_compile_system :
 
     def keyword_cb_property_syntax(self, _game:RunTime.minecraft_thread, lines:int, text:str) : 
         cb_property_str = re.compile("\\u005b.*?\\u005d").search(text)
-        if cb_property_str == None : return (lines, self.game_version, text, "命令方块属性语法错误")
+        if cb_property_str is None : return (lines, self.game_version, text, "命令方块属性语法错误")
 
         command_str = text[cb_property_str.end():]
         cb_property_str = cb_property_str.group()
         cb_property = re.split("[,，;；]",cb_property_str[1:len(cb_property_str)-1])
 
         re_test1 = None if (cb_property[0] not in self.command_block_facing_str) else cb_property[0]
-        if re_test1 == None : return (lines, self.game_version, text, "非法的命令方块朝向参数")
+        if re_test1 is None : return (lines, self.game_version, text, "非法的命令方块朝向参数")
 
         self.default_property[0] = self.command_block_facing_str.index(re_test1) % 6
         for info1 in cb_property[1:] :
@@ -195,7 +195,7 @@ class command_block_compile_system :
             block_index = _game.minecraft_chunk.____find_block_mapping____(
                 self.command_block_data[cb_pos]['id'], self.command_block_data[cb_pos]['block_state'])
 
-            cb_nbt = BlockComponent.find_id_nbt(self.command_block_data[cb_pos]['id'])
+            cb_nbt = BlockComponent.find_block_id_nbt(self.command_block_data[cb_pos]['id'])
             cb_nbt['auto'] = self.command_block_data[cb_pos]['auto']
             cb_nbt['Command'] = self.command_block_data[cb_pos]['command']
             cb_nbt['TickDelay'] = np.int32(self.command_block_data[cb_pos]['delay'])

@@ -65,7 +65,7 @@ class user_manager :
 
     def login_account(self, account:str, passcode:str, request_msg:str) :
         match_request_msg = self.login_msg_match.search(request_msg)
-        if match_request_msg == None : self.login_out_account() ; return None
+        if match_request_msg is None : self.login_out_account() ; return None
         account_log_msg = match_request_msg.group().replace("<login_msg>","").replace("</login_msg>","")
 
         try : msg_json = json.loads(account_log_msg)
@@ -204,7 +204,7 @@ class Text_Bind_Events :
         if isinstance(widget, tkinter.Text) : insert_pos = list(widget.bbox(tkinter.INSERT))[0:2]
         else : insert_pos = [widget.index(tkinter.INSERT)*40, widget.winfo_rooty()]
         
-        if self.insert_pos_save == None : self.insert_pos_save = insert_pos ; return None
+        if self.insert_pos_save is None : self.insert_pos_save = insert_pos ; return None
         if not(self.insert_pos_save[0]-100 <= insert_pos[0] <= self.insert_pos_save[0]+100) :
             self.insert_pos_save = insert_pos ; return None
         if not(self.insert_pos_save[1]-40 <= insert_pos[1] <= self.insert_pos_save[1]+40) :
@@ -254,7 +254,7 @@ class Text_Bind_Events :
 
 def mode_using(focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry], mode, word=None) : 
     import main_source.main_window.constant as app_constant
-    if focus_input == None : return None
+    if focus_input is None : return None
 
     if mode == "select_all" : focus_input.event_generate("<<SelectAll>>")
     elif mode == "cut" : 
@@ -331,7 +331,7 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
     log.write_log("正在获取软件信息...")
     def updata_info() :
         response2 = connent_API.request_url_without_error(connent_API.APP_INFO_URL)
-        if response2 == None : 
+        if response2 is None : 
             Announcement.set_notification(None)
             log.write_log("软件信息获取失败", 2) ; user.info_update = True ; return True
         response2 = connent_API.transfor_qq_share(response2.decode("utf-8"))
@@ -345,14 +345,14 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
 
     def test_network() :
         request1 = connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL)
-        if request1 == None : log.write_log("网络验证失败",2) ; return False
+        if request1 is None : log.write_log("网络验证失败",2) ; return False
         else : return True
 
     def get_info() :
         if app_constant.debug_testing : return None
-        data1 = {"userdata":user.get_account()} if (user.get_account() != None) else None
+        data1 = {"userdata":user.get_account()} if (user.get_account() is not None) else None
         request1 = connent_API.request_url_without_error(connent_API.AUTO_LOGIN,data1,user.save_data['cookies']["api_web_cookie"])
-        if request1 == None : log.write_log("自动登录连接失败",2) ; return False
+        if request1 is None : log.write_log("自动登录连接失败",2) ; return False
         else : 
             log.write_log("自动登录连接成功",2)
             user.save_data['cookies']["api_web_cookie"] = connent_API.request_headers['cookie']
@@ -374,7 +374,7 @@ def flash_minecraft_id(log:initialization_log) :
     def download_online_id() -> bool :
         try :
             response = connent_API.request_url_without_error(connent_API.UPDATE_BE_ID)
-            if response == None : raise Exception
+            if response is None : raise Exception
             with open(update_id_zip_path, 'wb') as file1: file1.write(response)
         except : log.write_log("在线BE-ID列表下载失败", 2) ; return True
         else : log.write_log("在线BE-ID列表下载成功", 2) ; return True
@@ -415,7 +415,7 @@ def flash_minecraft_source(user:user_manager, log:initialization_log) :
 
     def download_online_source() :
         be_resource = connent_API.request_url_without_error(user.save_data["online_get"]["app_info"]["source_update_url"])
-        if be_resource == None : log.write_log("资源联网获取失败",2) ; return False
+        if be_resource is None : log.write_log("资源联网获取失败",2) ; return False
         log.write_log("资源获取成功", 2)
         with open(source_path, 'wb') as file1 : file1.write(be_resource)
         return True

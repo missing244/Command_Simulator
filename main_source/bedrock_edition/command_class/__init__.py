@@ -28,8 +28,8 @@ from . import trans_html as HtmlGenerate
 
 def Command_Tokenizer_Compiler(_game:RunTime.minecraft_thread, Command:str, Version:Tuple[int]) :
     Version = tuple(Version)
-    if Version in Command_Compile_Dict_Save and Command in Command_Compile_Dict_Save[Version] :
-        return Command_Compile_Dict_Save[Version][Command]
+    if Version not in Command_Compile_Dict_Save : Command_Compile_Dict_Save[Version] = {}
+    if Command in Command_Compile_Dict_Save[Version] : return Command_Compile_Dict_Save[Version][Command]
 
     token_list = CommandParser.Start_Tokenizer(Command, Version)
     if isinstance(token_list, tuple) : 
@@ -40,7 +40,6 @@ def Command_Tokenizer_Compiler(_game:RunTime.minecraft_thread, Command:str, Vers
         Command_Compile_Dict_Save[Version][Command] = func_object
         return func_object
 
-    if Version not in Command_Compile_Dict_Save : Command_Compile_Dict_Save[Version] = {}
     Command_Compile_Dict_Save[Version][Command] = func_object
     return func_object
 

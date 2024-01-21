@@ -5,7 +5,7 @@
 from idlelib.calltip_w import CalltipWindow
 import http.server,ssl,importlib
 import json,tkinter,tkinter.font,time,threading,sys,gzip,gc
-import platform,os,types,traceback,itertools
+import platform,os,types,traceback,itertools,re,functools,cProfile
 import functools,tkinter.messagebox
 from tkinter import ttk
 from typing import List,Dict,Union,Literal
@@ -17,6 +17,7 @@ import main_source.main_window.function as app_function
 import main_source.main_window.tk_frame as app_tk_frame
 import main_source.package.file_operation as file_IO
 import main_source.package.tk_tool as tk_tool
+import main_source.package.python_numpy as np
 
 #模拟世界模块加载
 import main_source.bedrock_edition as Minecraft_BE
@@ -69,17 +70,15 @@ if True : #启用软件前的加载项目
         while app_constants.debug_testing : 
             text1 = input(">>> ")
             aaaa = globals()
+            a_11 = time.time()
             try : compile(text1,"","eval")
             except Exception as e : 
                 try : exec(text1, aaaa, aaaa)
                 except : traceback.print_exc()
             else :
-                try : 
-                    a_11 = time.time()
-                    print(eval(text1, aaaa, aaaa))
-                    a_22 = time.time()
-                    print('时间：' + str(a_22 - a_11))
+                try : print(eval(text1, aaaa, aaaa))
                 except : traceback.print_exc()
+            print('时间：%s' % str(time.time() - a_11))
     threading.Thread(target=listen_cmd_input).start()
 
 
@@ -232,7 +231,7 @@ class control_windows :
 
     def get_expand_pack_class_object(self,uuid:str) -> object :
         a = self.expand_pack_open_list.get(uuid, None)
-        if a == None : return None
+        if a is None : return None
         return a.get('object')
 
     def add_can_change_hight_component(self,component_list:list) :
@@ -303,6 +302,7 @@ threading.Thread(target=debug_windows.all_time_loop_event).start()
 debug_windows.window.mainloop()
 
 Minecraft_BE.Command_Compile_Dict_Save
-importlib.reload(Minecraft_BE.CommandCompiler)
+importlib.reload(Minecraft_BE.Command_Tokenizer_Compiler(debug_windows.game_process, "aaaa", (1,20,60)))
 importlib.reload(Minecraft_BE.CommandCompiler.Command1)
 #debug_windows.game_process.minecraft_chunk.loading_chunk["overworld"][(0,0)]
+debug_windows.game_process.minecraft_chunk.player

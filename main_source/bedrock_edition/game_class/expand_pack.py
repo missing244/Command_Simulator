@@ -53,7 +53,7 @@ class visualization :
                 self.track_entity.append({"entity": selector_func[1], "color": color_name[var_name]})
 
             else :
-                if int_test.search(var_json[var_name]) == None : 
+                if int_test.search(var_json[var_name]) is None : 
                     error_var_list[var_name] = "输入数据并不是整数" ; continue
                 if var_name in ["area_x","area_z"] and not(1 <= int(var_json[var_name]) <= 100) :
                     error_var_list[var_name] = "输入的整数超过未在1~128之间" ; continue

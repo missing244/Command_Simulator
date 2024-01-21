@@ -32,7 +32,7 @@ class Json_String(BaseMatch.Match_Base) :
         return {"type":self.token_type, "token":_match}
 
     def _auto_complete(self) -> Dict[str,str] : 
-        if self.auto_complete == None : return {'"string"':""}
+        if self.auto_complete is None : return {'"string"':""}
         else : return self.auto_complete.copy()
 
 
@@ -127,7 +127,7 @@ class Json_Parser :
 
             if is_not_successs :
                 _m_ = self.no_match_error1.match(self.command_str, self.read_pointers)
-                if _m_ == None : _m_ = self.no_match_error2.match(self.command_str, self.read_pointers)
+                if _m_ is None : _m_ = self.no_match_error2.match(self.command_str, self.read_pointers)
                 raise BaseMatch.Not_Match(">>%s<< 非期望的参数" % _m_.group(), pos=(_m_.start(),_m_.end()), word=_m_.group())
 
             if isinstance(current_leaves,BaseMatch.End_Node) : break

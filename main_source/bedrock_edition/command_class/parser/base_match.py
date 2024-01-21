@@ -203,15 +203,14 @@ class KeyWord(Match_Base) :
         super().__init__(token_type)
         self.base_input = s
         self.re_match   = [re.compile(".{1,%s}" % len(i)) for i in s]
-        self.re_test    = re.compile( "|".join( [string_to_rematch(i) for i in s] ) )
+        self.re_test    = [re.compile(string_to_rematch(i)) for i in s]
 
     def _match_string(self,s:str,s_pointer:int) : 
-        _match = [i.match(s,pos=s_pointer) for i in self.re_match]
-        a = [self.re_test.search(i.group()) for i in _match]
+        _match = [i.match(s, pos=s_pointer) for i in self.re_match]
+        a = [self.re_test[index].search(item.group()) for index,item in enumerate(_match)]
         if not any(a) : raise Not_Match(">>%s<< 并不是有效的字符" % _match[0].group(), 
             pos=(_match[0].start(),_match[0].end()), word=_match[0].group())
-        b = [i.group().__len__() for i in a if (i)]
-        return {"type":self.token_type, "token":_match[b.index(max(b))]}
+        return {"type":self.token_type, "token":next( (_match[index] for index,item in enumerate(a) if item) )}
 
     def _auto_complete(self) -> Dict[str,str] : 
         a = {}

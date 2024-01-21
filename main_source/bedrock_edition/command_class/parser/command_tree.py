@@ -562,18 +562,24 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.Char("Argument","replace").add_leaves(
             BaseMatch.Char("Argument","block").set_version(1,19,40,"min").add_leaves(
                 *SpecialMatch.Pos_Tree(
-                    BaseMatch.Char("Slot","slot.container").add_leaves(
+                    BaseMatch.Char("Slot_Type","slot.container").add_leaves(
                         BaseMatch.Int("Slot_ID").add_leaves(
-                            BaseMatch.Int("Count").add_leaves(*Command_Loot)
+                            BaseMatch.Int("Count").add_leaves(*Command_Loot),
+                            *Command_Loot
                         )
                     )
                 )
             ),
             BaseMatch.Char("Argument","entity").set_version(1,19,00,"min").add_leaves(
                 *SpecialMatch.BE_Selector_Tree(
-                    BaseMatch.AnyString("Slot_Type").add_leaves(
+                    BaseMatch.Enum("Slot_Type",
+                    "slot.weapon.mainhand","slot.weapon.offhand",
+                    "slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
+                    "slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
+                    "slot.armor","slot.chest","slot.equippable").add_leaves(
                         BaseMatch.Int("Slot_ID").add_leaves(
                             BaseMatch.Int("Count").add_leaves(*Command_Loot),
+                            *Command_Loot
                         )
                     )
                 )
@@ -586,7 +592,8 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     ),
     # mobevent 生物事件 ✓ V
     BaseMatch.Char("Command","mobevent").add_leaves(
-        BaseMatch.AnyString("Event_ID").add_leaves(
+        BaseMatch.Enum("Event_ID", "minecraft:ender_dragon_event", "minecraft:pillager_patrols_event",
+        "minecraft:wandering_trader_event", "events_enabled").add_leaves(
             BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
@@ -632,7 +639,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.AnyString("animation_Type").add_leaves(
                 BaseMatch.AnyString("Next_State_Type").add_leaves(
                     BaseMatch.Float("Blend_Out_Time").add_leaves(
-                        BaseMatch.AnyString("Stop_Expression_Type").add_leaves(
+                        *SpecialMatch.String_Tree("Stop_Expression_Type",
                             BaseMatch.AnyString("Controller_Type").add_leaves( BaseMatch.END_NODE ),
                             BaseMatch.END_NODE
                         ),
@@ -667,6 +674,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","recipe").set_version(1,20,30,"min").add_leaves(
         BaseMatch.Enum("Argument","give","take").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
+                BaseMatch.KeyWord("All_Recipe","*").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.AnyString("Recipe_Type").add_leaves( BaseMatch.END_NODE )
             )
         )
@@ -677,18 +685,21 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             *SpecialMatch.Pos_Tree(
                 BaseMatch.Char("Slot_Type","slot.container").add_leaves(
                     BaseMatch.Int("Slot_Id").add_leaves(
-                    BaseMatch.Enum("Old_Item_Handling","keep","destroy").set_version(1,16,0,"min").add_leaves( Command_Replaceitem ),
-                    Command_Replaceitem
+                        BaseMatch.Enum("Old_Item_Handling","keep","destroy").add_leaves( Command_Replaceitem ),
+                        Command_Replaceitem
                     )
                 )
             )
         ),
         BaseMatch.Char("Argument","entity").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
-                BaseMatch.AnyString("Slot_Type").add_leaves(
+                BaseMatch.Enum("Slot_Type","slot.weapon.mainhand","slot.weapon.offhand",
+                "slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
+                "slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
+                "slot.armor","slot.chest","slot.equippable").add_leaves(
                     BaseMatch.Int("Slot_Id").add_leaves(
-                    BaseMatch.Enum("Old_Item_Handling","keep","destroy").set_version(1,16,0,"min").add_leaves( Command_Replaceitem ),
-                    Command_Replaceitem
+                        BaseMatch.Enum("Old_Item_Handling","keep","destroy").add_leaves( Command_Replaceitem ),
+                        Command_Replaceitem
                     )
                 )
             )
@@ -800,7 +811,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.Char("Argument","operation").add_leaves(
                 *SpecialMatch.Scoreboard_Entity_Name_Tree(
                     *SpecialMatch.String_Tree("Scoreboard_Name",
-                        BaseMatch.KeyWord("Operate","+=","-=","*=","/=","%=","=","<",">","><").add_leaves(
+                        BaseMatch.KeyWord("Operate","+=","-=","*=","/=","%=","><","=","<",">").add_leaves(
                             *SpecialMatch.Scoreboard_Entity_Name_Tree(
                                 *SpecialMatch.String_Tree( "Scoreboard_Name", BaseMatch.END_NODE )
                             )

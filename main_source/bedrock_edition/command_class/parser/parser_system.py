@@ -31,7 +31,7 @@ class Command_Parser :
         self.Tree = Tree
         self.separator = separator
         self.separator_count = separator_count
-        if separator_count == None : self.separator_re_match = re.compile("[%s]{0,}" % BaseMatch.string_to_rematch(separator))
+        if separator_count is None : self.separator_re_match = re.compile("[%s]{0,}" % BaseMatch.string_to_rematch(separator))
         else : self.separator_re_match = re.compile("[%s]{%s,%s}" % (BaseMatch.string_to_rematch(separator), separator_count, separator_count))
         self.no_match_error1 = re.compile("[^%s]{1,}" % BaseMatch.TERMINATOR_RE)
         self.no_match_error2 = re.compile(".{0,1}")
@@ -43,11 +43,11 @@ class Command_Parser :
         self.current_leaves = self.Tree
 
     def _version_compare(self, leaves:BaseMatch.Match_Base) :
-        if leaves.maximum_version == leaves.minimum_version == None : return True
+        if leaves.maximum_version == leaves.minimum_version is None : return True
 
-        if leaves.maximum_version == None : max_v = (250,0,0)
+        if leaves.maximum_version is None : max_v = (250,0,0)
         else : max_v = leaves.maximum_version
-        if leaves.minimum_version == None : min_v = (0,0,0)
+        if leaves.minimum_version is None : min_v = (0,0,0)
         else : min_v = leaves.minimum_version
         version_int1 = min_v[0] * 1000000 + min_v[1] * 1000 + min_v[2]
         version_int2 = self.command_version[0] * 1000000 + self.command_version[1] * 1000 + self.command_version[2]
@@ -63,7 +63,7 @@ class Command_Parser :
         re_match1 = re.compile(BaseMatch.string_to_rematch(e.word))
         for i in list(_str1.keys()) :
             a = re_match1.search(i)
-            if a == None : del _str1[i]
+            if a is None : del _str1[i]
         return _str1
 
     def _parser(self,command_str:str) -> List[Dict[Literal["type","token"],Union[str,re.Match]]] :
@@ -97,7 +97,7 @@ class Command_Parser :
 
             if is_not_successs : 
                 _m_ = self.no_match_error1.match(command_str,command_str_pointer)
-                if _m_ == None : _m_ = self.no_match_error2.match(command_str,command_str_pointer)
+                if _m_ is None : _m_ = self.no_match_error2.match(command_str,command_str_pointer)
                 raise BaseMatch.Not_Match(">>%s<< 非期望的参数" % _m_.group(), pos=(_m_.start(),_m_.end()), word=_m_.group())
             
             if isinstance(self.current_leaves,BaseMatch.End_Node) : break

@@ -30,14 +30,14 @@ class tools :
         elif mode == "if" : return var1 <= a <= var2
         elif mode == "unless" : return not(var1 <= a <= var2)
 
-def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_thread, selector_var:dict) :
+def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_thread, selector_var:dict, _except:BaseNbtClass.entity_nbt=None) :
     entity_saves : List[BaseNbtClass.entity_nbt] = []
     if selector_var["is_executer"] : all_entity_test_list = (execute_var["executer"],) if isinstance(execute_var["executer"],BaseNbtClass.entity_nbt) else ()
     else : all_entity_test_list = game_tread.minecraft_chunk.__get_all_load_entity__(is_player= True if "minecraft:player" in selector_var["type_if"] else False)
 
-    select_origin_x = (execute_var["pos"][0] + selector_var["pos_offset"][0]) if selector_var["pos"][0] == None else (selector_var["pos"][0] + selector_var["pos_offset"][0])
-    select_origin_y = (execute_var["pos"][1] + selector_var["pos_offset"][1]) if selector_var["pos"][1] == None else (selector_var["pos"][1] + selector_var["pos_offset"][1])
-    select_origin_z = (execute_var["pos"][2] + selector_var["pos_offset"][2]) if selector_var["pos"][2] == None else (selector_var["pos"][2] + selector_var["pos_offset"][2])
+    select_origin_x = (execute_var["pos"][0] + selector_var["pos_offset"][0]) if selector_var["pos"][0] is None else (selector_var["pos"][0] + selector_var["pos_offset"][0])
+    select_origin_y = (execute_var["pos"][1] + selector_var["pos_offset"][1]) if selector_var["pos"][1] is None else (selector_var["pos"][1] + selector_var["pos_offset"][1])
+    select_origin_z = (execute_var["pos"][2] + selector_var["pos_offset"][2]) if selector_var["pos"][2] is None else (selector_var["pos"][2] + selector_var["pos_offset"][2])
 
     for entity in all_entity_test_list :
         if selector_var["is_alive"] and hasattr(entity,"Health") and entity.Health <= 0 : continue
@@ -108,30 +108,30 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
         if not all(hasitem_test_save) : continue
         
 
-        if any([i != None for i in selector_var["dxdydz"]]) and MathFunction.version_compare(execute_var["version"], (1,19,70)) == -1 :
+        if any([i is not None for i in selector_var["dxdydz"]]) and MathFunction.version_compare(execute_var["version"], (1,19,70)) == -1 :
             if DIMENSION_LIST[entity.Dimension] != execute_var["dimension"] : continue
             dxdydz_test_area = [
                 math.floor(select_origin_x), math.floor(select_origin_x) + 1,
                 math.floor(select_origin_y), math.floor(select_origin_y) + 1,
                 math.floor(select_origin_z), math.floor(select_origin_z) + 1
             ]
-            if selector_var["dxdydz"][0] != None : dxdydz_test_area[0 + int(selector_var["dxdydz"][0] > 0)] += selector_var["dxdydz"][0]
-            if selector_var["dxdydz"][1] != None : dxdydz_test_area[2 + int(selector_var["dxdydz"][1] > 0)] += selector_var["dxdydz"][1]
-            if selector_var["dxdydz"][2] != None : dxdydz_test_area[4 + int(selector_var["dxdydz"][2] > 0)] += selector_var["dxdydz"][2]
+            if selector_var["dxdydz"][0] is not None : dxdydz_test_area[0 + int(selector_var["dxdydz"][0] > 0)] += selector_var["dxdydz"][0]
+            if selector_var["dxdydz"][1] is not None : dxdydz_test_area[2 + int(selector_var["dxdydz"][1] > 0)] += selector_var["dxdydz"][1]
+            if selector_var["dxdydz"][2] is not None : dxdydz_test_area[4 + int(selector_var["dxdydz"][2] > 0)] += selector_var["dxdydz"][2]
 
             if not(dxdydz_test_area[0] <= entity.Pos[0] <= dxdydz_test_area[1]) : continue
             if not(dxdydz_test_area[2] <= entity.Pos[1] <= dxdydz_test_area[3]) : continue
             if not(dxdydz_test_area[4] <= entity.Pos[2] <= dxdydz_test_area[5]) : continue
-        if any([i != None for i in selector_var["dxdydz"]]) and MathFunction.version_compare(execute_var["version"], (1,19,70)) >= 0 :
+        if any([i is not None for i in selector_var["dxdydz"]]) and MathFunction.version_compare(execute_var["version"], (1,19,70)) >= 0 :
             if DIMENSION_LIST[entity.Dimension] != execute_var["dimension"] : continue
             dxdydz_test_area = [
                 select_origin_x, select_origin_x + 1,
                 select_origin_y, select_origin_y + 1,
                 select_origin_z, select_origin_z + 1
             ]
-            if selector_var["dxdydz"][0] != None : dxdydz_test_area[0 + int(selector_var["dxdydz"][0] > 0)] += selector_var["dxdydz"][0]
-            if selector_var["dxdydz"][1] != None : dxdydz_test_area[2 + int(selector_var["dxdydz"][1] > 0)] += selector_var["dxdydz"][1]
-            if selector_var["dxdydz"][2] != None : dxdydz_test_area[4 + int(selector_var["dxdydz"][2] > 0)] += selector_var["dxdydz"][2]
+            if selector_var["dxdydz"][0] is not None : dxdydz_test_area[0 + int(selector_var["dxdydz"][0] > 0)] += selector_var["dxdydz"][0]
+            if selector_var["dxdydz"][1] is not None : dxdydz_test_area[2 + int(selector_var["dxdydz"][1] > 0)] += selector_var["dxdydz"][1]
+            if selector_var["dxdydz"][2] is not None : dxdydz_test_area[4 + int(selector_var["dxdydz"][2] > 0)] += selector_var["dxdydz"][2]
 
             #print(dxdydz_m1,selector_var["dxdydz"])
             if not(dxdydz_test_area[0]-entity.Collision['width']/2 <= entity.Pos[0] <= dxdydz_test_area[1]+entity.Collision['width']/2) : continue
@@ -144,6 +144,7 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
 
         entity_saves.append(entity)
     
+    if _except and _except in entity_saves : entity_saves.remove(_except)
     entity_list_result = sorted(
         [i for i in entity_saves], key=functools.partial(DISTANCE_FUNC, origin_x=select_origin_x,
         origin_y=select_origin_y, origin_z=select_origin_z)
@@ -186,7 +187,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
 
     elif selector_argument in ("lm","l") :
         search_index = ("lm","l") ; index += 2
-        if selector_save["level"] == None : selector_save["level"] = [0, 2147483647]
+        if selector_save["level"] is None : selector_save["level"] = [0, 2147483647]
         set_index = search_index.index(selector_argument)
         selector_save["level"][set_index] = int(token_list[index]["token"].group())
         if selector_save["level"][set_index] < 0 : 
@@ -194,7 +195,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
     
     elif selector_argument in ("rm","r") :
         search_index = ("rm","r") ; index += 2
-        if selector_save["distance"] == None : selector_save["distance"] = [0.0, 2147483647.0]
+        if selector_save["distance"] is None : selector_save["distance"] = [0.0, 2147483647.0]
         set_index = search_index.index(selector_argument)
         selector_save["distance"][set_index] = np.float32(token_list[index]["token"].group())
         if selector_save["distance"][set_index] < 0 : 
@@ -254,8 +255,8 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
                 if token_list[index]["type"] == "Item_Argument" and token_list[index]["token"].group() == "item" :
                     index += 2
                     item_name = minecraft_ID_transfor(token_list[index]["token"].group())
-                    if item_name not in game_tread.minecraft_ident.items : 
-                        raise CompileError("不存在的物品ID",pos=(token_list[index]["token"].start(),token_list[index]["token"].end()))
+                    if item_name not in game_tread.minecraft_ident.items : raise CompileError("不存在的物品ID：%s" % item_name, 
+                        pos=(token_list[index]["token"].start(),token_list[index]["token"].end()))
                     hasitem_condition["item"] = item_name
                 elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"].group() == "data" :
                     index += 2
@@ -316,7 +317,10 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
             index -= 1
         else : 
             str1 = Quotation_String_transfor_2( token_list[index]["token"].group())
-            if selector_argument == "type" : str1 = minecraft_ID_transfor(str1)
+            if selector_argument == "type" : 
+                str1 = minecraft_ID_transfor(str1)
+                if str1 not in game_tread.minecraft_ident.entities : 
+                    raise CompileError("不存在的实体ID：%s" % str1,pos=(token_list[index]["token"].start(),token_list[index]["token"].end()))
             selector_save[mode % selector_argument].append(str1)
 
     return index + 1

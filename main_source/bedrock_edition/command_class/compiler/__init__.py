@@ -53,7 +53,7 @@ def ItemComponent_Compiler(_game:RunTime.minecraft_thread, token_list:COMMAND_TO
     json_str_list = [i["token"].group() for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
     json_str_list.append(token_list[index + len(json_str_list)]["token"].group())
     index = index + len(json_str_list)
-    item_nbt = json.loads(json_str_list)
+    item_nbt = json.loads("".join(json_str_list))
     key_list = set(("minecraft:keep_on_death", "minecraft:can_destroy", "minecraft:can_place_on", "minecraft:item_lock"))
     if set(item_nbt) - key_list : raise CompileError("不存在的物品组件：%s" % ", ".join( set(item_nbt) - key_list ))
     if "minecraft:keep_on_death" in item_nbt and (not isinstance(item_nbt["minecraft:keep_on_death"], dict) or 
@@ -64,18 +64,20 @@ def ItemComponent_Compiler(_game:RunTime.minecraft_thread, token_list:COMMAND_TO
         not isinstance(item_nbt["minecraft:can_destroy"]["blocks"], list) or 
         any( (not isinstance(i,str) for i in item_nbt["minecraft:can_destroy"]["blocks"]) )) : 
         raise CompileError('can_destroy 物品组件的值应该为 {"blocks":["air", ...]}')
-    for i in item_nbt["minecraft:can_destroy"]["blocks"] :
-        if (i if ":" in i else ("minecraft:%s" % i)) not in _game.minecraft_ident.blocks :
-            raise CompileError('can_destroy 物品组件中存在不存在的方块ID%s' % i)
+    if "minecraft:can_destroy" in item_nbt :
+        for i in item_nbt["minecraft:can_destroy"]["blocks"] :
+            if (i if ":" in i else ("minecraft:%s" % i)) not in _game.minecraft_ident.blocks :
+                raise CompileError('can_destroy 物品组件中存在不存在的方块ID%s' % i)
 
     if "minecraft:can_place_on" in item_nbt and (not isinstance(item_nbt["minecraft:can_place_on"], dict) or 
         item_nbt["minecraft:can_place_on"].__len__() != 1 or "blocks" not in item_nbt["minecraft:can_place_on"] or 
         not isinstance(item_nbt["minecraft:can_place_on"]["blocks"], list) or 
         any( (not isinstance(i,str) for i in item_nbt["minecraft:can_place_on"]["blocks"]) )) : 
-        raise CompileError('can_place_on 物品组件的值应该为 {"blocks":["air", ...]}')
-    for i in item_nbt["minecraft:can_place_on"]["blocks"] :
-        if (i if ":" in i else ("minecraft:%s" % i)) not in _game.minecraft_ident.blocks :
-            raise CompileError('can_place_on 物品组件中存在不存在的方块ID%s' % i)
+            raise CompileError('can_place_on 物品组件的值应该为 {"blocks":["air", ...]}')
+    if "minecraft:can_place_on" in item_nbt :
+        for i in item_nbt["minecraft:can_place_on"]["blocks"] :
+            if (i if ":" in i else ("minecraft:%s" % i)) not in _game.minecraft_ident.blocks :
+                raise CompileError('can_place_on 物品组件中存在不存在的方块ID%s' % i)
 
     if "minecraft:item_lock" in item_nbt and (not isinstance(item_nbt["minecraft:item_lock"], dict) or 
         item_nbt["minecraft:item_lock"].__len__() != 1 or "mode" not in item_nbt["minecraft:item_lock"] or 
@@ -114,6 +116,7 @@ Selector_Parser = CommandParser.ParserSystem.Command_Parser(
 
 from . import selector as Selector
 from . import rawtext as Rawtext
+from . import command_0 as Command0
 from . import command_1 as Command1
 from . import command_2 as Command2
 from . import command_3 as Command3
@@ -139,6 +142,12 @@ Command_to_Compiler = {
 
     "inputpermission": Command3.inputpermission, "kick":Command3.kick, "kill":Command3.kill,
     "list": Command3.list_command, "locate":Command3.locate, "loot":Command3.loot,
+    "me": Command3.me, "say":Command3.me, "mobevent":Command3.mobevent,
+    "music": Command3.music, "particle":Command3.particle, "playanimation":Command3.playanimation,
+    "playsound": Command3.playsound, "replaceitem":Command3.replaceitem, "recipe":Command3.recipe,
+    "ride": Command3.ride, "schedule":Command3.schedule, "scoreboard":Command3.scoreboard,
+    "ride": Command3.ride, "setworldspawn":Command3.setworldspawn, "spawnpoint":Command3.spawnpoint,
+    "ride": Command3.ride, "replaceitem":Command3.replaceitem, "spreadplayers":Command3.spreadplayers,
 
     "structure": Command2.structure, "stopsound": Command2.stopsound, "summon": {(0,0,0):Command2.summon_1_0_0, (1,19,80):Command2.summon_1_70_0}, 
     "tag": Command2.tag, "teleport" : Command2.teleport, "tp" : Command2.teleport, 

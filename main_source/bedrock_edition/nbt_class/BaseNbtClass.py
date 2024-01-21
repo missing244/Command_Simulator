@@ -201,9 +201,8 @@ class entity_nbt :
 
     def __create__(self, Identifier:str, dimension:Literal["overworld","nether","the_end"], pos:List[np.float32], name:str=None) :
         from . import EntityComponent
-        if len(Identifier) == 0 : return None
         self.Identifier = "minecraft:%s" % Identifier if (":" not in Identifier) else Identifier
-        self.Dimension = list(Constants.DIMENSION_INFO).index(dimension)
+        self.Dimension = list(Constants.DIMENSION_INFO).index(dimension) if isinstance(dimension, str) else dimension
         self.Pos = [np.float32(pos[0]), np.float32(pos[1]), np.float32(pos[2])]
 
         EntityComponent.set_component(self)
@@ -280,42 +279,53 @@ class entity_nbt :
         if not hasattr(self,"Passengers") : return None
         passengers_list:List[entity_nbt] = []
         for sit_info in self.Passengers['entity'] :
-            if not isinstance(sit_info['entity'],entity_nbt) :
-                sit_info['entity'] == None ; continue
-            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : 
-                sit_info['entity'] = None ; continue
+            if sit_info['entity'] is not None and not isinstance(sit_info['entity'], entity_nbt) : sit_info['entity'] = None
+            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : sit_info['entity'] = None
+            if sit_info['entity'] is None : continue 
+            if sit_info['entity'].Identifier == "minecraft:player" : continue
             passengers_list.append(sit_info['entity'])
         return passengers_list
 
-    def __sit_update__(self) :
+    def __sit_update__(self, player_list:List["entity_nbt"]=[]) :
         if not hasattr(self,"Passengers") : return None
         
         for sit_info in self.Passengers['entity'] :
-            if not isinstance(sit_info['entity'],entity_nbt) :
-                sit_info['entity'] == None ; continue
-            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : 
-                sit_info['entity'] = None ; continue
+            if sit_info['entity'] is not None and not isinstance(sit_info['entity'], entity_nbt) : sit_info['entity'] = None
+            if player_list and isinstance(sit_info['entity'], entity_nbt) and \
+            sit_info['entity'].Identifier == "minecraft:player" and sit_info['entity'] not in player_list :
+                aa = [i.UniqueID.value for i in player_list]
+                index = aa.index(sit_info['entity'].UniqueID.value)
+                sit_info['entity'] = player_list[index]
+            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : sit_info['entity'] = None
+            if sit_info['entity'] is None : continue
             sit_info['entity'].Pos[0] = self.Pos[0] + sit_info['seat_pos'][0]
             sit_info['entity'].Pos[1] = self.Pos[1] + sit_info['seat_pos'][1]
             sit_info['entity'].Pos[2] = self.Pos[2] + sit_info['seat_pos'][2]
+
+    def __sit_remove_player__(self) :
+        if not hasattr(self,"Passengers") : return None
+        
+        for sit_info in self.Passengers['entity'] :
+            if sit_info['entity'] is not None and not isinstance(sit_info['entity'], entity_nbt) : sit_info['entity'] = None
+            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : sit_info['entity'] = None
+            if sit_info['entity'] is None : continue 
+            if sit_info['entity'].Identifier == "minecraft:player" : sit_info['entity'] = None
 
     def __sit_start_riding__(self, entity_obj) :
         if not hasattr(self,"Passengers") : return False
         if entity_obj.Identifier == "minecraft:warden" : return False
         
         if self.Passengers['family_types'] :
-            test_list = [types1 for types1 in entity_obj.FamilyType if (types1 in self.Passengers['family_types'])] 
-            if not any(test_list) : return False
+            test_list = set(entity_obj.FamilyType) & set(self.Passengers['family_types'])
+            if not test_list : return False
 
         for sit_info in self.Passengers['entity'] :
-            if not isinstance(sit_info['entity'],entity_nbt) :
-                sit_info['entity'] == None ; continue
-            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : 
-                sit_info['entity'] = None ; continue
-            if sit_info['entity'] == None : sit_info['entity'] = entity_obj
-
-        self.__sit_update__()
-        return True
+            if sit_info['entity'] is not None and not isinstance(sit_info['entity'], entity_nbt) : sit_info['entity'] = None
+            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : sit_info['entity'] = None
+            if sit_info['entity'] is not None : continue 
+            sit_info['entity'] = entity_obj 
+            self.__sit_update__()
+            return True
     
     def __sit_stop_riding__(self, entity_list:list) :
         """踢出坐骑"""
@@ -327,13 +337,12 @@ class entity_nbt :
             sss = entity.__get_passengers__()
             if sss and self in sss : break
 
-        if not(sss and self in sss) : return None
+        if "sss" not in locals() or not(sss and self in sss) : return None
 
-        for sit_info in sss[index].Passengers['entity'] :
-            if not isinstance(sit_info['entity'],entity_nbt) :
-                sit_info['entity'] == None ; continue
-            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : 
-                sit_info['entity'] = None ; continue
+        for sit_info in entity.Passengers['entity'] :
+            if sit_info['entity'] is not None and not isinstance(sit_info['entity'], entity_nbt) : sit_info['entity'] = None
+            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : sit_info['entity'] = None
+            if sit_info['entity'] is None : continue 
             if sit_info['entity'] == self : sit_info['entity'] = None
 
         return self
@@ -344,10 +353,9 @@ class entity_nbt :
 
         passengers_list:List[entity_nbt] = []
         for sit_info in self.Passengers['entity'] :
-            if not isinstance(sit_info['entity'],entity_nbt) :
-                sit_info['entity'] == None ; continue
-            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : 
-                sit_info['entity'] = None ; continue
+            if sit_info['entity'] is not None and not isinstance(sit_info['entity'], entity_nbt) : sit_info['entity'] = None
+            if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : sit_info['entity'] = None
+            if sit_info['entity'] is None : continue 
             passengers_list.append(sit_info['entity'])
             sit_info['entity'] = None
 
@@ -501,7 +509,7 @@ class scoreboard_nbt :
         if self.____scb_exists____(board_name) : return Exception
         
         middle1 = {"display_name": "", "predicate": "", "entity_list": {}}
-        if display_name == None : middle1['display_name'] = board_name
+        if display_name is None : middle1['display_name'] = board_name
         else : middle1['display_name'] = display_name
         middle1['predicate'] = predicate
         self.scoreboard_list[board_name] = middle1
@@ -514,10 +522,10 @@ class scoreboard_nbt :
         if self.display_sidebar == board_name : self.display_sidebar = None
         del self.scoreboard_list[board_name]
 
-    def __set_display__(self, display_id:str, board_name:str="") :
-        if not self.____scb_exists____(board_name) : return Exception
+    def __set_display__(self, display_id:str, board_name:str=None) :
+        if board_name is not None and not self.____scb_exists____(board_name) : return Exception
 
-        if board_name == "" :
+        if board_name is None :
             if display_id == "list" : self.display_list = None
             elif display_id == "sidebar" : self.display_sidebar = None
             elif display_id == "belowname" : self.display_belowname = None
@@ -580,15 +588,8 @@ class scoreboard_nbt :
         if score1 == "*" : score1 = -2147483648
         if score2 == "*" : score2 = 2147483647
         func = lambda name:self.____score_exists____(board_name,name) and score1 <= self.____get_score____(board_name,name) <= score2
-        a = filter(func, [self.ID_tracker(i) for i in entity_list])
+        a = filter(func, entity_list)
         return list(a)
-
-    def __list_score__(self, entity_list:List[Union[entity_nbt,str]]) :
-        query_list:List[str] = []
-        for name,scb in itertools.product( [self.ID_tracker(i) for i in entity_list], list(self.scoreboard_list) ) :
-            if not self.____score_exists____(scb, name) : continue
-            query_list.append("实体 %s 在计分板 %s 计分: %s" % (name, scb, self.____get_score____(name, scb)))
-        return query_list
 
 
     def __equral_entity_score__(self, entity1:entity_nbt, board_name1:str, entity_list2:List[Union[entity_nbt,str]], board_name2:str) :
@@ -696,9 +697,9 @@ class scoreboard_nbt :
             value1,value2 = self.____get_score____(board_name1, name1), self.____get_score____(board_name2, name2)
             if value2 == 0 : continue
             div_value, mod_value = divmod(value1, value2)
-            if value1 < 0 and value2 > 0 : 
+            if mod_value != 0 and value1 < 0 and value2 > 0 : 
                 div_value += 1 ; mod_value -= value2
-            elif value1 > 0 and value2 < 0 : 
+            elif mod_value != 0 and  value1 > 0 and value2 < 0 : 
                 div_value -= 1 ; mod_value -= value2
             self.scoreboard_list[board_name1]['entity_list'][name1] = div_value
 
@@ -715,9 +716,9 @@ class scoreboard_nbt :
             value1,value2 = self.____get_score____(board_name1, name1), self.____get_score____(board_name2, name2)
             if value2 == 0 : continue
             div_value, mod_value = divmod(value1, value2)
-            if value1 < 0 and value2 > 0 : 
+            if mod_value != 0 and value1 < 0 and value2 > 0 : 
                 div_value += 1 ; mod_value -= value2
-            elif value1 > 0 and value2 < 0 : 
+            elif mod_value != 0 and value1 > 0 and value2 < 0 : 
                 div_value -= 1 ; mod_value -= value2
             self.scoreboard_list[board_name1]['entity_list'][name1] = mod_value
 
@@ -780,7 +781,7 @@ class chunk_nbt :
 
 
     def ____find_block_mapping____(self, block_id:dict, block_info:Union[int,dict], block_obj:block_nbt=None) :
-        if block_obj == None : block_obj = block_nbt().__create__(block_id,block_info)
+        if block_obj is None : block_obj = block_nbt().__create__(block_id,block_info)
 
         for index in range(len(self.block_mapping)) :
             test1 = block_obj.Identifier == self.block_mapping[index].Identifier
@@ -868,7 +869,7 @@ class chunk_nbt :
             if item_obj.Count > 0 : place_item(nbt['Items'], index)
 
 
-    def __get_all_load_entity__(self, is_player:bool=False) :
+    def __get_all_load_entity__(self, is_player:bool=False, has_passengers:bool=True) :
         entity_list : List[entity_nbt] = []
         if not is_player :
             for dimension_id in self.loading_chunk :
@@ -877,16 +878,17 @@ class chunk_nbt :
             entity_list.extend(self.out_load_entity)
         entity_list.extend(self.player)
         
-        start_index = 0
-        while start_index < entity_list.__len__() :
-            if hasattr(entity_list[start_index], "Passengers") :
-                for entity in entity_list[start_index].Passengers['entity'] :
-                    if not isinstance(entity['entity'], entity_nbt) : continue
-                    if hasattr(entity['entity'], "Health") and entity['entity'].Health <= 0 : 
-                        entity['entity'] = None
-                        continue
-                    entity_list.append(entity['entity'])
-            start_index += 1
+        if has_passengers :
+            start_index = 0
+            while start_index < entity_list.__len__() :
+                if hasattr(entity_list[start_index], "Passengers") :
+                    for entity in entity_list[start_index].Passengers['entity'] :
+                        if not isinstance(entity['entity'], entity_nbt) : continue
+                        if hasattr(entity['entity'], "Health") and entity['entity'].Health <= 0 : 
+                            entity['entity'] = None
+                            continue
+                        entity_list.append(entity['entity'])
+                start_index += 1
 
         return entity_list
 
@@ -897,8 +899,7 @@ class chunk_nbt :
         random.seed("%s%s" % (seed,chunk_pos))
         choose_biome : List[str] = []
         for i in range(1 if random.random() > 0.01 else 2) : 
-            a = random.choice(list_biome)
-            if a not in list_biome : choose_biome.append(a)
+            choose_biome.append(random.choice(list_biome))
         random.seed()
         return choose_biome
 
@@ -950,8 +951,19 @@ class chunk_nbt :
         self.command_block_compile_function[command] = compile_func
 
 
-    def __remove_entity__(self, *entity_list:entity_nbt) :
+    def __add_entity__(self, *entity_list:entity_nbt) :
         for entity1 in entity_list :
+            if entity1.Identifier == "minecraft:player" : continue
+            chunk_pos = (math.floor(entity1.Pos[0])//16*16, math.floor(entity1.Pos[2])//16*16)
+            entity_chunk_list = self.loading_chunk[DIMENSION_LIST[entity1.Dimension]]
+            if chunk_pos not in entity_chunk_list and entity1 not in self.out_load_entity :
+                self.out_load_entity.append(entity1)
+            elif chunk_pos in entity_chunk_list and entity1 not in entity_chunk_list[chunk_pos]["entities"] : 
+                entity_chunk_list[chunk_pos]["entities"].append(entity1)
+
+    def __remove_entity__(self, *entity_list:entity_nbt, scoreboard_obj:scoreboard_nbt=None) :
+        for entity1 in entity_list :
+            if entity1.Identifier == "minecraft:player" : continue
             chunk_pos = (math.floor(entity1.Pos[0])//16*16, math.floor(entity1.Pos[2])//16*16)
             entity_chunk = self.loading_chunk[DIMENSION_LIST[entity1.Dimension]]
             if chunk_pos not in entity_chunk :
@@ -960,10 +972,12 @@ class chunk_nbt :
             else :
                 entity_chunk_list = entity_chunk[chunk_pos]["entities"]
                 if entity1 in entity_chunk_list : entity_chunk_list.remove(entity1)
+            if scoreboard_obj : scoreboard_obj.__reset_score__((entity1,))
 
-    def __summon_entity__(self, difficulty:int, dimension_id:Literal["overworld","nether","the_end"], entity_id:str, 
+    def __summon_entity__(self, difficulty:int, dimension_id:Union[int,Literal["overworld","nether","the_end"]], entity_id:str, 
                           pos:List[Union[float,np.float32]], name:str=None, event:str=None) :
         from .. import EntityComponent
+        if not isinstance(dimension_id, str) : dimension_id = DIMENSION_LIST[dimension_id]
         entity_1 = entity_nbt().__create__(entity_id, dimension_id, pos, name)
 
         if "mob" in entity_1.FamilyType :
@@ -1041,10 +1055,10 @@ class chunk_nbt :
             if DIMENSION[entity.Dimension] == destination_dimension : continue
 
             if chunk_data1 and (entity in chunk_data1[chunk_pos_1]['entities']) : chunk_data1[chunk_pos_1]['entities'].remove(entity)
-            elif (chunk_data1 == None) and (entity in self.out_load_entity) : self.out_load_entity.remove(entity)
+            elif (chunk_data1 is None) and (entity in self.out_load_entity) : self.out_load_entity.remove(entity)
 
             if chunk_data2 and (entity not in chunk_data2[chunk_pos_2]['entities']) : chunk_data2[chunk_pos_2]['entities'].append(entity)
-            elif (chunk_data2 == None) and (entity in self.out_load_entity) : self.out_load_entity.append(entity)
+            elif (chunk_data2 is None) and (entity in self.out_load_entity) : self.out_load_entity.append(entity)
         
         return success_list
 
@@ -1161,7 +1175,7 @@ class structure_nbt :
         self.BlockMap = chunk.block_mapping.copy()
 
         if Entities :
-            entity_list = [i for i in chunk.__get_all_load_entity__() if i.Identifier != "minecraft:player"]
+            entity_list = [i for i in chunk.__get_all_load_entity__(has_passengers=False) if i.Identifier != "minecraft:player"]
             func = lambda posx,posy,posz : (
                 start_pos_setting[0] <= math.floor(posx) <= end_pos_setting[0] and
                 start_pos_setting[1] <= math.floor(posy) <= end_pos_setting[1] and
@@ -1169,6 +1183,11 @@ class structure_nbt :
             )
             def change_pos(entity:entity_nbt) :
                 entity = copy.deepcopy(entity)
+                passengers = entity.__get_passengers__() ; index = 0
+                while index < len(passengers) :
+                    passengers[index].__sit_remove_player__()
+                    passengers.extend(passengers[index].__get_passengers__())
+                    index += 1
                 for i in range(3) : entity.Pos[i] -= np.float32(start_pos_setting[i])
                 return entity
             self.Entity = [change_pos(i) for i in entity_list if func(i.Pos[0], i.Pos[1], i.Pos[2])]
@@ -1188,7 +1207,7 @@ class structure_nbt :
 
         return self
 
-    def __output__(self, chunk:chunk_nbt, dimension_id:Literal["overworld","nether","the_end"],
+    def __output__(self, chunk:chunk_nbt, dimension_id:Literal["overworld","nether","the_end"], 
                    start_pos:List[float], Rotation:Literal["0_degrees","90_degrees","180_degrees","270_degrees"]="0_degrees", 
                    Mirror:Literal["none","x","z","xz"]="none", Entities:bool=True, Blocks:bool=True, 
                    Present:float=100, Seed:str=None):
@@ -1229,9 +1248,13 @@ class structure_nbt :
                 en2_rotation = MathFunction.rotation_angle([0,0,0],en2_pos_trans)
                 en2.Rotation[0] = np.float32(en2_rotation[0])
                 en2.Rotation[1] = np.float32(en2_rotation[1])
-                passengers = en2.__get_passengers__()
-                if passengers : [(i.__reload_UID__(), i.__sit_update__()) for i in passengers]
-                if not chunk.____in_load_chunk____(dimension_id, en2.Pos) :
+                passengers = en2.__get_passengers__() ; index = 0
+                while index < len(passengers) :
+                    passengers[index].__sit_update__()
+                    passengers[index].__reload_UID__()
+                    passengers.extend(passengers[index].__get_passengers__())
+                    index += 1
+                if chunk.____in_load_chunk____(dimension_id, en2.Pos) :
                     chunk_pos = (math.floor(en2.Pos[0])//16*16, math.floor(en2.Pos[2])//16*16)
                     chunk.loading_chunk[dimension_id][chunk_pos]['entities'].append(en2)
                 else : chunk.out_load_entity.append(en2)

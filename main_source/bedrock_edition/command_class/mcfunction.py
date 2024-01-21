@@ -41,7 +41,7 @@ def Function_Checker(_game:RunTime.minecraft_thread, version:List[int], mcfuncti
     function_save = _game.minecraft_ident.functions
 
     for file_path in FileOperation.file_in_path(mcfunction_path) :
-        if MCFUNCTION_FILE.search(file_path) == None : continue
+        if MCFUNCTION_FILE.search(file_path) is None : continue
         mcfunc_path = file_path.replace(mcfunction_path, "", 1)
         file_content = FileOperation.read_a_file(file_path)
         if isinstance(file_content, tuple) : mcfunction_encoding_error.append(file_path) ; continue
