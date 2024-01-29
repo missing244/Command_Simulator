@@ -124,8 +124,9 @@
 				this.now_detial = (page1 - 1) * this.every_detail_in_page ;
 				for (let page_loop = 0 ; page_loop < this.max_detial ; page_loop++) {
 					let id_name = "gametick_" + this.tick.toString() + "->" + page_loop.toString();
-					if ((this.now_detial <= page_loop) & (page_loop < this.now_detial + this.every_detail_in_page)) document.getElementById(id_name).style.display = "" ;
-					else document.getElementById(id_name).style.display = "none" ; 
+					let id_list = document.querySelectorAll("[id='"+ id_name +"']")
+					if ((this.now_detial <= page_loop) & (page_loop < this.now_detial + this.every_detail_in_page)) id_list.forEach((item) => {item.style.display = ""})
+					else id_list.forEach((item) => {item.style.display = "none"}) ; 
 				}
 				this.set_display_text();
 			}

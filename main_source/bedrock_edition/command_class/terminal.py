@@ -59,7 +59,7 @@ def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) -> Union[Exception,
 
 def command_reload(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) :
     index = 1
-    if index >= len(token_list) : return reload_doing
+    if index >= len(token_list) : return functools.partial(reload_doing)
 
     index += 1
     if index >= len(token_list) : return functools.partial(reload_doing, cb_view=token_list[-1]["token"].group())
@@ -120,18 +120,18 @@ def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List
     if token_list[1]["token"].group() == "loop" : 
         command_object = CommandCompiler.Start_Compile(token_list[2:], _game.game_version, _game)
         if isinstance(command_object, tuple) : return command_object[1]
-        return functools.partial(command_loop, _command=command[token_list[2]["token"].start()], command_obj=command_object)
+        return functools.partial(command_loop, command=command[token_list[2]["token"].start():], command_obj=command_object)
     elif token_list[1]["token"].group() == "delay" : 
         if int(token_list[2]["token"].group()) < 0 : 
             return CommandCompiler.CompileError("延时时间不能为负数", pos=(token_list[2]["token"].start(),token_list[2]["token"].end()))
         command_object = CommandCompiler.Start_Compile(token_list[3:], _game.game_version, _game)
         if isinstance(command_object, tuple) : return command_object[1]
-        return functools.partial(command_delay, _time=int(token_list[2]["token"].group()),
-        command=command[token_list[3]["token"].start()], command_obj=command_object)
+        return functools.partial(command_delay, time=int(token_list[2]["token"].group()),
+        command=command[token_list[3]["token"].start():], command_obj=command_object)
     elif token_list[1]["token"].group() == "end" : 
         command_object = CommandCompiler.Start_Compile(token_list[2:], _game.game_version, _game)
         if isinstance(command_object, tuple) : return command_object[1]
-        return functools.partial(command_end, _command=command[token_list[2]["token"].start()], command_obj=command_object)
+        return functools.partial(command_end, command=command[token_list[2]["token"].start():], command_obj=command_object)
 
 def command_loop(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:Callable) :
     _game.runtime_variable.command_will_loop.append( (command, command_obj) )

@@ -116,10 +116,11 @@ Selector_Parser = CommandParser.ParserSystem.Command_Parser(
 
 from . import selector as Selector
 from . import rawtext as Rawtext
-from . import command_0 as Command0
 from . import command_1 as Command1
 from . import command_2 as Command2
+from . import command_0 as Command0
 from . import command_3 as Command3
+from . import command_4 as Command4
 
 be_command_list = [
     'ability', 'alwaysday', 'camera', 'camerashake', 'clear', 'clearspawnpoint', 'clone', 'damage', 'daylock', 'dialogue',
@@ -133,6 +134,8 @@ be_command_list = [
 
 Command_to_Compiler = {
     # key:class or key:{tuple:class}
+    "execute": {(0,0,0):Command0.execute_1_19, (1,19,50):Command0.execute_1_19_50}, "function":Command0.function,
+
     "ability": Command1.ability, "alwaysday": Command1.alwaysday, "camera": Command1.camera,
     "camerashake": Command1.camerashake, "clear": Command1.clear, "clearspawnpoint": Command1.clearspawnpoint,
     "clone": Command1.clone, "damage": Command1.damage, "daylock": Command1.daylock,
@@ -146,8 +149,8 @@ Command_to_Compiler = {
     "music": Command3.music, "particle":Command3.particle, "playanimation":Command3.playanimation,
     "playsound": Command3.playsound, "replaceitem":Command3.replaceitem, "recipe":Command3.recipe,
     "ride": Command3.ride, "schedule":Command3.schedule, "scoreboard":Command3.scoreboard,
-    "ride": Command3.ride, "setworldspawn":Command3.setworldspawn, "spawnpoint":Command3.spawnpoint,
-    "ride": Command3.ride, "replaceitem":Command3.replaceitem, "spreadplayers":Command3.spreadplayers,
+    "setblock": Command3.setblock, "setworldspawn":Command3.setworldspawn, "spawnpoint":Command3.spawnpoint,
+    "spreadplayers":Command3.spreadplayers,
 
     "structure": Command2.structure, "stopsound": Command2.stopsound, "summon": {(0,0,0):Command2.summon_1_0_0, (1,19,80):Command2.summon_1_70_0}, 
     "tag": Command2.tag, "teleport" : Command2.teleport, "tp" : Command2.teleport, 
@@ -155,11 +158,13 @@ Command_to_Compiler = {
     "testforblocks" : Command2.testforblocks, "tickingarea" : Command2.tickingarea, "time" : Command2.time, 
     "title" : Command2.titleraw, "titleraw" : Command2.titleraw, "toggledownfall" : Command2.toggledownfall,
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,
-    "w" : Command2.tell, "weather" : Command2.weather, "xp" : Command2.xp
+    "w" : Command2.tell, "weather" : Command2.weather, "xp" : Command2.xp,
+
+    "hud" : Command4.hud,
 }
 
-def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], 
-                  version:Tuple[int], _game:RunTime.minecraft_thread) -> Union[functools.partial,Tuple[str,Exception],None] :
+def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], _game:RunTime.minecraft_thread, 
+                  version:Tuple[int]) -> Union[functools.partial,Tuple[str,Exception],None] :
     if token_list[0]["type"] != "Command" : return None
     command_name = token_list[0]["token"].group()
     if command_name not in Command_to_Compiler : return None
@@ -173,7 +178,9 @@ def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Matc
             if version_int2 > version_int1 : func = Command_to_Compiler[command_name][func_version_list[version_index-1]]
         if not func : func = Command_to_Compiler[command_name][func_version_list[-1]]
 
-    try : return func.__compiler__(_game, token_list)
+    try : 
+        if command_name == "execute" : return func.__compiler__(_game, token_list, version)
+        else : return func.__compiler__(_game, token_list)
     except Exception as e :
         if hasattr(e,"pos") : s = "%s\n错误位于字符%s至%s" % (e.args[0], e.pos[0], e.pos[1])
         else : s = e.args[0]

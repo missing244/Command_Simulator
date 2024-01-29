@@ -119,8 +119,12 @@ class item_nbt :
 
     def __create__(self, Identifier:str, Count=1, Damage=0, nbt:dict={}):
         if len(Identifier) == 0 or Identifier == "minecraft:air" : return None
+        
+        if Identifier in Constants.IDENTIFIER_TRANSFORM['item']['id_transfor'] : 
+            self.Identifier = Constants.IDENTIFIER_TRANSFORM['item']['id_transfor'][Identifier]['item_id']
+            Damage = Constants.IDENTIFIER_TRANSFORM['block']['id_transfor'][Identifier]['item_data']['value']
+        else : self.Identifier = "minecraft:%s" % Identifier if ":" not in Identifier else Identifier
 
-        self.Identifier = "minecraft:%s" % Identifier if ":" not in Identifier else Identifier
         self.Count = np.int8(Count)
         self.Damage = np.int16(0) if self.Identifier in Constants.GAME_DATA["damage_tool"] else np.int16(Damage)
         if self.Identifier in Constants.GAME_DATA["damage_tool"] : self.tags["damage"] = np.int16(Damage)
@@ -343,7 +347,7 @@ class entity_nbt :
             if sit_info['entity'] is not None and not isinstance(sit_info['entity'], entity_nbt) : sit_info['entity'] = None
             if hasattr(sit_info['entity'], "Health") and sit_info['entity'].Health <= 0 : sit_info['entity'] = None
             if sit_info['entity'] is None : continue 
-            if sit_info['entity'] == self : sit_info['entity'] = None
+            if sit_info['entity'] is self : sit_info['entity'] = None
 
         return self
 
@@ -442,8 +446,8 @@ class block_nbt :
                 nbt1['Item']['Count'] = np.int8( item_of_loot[list(item_of_loot)[0]] )
 
             item_name = nbt1["Item"]["Identifier"].replace("minecraft:","",1)
-            nbt1["Display"]["Name"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name)
-            nbt1["CustomName"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name)
+            nbt1['Item']['tags']["Display"]["Name"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name).split("/")[0]
+            nbt1["CustomName"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name).split("/")[0]
 
             return entity_nbt().__create__("minecraft:item", dimension, pos).__force_write_nbt__(nbt1)
 
@@ -1107,7 +1111,7 @@ class chunk_nbt :
 
     def ____save_outload_chunk_data____(self, world_name:str) :
         for keys in self.loading_chunk :
-            for load_chunk in self.loading_chunk[keys] :
+            for load_chunk in list(self.loading_chunk[keys]) :
                 if load_chunk in Constants.COMMAND_BLOCK_LOAD_CHUNK : continue #不进行储存
                 if load_chunk in self.loading_chunk_pos[keys] : continue
                 db_tuple = (load_chunk[0]//400*400, load_chunk[1]//400*400)
@@ -1118,6 +1122,8 @@ class chunk_nbt :
                 save_index = save_chunk_pos[1] * 25 + save_chunk_pos[0]
                 json1 = json.dumps(self.loading_chunk[keys][load_chunk], default=DataSave.encoding)
                 self.loading_db_file[keys][db_file_path][save_index] = DataSave.string_to_zip(json1)
+                
+                del self.loading_chunk[keys][load_chunk]
 
     def ____save_and_write_db_file____(self, world_name:str) :
         for keys in self.loading_chunk :

@@ -21,7 +21,7 @@ class dynamic_source :
 
         self.dialogues = {}
         self.volumeareas = {}
-        self.functions:Dict[str, Dict[Literal["crc32", "command"], Union[int, List[Tuple[str,functools.partial]] ]]] = {}
+        self.functions:Dict[str, Dict[Literal["mtime", "command"], Union[int, List[Tuple[str,functools.partial]] ]]] = {}
         self.camera_persets = {}
 
 class runtime_variable :
@@ -110,6 +110,7 @@ class minecraft_thread :
         for dis in Constants.DIMENSION_INFO : os.makedirs(os.path.join("save_world", self.world_name, "chunk_info", dis),exist_ok=True)
 
         for id_regs in Constants.IDENTIFIER_TRANSFORM['block']['id_register'] : self.minecraft_ident.blocks[id_regs] = {}
+        for id_regs in Constants.IDENTIFIER_TRANSFORM['item']['id_register'] : self.minecraft_ident.items[id_regs] = {}
 
         if ("verification_challenge" not in self.world_infomation) or (not self.world_infomation['verification_challenge']) :  
             self.visualization_object = ExpandPackAPI.visualization(self)

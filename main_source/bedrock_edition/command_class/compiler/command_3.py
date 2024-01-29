@@ -4,7 +4,7 @@ from . import Selector,Rawtext,CompileError,CommandParser,Command0
 from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler,Msg_Compiler,ItemComponent_Compiler
 import functools,string,random,math,itertools,json
 from typing import Dict,Union,List,Tuple,Literal,Callable
-
+DISTANCE_FUNC = lambda pos1x,pos1z,pos2x,pos2z: (pow(pos1x-pos2x, 2) + pow(pos1z-pos2z, 2)) ** 0.5
 
 
 class inputpermission :
@@ -80,7 +80,8 @@ class kill :
     def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable=None) :
         entity_list = entity_get(execute_var, game) if entity_get else [execute_var["executer"]]
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        if not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
+        entity_list = [i for i in entity_list if i.Identifier != "minecraft:player" or i.GameMode != 1]
+        if len(entity_list) == 0 or not isinstance(entity_list[0], BaseNbtClass.entity_nbt) : 
             return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
 
         for entity in entity_list : 
@@ -435,7 +436,7 @@ class particle :
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         particle_id = Quotation_String_transfor_1(token_list[1]["token"].group())
         if particle_id not in _game.minecraft_ident.particles : raise CompileError("不存在的粒子ID：%s" % particle_id, 
-            pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+            pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
         if 2 >= len(token_list) : return functools.partial(cls.run, particle_id=particle_id)
         pos = [token_list[i]["token"].group() for i in range(2,5,1)]
         return functools.partial(cls.run, particle_id=particle_id, pos=pos)
@@ -1174,7 +1175,42 @@ class setblock :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         pos = [ token_list[i]["token"].group() for i in range(1,4,1) ]
-        block_id = ID_transfor(token_list[4]["token"].group())
+        block_id = ID_transfor(token_list[4]["token"].group()) ; index = 5
+        if block_id not in _game.minecraft_ident.blocks :
+            raise CompileError("不存在的方块ID：%s" % block_id, pos=(token_list[4]["token"].start(), token_list[4]["token"].end()))
+        if index >= len(token_list) : return functools.partial(cls.run, pos=pos, block_id=block_id)
+
+        if token_list[index]["type"] == "Block_Data" : 
+            block_state = int(token_list[index]["token"].group())
+            if not(0 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
+            pos=(token_list[index]["token"].start(), token_list[13]["token"].end()))
+            if block_state == -1 : block_state = {}
+            index += 1
+        else : index, block_state = BlockState_Compiler( block_id, token_list, index )
+        if index >= len(token_list) : return functools.partial(cls.run, pos=pos, block_id=block_id, block_state=block_state)
+        return functools.partial(cls.run, pos=pos, block_id=block_id, block_state=block_state, mode=token_list[index]["token"].group())
+    
+    def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str], block_id:str, block_state:Union[dict,int]=0, 
+            mode:Literal["replace","keep","destroy"]="replace") :
+        set_pos = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
+        height_test = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"]
+        if not(height_test[0] <= set_pos[1] < height_test[1]) :
+            return Response.Response_Template("$pos处于世界之外").substitute(pos=tuple(set_pos))
+        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], set_pos) :
+            return Response.Response_Template("$pos为未加载的区块").substitute(pos=tuple(set_pos))
+        
+        new_block_index = game.minecraft_chunk.____find_block_mapping____(block_id, block_state)
+        if  (mode == "replace" and game.minecraft_chunk.____find_block____(execute_var["dimension"], set_pos) != new_block_index) or \
+            (mode == "keep" and game.minecraft_chunk.____find_block____(execute_var["dimension"], set_pos) == 0) or \
+            (mode == "destroy"):
+            if mode == "destroy" : 
+                block_obj = game.minecraft_chunk.block_mapping[game.minecraft_chunk.____find_block____(execute_var["dimension"], set_pos)]
+                a = block_obj.__change_to_entity__(execute_var["dimension"], [i+0.5 for i in set_pos])
+                game.minecraft_chunk.__add_entity__(a)
+            game.minecraft_chunk.____set_block____(execute_var["dimension"], set_pos, new_block_index)
+            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], set_pos, None)
+            return Response.Response_Template("已在$pos放置了指定的方块", 1, 1).substitute(pos=tuple(set_pos))
+        else : return Response.Response_Template("无法在$pos放置指定的方块").substitute(pos=tuple(set_pos))
 
 
 class setworldspawn :
@@ -1224,9 +1260,95 @@ class spawnpoint :
 class spreadplayers :
 
     @classmethod
-    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) : pass
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) : 
+        pos = [ token_list[i]["token"].group() for i in range(1,3,1) ] ; pos.insert(1,"~")
+        distance = float(token_list[3]["token"].group())
+        if distance <= 0 : raise CompileError("散播距离应该为正数", pos=(token_list[3]["token"].start(), token_list[3]["token"].end()))
+        range1 = float(token_list[4]["token"].group())
+        if range1 + 1 < distance : raise CompileError("散播距离应该比区域范围大1", pos=(token_list[4]["token"].start(), token_list[4]["token"].end()))
+        index, entity_func = Selector.Selector_Compiler(_game, token_list, 5)
+        return functools.partial(cls.run, entity_get=entity_func, pos=pos, distance=distance, range1=range1)
 
+    def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, pos:List[str], distance:float, range1:float) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        start_pos = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
+        start_pos[0] += 0.5 ; start_pos[2] += 0.5
 
+        flag = False
+        area_height_min = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"][0]
+        area_height_max = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"][1]
+        range_var = (start_pos[0]-range1, start_pos[0]+range1, start_pos[2]-range1, start_pos[2]+range1)
+        pos_list:List[List[float]] = [[random.uniform(range_var[0], range_var[1]), area_height_max, 
+        random.uniform(range_var[2], range_var[3])] for i in range(len(entity_list))]
+        
+        for times in range(1001) :
+            if times == 1000 : continue
+            if not flag : break
+            flag = False
 
+            for index, (posx, _, posz) in enumerate(pos_list) :
+                smaller_than_distance_count = 0
+                diffrence_x, diffrence_z = 0, 0
+                for index1, (pos1x, _, pos1z) in enumerate(pos_list) :
+                    if index == index1 : continue
+                    if DISTANCE_FUNC(posx, posz, pos1x, pos1z) >= distance : continue
+                    diffrence_x += pos1x - posx
+                    diffrence_z += pos1z - posz
+                    smaller_than_distance_count += 1
+
+                if smaller_than_distance_count :
+                    diffrence_x /= smaller_than_distance_count
+                    diffrence_z /= smaller_than_distance_count
+                    if diffrence_x == diffrence_z == 0 : 
+                        pos_list[index][0] = random.uniform(range_var[0], range_var[1])
+                        pos_list[index][2] = random.uniform(range_var[2], range_var[3])
+                    else :
+                        dis = DISTANCE_FUNC(0, 0, diffrence_x, diffrence_z)
+                        diffrence_x /= dis ; diffrence_z /= dis
+                        pos_list[index][0] -= diffrence_x
+                        pos_list[index][2] -= diffrence_z
+                    flag = True
+            
+                if not(range_var[0] <= pos_list[index][0] <= range_var[1]) or not(range_var[2] <= pos_list[index][2] <= range_var[3]) :
+                    if pos_list[index][0] < range_var[0] : pos_list[index][0] = range_var[0]
+                    if pos_list[index][0] > range_var[1] : pos_list[index][0] = range_var[1]
+                    if pos_list[index][2] < range_var[2] : pos_list[index][2] = range_var[2]
+                    if pos_list[index][2] > range_var[3] : pos_list[index][2] = range_var[3]
+                    flag = True
+
+            if not flag :
+                for pos in pos_list :
+                    if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], pos) : continue
+                    while pos[1] > area_height_min : 
+                        pos[1] -= 1
+                        block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], pos)
+                        block_obj = game.minecraft_chunk.block_mapping[block_index]
+                        if block_obj.Identifier == "minecraft:air" : continue
+                        break
+                    if block_obj.Identifier in ("minecraft:fire", "minecraft:lava", "minecraft:water", "minecraft:air") :
+                        pos_list[index][0] = random.uniform(range_var[0], range_var[1])
+                        pos_list[index][1] = area_height_max
+                        pos_list[index][2] = random.uniform(range_var[2], range_var[3])
+                        flag = True
+                    
+        if times == 1000 : return Response.Response_Template("在规定的次数内未找到合适的散步位置").substitute()
+        
+        for pos in pos_list :
+            if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], pos) : continue
+            while pos[1] > area_height_min : 
+                pos[1] -= 1
+                block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], pos)
+                block_obj = game.minecraft_chunk.block_mapping[block_index]
+                if block_obj.Identifier != "minecraft:air" : pos[1] += 1 ; break
+
+        msg_list = []
+        for entity, posess in zip(entity_list, pos_list) : 
+            entity.Pos[0] = np.float32(math.floor(posess[0]) + 0.5)
+            entity.Pos[1] = np.float32(posess[1])
+            entity.Pos[2] = np.float32(math.floor(posess[2]) + 0.5)
+            msg_list.append("%s 的坐标 %s" % (ID_tracker(entity), tuple(entity.Pos)))
+        
+        return Response.Response_Template("已将下列实体进行散布：\n$msg", 1, len(entity_list)).substitute(msg="\n".join(msg_list))
 
         

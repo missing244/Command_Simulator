@@ -27,6 +27,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:acacia_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:acacia_log": {
     "damage_max": null,
     "can_enchant": []
@@ -40,6 +44,10 @@
     "can_enchant": []
   },
   "minecraft:acacia_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:acacia_slab": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -311,6 +319,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:birch_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:birch_log": {
     "damage_max": null,
     "can_enchant": []
@@ -324,6 +336,10 @@
     "can_enchant": []
   },
   "minecraft:birch_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_slab": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1206,6 +1222,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:dark_oak_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:dark_oak_log": {
     "damage_max": null,
     "can_enchant": []
@@ -1219,6 +1239,10 @@
     "can_enchant": []
   },
   "minecraft:dark_oak_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_slab": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2016,7 +2040,7 @@
     "damage_max": null,
     "can_enchant": []
   },
-  "minecraft:grass": {
+  "minecraft:grass_block": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2412,6 +2436,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:jungle_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:jungle_log": {
     "damage_max": null,
     "can_enchant": []
@@ -2425,6 +2453,10 @@
     "can_enchant": []
   },
   "minecraft:jungle_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_slab": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2542,14 +2574,6 @@
       "thorns",
       "unbreaking"
     ]
-  },
-  "minecraft:leaves": {
-    "damage_max": null,
-    "can_enchant": []
-  },
-  "minecraft:leaves2": {
-    "damage_max": null,
-    "can_enchant": []
   },
   "minecraft:lectern": {
     "damage_max": null,
@@ -3225,6 +3249,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:oak_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:oak_log": {
     "damage_max": null,
     "can_enchant": []
@@ -3234,6 +3262,10 @@
     "can_enchant": []
   },
   "minecraft:oak_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_slab": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4158,6 +4190,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:spruce_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:spruce_log": {
     "damage_max": null,
     "can_enchant": []
@@ -4171,6 +4207,10 @@
     "can_enchant": []
   },
   "minecraft:spruce_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:spruce_slab": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4889,10 +4929,6 @@
       "silk_touch",
       "unbreaking"
     ]
-  },
-  "minecraft:wooden_slab": {
-    "damage_max": null,
-    "can_enchant": []
   },
   "minecraft:wooden_sword": {
     "damage_max": 59,

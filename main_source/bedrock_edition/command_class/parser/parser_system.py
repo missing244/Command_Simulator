@@ -43,7 +43,7 @@ class Command_Parser :
         self.current_leaves = self.Tree
 
     def _version_compare(self, leaves:BaseMatch.Match_Base) :
-        if leaves.maximum_version == leaves.minimum_version is None : return True
+        if leaves.maximum_version is leaves.minimum_version is None : return True
 
         if leaves.maximum_version is None : max_v = (250,0,0)
         else : max_v = leaves.maximum_version

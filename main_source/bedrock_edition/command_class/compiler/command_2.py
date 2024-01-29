@@ -201,6 +201,7 @@ class summon_1_70_0 :
             return functools.partial(cls.summon_entity, entity_id=entity_id, entity_name=entity_name, pos=pos)
         else :
             pos = [token_list[2+i]["token"].group() for i in range(3)]
+            if 5 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, pos=pos)
             if token_list[5]["type"] in ("Absolute_Rotation", "Relative_Rotation") :
                 if 6 >= len(token_list) : return functools.partial(cls.summon_entity, entity_id=entity_id, 
                     pos=pos, facing=(token_list[5]["token"].group(),"~"))
@@ -509,7 +510,6 @@ class testforblock :
         if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], start_pos) :
             return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos))
 
-
         aaa = Response.Response_Template("$pos方块与目标方块不相同").substitute(pos=tuple(start_pos))
         if isinstance(block_state, int) and block_state != -1 :
             test_block_obj = BaseNbtClass.block_nbt().__create__(block_id, block_state)
@@ -540,18 +540,18 @@ class testforblocks :
         height_test = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"]
         for i,j in [("起始位置", start_pos1),("结束位置", end_pos1),("目标起始位置", start_pos2),("目标结束位置", end_pos2)] :
             if not(height_test[0] <= j[1] < height_test[1]) :
-                return Response.Response_Template("$id$pos处于世界之外").substitute(id=i, pos=tuple(j))
+                return Response.Response_Template("$id$pos处于世界之外",response_id=-2147483000).substitute(id=i, pos=tuple(j))
 
         for j in itertools.product(range(start_pos1[0]//16*16, end_pos1[0]//16*16+16, 16), range(start_pos1[2]//16*16, end_pos1[2]//16*16+16, 16)) :
             if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], (j[0],0,j[1])) :
-                return Response.Response_Template("起始区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+                return Response.Response_Template("起始区域$pos为未加载的区块",response_id=-2147483001).substitute(pos=tuple(start_pos1))
 
         for j in itertools.product(range(start_pos2[0]//16*16, end_pos2[0]//16*16+16, 16), range(start_pos2[2]//16*16, end_pos2[2]//16*16+16, 16)) :
             if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], (j[0],0,j[1])) :
-                return Response.Response_Template("目标区域$pos为未加载的区块").substitute(pos=tuple(start_pos1))
+                return Response.Response_Template("目标区域$pos为未加载的区块",response_id=-2147483002).substitute(pos=tuple(start_pos1))
 
     def test(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start1:tuple, end1:tuple, start2:tuple,
-             mask_mode:Literal["all","masked"]="all") :
+             mask_mode:Literal["all","masked"]="all", max_block:int=524288) :
         start_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], start1, execute_var["rotate"])]
         end_pos1 = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], end1, execute_var["rotate"])]
         for index,(pos_1,pos_2) in enumerate(itertools.zip_longest(start_pos1, end_pos1)) :
@@ -563,7 +563,8 @@ class testforblocks :
         if isinstance(aaa, Response.Response_Template) : return aaa
 
         volue = [end_pos1[i] - start_pos1[i] + 1 for i in range(3)]
-        if volue[0] * volue[1] * volue[2] > 524288 : return Response.Response_Template("区域大小超过524288个方块").substitute()
+        if volue[0] * volue[1] * volue[2] > max_block : 
+            return Response.Response_Template("区域大小超过524288个方块",response_id=-2147483003).substitute()
 
 
         pos_iter = itertools.zip_longest(
@@ -575,12 +576,14 @@ class testforblocks :
             start_block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], start_pos_xyz)
             test_block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], test_pos_xyz)
             if mask_mode == "masked" and start_block_index == 0 : continue
-            if start_block_index != test_block_index : return Response.Response_Template("区域内存在不相同的方块").substitute()
+            if start_block_index != test_block_index : 
+                return Response.Response_Template("区域$start ~ $end内存在不相同的方块").substitute(start=tuple(start_pos2), end=tuple(end_pos2))
             start_block_nbt = game.minecraft_chunk.____find_block_nbt____(execute_var["dimension"], start_pos_xyz)
             test_block_nbt = game.minecraft_chunk.____find_block_nbt____(execute_var["dimension"], test_pos_xyz)
             json1 = json.dumps(start_block_nbt, default=DataSave.encoding)
             json2 = json.dumps(test_block_nbt, default=DataSave.encoding)
-            if hash(json1) != hash(json2) : return Response.Response_Template("区域内存在不相同的方块").substitute()
+            if hash(json1) != hash(json2) : 
+                return Response.Response_Template("区域$start ~ $end内存在不相同的方块").substitute(start=tuple(start_pos2), end=tuple(end_pos2))
             test_list[index] = True
 
         success_counter = test_list.count(True)

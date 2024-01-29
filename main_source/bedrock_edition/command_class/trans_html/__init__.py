@@ -145,8 +145,6 @@ class generate_all_command_load_html :
             )
         )
         file1.close()
-        if self.command_block_file_encode or self.function_file_encode or self.command_block_file_syntax or self.function_file_syntax :
-            setTimeOut(1.5, lambda: webbrowser.open("http://localhost:32323/command_load.html"))
 
 
 class generate_command_respones_html : 
@@ -184,7 +182,7 @@ class generate_command_respones_html :
 				</div>
                     """)# $tick $count $msgcolor $types $command $response $index
 
-        self.all_respones:Dict[int,Dict[Literal["delay_command","loop_command","command_block","delay_function","loop_function","end_command"],
+        self.all_respones:Dict[int,Dict[Literal["delay_command","loop_command","command_block","end_command"],
         Union[List[Response.Response_Template],List[Response.Response_Template],List[Response.Response_Template]]]] = all_respones
         self.types = {"delay_command":"延时命令","loop_command":"循环命令","command_block":"命令方块","end_command":"结束命令"}
 
@@ -204,42 +202,43 @@ class generate_command_respones_html :
 
     def mcfunction_respones_reader(self, detial_list:list, response_1:Response.Response_Template, test_tick:int, command_counter:int) :
         respones_list:List[Union[Response.Response_Template,Response.Function_Response_Group]] = response_1.Function_Feedback[::-1]
-        function_out_stack:List[int] = [response_1.Function_Feedback[::-1][0]]
+        function_out_stack:List[Tuple[int,Response.Function_Response_Group]] = [(id(response_1.Function_Feedback[::-1][0]), response_1)] #出栈对象地址
         while respones_list :
             template_or_group = respones_list.pop()
             if isinstance(template_or_group, Response.Response_Template) : 
+                command_counter += 1
                 detial_list.append( self.command_template.substitute(
                     tick = test_tick,
                     count = command_counter,
                     index = command_counter-1,
                     msgcolor = "success_color" if template_or_group.success_count else "error_color",
-                    types = self.types["function"],
+                    types = "函数命令",
                     command = self.html_word_replace(template_or_group.command),
                     response = self.html_word_replace(template_or_group.command_msg)
                 ))
-                if template_or_group.Function_Feedback is None : continue
-                respones_list.extend(template_or_group.Function_Feedback[::-1])
+                if template_or_group.Function_Feedback is not None : respones_list.extend(template_or_group.Function_Feedback[::-1])
             elif isinstance(template_or_group, Response.Function_Response_Group) : 
-                command_counter += 1
                 detial_list.append( self.function_stack.substitute(
                     tick = test_tick,
                     index = command_counter - 1,
                     response = self.html_word_replace(template_or_group.push_context())
                 ))
                 extend_response = template_or_group.Response_List[::-1]
-                function_out_stack.append(id(extend_response[0]))
+                function_out_stack.append( (id(extend_response[0]), template_or_group) )
                 respones_list.extend(extend_response)
-            if id(template_or_group) == function_out_stack[-1] :
+            
+            if id(template_or_group) == function_out_stack[-1][0] :
                 detial_list.append( self.function_stack.substitute(
                     tick = test_tick,
                     index = command_counter - 1,
-                    response = self.html_word_replace(template_or_group.pop_context())
+                    response = self.html_word_replace(function_out_stack[-1][1].pop_context())
                 ))
                 function_out_stack.pop()
         return command_counter
 
     def load_all_response(self) :
         self.html_detials_list.clear() ; self.js_detial_class_list.clear()
+
         test_tick_min = min(list(self.all_respones)) ; single_detial_msg:List[str] = []
         for test_tick in list(self.all_respones) :
             command_counter = 0 ; single_detial_msg.clear() ; display_test_tick = test_tick - test_tick_min

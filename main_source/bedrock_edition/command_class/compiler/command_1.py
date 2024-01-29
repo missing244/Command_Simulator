@@ -214,6 +214,8 @@ class clear :
     
     def clear_items(entity:BaseNbtClass.entity_nbt, container:Literal["Armor","HotBar","Inventory","Weapon"],
                     name:str=None, data:int=-1, max_count:int=2147483647) :
+        if name is not None : test_item_obj = BaseNbtClass.item_nbt().__create__(name, 1, data if data != -1 else 0)
+
         clear_count = 0  ; fill_blank = {}
         clear_list = getattr(entity, container) if container != "Inventory" else getattr(entity, container)["Items"]
         for index,item in enumerate(clear_list) :
@@ -221,9 +223,9 @@ class clear :
             if container == "Weapon" and index == 0 : continue
 
             if name is None : clear_count += int(item.Count) ; clear_list[index] = fill_blank ; continue
-            if item.Identifier != name : continue
+            if item.Identifier != test_item_obj.Identifier : continue
             if data != -1 and item.Identifier in Constants.GAME_DATA["damage_tool"] and item.tags["damage"] != data : continue
-            elif data != -1 and item.Damage != data : continue
+            elif data != -1 and item.Damage != test_item_obj.Damage : continue
 
             if max_count == 0 : clear_count += int(item.Count) ; continue
             if clear_count < max_count :              #Case1: The max clear num is enough to delete this item
@@ -749,7 +751,7 @@ class fill_1_0_0 :
         if token_list[index]["type"] == "Block_Data" : 
             block_state = int(token_list[index]["token"].group())
             if not(0 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
-            pos=(token_list[index]["token"].start(), token_list[13]["token"].end()))
+            pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
             if block_state == -1 : block_state = {}
             index += 1
         else : index, block_state = BlockState_Compiler( block_id, token_list, index )
@@ -771,7 +773,7 @@ class fill_1_0_0 :
             if token_list[index]["type"] == "Block_Data" : 
                 test_block_state = int(token_list[index]["token"].group())
                 if not(-1 <= test_block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % test_block_state,
-                pos=(token_list[index]["token"].start(), token_list[13]["token"].end()))
+                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
                 if test_block_state == -1 : test_block_state = {}
                 index += 1
             else : index, block_state = BlockState_Compiler( block_id, token_list, index )
@@ -830,7 +832,8 @@ class fill_1_0_0 :
                 success[index] = True
                 continue
             elif fill_mode == "destroy" :
-                block_obj.__change_to_entity__(execute_var["dimension"], [i+0.5 for i in pos_xyz])
+                a = block_obj.__change_to_entity__(execute_var["dimension"], [i+0.5 for i in pos_xyz])
+                game.minecraft_chunk.__add_entity__(a)
 
             game.minecraft_chunk.____set_block____(execute_var["dimension"], pos_xyz, new_block_index)
             game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], pos_xyz, BlockComponent.find_block_id_nbt(block_id))

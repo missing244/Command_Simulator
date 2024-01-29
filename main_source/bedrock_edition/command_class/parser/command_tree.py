@@ -519,6 +519,16 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             )
         )
     ),
+    # hud ✓ V
+    BaseMatch.Char("Command","hud").add_leaves(
+        *SpecialMatch.BE_Selector_Tree(
+            BaseMatch.Enum("Argument","hide","reset").add_leaves( 
+                BaseMatch.Enum("Hud_Type","air_bubbles","all","armor","crosshair","health","horse_health",
+                "hotbar","hunger","paperdoll","progress_bar","tooltips","touch_controls").add_leaves(BaseMatch.END_NODE),
+                BaseMatch.END_NODE 
+            )
+        )
+    ),
     # kick ✓ V
     BaseMatch.Char("Command","kick").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
@@ -860,19 +870,16 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # setblock ✓ V
     BaseMatch.Char("Command","setblock").add_leaves(
         *SpecialMatch.Pos_Tree(
-            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
+            BaseMatch.AnyString("Block_ID").add_leaves(
+                BaseMatch.Int("Block_Data").set_version(1,19,70,"max").add_leaves(
+                    BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
+                    BaseMatch.END_NODE 
+                ),
                 SpecialMatch.BE_BlockState_Tree( 
                     BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
                     BaseMatch.END_NODE 
                 ),
                 BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
-                BaseMatch.END_NODE
-            ),
-            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
-                BaseMatch.Int("Block_Data").add_leaves(
-                    BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
-                    BaseMatch.END_NODE 
-                ),
                 BaseMatch.END_NODE
             )
         )
@@ -1287,10 +1294,10 @@ Command_Execute[8].add_leaves(   # if unless
         *SpecialMatch.BE_Selector_Tree(BaseMatch.END_NODE, *Command_Execute)
     ),
     BaseMatch.Char("Type","score").add_leaves(
-        *SpecialMatch.Scoreboard_Entity_Name_Tree(
+        *SpecialMatch.BE_Selector_Tree(
             *SpecialMatch.String_Tree("Scoreboard_Name",
                 BaseMatch.KeyWord("Operation","=","<","<=",">",">=").add_leaves(
-                    *SpecialMatch.Scoreboard_Entity_Name_Tree(
+                    *SpecialMatch.BE_Selector_Tree(
                         *SpecialMatch.String_Tree( "Scoreboard_Name", BaseMatch.END_NODE, *Command_Execute)
                     )
                 ),

@@ -5,6 +5,7 @@ from . import Command_Tokenizer_Compiler
 
 MCFUNCTION_FILE = re.compile("\\u002emcfunction$")
 MCFUNCTION_COMMAND_ERROR_START = re.compile("[ ]{0,}/")
+MCFUNCTION_NONE_COMMAND = re.compile("[ ]{0,}$|[ ]{0,}#")
 
 
 mcfunction_encoding_error:List[str] = []
@@ -36,29 +37,31 @@ def Function_Compiler(_game:RunTime.minecraft_thread) :
         
         bp_function_path = os.path.join(bp_path, bp_name, 'functions', "")
         Function_Checker(_game, mcfunction_version, bp_function_path)
+        if mcfunction_syntax_error : _game.minecraft_ident.functions.clear()
 
 def Function_Checker(_game:RunTime.minecraft_thread, version:List[int], mcfunction_path:str) :
     function_save = _game.minecraft_ident.functions
 
     for file_path in FileOperation.file_in_path(mcfunction_path) :
         if MCFUNCTION_FILE.search(file_path) is None : continue
-        mcfunc_path = file_path.replace(mcfunction_path, "", 1)
+        mcfunc_path = file_path.replace(mcfunction_path, "", 1).replace("\\", "/")[:-11]
+        if mcfunc_path not in function_save : function_save[mcfunc_path] = {"command":[]}
+        else : function_save[mcfunc_path]["command"].clear()
+
         file_content = FileOperation.read_a_file(file_path)
         if isinstance(file_content, tuple) : mcfunction_encoding_error.append(file_path) ; continue
 
-        file_crc32 = zlib.crc32(file_content.encode("utf-8"))
-        if mcfunc_path in function_save and file_crc32 == function_save[mcfunc_path]["crc32"] : continue
-
         for lines,function_command_str in enumerate(file_content.split("\n")) :
+            if MCFUNCTION_NONE_COMMAND.match(function_command_str) : continue
+
             if MCFUNCTION_COMMAND_ERROR_START.match(function_command_str) :
                 mcfunction_syntax_error[mcfunc_path].append( (lines+1, version, function_command_str, "mcfunction命令不能以/开头") )
                 continue
-
+            
             func_object = Command_Tokenizer_Compiler(_game, function_command_str, version)
             if isinstance(func_object, tuple) : 
                 if mcfunc_path not in mcfunction_syntax_error : mcfunction_syntax_error[mcfunc_path] = []
                 mcfunction_syntax_error[mcfunc_path].append( (lines+1, version, function_command_str, func_object[0]) )
                 continue
-            
-            if mcfunc_path not in function_save : function_save[mcfunc_path] = {"crc32":file_crc32, "command":[]}
+
             function_save[mcfunc_path]["command"].append( (function_command_str, func_object) )

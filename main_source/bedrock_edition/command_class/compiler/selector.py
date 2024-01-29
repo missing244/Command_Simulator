@@ -99,9 +99,12 @@ def RunTime_Selector(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_t
                     elif ("slot_unless" not in item_test) and item_test["slot_if"][0] <= slot_index <= item_test["slot_if"][1] : slot_item_save.append(item)
 
             item_count = 0
+            item_id = item_test["item"] ; item_data = item_test["data"]
+            test_item_obj = BaseNbtClass.item_nbt().__create__(item_id, 1, item_data if item_data != -1 else 0)
             for item_obj in slot_item_save :
-                if item_obj.Identifier == item_test["item"] and item_obj.Damage == item_test["data"] : item_count += int(item_obj.Count)
-            
+                if item_obj.Identifier == test_item_obj.Identifier and \
+                item_obj.Damage == test_item_obj.Damage : item_count += int(item_obj.Count)
+
             if ("quantity_unless" in item_test) and not(item_test["quantity_unless"][0] <= item_count <= item_test["quantity_unless"][1]) : hasitem_test_save.append(True)
             elif ("quantity_unless" not in item_test) and item_test["quantity_if"][0] <= item_count <= item_test["quantity_if"][1] : hasitem_test_save.append(True)
             else : hasitem_test_save.append(False)
@@ -168,7 +171,8 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict,
         if token_list[index]["type"] == "Value" : 
             selector_save["pos"][set_index] = np.float32(token_list[index]["token"].group())
         elif token_list[index]["type"] == "Relative_Value" : 
-            selector_save["pos_offset"][set_index] = np.float32(token_list[index]["token"].group()[1:])
+            int1 = token_list[index]["token"].group()[1:]
+            selector_save["pos_offset"][set_index] = np.float32(int1 if int1 else 0)
 
     elif selector_argument in ("dx","dy","dz") :
         search_index = ("dx","dy","dz") ; index += 2
@@ -358,7 +362,6 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
             is_player = True
         elif Selector_Var == "@r" :
             selector_save["limit"] = 1
-            selector_save["type_if"].append("minecraft:player")
             selector_save["sort"] = "random"
         elif Selector_Var == "@e" : pass
         elif Selector_Var == "@s" :
@@ -385,6 +388,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:List[Dict[
                     pos=(selector_argument_token.start(),selector_argument_token.end()))
                 index = Selector_Save_Set(game_tread, selector_save, token_list, index)
     end_index_save = token_list[-1]["token"].end()
+    if Selector_Var == "@r" and not len(selector_save["type_if"]) : selector_save["type_if"].append("minecraft:player")
 
     if is_single and selector_save["limit"] > 1 : raise CompileError("选择器无法选择多个实体", pos=(start_index_save, end_index_save))
     if is_player and (len(selector_save["type_if"]) != 1 or selector_save["type_if"][0] != "minecraft:player") : raise CompileError("选择器只能为玩家类型", pos=(start_index_save, end_index_save))

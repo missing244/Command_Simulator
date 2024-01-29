@@ -1,4 +1,4 @@
-import re,random,math,functools
+import re,random,time,functools
 from .. import np,BaseNbtClass,Constants
 from . import RunTime
 from typing import List,Dict,Union,Literal,Tuple,Callable,Generator
@@ -321,7 +321,8 @@ def terminal_running(self:RunTime.minecraft_thread) :
     self.runtime_variable.terminal_clear()
 
     executer = self.minecraft_chunk.player[0]
-    context = {"executer":executer,"dimension":DIMENSION_LIST[executer.Dimension],"pos":executer.Pos,"rotate":executer.Rotation}
+    context = {"executer":executer,"dimension":DIMENSION_LIST[executer.Dimension],"pos":list(executer.Pos),
+               "rotate":list(executer.Rotation),"version":self.game_version}
 
     feedback_list = self.runtime_variable.terminal_command_feedback
     pass_times = 0 ; command_function:List[Tuple[str,functools.partial]] = []
@@ -367,7 +368,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
 
 def command_running(self:RunTime.minecraft_thread) :
     if self.runtime_variable.how_times_run_all_command <= 0 : return None
-    aaa = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":self.game_version}
+    aaa = {"executer":"server","dimension":"overworld","pos":[0,0,0],"rotate":[0,0],"version":self.game_version}
     if self.minecraft_world.game_time in self.runtime_variable.command_will_run :
         for command_str,func in self.runtime_variable.command_will_run[self.minecraft_world.game_time] :
             self.register_response("delay_command",command_str,func(aaa, self))

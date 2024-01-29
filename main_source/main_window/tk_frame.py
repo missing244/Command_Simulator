@@ -742,14 +742,20 @@ class Game_Run(tkinter.Frame) :
 
         tkinter.Label(self,text="",fg='black',font=tk_tool.get_default_font(3),width=15,height=1).pack()
 
-        self.world_gt = tkinter.Label(self, bg='green',fg='white',font=tk_tool.get_default_font(12), width=21, height=1)
-        self.world_gt.pack()
+        frame_m9 = tkinter.Frame(self)
+        self.world_gt = tkinter.Label(frame_m9, bg='green',fg='white',font=tk_tool.get_default_font(12), width=12, height=1)
+        self.focus_pos = tkinter.Label(frame_m9, text="0, 0", fg='black',font=tk_tool.get_default_font(12), width=9, height=1)
+        self.world_gt.grid(row=0,column=0)
+        self.focus_pos.grid(row=0,column=1)
+        frame_m9.pack()
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
         self.input_box1 = tkinter.Text(frame_m10,show=None,height=22,width=28,font=tk_tool.get_default_font(10),
             yscrollcommand=sco1.set,undo=True)
         self.input_box1.grid()
         self.input_box1.bind("<FocusIn>",lambda a : main_win.set_focus_input(a))
+        self.input_box1.bind("<ButtonRelease-1>", self.set_focus_pos, add="+")
+        self.input_box1.bind("<KeyRelease>", self.set_focus_pos, add="+")
         self.input_box1.tag_config("syntax_error", background="#ff6161")
         sco1.config(command=self.input_box1.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
@@ -770,7 +776,7 @@ class Game_Run(tkinter.Frame) :
             command=self.exit_world).pack(side='left')
         frame_m4.pack()
 
-        main_win.add_can_change_hight_component([self.input_box1, c1,self.world_gt,c1,frame_m4])
+        main_win.add_can_change_hight_component([self.input_box1, c1, frame_m9, c1, frame_m4])
 
     def join_world(self) : 
         def aaaa(_game:Minecraft_BE.RunTime.minecraft_thread, Terminal = self.input_box1) :
@@ -818,8 +824,12 @@ class Game_Run(tkinter.Frame) :
     def display_terminal(self) : 
         self.main_win.set_display_frame("game_terminal")
 
+    def set_focus_pos(self, e) :
+        row,clo = self.input_box1.index(tkinter.INSERT).split(".")
+        self.focus_pos.config(text="%s, %s" % (row,clo))
+
     def set_gametime(self, time:int) :
-        self.world_gt.config(text="游戏刻：%s" % time)
+        self.world_gt.config(text="%s刻" % time)
 
 class Game_Terminal(tkinter.Frame) :
     
