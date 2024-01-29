@@ -8,3 +8,26 @@
 * 模拟函数命令运行：命令模拟器支持模拟函数命令的运行；
 * 命令反馈文件：命令运行可生成反馈文件供玩家检查命令运行中产生的影响。
 ## 拓展包功能
+* execute与方块状态语法升级
+* 基岩版指令语法自动补全与提示
+* 按照预设模板快速生成同类命令
+* 基岩版rawtext json富文本编辑器
+* 基岩版websocket服务器
+* 可视化命令效果调试
+## 附加功能
+* 基岩版全部字符的查询与复制
+* 基岩版方块、物品等ID快速查询
+* 适用于手动导入命令的小窗口命令复制
+## 依赖软件
+### Android
+* [MT管理器](https://mt2.cn/download/)
+* [Pydroid 3](https://wwop.lanzoul.com/id23d0qq8vah)，蓝奏云密码1234
+### Windows 7-8
+* [Python 3.7.2](https://wwop.lanzoul.com/iCBLA0vu6ssj)，蓝奏云密码1234，如已安装3.7.2以上版本请忽略
+### Windows 10-11
+* [Python 3.9.2](https://wwop.lanzoul.com/isS760vu6rvg)，蓝奏云密码1234，如已安装3.7.2以上版本请忽略
+## 安装方法
+* 根据系统完成依赖软件的安装
+* 将本仓库文件下载到本地
+* Windows系统：将下载的文件进行解压，双击windows启动.bat启动
+* Android系统：通过MT管理器，将下载的文件移动到/storage/emulated/0/Android/data/ru.iiec.pydroid3/files/路径下进行解压，然后通过Pydroid 3打开main.py文件启动
