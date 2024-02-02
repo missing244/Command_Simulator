@@ -306,9 +306,15 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )    
     ),
     # damage ✓ V
-    BaseMatch.Char("Command","damage").set_version(1,18,10,"min").add_leaves(
+    BaseMatch.Char("Command","damage").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Int("Amount").add_leaves(
+                BaseMatch.Enum("Damager_Type","suicide").set_version(1,20,70,"max").add_leaves(
+                    BaseMatch.Char("Value","entity").add_leaves(
+                        *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
+                    ),
+                    BaseMatch.END_NODE
+                ),
                 BaseMatch.AnyString("Damager_Type").add_leaves(
                     BaseMatch.Char("Value","entity").add_leaves(
                         *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
@@ -320,7 +326,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     # dialogue  NPC相关 ✓ V
-    BaseMatch.Char("Command","dialogue").set_version(1,17,10,"min").add_leaves(
+    BaseMatch.Char("Command","dialogue").add_leaves(
         BaseMatch.Char("Argument","open").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
                 *SpecialMatch.BE_Selector_Tree(

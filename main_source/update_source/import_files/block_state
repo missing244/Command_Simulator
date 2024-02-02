@@ -138,14 +138,14 @@
         "0b1":{"infiniburn_bit":true}
     },
     "minecraft:bee_nest":{
-        "default": {"facing":"north","honey_level":0},
-        "support_value": {"facing":["north","east","south","west"],"honey_level":[0,1,2,3,4,5]},
-        "0b0":{"facing":"north","honey_level":0}
+        "default": {"direction":0,"honey_level":0},
+        "support_value": {"direction":[0,1,2,3],"honey_level":[0,1,2,3,4,5]},
+        "0b0":{"direction":0,"honey_level":0}
     },
     "minecraft:beehive":{
-        "default": {"facing":"north","honey_level":0},
-        "support_value": {"facing":["north","east","south","west"],"honey_level":[0,1,2,3,4,5]},
-        "0b0":{"facing":"north","honey_level":0}
+        "default": {"direction":0,"honey_level":0},
+        "support_value": {"direction":[0,1,2,3],"honey_level":[0,1,2,3,4,5]},
+        "0b0":{"direction":0,"honey_level":0}
     },
     "minecraft:beetroot":{
         "default": {"growth":0},
@@ -5848,6 +5848,12 @@
         "default": {"trial_spawner_state": 0},
         "support_value": {"trial_spawner_state": [0,1,2,3,4,5]},
         "0b0": {"trial_spawner_state": false}
+    },
+
+    "minecraft:vault":  {
+        "default": {"minecraft:cardinal_direction": "south", "vault_state":"unlocking"},
+        "support_value": {"minecraft:cardinal_direction": ["south","north","east","west"], "vault_state":["unlocking","active","ejecting","inactive"]},
+        "0b0": {"minecraft:cardinal_direction": false, "vault_state":"unlocking"}
     }
 }
 

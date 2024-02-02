@@ -71,6 +71,9 @@
   "ram_attack": {
     "modify_in_tick": false
   },
+  "self_destruct": {
+    "modify_in_tick": false
+  },
   "sonic_boom": {
     "modify_in_tick": false
   },
@@ -88,9 +91,6 @@
   },
   "suffocation": {
     "modify_in_tick": false
-  },
-  "suicide": {
-    "modify_in_tick": true
   },
   "temperature": {
     "modify_in_tick": false

@@ -128,6 +128,14 @@ def Selector_Var_Condition_Test(execute_var:COMMAND_CONTEXT, game_tread:RunTime.
         if "r" in selector_var and distance > selector_var["r"] : return False
         if "rm" in selector_var and distance < selector_var["rm"] : return False
     
+    if "has_property" in execute_var :
+        for condition in execute_var["has_property"] :
+            if condition['condition'] == 'has_porperty' and not((condition['name'] in entity.porperty) ^ condition['not']) : return False
+            if condition['condition'] == 'porperty_test' and ((condition['name'] not in entity.porperty) or 
+            (condition['value'] is not None and condition['value'] != entity.porperty[condition['name']]) or 
+            (condition['min'] is not None and ((entity.porperty[condition['name']] < condition['min']) ^ condition['not'])) or
+            (condition['max'] is not None and ((entity.porperty[condition['name']] > condition['max']) ^ condition['not']))) : return False
+
     return True
 
 
@@ -272,7 +280,7 @@ def set_insert_extand_Data(saves:dict, key:str, value, types:Union[list,None]=No
     else :
         if isinstance(saves[key], dict) : saves[key].update(value)
         elif isinstance(saves[key], list) and value not in saves[key] : saves[key].append(value)
-        else : saves[key] = value
+        elif not isinstance(saves[key], (dict,list)) : saves[key] = value
 
 def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, token_list:COMMAND_TOKEN, index:int) -> int :
     selector_argument = token_list[index]["token"].group()
@@ -416,6 +424,44 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
                     raise CompileError("不存在的实体ID：%s" % str1,pos=(token_list[index]["token"].start(),token_list[index]["token"].end()))
             set_insert_extand_Data(selector_save, mode, str1, list)
 
+    elif selector_argument == "has_property" :
+        index += 3
+        while 1 :
+            if token_list[index]["type"] == "End_Property_Argument" : break
+            if token_list[index]["type"] == "Next_Property_Argument" : index += 1
+            if token_list[index]["type"] == "Property_Argument" : 
+                index += 2
+                condition_json = {"condition":"has_porperty", "name":"", "not":False}
+                if token_list[index]["type"] == "Not" : condition_json["not"] = True ; index += 1
+                condition_json["name"] = name = token_list[index]["token"].group() ; index += 1
+                if not any( (name in data["description"].get("properties", {}) \
+                    for entity,data in game_tread.minecraft_ident.entities.items()) ) :
+                    raise CompileError("不存在的实体属性：%s" % name, pos=(token_list[index-1]["token"].start(),token_list[index-1]["token"].end()))
+                set_insert_extand_Data(selector_save, "has_porperty", condition_json, list)
+            elif token_list[index]["type"] == "Property" : 
+                condition_json = {"condition":"porperty_test", "name":"", "value":None, "min":None, "max":None, "not":False}
+                condition_json["name"] = name = token_list[index]["token"].group() ; index += 2
+                if not any( (name in data["description"].get("properties", {}) \
+                    for entity,data in game_tread.minecraft_ident.entities.items()) ) :
+                    raise CompileError("不存在的实体属性：%s" % name, pos=(token_list[index-2]["token"].start(),token_list[index-2]["token"].end()))
+                if token_list[index]["type"] == "Bool" :
+                    condition_json["value"] = ("false","true").index(token_list[index]["token"].group()).__bool__() ; index += 1
+                elif token_list[index]["type"] == "Float" :
+                    condition_json["value"] = float(token_list[index]["token"].group()) ; index += 1
+                elif token_list[index]["type"] == "String" :
+                    condition_json["value"] = Quotation_String_transfor_2(token_list[index]["token"].group()) ; index += 1
+                else :
+                    if token_list[index]["type"] == "Not" : condition_json["not"] = True ; index += 1
+                    if token_list[index]["type"] == "Range_Min" : 
+                        condition_json["min"] = int(token_list[index]["token"].group()) ; index += 1
+                    if token_list[index]["type"] != "Range_Sign" : condition_json["max"] = condition_json["min"]
+                    else :
+                        index += 1
+                        if token_list[index]["type"] == "Range_Max" : 
+                            condition_json["max"] = int(token_list[index]["token"].group()) ; index += 1
+
+                set_insert_extand_Data(selector_save, "has_porperty", condition_json, list)
+
     return index + 1
 
 def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, index:int, / ,
@@ -423,8 +469,9 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
 
     start_index_save = token_list[index]["token"].start()
     selector_argument_all = ("x", "y", "z", "c", "dx", "dy", "dz", "rx", "ry", "rxm", "rym", "l", "lm", "r", "rm", "scores",
-                             "hasitem", "haspermission", "tag", "name", "family", "type", "m")
-    selector_argument_single = ("x","y","z","c","dx","dy","dz","rx","ry","rxm","rym","l","lm","r","rm","scores","hasitem","haspermission")
+                             "hasitem", "haspermission", "has_property", "tag", "name", "family", "type", "m")
+    selector_argument_single = ("x","y","z","c","dx","dy","dz","rx","ry","rxm","rym","l","lm","r","rm","scores","hasitem",
+                                "haspermission", "has_property")
     selector_argument_count = { i:0 for i in selector_argument_all }
     selector_save = {"sort":"nearest"}
     """
@@ -433,7 +480,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
         "dx": float, "dy": float, "dz": float, "rx": float, "rxm": float, "ry": float, "rym": float,
         "l": float, "lm": float, "r": float, "rm": float, "scores_if":[], "scores_unless":[], "tag_if":[], "tag_unless":[],
         "family_if":[], "family_unless":[], "m_if":[], "m_unless":[], "name_if":[], "name_unless":[], "type_if":[], "type_unless":[],
-        "hasitem":[], "permission_test":{}
+        "hasitem":[], "permission_test":{}, "has_porperty":[]
     }
     """
 
@@ -504,6 +551,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
     if selector_func is RunTime_Selector_Random and selector_save["sort"] == "farnest" :
         raise CompileError("随机选择器的数量参数不能为负数", pos=(start_index_save, end_index_save))
 
+    print(selector_save)
     if selector_func is not RunTime_Selector_Self : return (index+1, functools.partial(selector_func, selector_var=selector_save))
     else : return (index+1, functools.partial(selector_func, selector_var=selector_save, is_npc=is_npc, is_player=is_player))
 

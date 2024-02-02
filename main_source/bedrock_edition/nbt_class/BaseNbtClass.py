@@ -202,6 +202,7 @@ class entity_nbt :
         self.support_nbt.append("__minecraft_type__")
         self.__minecraft_type__ = "entity_nbt"
         self.damage = {"time_no_hurt":0, "type":None, "value":0, "source":None}
+        self.porperty:Dict[str,Union[str,int,bool,float]] = {}
 
     def __create__(self, Identifier:str, dimension:Literal["overworld","nether","the_end"], pos:List[np.float32], name:str=None) :
         from . import EntityComponent
@@ -273,9 +274,11 @@ class entity_nbt :
         return all_data
 
     def __load__(self, json1:dict) :
+        from . import EntityComponent
         for key1 in json1:
             self.__setattr__(key1,json1[key1])
             self.support_nbt.append(key1)
+        EntityComponent.set_default_porperty(self)
         return self
 
 
@@ -364,7 +367,7 @@ class entity_nbt :
             sit_info['entity'] = None
 
         return passengers_list
-    
+
 
     def __get_damage__(self, world:world_nbt, damage_type:str, value:Union[int,float], couser:"entity_nbt"=None) -> bool :
         if self.Identifier == "minecraft:player" :

@@ -338,13 +338,13 @@
             "minecraft:acacia_leaves" : {"item_id":"minecraft:leaves2","item_data":{"value": 0}},
             "minecraft:dark_oak_leaves" : {"item_id":"minecraft:leaves2","item_data":{"value": 1}},
             
-            "minecraft:double_oak_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 0}},
-            "minecraft:double_spruce_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 1}},
-            "minecraft:double_birch_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 2}},
-            "minecraft:double_jungle_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 3}},
-            "minecraft:double_acacia_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 4}},
-            "minecraft:double_dark_oak_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 5}},
-            
+            "minecraft:oak_double_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 0}},
+            "minecraft:spruce_double_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 1}},
+            "minecraft:birch_double_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 2}},
+            "minecraft:jungle_double_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 3}},
+            "minecraft:acacia_double_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 4}},
+            "minecraft:dark_oak_double_slab" : {"item_id":"minecraft:double_wooden_slab","item_data":{"value": 5}},
+
             "minecraft:oak_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 0}},
             "minecraft:spruce_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 1}},
             "minecraft:birch_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 2}},

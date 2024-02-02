@@ -2,6 +2,7 @@
 针对 Minecraft 中特殊的结构内建的匹配类
 """
 
+from main_source.bedrock_edition.command_class.parser.base_match import TERMINATOR_RE
 from . import BaseMatch
 from typing import Dict,Union,List,Tuple
 import re
@@ -32,6 +33,12 @@ class Command_Root(BaseMatch.Match_Base) :
     def _match_string(self,s:str,s_pointer:int) : pass
     def _auto_complete(self) -> Dict[str,str] : pass
 
+
+class BE_Not_Int_Float(BaseMatch.Float) :
+
+    def __init__(self, token_type: str, *unit_word: str, terminator: str = BaseMatch.TERMINATOR_RE) -> None:
+        super().__init__(token_type, *unit_word, terminator=terminator)
+        self.re_test  = re.compile("^[-+]?([0-9]{0,}\\.[0-9]{1,}|[0-9]{1,}\\.[0-9]{0,})$") 
 
 class BE_Range_Int(BaseMatch.Int) :
     """
@@ -172,7 +179,6 @@ class BE_BlockState_String(BE_Quotation_String) :
 
 
 
-
 def String_Tree(token_type:str="Scoreboard_Name",*end_node:BaseMatch.Match_Base):
     """
     自动生成一个计分板名字匹配树\n
@@ -286,6 +292,132 @@ def Range_Tree(*end_node:BaseMatch.Match_Base) -> List[BaseMatch.Match_Base] :
 
 
 
+def middle_scores_loop(*end_node:BaseMatch.Match_Base) :
+    scores : List[BaseMatch.Match_Base] = [
+        BE_String("Scoreboard_Name"),
+        BE_Quotation_String("Scoreboard_Name")
+    ]
+    scores[0].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( *Range_Tree(
+        BaseMatch.KeyWord("Next_Score_Argument",",").add_leaves(*scores),
+        BaseMatch.KeyWord("End_Score_Argument","}").add_leaves(*end_node)
+    )))
+    scores[1].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( *Range_Tree(
+        BaseMatch.KeyWord("Next_Score_Argument",",").add_leaves(*scores),
+        BaseMatch.KeyWord("End_Score_Argument","}").add_leaves(*end_node)
+    )))
+    return BaseMatch.KeyWord("Start_Score_Argument","{").add_leaves(*scores)
+
+def middle_haspermission_loop(*end_node:BaseMatch.Match_Base) :
+    haspermission1 = BaseMatch.KeyWord("Start_Permission_Argument","{")
+    haspermission2 = BaseMatch.Enum("Permission_Argument","camera","movement")
+    haspermission2.add_leaves( 
+        BaseMatch.KeyWord("Equal","=").add_leaves( 
+            BaseMatch.Enum("Value","enabled","disabled").add_leaves( 
+                BaseMatch.KeyWord("Next_Permission_Argument",",").add_leaves(haspermission2),
+                BaseMatch.KeyWord("End_Permission_Argument","}").add_leaves(*end_node)
+            )
+        )
+    )
+    return haspermission1.add_leaves(haspermission2)
+
+def middle_hasitem_single_args_loop(*end_node:BaseMatch.Match_Base) :
+    hasitem : List[BaseMatch.Match_Base] = [
+        BaseMatch.Char("Item_Argument","item"),
+        BaseMatch.Char("Item_Argument","data"),
+        BaseMatch.Char("Item_Argument","quantity"),
+        BaseMatch.Char("Item_Argument","location"),
+        BaseMatch.Char("Item_Argument","slot")
+    ]
+    hasitem[0].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
+        BaseMatch.AnyString("Item_ID").add_leaves( 
+            BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
+            BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
+        )
+    ))
+    hasitem[1].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
+        BaseMatch.Int("Data_Value").add_leaves( 
+            BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
+            BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
+        )
+    ))
+    hasitem[2].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
+        *Range_Tree( 
+            BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
+            BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
+        )
+    ))
+    hasitem[3].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
+        BaseMatch.Enum("Slot_Type","slot.weapon.mainhand","slot.weapon.offhand",
+        "slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
+        "slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
+        "slot.armor","slot.chest","slot.equippable").add_leaves( 
+            BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
+            BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
+        )
+        #"slot.weapon.mainhand","slot.weapon.offhand",
+        #"slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
+        #"slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
+        #"slot.armor","slot.chest","slot.equippable"
+    ))
+    hasitem[4].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
+        *Range_Tree( 
+            BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
+            BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
+        )
+    ))
+    return BaseMatch.KeyWord("Start_Item_Argument","{").add_leaves(*hasitem)
+
+def middle_hasitem_multiple_args_loop(*end_node:BaseMatch.Match_Base) :
+    hasitem1 = BaseMatch.KeyWord("Start_Item_Condition","[")
+    m1 = BaseMatch.KeyWord("Next_Item_Condition",",")
+    hasitem2 = middle_hasitem_single_args_loop( 
+        m1, BaseMatch.KeyWord("End_Item_Condition","]").add_leaves(*end_node)
+    )
+    m1.add_leaves(hasitem2)
+    return hasitem1.add_leaves(hasitem2)
+
+def middle_hasporperty_loop(*end_node:BaseMatch.Match_Base) :
+    hasProperty1 = BaseMatch.KeyWord("Start_Property_Argument","{")
+    hasProperty2 = BaseMatch.Char("Property_Argument","property")
+    hasProperty3 = BaseMatch.AnyString("Property")
+    hasProperty2.add_leaves(
+        BaseMatch.KeyWord("Equal","=").add_leaves(
+            BaseMatch.AnyString("Property").add_leaves(
+                BaseMatch.KeyWord("Next_Property_Argument",",").add_leaves(hasProperty2,hasProperty3),
+                BaseMatch.KeyWord("End_Property_Argument","}").add_leaves(*end_node)
+            ),
+            BaseMatch.KeyWord("Not","!").add_leaves(
+                BaseMatch.AnyString("Property").add_leaves( 
+                    BaseMatch.KeyWord("Next_Property_Argument",",").add_leaves(hasProperty2,hasProperty3),
+                    BaseMatch.KeyWord("End_Property_Argument","}").add_leaves(*end_node)
+                )
+            )
+        )
+    )
+    hasProperty3.add_leaves(
+        BaseMatch.KeyWord("Equal","=").add_leaves(
+            BaseMatch.Enum("Bool","true","false").add_leaves( 
+                BaseMatch.KeyWord("Next_Property_Argument",",").add_leaves(hasProperty2,hasProperty3),
+                BaseMatch.KeyWord("End_Property_Argument","}").add_leaves(*end_node)
+            ),
+            BE_Not_Int_Float("Float").add_leaves( 
+                BaseMatch.KeyWord("Next_Property_Argument",",").add_leaves(hasProperty2,hasProperty3),
+                BaseMatch.KeyWord("End_Property_Argument","}").add_leaves(*end_node)
+            ),
+            *Range_Tree(
+                BaseMatch.KeyWord("Next_Property_Argument",",").add_leaves(hasProperty2,hasProperty3),
+                BaseMatch.KeyWord("End_Property_Argument","}").add_leaves(*end_node)
+            ),
+            BE_Quotation_String("String").add_leaves( 
+                BaseMatch.KeyWord("Next_Property_Argument",",").add_leaves(hasProperty2,hasProperty3),
+                BaseMatch.KeyWord("End_Property_Argument","}").add_leaves(*end_node)
+            ),
+        )
+    )
+    return hasProperty1.add_leaves(hasProperty2,hasProperty3)
+
+
+
 def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
     """
     自动生成一个目标选择器选择器匹配树\n
@@ -293,90 +425,6 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
     -------------------------------
     返回匹配列表，请将该列表传入add_leaves时添加解包操作
     """
-
-    def middle_scores_loop(*end_node:BaseMatch.Match_Base) :
-        scores : List[BaseMatch.Match_Base] = [
-            BE_String("Scoreboard_Name"),
-            BE_Quotation_String("Scoreboard_Name")
-        ]
-        scores[0].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( *Range_Tree(
-            BaseMatch.KeyWord("Next_Score_Argument",",").add_leaves(*scores),
-            BaseMatch.KeyWord("End_Score_Argument","}").add_leaves(*end_node)
-        )))
-        scores[1].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( *Range_Tree(
-            BaseMatch.KeyWord("Next_Score_Argument",",").add_leaves(*scores),
-            BaseMatch.KeyWord("End_Score_Argument","}").add_leaves(*end_node)
-        )))
-        return BaseMatch.KeyWord("Start_Score_Argument","{").add_leaves(*scores)
-
-    def middle_haspermission_loop(*end_node:BaseMatch.Match_Base) :
-        haspermission1 = BaseMatch.KeyWord("Start_Permission_Argument","{")
-        haspermission2 = BaseMatch.Enum("Permission_Argument","camera","movement")
-        haspermission2.add_leaves( 
-            BaseMatch.KeyWord("Equal","=").add_leaves( 
-                BaseMatch.Enum("Value","enabled","disabled").add_leaves( 
-                    BaseMatch.KeyWord("Next_Permission_Argument",",").add_leaves(haspermission2),
-                    BaseMatch.KeyWord("End_Permission_Argument","}").add_leaves(*end_node)
-                )
-            )
-        )
-        return haspermission1.add_leaves(haspermission2)
-
-    def middle_hasitem_single_args_loop(*end_node:BaseMatch.Match_Base) :
-        hasitem : List[BaseMatch.Match_Base] = [
-            BaseMatch.Char("Item_Argument","item"),
-            BaseMatch.Char("Item_Argument","data"),
-            BaseMatch.Char("Item_Argument","quantity"),
-            BaseMatch.Char("Item_Argument","location"),
-            BaseMatch.Char("Item_Argument","slot")
-        ]
-        hasitem[0].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
-            BaseMatch.AnyString("Item_ID").add_leaves( 
-                BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
-                BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
-            )
-        ))
-        hasitem[1].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
-            BaseMatch.Int("Data_Value").add_leaves( 
-                BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
-                BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
-            )
-        ))
-        hasitem[2].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
-            *Range_Tree( 
-                BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
-                BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
-            )
-        ))
-        hasitem[3].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
-            BaseMatch.Enum("Slot_Type","slot.weapon.mainhand","slot.weapon.offhand",
-            "slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
-            "slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
-            "slot.armor","slot.chest","slot.equippable").add_leaves( 
-                BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
-                BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
-            )
-            #"slot.weapon.mainhand","slot.weapon.offhand",
-            #"slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
-            #"slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
-            #"slot.armor","slot.chest","slot.equippable"
-        ))
-        hasitem[4].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
-            *Range_Tree( 
-                BaseMatch.KeyWord("Next_Item_Argument",",").add_leaves(*hasitem),
-                BaseMatch.KeyWord("End_Item_Argument","}").add_leaves(*end_node)
-            )
-        ))
-        return BaseMatch.KeyWord("Start_Item_Argument","{").add_leaves(*hasitem)
-
-    def middle_hasitem_multiple_args_loop(*end_node:BaseMatch.Match_Base) :
-        hasitem1 = BaseMatch.KeyWord("Start_Item_Condition","[")
-        m1 = BaseMatch.KeyWord("Next_Item_Condition",",")
-        hasitem2 = middle_hasitem_single_args_loop( 
-            m1, BaseMatch.KeyWord("End_Item_Condition","]").add_leaves(*end_node)
-        )
-        m1.add_leaves(hasitem2)
-        return hasitem1.add_leaves(hasitem2)
 
 
     Selector_Var2 : List[BaseMatch.Match_Base] = [
@@ -390,7 +438,8 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
         BaseMatch.Enum("Selector_Argument","name","family"), # 7
         BaseMatch.Char("Selector_Argument","scores"),        # 8
         BaseMatch.Char("Selector_Argument","haspermission"), # 9
-        BaseMatch.Char("Selector_Argument","hasitem")        # 10
+        BaseMatch.Char("Selector_Argument","hasitem"),       # 10
+        BaseMatch.Char("Selector_Argument","has_property").set_version(1,20,70,"min")   # 11
     ]
 
 
@@ -507,7 +556,10 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
             BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         )
     ))
-
+    Selector_Var2[11].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( middle_hasporperty_loop(
+        BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
+        BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
+    )))
 
     Selector : List[BaseMatch.Match_Base] = [
         BaseMatch.KeyWord("Selector","@p","@a","@r","@s","@e","@initiator").add_leaves(

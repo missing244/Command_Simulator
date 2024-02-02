@@ -45,7 +45,6 @@ class block_components :
 
     def find_nbt(self,block_id:str) :
         block_id = block_id.replace("minecraft:","",1)
-        print(block_id,hasattr(self,block_id))
         if hasattr(self,block_id) : return copy.deepcopy(getattr(self,block_id))
 
 blcok_nbt_data = block_components()
