@@ -56,6 +56,11 @@ class entity_buliding :
                             except : pass ; #traceback.print_exc()
                             else : func(entity_object, component_groups_json[groups_1][component_1])
 
+                if 'set_property' in sequence_obj :
+                    for porperty_name,value in sequence_obj['set_property'].items() :
+                        if porperty_name not in entity_object.porperty : continue
+                        self.set_porperty(entity_object, porperty_name, value)
+
         if 'remove' in events_json[event_name] :
             if 'component_groups' not in events_json[event_name]['remove'] : return None
             for groups_2 in [i for i in events_json[event_name]['remove']['component_groups'] if (i in component_groups_json)] :
@@ -74,6 +79,12 @@ class entity_buliding :
                     try : func = getattr(self,"add_%s" % component_3.replace("minecraft:","").replace(".",""))
                     except : pass ; #traceback.print_exc()
                     else : func(entity_object, component_groups_json[groups_3][component_3])
+        
+        if 'set_property' in events_json[event_name] :
+            for porperty_name,value in events_json[event_name]['set_property'].items() :
+                if porperty_name not in entity_object.porperty : continue
+                self.set_porperty(entity_object, porperty_name, value)
+
 
 
     def set_default_porperty(self, entity_object) :

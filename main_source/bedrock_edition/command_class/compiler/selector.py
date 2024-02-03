@@ -132,6 +132,9 @@ def Selector_Var_Condition_Test(execute_var:COMMAND_CONTEXT, game_tread:RunTime.
         for condition in execute_var["has_property"] :
             if condition['condition'] == 'has_porperty' and not((condition['name'] in entity.porperty) ^ condition['not']) : return False
             if condition['condition'] == 'porperty_test' and ((condition['name'] not in entity.porperty) or 
+            (condition['value'] is not None and type(condition['value']) != type(entity.porperty[condition['name']])) or 
+            (condition['min'] is not None and type(condition['min']) != type(entity.porperty[condition['name']])) or 
+            (condition['max'] is not None and type(condition['max']) != type(entity.porperty[condition['name']])) or
             (condition['value'] is not None and condition['value'] != entity.porperty[condition['name']]) or 
             (condition['min'] is not None and ((entity.porperty[condition['name']] < condition['min']) ^ condition['not'])) or
             (condition['max'] is not None and ((entity.porperty[condition['name']] > condition['max']) ^ condition['not']))) : return False
