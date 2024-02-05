@@ -14,7 +14,7 @@
             <div id="menu_1">
                 <div class="menu_1">
                     <div onclick="display_thing('main_1');">软件使用</div>
-                    <div onclick="display_thing('main_2');">本地网站</div>
+                    <div onclick="display_thing('main_2');">本地数据</div>
                     <div onclick="display_thing('main_3');">文字输入</div>
                     <div onclick="display_thing('main_4');">用户登录</div>
                 </div>
@@ -74,6 +74,15 @@
             </div>
 
             <div id="main_2" style="display: none;" >
+                <h1 style="text-align: center;">本地文件</h1>
+                <p>&emsp;&emsp;命令模拟器的世界储存和源代码位于同一目录位置。</p>
+                <p>&emsp;&emsp;Windows的本地文件储存在用户自己选择的文件夹目录。</p>
+                <p style="overflow-wrap:break-word">
+                    &emsp;&emsp;Android的本地文件需要用户需要在MT管理器中，点击最上方路径栏，跳转至/storage/emulated/0/Android/data/ru.iiec.pydroid3(
+                    <a href="#" onclick="copyTextToClipboard('/storage/emulated/0/Android/data/ru.iiec.pydroid3')">点击复制</a>)
+                    如果是Android 13系统则需要按照MT管理器指引授权此文件夹。进入该目录，在此目录下有files文件夹，命令模拟器本地文件就储存于此。
+                </p>
+
                 <h1 style="text-align: center;">本地网站</h1>
                 <p>
                     &emsp;&emsp;命令模拟器在启动时会自动搭建一个本地服务器，这个服务器将服务于命令模拟器中的重要功能，例如命令的语法错误反馈信息。
@@ -177,6 +186,15 @@
             for (let index = 0; index < array1.length; index++) {
                 if (id1 == array1[index]) document.getElementById(array1[index]).style.display = "";
                 else document.getElementById(array1[index]).style.display = "none";
+            }
+        }
+
+        async function copyTextToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                console.log('文本已复制到剪贴板');
+            } catch (err) {
+                console.error('无法复制文本: ', err);
             }
         }
     </script>
