@@ -79,9 +79,10 @@
                 <p>&emsp;&emsp;Windows的本地文件储存在用户自己选择的文件夹目录。</p>
                 <p style="overflow-wrap:break-word">
                     &emsp;&emsp;Android的本地文件需要用户需要在MT管理器中，点击最上方路径栏，跳转至/storage/emulated/0/Android/data/ru.iiec.pydroid3(
-                    <a href="#" onclick="copyTextToClipboard('/storage/emulated/0/Android/data/ru.iiec.pydroid3')">点击复制</a>)
+                    <a href="#" onclick="clipboard.copy('/storage/emulated/0/Android/data/ru.iiec.pydroid3')">点击复制</a>)
                     如果是Android 13系统则需要按照MT管理器指引授权此文件夹。进入该目录，在此目录下有files文件夹，命令模拟器本地文件就储存于此。
                 </p>
+                <p>&emsp;&emsp;用户可以在MT管理器中点击右上角菜单，对此目录<samp class="red_text">设置首页</samp>或<samp class="red_text">添加书签</samp>以方便下一次寻找该目录。</p>
 
                 <h1 style="text-align: center;">本地网站</h1>
                 <p>
@@ -189,14 +190,50 @@
             }
         }
 
-        async function copyTextToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-                console.log('文本已复制到剪贴板');
-            } catch (err) {
-                console.error('无法复制文本: ', err);
-            }
-        }
+        var clipboard = function (window, document, navigator) {
+          var textArea, copy;
+ 
+          function isOS() {
+              return navigator.userAgent.match(/ipad|iphone/i);
+          }
+ 
+          function createTextArea(text) {
+              textArea = document.createElement('textArea');
+              textArea.value = text;
+              document.body.appendChild(textArea);
+          }
+ 
+          function selectText() {
+              var range, selection;
+ 
+              if (isOS()) {
+                  range = document.createRange();
+                  range.selectNodeContents(textArea);
+                  selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                  textArea.setSelectionRange(0, 999999);
+              } else {
+                  textArea.select();
+              }
+          }
+ 
+          function copyToClipboard() {
+              document.execCommand('copy');
+              document.body.removeChild(textArea);
+          }
+ 
+          copy = function copy(text) {
+              createTextArea(text);
+              selectText();
+              copyToClipboard();
+          };
+ 
+          return {
+              copy: copy
+          };
+        }(window, document, navigator);
+
     </script>
 
 </html>
