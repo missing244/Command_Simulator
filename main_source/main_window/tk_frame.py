@@ -525,7 +525,7 @@ class Game_Ready(tkinter.Frame) :
         command=lambda : webbrowser.open("http://localhost:32323/tutorial/Instructions.html")).pack(side='left')
         tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
         tkinter.Button(frame_m4,text='常见问题',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
-        command=lambda : webbrowser.open("https://missing254.github.io/cs-tool/tool/Question/")).pack(side='left')
+        command=lambda : webbrowser.open("https://commandsimulator.great-site.net/tool/Question/")).pack(side='left')
         frame_m4.pack()
         c2 = tkinter.Label(self, text="新用户一定要阅读 使用须知\n安卓用户一定要阅读 常见问题", font=tk_tool.get_default_font(10), height=2, fg="red")
         c2.pack()

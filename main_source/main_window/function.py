@@ -232,7 +232,8 @@ class Text_Bind_Events :
             if isinstance(e.widget, tkinter.Text) : x1,y1,x2,y2 = e.widget.bbox(tkinter.SEL_FIRST)
             else : x1,y1 = e.widget.winfo_rootx(), e.widget.winfo_rooty()
             x1 = self.main_win.window.winfo_width() // 2
-            Menu.post(x1, y1 - (e.widget.winfo_height()+20 if isinstance(e.widget, (tkinter.Entry, ttk.Entry)) else 0))
+            if isinstance(e.widget, tkinter.Text) : Menu.post(x1, y1 - e.widget.winfo_height())
+            else : Menu.post(x1, y1 - e.widget.winfo_height() - 40)
             self.is_have_select=True
             self.is_left_motion = False
             return None
@@ -373,7 +374,7 @@ def flash_minecraft_id(log:initialization_log) :
 
     def download_online_id() -> bool :
         try :
-            response = connent_API.request_url_without_error(connent_API.UPDATE_BE_ID)
+            response = connent_API.request_url_without_error(connent_API.UPDATE_BE_ID, timeout_s=10)
             if response is None : raise Exception
             with open(update_id_zip_path, 'wb') as file1: file1.write(response)
         except : log.write_log("在线BE-ID列表下载失败", 2) ; return True
@@ -414,7 +415,7 @@ def flash_minecraft_source(user:user_manager, log:initialization_log) :
     log.write_log("正在获取minecraft source...")
 
     def download_online_source() :
-        be_resource = connent_API.request_url_without_error(user.save_data["online_get"]["app_info"]["source_update_url"])
+        be_resource = connent_API.request_url_without_error(user.save_data["online_get"]["app_info"]["source_update_url"], timeout_s=10)
         if be_resource is None : log.write_log("资源联网获取失败",2) ; return False
         log.write_log("资源获取成功", 2)
         with open(source_path, 'wb') as file1 : file1.write(be_resource)

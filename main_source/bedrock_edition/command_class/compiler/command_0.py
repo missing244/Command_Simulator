@@ -64,7 +64,7 @@ def if_block(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:Lis
 class execute_1_19 :
 
     @classmethod
-    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, Version:tuple[int]) : 
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, Version:Tuple[int]) : 
         from . import Start_Compile
         index = 1 ; subcommand_list:List[functools.partial] = [functools.partial(head_generate)]
         while 1 :
@@ -334,7 +334,7 @@ class execute_1_19_50 :
         subcommand.keywords["test_func"].append(func)
 
     @classmethod
-    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, Version:tuple[int]) : 
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, Version:Tuple[int]) : 
         from . import Start_Compile
         subcommand_list:List[functools.partial] = [functools.partial(head_generate)] 
         index = 1 ; func:Callable = None
