@@ -364,7 +364,7 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         if not i() : break
     user.write_back() ; log.set_time_end()
     if user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
-        tkinter.messagebox.showinfo("最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
+        tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
         user.save_data['online_get']['app_version']))
 
 def flash_minecraft_id(log:initialization_log) :
