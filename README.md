@@ -23,9 +23,9 @@
 * [MT管理器](https://mt2.cn/download/)
 * [Pydroid 3](https://wwop.lanzoul.com/id23d0qq8vah)，蓝奏云密码1234
 ### Windows 7-8
-* [Python 3.7.2](https://wwop.lanzoul.com/iCBLA0vu6ssj)，蓝奏云密码1234，如已安装3.7.2以上版本请忽略
+* [Python 3.8.5](https://wwm.lanzoul.com/iZMN61nfljch)，蓝奏云密码1234，如已安装3.8以上版本请忽略
 ### Windows 10-11
-* [Python 3.9.2](https://wwop.lanzoul.com/isS760vu6rvg)，蓝奏云密码1234，如已安装3.7.2以上版本请忽略
+* [Python 3.9.2](https://wwop.lanzoul.com/isS760vu6rvg)，蓝奏云密码1234，如已安装3.8以上版本请忽略
 ## 安装方法
 * 根据系统完成依赖软件的安装
 * 将本仓库文件下载到本地
