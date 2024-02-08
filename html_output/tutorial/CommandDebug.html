@@ -158,11 +158,14 @@
                 <p>
                     格式1: #set command_version &#60;int&#62; &#60;int&#62; &#60;int&#62;<br>
                     格式2: #set test_time &#60;int&#62;
+                    格式3: #set response_web &#60;bool&#62;
                 </p>
                 <p>
                     &emsp;&emsp;command_version是设定命令对应游戏版本，命令的语法将会根据设置的版本进行运行。<br>
                     &emsp;&emsp;test_time是设定命令测试的总时长，当test_time设置为大于0的时候，所有命令设施开始运行，
-                    在测试过程中会记录所有命令运行的反馈，测试时间到后会跳转至命令反馈页面。
+                    在测试过程中会记录所有命令运行的反馈，测试时间到后会跳转至命令反馈页面。<br>
+                    &emsp;&emsp;response_web是设定命令测试完成后是否自动跳转命令反馈网页，
+                    每一次进入世界时都不会自动跳转，需要用户执行命令开启自动跳转。
                 </p>
 
                 <h3>#command</h3>
