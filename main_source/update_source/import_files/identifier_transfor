@@ -4,7 +4,7 @@
             "minecraft:wool","minecraft:log","minecraft:log2","minecraft:fence","minecraft:carpet","minecraft:coral",
             "minecraft:stained_glass","minecraft:stained_glass_pane","minecraft:concrete_powder","minecraft:stained_hardened_clay",
             "minecraft:concrete","minecraft:grass","minecraft:leaves","minecraft:leaves2","minecraft:double_wooden_slab",
-            "minecraft:wooden_slab"
+            "minecraft:wooden_slab","minecraft:wood"
         ],
         "id_transfor" : {
             "minecraft:white_wool" : {"block_id":"minecraft:wool","block_data":{"color": "white"}},
@@ -173,7 +173,20 @@
             "minecraft:birch_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "birch","top_slot_bit": false}},
             "minecraft:jungle_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "jungle","top_slot_bit": false}},
             "minecraft:acacia_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "acacia","top_slot_bit": false}},
-            "minecraft:dark_oak_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "dark_oak","top_slot_bit": false}}
+            "minecraft:dark_oak_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "dark_oak","top_slot_bit": false}},
+            
+            "minecraft:oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oka","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:spruce_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "spruce","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:birch_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "birch","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:jungle_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "jungle","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:acacia_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "acacia","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:dark_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "dark_oak","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:stripped_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oka","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_spruce_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "spruce","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_birch_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "birch","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_jungle_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "jungle","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_acacia_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "acacia","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_dark_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "dark_oak","stripped_bit": true,"pillar_axis": "y"}}
         }
     },
     "item": {
@@ -181,7 +194,7 @@
             "minecraft:wool","minecraft:log","minecraft:log2","minecraft:fence","minecraft:carpet","minecraft:coral",
             "minecraft:stained_glass","minecraft:stained_glass_pane","minecraft:concrete_powder","minecraft:stained_hardened_clay",
             "minecraft:concrete","minecraft:grass","minecraft:leaves","minecraft:leaves2","minecraft:double_wooden_slab",
-            "minecraft:wooden_slab"
+            "minecraft:wooden_slab","minecraft:wood"
         ],
         "id_transfor": {
             "minecraft:white_wool" : {"item_id":"minecraft:wool","item_data":{"value": 0}},
@@ -350,7 +363,20 @@
             "minecraft:birch_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 2}},
             "minecraft:jungle_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 3}},
             "minecraft:acacia_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 4}},
-            "minecraft:dark_oak_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 5}}
+            "minecraft:dark_oak_slab" : {"item_id":"minecraft:wooden_slab","item_data":{"value": 5}},
+            
+            "minecraft:oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oka","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:spruce_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "spruce","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:birch_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "birch","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:jungle_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "jungle","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:acacia_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "acacia","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:dark_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "dark_oak","stripped_bit": false,"pillar_axis": "y"}},
+            "minecraft:stripped_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oka","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_spruce_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "spruce","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_birch_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "birch","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_jungle_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "jungle","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_acacia_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "acacia","stripped_bit": true,"pillar_axis": "y"}},
+            "minecraft:stripped_dark_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "dark_oak","stripped_bit": true,"pillar_axis": "y"}}
         }
     },
     "block_state": {
