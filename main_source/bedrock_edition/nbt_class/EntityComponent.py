@@ -24,7 +24,7 @@ class entity_buliding :
             else : func(entity_object, entity_component_json['components'][i])
         
         self.trigger_entity_event(entity_object, entity_component_json, 'minecraft:entity_spawned')
-        self.set_default_porperty(entity_object)
+        self.set_default_property(entity_object)
 
     def entity_trigger(self, entity_object, event_name:str):
         entity_component_json = self.source.entities[entity_object.Identifier]
@@ -57,9 +57,9 @@ class entity_buliding :
                             else : func(entity_object, component_groups_json[groups_1][component_1])
 
                 if 'set_property' in sequence_obj :
-                    for porperty_name,value in sequence_obj['set_property'].items() :
-                        if porperty_name not in entity_object.porperty : continue
-                        self.set_porperty(entity_object, porperty_name, value)
+                    for property_name,value in sequence_obj['set_property'].items() :
+                        if property_name not in entity_object.property : continue
+                        self.set_property(entity_object, property_name, value)
 
         if 'remove' in events_json[event_name] :
             if 'component_groups' not in events_json[event_name]['remove'] : return None
@@ -81,51 +81,51 @@ class entity_buliding :
                     else : func(entity_object, component_groups_json[groups_3][component_3])
         
         if 'set_property' in events_json[event_name] :
-            for porperty_name,value in events_json[event_name]['set_property'].items() :
-                if porperty_name not in entity_object.porperty : continue
-                self.set_porperty(entity_object, porperty_name, value)
+            for property_name,value in events_json[event_name]['set_property'].items() :
+                if property_name not in entity_object.property : continue
+                self.set_property(entity_object, property_name, value)
 
 
 
-    def set_default_porperty(self, entity_object) :
+    def set_default_property(self, entity_object) :
         if entity_object.Identifier not in self.source.entities : return None
         if "properties" not in self.source.entities[entity_object.Identifier]["description"] : return None
         entity_properties_json = self.source.entities[entity_object.Identifier]["description"]["properties"]
 
-        for porperty_name,json1 in entity_properties_json.items() :
+        for property_name,json1 in entity_properties_json.items() :
             if json1["type"] == "bool" : 
-                self.set_porperty(entity_object, porperty_name, json1["default"] if isinstance(json1["default"],bool) else False , bool)
+                self.set_property(entity_object, property_name, json1["default"] if isinstance(json1["default"],bool) else False , bool)
             elif json1["type"] == "int" : 
-                self.set_porperty(entity_object, porperty_name, json1["default"], int, condition=json1.get("range",None))
+                self.set_property(entity_object, property_name, json1["default"], int, condition=json1.get("range",None))
             elif json1["type"] == "float" : 
-                self.set_porperty(entity_object, porperty_name, json1["default"], float, condition=json1.get("range",None))
+                self.set_property(entity_object, property_name, json1["default"], float, condition=json1.get("range",None))
             elif json1["type"] == "enum" : 
-                self.set_porperty(entity_object, porperty_name, json1["default"], str, condition=json1.get("values",None))
+                self.set_property(entity_object, property_name, json1["default"], str, condition=json1.get("values",None))
 
-    def set_porperty(self, entity_object, porperty_name, value, types=None, condition=None) :
-        if porperty_name not in entity_object.porperty :
-            entity_object.porperty[porperty_name] = {"value":types(value)}
-            if condition is not None : entity_object.porperty[porperty_name]["condition"] = condition
+    def set_property(self, entity_object, property_name, value, types=None, condition=None) :
+        if property_name not in entity_object.property :
+            entity_object.property[property_name] = {"value":types(value)}
+            if condition is not None : entity_object.property[property_name]["condition"] = condition
         else :
-            porperty_data = entity_object.porperty[porperty_name]
-            types1 = type(porperty_data["value"])
+            property_data = entity_object.property[property_name]
+            types1 = type(property_data["value"])
             try : m1 = types1(value)
             except : m1 = types1(bool(value))
-            if "condition" in porperty_data and isinstance(m1, (int,float)): 
-                if porperty_data["condition"][0] <= m1 <= porperty_data["condition"][1] : porperty_data["value"] = m1
-                elif m1 < porperty_data["condition"][0] : porperty_data["value"] = types1(porperty_data["condition"][0])
-                elif m1 > porperty_data["condition"][1] : porperty_data["value"] = types1(porperty_data["condition"][1])
-            elif "condition" in porperty_data and isinstance(m1, str) : 
-                if m1 in porperty_data["condition"] : porperty_data["value"] = m1
-            else : porperty_data["value"] = m1
+            if "condition" in property_data and isinstance(m1, (int,float)): 
+                if property_data["condition"][0] <= m1 <= property_data["condition"][1] : property_data["value"] = m1
+                elif m1 < property_data["condition"][0] : property_data["value"] = types1(property_data["condition"][0])
+                elif m1 > property_data["condition"][1] : property_data["value"] = types1(property_data["condition"][1])
+            elif "condition" in property_data and isinstance(m1, str) : 
+                if m1 in property_data["condition"] : property_data["value"] = m1
+            else : property_data["value"] = m1
 
 
-    def add_set_porperty(self, entity_obj, json2) :
-        for porperty_name,value in json2.items() :
-            if porperty_name not in entity_obj.porperty : continue
-            self.set_porperty(entity_obj, porperty_name, value)
+    def add_set_property(self, entity_obj, json2) :
+        for property_name,value in json2.items() :
+            if property_name not in entity_obj.property : continue
+            self.set_property(entity_obj, property_name, value)
 
-    def remove_set_porperty(self, entity_obj):
+    def remove_set_property(self, entity_obj):
         pass
 
     def add_rideable(self, entity_obj, json2):
@@ -501,8 +501,8 @@ def set_source(source) :
 def set_component(entity_object) :
     Entity_Construct.entity_creating(entity_object)
     
-def set_default_porperty(entity_object) :
-    Entity_Construct.set_default_porperty(entity_object)
+def set_default_property(entity_object) :
+    Entity_Construct.set_default_property(entity_object)
 
 def trigger_event(entity_object, event_name:str) :
     Entity_Construct.entity_trigger(entity_object, event_name)

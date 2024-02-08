@@ -25,6 +25,9 @@ terminal_command_parser = CommandParser.ParserSystem.Command_Parser(
                     ),
                     CommandParser.BaseMatch.Char("Argument","test_time").add_leaves(
                         CommandParser.BaseMatch.Int("Time").add_leaves( CommandParser.BaseMatch.END_NODE )
+                    ),
+                    CommandParser.BaseMatch.Char("Argument","response_web").add_leaves(
+                        CommandParser.BaseMatch.Enum("Bool","false","true").add_leaves( CommandParser.BaseMatch.END_NODE )
                     )
                 ),
             CommandParser.BaseMatch.Char("Command","command").add_leaves(
@@ -44,14 +47,13 @@ terminal_command_parser = CommandParser.ParserSystem.Command_Parser(
     )
 )
 
-
 def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) -> Union[Exception, functools.partial] :
     Terminal_Command = {
         "reload" : command_reload,
         "set" : command_set,
         "command" : command_command,
     }
-    token_list = terminal_command_parser.parser(s, (255,0,0))
+    token_list = terminal_command_parser.parser(s, _game.game_version)
     if isinstance(token_list, tuple) : return token_list[1]
     token_list.pop(0)
     return Terminal_Command[token_list[0]["token"].group()](_game, s, token_list)
@@ -106,6 +108,8 @@ def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dic
         if int(token_list[2]["token"].group()) < 0 : 
             return CommandCompiler.CompileError("测试时间不能为负数", pos=(token_list[2]["token"].start(),token_list[2]["token"].end()))
         return functools.partial(set_testTime, time=int(token_list[2]["token"].group()))
+    elif token_list[1]["token"].group() == "test_time" : 
+        return functools.partial(set_openResponseWeb, bool1=bool(("false","true").index(token_list[2]["token"].group())))
 
 def set_version(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, version:tuple) :
     _game.game_version = tuple(version)
@@ -115,21 +119,26 @@ def set_testTime(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, time:i
     _game.runtime_variable.how_times_run_all_command = time
     return Response.Response_Template("测试时间已设置完成", 1, 1).substitute()
 
+def set_openResponseWeb(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, bool1:bool) :
+    _game.runtime_variable.open_response_website = bool1
+    return Response.Response_Template("自动跳转反馈网页设置为$b", 1, 1).substitute(b=bool1)
+
+
 
 def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) -> functools.partial :
-    if token_list[1]["token"].group() == "loop" : 
-        command_object = CommandCompiler.Start_Compile(token_list[2:], _game.game_version, _game)
+    if token_list[1]["token"].group() == "loop" :
+        command_object = CommandCompiler.Start_Compile(token_list[2:], _game, _game.game_version)
         if isinstance(command_object, tuple) : return command_object[1]
         return functools.partial(command_loop, command=command[token_list[2]["token"].start():], command_obj=command_object)
     elif token_list[1]["token"].group() == "delay" : 
         if int(token_list[2]["token"].group()) < 0 : 
             return CommandCompiler.CompileError("延时时间不能为负数", pos=(token_list[2]["token"].start(),token_list[2]["token"].end()))
-        command_object = CommandCompiler.Start_Compile(token_list[3:], _game.game_version, _game)
+        command_object = CommandCompiler.Start_Compile(token_list[3:], _game, _game.game_version)
         if isinstance(command_object, tuple) : return command_object[1]
         return functools.partial(command_delay, time=int(token_list[2]["token"].group()),
         command=command[token_list[3]["token"].start():], command_obj=command_object)
     elif token_list[1]["token"].group() == "end" : 
-        command_object = CommandCompiler.Start_Compile(token_list[2:], _game.game_version, _game)
+        command_object = CommandCompiler.Start_Compile(token_list[2:], _game, _game.game_version)
         if isinstance(command_object, tuple) : return command_object[1]
         return functools.partial(command_end, command=command[token_list[2]["token"].start():], command_obj=command_object)
 

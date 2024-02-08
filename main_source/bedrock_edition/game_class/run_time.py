@@ -44,6 +44,8 @@ class runtime_variable :
         self.command_will_run:Dict[int,List[Tuple[str,functools.partial]]] = {}
         self.command_will_loop:List[Tuple[str,functools.partial]] = []
         self.command_will_run_test_end:List[Tuple[str,functools.partial]] = []
+
+        self.open_response_website = False
     
     def terminal_clear(self) :
         self.how_times_run_all_command = -1 

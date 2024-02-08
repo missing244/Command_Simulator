@@ -679,7 +679,7 @@ class tickingarea :
             return Response.Response_Template("常加载区块内记录的区块数量大于100个").substitute()
 
         template1 = {"type":"square", "dimension":execute_var["dimension"], "preload":preload, "force_load":[i for i in itertools.product(
-            range(start_pos[0], start_pos[2]+1, 16), range(end_pos[0], end_pos[2]+1, 16))]}
+            range(start_pos[0], end_pos[0]+1, 16), range(start_pos[2], end_pos[2]+1, 16))]}
         if name is None :
             for i in ["Area%s" % i for i in range(10)] : 
                 if i in game.minecraft_chunk.tickingarea : continue

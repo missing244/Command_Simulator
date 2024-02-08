@@ -713,8 +713,6 @@ class event :
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_get = Selector.Selector_Compiler(_game, token_list, 2)
         event_id = token_list[index]["token"].group()
-        if not any(event_id in ident["events"] for entity,ident in _game.minecraft_ident.entities.items()) :
-            raise CompileError("不存在的事件ID：%s" % event_id, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
         return functools.partial(cls.run_event, entity_get=entity_get, event_id=event_id)
 
     def run_event(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, event_id:str) :

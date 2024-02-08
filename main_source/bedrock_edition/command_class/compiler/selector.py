@@ -103,7 +103,7 @@ def Selector_Var_Condition_Test(execute_var:COMMAND_CONTEXT, game_tread:RunTime.
             else : hasitem_test_save.append(False)
         if not all(hasitem_test_save) : return False
 
-    if "dx" in execute_var or "dy" in execute_var or "dz" in execute_var :
+    if "dx" in selector_var or "dy" in selector_var or "dz" in selector_var :
         if DIMENSION_LIST[entity.Dimension] != execute_var["dimension"] : return False
         dxdydz_test_area = [
             math.floor(origin[0]), math.floor(origin[0]) + 1,
@@ -122,22 +122,22 @@ def Selector_Var_Condition_Test(execute_var:COMMAND_CONTEXT, game_tread:RunTime.
             if not(dxdydz_test_area[4]-entity.Collision['width']/2 <= entity.Pos[2] <= dxdydz_test_area[5]+entity.Collision['width']/2) : return False
             if not(dxdydz_test_area[2]-entity.Collision['height'] <= entity.Pos[1] <= dxdydz_test_area[3]) : return False
         
-    if "rm" in execute_var or "r" in execute_var :
+    if "rm" in selector_var or "r" in selector_var :
         if DIMENSION_LIST[entity.Dimension] != execute_var["dimension"] : return False
         distance = DISTANCE_FUNC(entity, *origin)
         if "r" in selector_var and distance > selector_var["r"] : return False
         if "rm" in selector_var and distance < selector_var["rm"] : return False
-    
-    if "has_property" in execute_var :
-        for condition in execute_var["has_property"] :
-            if condition['condition'] == 'has_porperty' and not((condition['name'] in entity.porperty) ^ condition['not']) : return False
-            if condition['condition'] == 'porperty_test' and ((condition['name'] not in entity.porperty) or 
-            (condition['value'] is not None and type(condition['value']) != type(entity.porperty[condition['name']])) or 
-            (condition['min'] is not None and type(condition['min']) != type(entity.porperty[condition['name']])) or 
-            (condition['max'] is not None and type(condition['max']) != type(entity.porperty[condition['name']])) or
-            (condition['value'] is not None and condition['value'] != entity.porperty[condition['name']]) or 
-            (condition['min'] is not None and ((entity.porperty[condition['name']] < condition['min']) ^ condition['not'])) or
-            (condition['max'] is not None and ((entity.porperty[condition['name']] > condition['max']) ^ condition['not']))) : return False
+
+    if "has_property" in selector_var :
+        for condition in selector_var["has_property"] :
+            if condition['condition'] == 'has_property' and not((condition['name'] in entity.property) ^ condition['not']) : return False
+            if condition['condition'] == 'property_test' and ((condition['name'] not in entity.property) or 
+            (condition['value'] is not None and type(condition['value']) != type(entity.property[condition['name']])) or 
+            (condition['min'] is not None and type(condition['min']) != type(entity.property[condition['name']])) or 
+            (condition['max'] is not None and type(condition['max']) != type(entity.property[condition['name']])) or
+            (condition['value'] is not None and condition['value'] != entity.property[condition['name']]) or 
+            (condition['min'] is not None and ((entity.property[condition['name']] < condition['min']) ^ condition['not'])) or
+            (condition['max'] is not None and ((entity.property[condition['name']] > condition['max']) ^ condition['not']))) : return False
 
     return True
 
@@ -434,15 +434,15 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
             if token_list[index]["type"] == "Next_Property_Argument" : index += 1
             if token_list[index]["type"] == "Property_Argument" : 
                 index += 2
-                condition_json = {"condition":"has_porperty", "name":"", "not":False}
+                condition_json = {"condition":"has_property", "name":"", "not":False}
                 if token_list[index]["type"] == "Not" : condition_json["not"] = True ; index += 1
                 condition_json["name"] = name = token_list[index]["token"].group() ; index += 1
                 if not any( (name in data["description"].get("properties", {}) \
                     for entity,data in game_tread.minecraft_ident.entities.items()) ) :
                     raise CompileError("不存在的实体属性：%s" % name, pos=(token_list[index-1]["token"].start(),token_list[index-1]["token"].end()))
-                set_insert_extand_Data(selector_save, "has_porperty", condition_json, list)
+                set_insert_extand_Data(selector_save, "has_property", condition_json, list)
             elif token_list[index]["type"] == "Property" : 
-                condition_json = {"condition":"porperty_test", "name":"", "value":None, "min":None, "max":None, "not":False}
+                condition_json = {"condition":"property_test", "name":"", "value":None, "min":None, "max":None, "not":False}
                 condition_json["name"] = name = token_list[index]["token"].group() ; index += 2
                 if not any( (name in data["description"].get("properties", {}) \
                     for entity,data in game_tread.minecraft_ident.entities.items()) ) :
@@ -463,7 +463,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
                         if token_list[index]["type"] == "Range_Max" : 
                             condition_json["max"] = int(token_list[index]["token"].group()) ; index += 1
 
-                set_insert_extand_Data(selector_save, "has_porperty", condition_json, list)
+                set_insert_extand_Data(selector_save, "has_property", condition_json, list)
 
     return index + 1
 
@@ -483,7 +483,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
         "dx": float, "dy": float, "dz": float, "rx": float, "rxm": float, "ry": float, "rym": float,
         "l": float, "lm": float, "r": float, "rm": float, "scores_if":[], "scores_unless":[], "tag_if":[], "tag_unless":[],
         "family_if":[], "family_unless":[], "m_if":[], "m_unless":[], "name_if":[], "name_unless":[], "type_if":[], "type_unless":[],
-        "hasitem":[], "permission_test":{}, "has_porperty":[]
+        "hasitem":[], "permission_test":{}, "has_property":[]
     }
     """
 
@@ -554,7 +554,6 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
     if selector_func is RunTime_Selector_Random and selector_save["sort"] == "farnest" :
         raise CompileError("随机选择器的数量参数不能为负数", pos=(start_index_save, end_index_save))
 
-    print(selector_save)
     if selector_func is not RunTime_Selector_Self : return (index+1, functools.partial(selector_func, selector_var=selector_save))
     else : return (index+1, functools.partial(selector_func, selector_var=selector_save, is_npc=is_npc, is_player=is_player))
 

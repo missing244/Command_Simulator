@@ -25,10 +25,10 @@ class visualization :
 
         self.game_thread = game_thread
         self.first_get_ready = False 
-        self.defalt_chunk = [0 for i in range(16 * 16 * 384)]
+        self.defalt_chunk = [0] * (16 * 16 * 384)
 
         self.start_x = 0 ; self.start_y = -64 ; self.start_z = 0
-        self.area_x = 16 ; self.area_y = 64 ; self.area_z = 16
+        self.area_x = 16 ; self.area_y = 1 ; self.area_z = 16
 
         self.track_entity = []
         self.debug_data = []
@@ -87,7 +87,7 @@ class visualization :
                 if not self.game_thread.in_game_tag : return {}
                 chunk_pos_1 = "(%s, %s)" % tuple(chunk_start)
                 if tuple(chunk_start) in dimension_data : chunks[chunk_pos_1] = dimension_data[tuple(chunk_start)]['blocks'][0:self.area_y*16*16]
-                else : chunks[chunk_pos_1] = self.defalt_chunk
+                else : chunks[chunk_pos_1] = self.defalt_chunk[0:self.area_y*16*16]
                 chunk_start[1] += 16
             chunk_start[0] += 16 ; chunk_start[1] = m1
         chunks["block_map"] = [i.Identifier for i in self.game_thread.minecraft_chunk.block_mapping]

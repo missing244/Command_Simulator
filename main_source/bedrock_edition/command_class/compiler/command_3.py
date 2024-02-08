@@ -934,7 +934,7 @@ class schedule :
         if len(range(start_pos[0], start_pos[2]+1, 16)) * len(range(end_pos[0], end_pos[2]+1, 16)) > 100 :
             return Response.Response_Template("区域内区块数量大于100个").substitute()
 
-        force_load = [i for i in itertools.product(range(start_pos[0], start_pos[2]+1, 16), range(end_pos[0], end_pos[2]+1, 16))]
+        force_load = [i for i in itertools.product(range(start_pos[0], end_pos[0]+1, 16), range(start_pos[2], end_pos[2]+1, 16))]
         def async_func() :
             set1 = set(force_load) & game.minecraft_chunk.loading_chunk_pos[execute_var["dimension"]]
             if set1.__len__() != force_load.__len__() : return None

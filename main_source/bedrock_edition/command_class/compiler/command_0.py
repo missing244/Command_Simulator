@@ -40,7 +40,7 @@ def as_at_pos(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity
         if not test_func : yield a
         for index,func in enumerate(test_func) : 
             b = func(a, game)
-            if not b : yield (1, a, b) ; continue
+            if not b : yield (1, a, b) ; break
             if index + 1 == len(test_func) : yield a
 
     yield None
@@ -134,7 +134,7 @@ def subcommand_as(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, en
         if not test_func : yield a
         for index,func in enumerate(test_func) : 
             b = func(a, game)
-            if not b : yield (1, a, b) ; continue
+            if not b : yield (1, a, b) ; break
             if index + 1 == len(test_func) : yield a
 
     yield None
@@ -153,24 +153,26 @@ def subcommand_at(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, en
         if not test_func : yield a
         for index,func in enumerate(test_func) : 
             b = func(a, game)
-            if not b : yield (1, a, b) ; continue
+            if not b : yield (1, a, b) ; break
             if index + 1 == len(test_func) : yield a
 
     yield None
 
-def subcommand_facing_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable,
+def subcommand_facing_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, anchor:Literal["feet","eyes"],
     test_func:List[Callable] = []) -> CONTEXT_GENERATER :
     entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
     if isinstance(entity_list, Response.Response_Template) : yield (0, execute_var, entity_list)
 
     for entity in entity_list :
         a = execute_var.copy()
+        pos1 = list(entity_list[0].Pos)
+        if anchor == "eyes" : pos1[1] = entity_list[0].Pos[1] + entity_list[0].Collision['height'] * 0.844444444444444444444
         a["rotate"] = MathFunction.rotation_angle(execute_var["pos"], entity.Pos)
 
         if not test_func : yield a
         for index,func in enumerate(test_func) : 
             b = func(a, game)
-            if not b : yield (1, a, b) ; continue
+            if not b : yield (1, a, b) ; break
             if index + 1 == len(test_func) : yield a
 
     yield None
@@ -187,7 +189,7 @@ def subcommand_positioned_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minec
         if not test_func : yield a
         for index,func in enumerate(test_func) : 
             b = func(a, game)
-            if not b : yield (1, a, b) ; continue
+            if not b : yield (1, a, b) ; break
             if index + 1 == len(test_func) : yield a
 
     yield None
@@ -204,7 +206,7 @@ def subcommand_rotated_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraf
         if not test_func : yield a
         for index,func in enumerate(test_func) : 
             b = func(a, game)
-            if not b : yield (1, a, b) ; continue
+            if not b : yield (1, a, b) ; break
             if index + 1 == len(test_func) : yield a
 
     yield None
@@ -246,23 +248,23 @@ def subcommand_rotated_pos(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_t
     return True
 
 def subcommand_test_block(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, unless:bool, pos:List[str], block_id:str, block_state=-1) :
-    pos_xyz = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
+    m1 = pos_xyz = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
     if not game.minecraft_chunk.____in_build_area____(execute_var["dimension"], pos_xyz) :
-        return Response.Response_Template("$pos处于世界之外").substitute(pos=tuple(pos_xyz))
+        return Response.Response_Template("$pos处于世界之外").substitute(pos=tuple(m1))
     if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], pos_xyz) :
-        return Response.Response_Template("$pos为未加载的区块").substitute(pos=tuple(pos_xyz))
+        return Response.Response_Template("$pos为未加载的区块").substitute(pos=tuple(m1))
 
     pos_xyz = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
     block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], pos_xyz)
     block_map = game.minecraft_chunk.block_mapping
     if block_state == -1 or block_state == {} :
         if (block_map[block_index].Identifier != block_id) ^ unless :
-            return Response.Response_Template("$pos位置的方块测试失败").substitute(pos=tuple(pos_xyz))
+            return Response.Response_Template("$pos位置的方块测试失败").substitute(pos=tuple(m1))
     else :
         new_block_index = game.minecraft_chunk.____find_block_mapping____(block_id, block_state)
         if (new_block_index != block_index) ^ unless: 
-            return Response.Response_Template("$pos位置的方块测试失败").substitute(pos=tuple(pos_xyz))
-    return Response.Response_Template("$pos位置的方块测试通过", 1, 1).substitute(pos=tuple(pos_xyz))
+            return Response.Response_Template("$pos位置的方块测试失败").substitute(pos=tuple(m1))
+    return Response.Response_Template("$pos位置的方块测试通过", 1, 1).substitute(pos=tuple(m1))
 
 def subcommand_test_blocks(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, unless:bool, start1:tuple, end1:tuple, 
     start2:tuple, mask_mode:Literal["all","masked"]) :
@@ -348,7 +350,8 @@ class execute_1_19_50 :
             elif token_list[index]["token"].group() == "facing" :
                 if token_list[index+1]["token"].group() == "entity" :
                     index, entity_func = Selector.Selector_Compiler(_game, token_list, index+2)
-                    subcommand_list.append( functools.partial(subcommand_facing_entity, entity_get=entity_func) )
+                    anchor_1 = token_list[index]["token"].group() ; index += 1
+                    subcommand_list.append( functools.partial(subcommand_facing_entity, entity_get=entity_func, anchor=anchor_1) )
                 else :
                     pos = [token_list[index+i]["token"].group() for i in range(1,4)] ; index += 4
                     cls.add_func(subcommand_list[-1], functools.partial(subcommand_facing_pos, pos=pos))

@@ -202,7 +202,7 @@ class entity_nbt :
         self.support_nbt.append("__minecraft_type__")
         self.__minecraft_type__ = "entity_nbt"
         self.damage = {"time_no_hurt":0, "type":None, "value":0, "source":None}
-        self.porperty:Dict[str,Union[str,int,bool,float]] = {}
+        self.property:Dict[str,Union[str,int,bool,float]] = {}
 
     def __create__(self, Identifier:str, dimension:Literal["overworld","nether","the_end"], pos:List[np.float32], name:str=None) :
         from . import EntityComponent
@@ -278,7 +278,7 @@ class entity_nbt :
         for key1 in json1:
             self.__setattr__(key1,json1[key1])
             self.support_nbt.append(key1)
-        EntityComponent.set_default_porperty(self)
+        EntityComponent.set_default_property(self)
         return self
 
 

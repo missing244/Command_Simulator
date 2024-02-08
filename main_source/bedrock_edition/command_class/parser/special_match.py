@@ -376,7 +376,7 @@ def middle_hasitem_multiple_args_loop(*end_node:BaseMatch.Match_Base) :
     m1.add_leaves(hasitem2)
     return hasitem1.add_leaves(hasitem2)
 
-def middle_hasporperty_loop(*end_node:BaseMatch.Match_Base) :
+def middle_hasproperty_loop(*end_node:BaseMatch.Match_Base) :
     hasProperty1 = BaseMatch.KeyWord("Start_Property_Argument","{")
     hasProperty2 = BaseMatch.Char("Property_Argument","property")
     hasProperty3 = BaseMatch.AnyString("Property")
@@ -556,7 +556,7 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
             BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         )
     ))
-    Selector_Var2[11].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( middle_hasporperty_loop(
+    Selector_Var2[11].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( middle_hasproperty_loop(
         BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
         BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
     )))

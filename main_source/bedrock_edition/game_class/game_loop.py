@@ -1,4 +1,4 @@
-import re,random,time,functools
+import re,random,time,functools,webbrowser,threading
 from .. import np,BaseNbtClass,Constants
 from . import RunTime
 from typing import List,Dict,Union,Literal,Tuple,Callable,Generator
@@ -403,6 +403,8 @@ def command_run_end(self:RunTime.minecraft_thread) :
             a = HtmlGenerate.generate_command_respones_html(self.runtime_variable.all_command_response)
             a.load_all_response()
             a.generate_html(self.world_name, "command_respones.html")
+            if self.runtime_variable.open_response_website : 
+                threading.Thread(lambda:[time.sleep(1.5), webbrowser.open("http://localhost:32323/command_respones.html")]).start()
 
         if self.visualization_object : self.visualization_object.set_test_end_flag()
     
