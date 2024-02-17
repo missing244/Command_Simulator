@@ -108,7 +108,7 @@ def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dic
         if int(token_list[2]["token"].group()) < 0 : 
             return CommandCompiler.CompileError("测试时间不能为负数", pos=(token_list[2]["token"].start(),token_list[2]["token"].end()))
         return functools.partial(set_testTime, time=int(token_list[2]["token"].group()))
-    elif token_list[1]["token"].group() == "test_time" : 
+    elif token_list[1]["token"].group() == "response_web" : 
         return functools.partial(set_openResponseWeb, bool1=bool(("false","true").index(token_list[2]["token"].group())))
 
 def set_version(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, version:tuple) :

@@ -355,8 +355,8 @@ def flash_search_id() -> Dict[Literal["success","error"],Union[list,list]] :
         else :
             content1 = file.read().split("\n")
             content1 = [tuple(text.split(": ",1)) for text in content1[1 : len(content1)-3]]
-            id_translat[id_name] = {
-                text_list[0]:text_list[1].replace("（不可召唤）","") for text_list in content1 if (text_list[1] != "")
+            id_translat[id_name] = { (text_list[0] if id_name != "[实体]" else text_list[0].replace("minecraft:", "", 1)) :
+                text_list[1].replace("（不可召唤）","") for text_list in content1 if (text_list[1] != "")
             }
             file.close()
             logs["success"].append("%s 文件翻译提取成功" % open_file_list[id_name]["name"])

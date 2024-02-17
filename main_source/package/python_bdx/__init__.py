@@ -1,6 +1,6 @@
 from . import operation as OperationCode
 from typing import Union,Literal,List
-import io,brotli,os,sys,traceback
+import io,brotli,os,sys,traceback,time
 
 from .function import get_operation
 from .operation import match_string_bytes
@@ -66,7 +66,7 @@ class BDX_File :
     def __init2__(self) :
         if self._file.read(3) != b'BD@' : raise BXDFileReadError("不是bdx数据文件")
         bdx_code = io.BytesIO(brotli.decompress(self._file.read()))
-        #print(bdx_code.getvalue()[0:100])
+        #print(bdx_code.getvalue().__len__())
         if bdx_code.read(4) != b'BDX\0' : raise BXDFileReadError("不是bdx数据文件")
         self.author = match_string_bytes(bdx_code).decode("utf-8")
         try :

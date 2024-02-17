@@ -652,7 +652,6 @@ class tickingarea :
             start_pos[2] - (radius * 16) , start_pos[2] + 16 + (radius * 16) ,
         )
         for chunk_pos in itertools.product(range(load_range[0], load_range[1], 16), range(load_range[2], load_range[3], 16)) :
-            if ((chunk_pos[0] - start_pos[0]) ** 2 + (chunk_pos[1]- start_pos[2]) ** 2) > ((radius * 16) ** 2) : continue
             template1["force_load"].append(chunk_pos)     
    
         if name is None :

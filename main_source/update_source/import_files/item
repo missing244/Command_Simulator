@@ -59,6 +59,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:acacia_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:activator_rail": {
     "damage_max": null,
     "can_enchant": []
@@ -348,6 +352,10 @@
     "can_enchant": []
   },
   "minecraft:birch_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_wood": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1251,6 +1259,10 @@
     "can_enchant": []
   },
   "minecraft:dark_oak_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_wood": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2468,6 +2480,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:jungle_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:kelp": {
     "damage_max": null,
     "can_enchant": []
@@ -3270,6 +3286,10 @@
     "can_enchant": []
   },
   "minecraft:oak_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oak_wood": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4222,6 +4242,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:spruce_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:spyglass": {
     "damage_max": null,
     "can_enchant": []
@@ -4359,11 +4383,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:stripped_acacia_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:stripped_bamboo_block": {
     "damage_max": null,
     "can_enchant": []
   },
   "minecraft:stripped_birch_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_birch_wood": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4387,7 +4419,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:stripped_dark_oak_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:stripped_jungle_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_jungle_wood": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4403,7 +4443,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:stripped_oak_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:stripped_spruce_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_spruce_wood": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4864,10 +4912,6 @@
     "can_enchant": []
   },
   "minecraft:wolf_spawn_egg": {
-    "damage_max": null,
-    "can_enchant": []
-  },
-  "minecraft:wood": {
     "damage_max": null,
     "can_enchant": []
   },

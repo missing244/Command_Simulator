@@ -1,5 +1,5 @@
 from .. import COMMAND_TOKEN,COMMAND_CONTEXT,ID_tracker,Response
-from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,DataSave,LootTable,EntityComponent
+from ... import RunTime,Constants,BaseNbtClass,np,MathFunction,DataSave,LootTable,EntityComponent,BlockComponent
 from . import Selector,Rawtext,CompileError,CommandParser,Command0
 from . import Quotation_String_transfor_1,ID_transfor,BlockState_Compiler,Msg_Compiler,ItemComponent_Compiler
 import functools,string,random,math,itertools,json
@@ -173,7 +173,7 @@ class loot :
             if token_list[index]["token"].group() == "kill" :
                 index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
             else : 
-                loot_get = "loot_tables/%s" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
+                loot_get = "loot_tables/%s.json" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
                 if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
                 pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
             return functools.partial(cls.give, entity_get=entity_func_1, loot_get=loot_get)
@@ -182,7 +182,7 @@ class loot :
             if token_list[index]["token"].group() == "kill" :
                 index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
             else : 
-                loot_get = "loot_tables/%s" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
+                loot_get = "loot_tables/%s.json" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
                 if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
                 pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
             return functools.partial(cls.insert if token_list[1]["token"].group() == "insert" else cls.spawn, pos=pos, loot_get=loot_get)
@@ -200,7 +200,7 @@ class loot :
                 if token_list[index]["token"].group() == "kill" :
                     index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
                 else : 
-                    loot_get = "loot_tables/%s" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
+                    loot_get = "loot_tables/%s.json" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
                     if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
                     pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
                 return functools.partial(cls.replace_block, pos=pos, slot_id=slot_id, slot_count=slot_count, loot_get=loot_get)
@@ -218,7 +218,7 @@ class loot :
                 if token_list[index]["token"].group() == "kill" :
                     index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
                 else : 
-                    loot_get = "loot_tables/%s" % token_list[index+1]["token"].group()
+                    loot_get = "loot_tables/%s.json" % token_list[index+1]["token"].group()
                     if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
                     pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
                 return functools.partial(cls.replace_entity, entity_get=entity_func_1, slot=slot, slot_index=slot_id, slot_count=slot_count, loot_get=loot_get)
@@ -897,10 +897,8 @@ class schedule :
             start_pos[2] - (radius * 16) , start_pos[2] + 16 + (radius * 16) ,
         )
 
-        force_load = [] 
-        for chunk_pos in itertools.product(range(load_range[0], load_range[1], 16), range(load_range[2], load_range[3], 16)) :
-            if ((chunk_pos[0] - start_pos[0]) ** 2 + (chunk_pos[1]- start_pos[2]) ** 2) > ((radius * 16) ** 2) : continue
-            force_load.append(chunk_pos)
+        force_load = [chunk_pos for chunk_pos in itertools.product(
+            range(load_range[0], load_range[1], 16), range(load_range[2], load_range[3], 16))]
         
         def async_func() :
             set1 = set(force_load) & game.minecraft_chunk.loading_chunk_pos[execute_var["dimension"]]
@@ -1208,7 +1206,7 @@ class setblock :
                 a = block_obj.__change_to_entity__(execute_var["dimension"], [i+0.5 for i in set_pos])
                 game.minecraft_chunk.__add_entity__(a)
             game.minecraft_chunk.____set_block____(execute_var["dimension"], set_pos, new_block_index)
-            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], set_pos, None)
+            game.minecraft_chunk.____set_block_nbt____(execute_var["dimension"], set_pos, BlockComponent.find_block_id_nbt(block_id))
             return Response.Response_Template("已在$pos放置了指定的方块", 1, 1).substitute(pos=tuple(set_pos))
         else : return Response.Response_Template("无法在$pos放置指定的方块").substitute(pos=tuple(set_pos))
 

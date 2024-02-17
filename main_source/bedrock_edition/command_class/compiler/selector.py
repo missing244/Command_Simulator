@@ -173,7 +173,7 @@ def RunTime_Selector_Entity(execute_var:COMMAND_CONTEXT, game_tread:RunTime.mine
 def RunTime_Selector_Name(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_thread, name:str, _except:BaseNbtClass.entity_nbt=None) :
     all_entity_test_list = game_tread.minecraft_chunk.__get_all_load_entity__(is_player=True)
     if _except and _except in all_entity_test_list : all_entity_test_list.remove(_except)
-
+    
     entity_saves : List[BaseNbtClass.entity_nbt] = [entity for entity in all_entity_test_list if name == entity.CustomName and entity.Health > 0]
         
     if not entity_saves : return Response.Response_Template("没有与目标选择器匹配的目标").substitute()
@@ -488,8 +488,8 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
     """
 
     if token_list[index]["type"] == "Player_Name" :
-        player_name = Quotation_String_transfor_2(token_list[index]["token"].group().lower())
-        return functools.partial(RunTime_Selector_Name, name=player_name)
+        player_name = Quotation_String_transfor_2(token_list[index]["token"].group())
+        return (index+1, functools.partial(RunTime_Selector_Name, name=player_name))
 
     Selector_Var = token_list[index]["token"].group()
     if Selector_Var == "@p" : selector_func = RunTime_Selector_Player ; is_player = True

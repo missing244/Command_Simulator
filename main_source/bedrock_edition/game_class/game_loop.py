@@ -92,8 +92,7 @@ class runing_command_block_obj:
         block_id = self.mc_chunk.____find_block____(self.DIM, pos)
         nbt = self.mc_chunk.____find_block_nbt____(self.DIM, pos)
         i = block_id - self.ID_CB_OFFSET
-        if not (0 <= i <= 35):
-            raise ValueError  # Block at `pos` is not CB now
+        if not (0 <= i <= 35) : raise ValueError  # Block at `pos` is not CB now
         cb_type = i // 12
         cb_direction = i % 6
         cb_conditional = bool(i // 6 % 2)
@@ -180,8 +179,7 @@ class runing_command_block_obj:
                 else : condition_ok = True
             else : condition_ok = False
             # Run command
-            if condition_ok:
-                if cb_command not in self.mc_chunk.command_block_compile_function : continue
+            if condition_ok and cb_command in self.mc_chunk.command_block_compile_function :
                 func = self.mc_chunk.command_block_compile_function[cb_command]
                 response = func({
                     "executer": "command_block",
@@ -404,7 +402,7 @@ def command_run_end(self:RunTime.minecraft_thread) :
             a.load_all_response()
             a.generate_html(self.world_name, "command_respones.html")
             if self.runtime_variable.open_response_website : 
-                threading.Thread(lambda:[time.sleep(1.5), webbrowser.open("http://localhost:32323/command_respones.html")]).start()
+                threading.Thread(target=lambda:[time.sleep(1.5), webbrowser.open("http://localhost:32323/command_respones.html")]).start()
 
         if self.visualization_object : self.visualization_object.set_test_end_flag()
     

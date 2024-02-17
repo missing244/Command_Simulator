@@ -840,7 +840,7 @@ class chunk_nbt :
         index_str = str(self.____pos_to_index____(block_pos))
         saves = self.loading_chunk[dimension_id][chunk_pos]['nbt_save']
         if nbt is None and index_str in saves : del saves[index_str]
-        else : saves[index_str] = nbt
+        elif nbt is not None : saves[index_str] = nbt
     
 
     def __block_pickup_item__(self, dimension_id:Literal["overworld","nether","the_end"], block_pos:List[Union[float,np.float32,int]], item_obj:item_nbt):
@@ -1085,7 +1085,8 @@ class chunk_nbt :
                     player_chunk_z - (chunk_radius*16) , player_chunk_z + 16 + (chunk_radius*16) ,
                 )
                 for chunk_pos in itertools.product(range(load_range[0], load_range[1], 16), range(load_range[2], load_range[3], 16)) :
-                    if ((chunk_pos[0] - player_chunk_x) ** 2 + (chunk_pos[1]- player_chunk_z) ** 2) > ((chunk_radius*16) ** 2) : continue
+                    if (abs((chunk_pos[0] - player_chunk_x) // 16) + abs((chunk_pos[1] - player_chunk_z) // 16) > 
+                    (chunk_radius + (0 if chunk_pos[0] == player_chunk_x or chunk_pos[1] == player_chunk_z else 1))) : continue
                     self.loading_chunk_pos[keys].add(chunk_pos)
 
         for keys in self.tickingarea :
