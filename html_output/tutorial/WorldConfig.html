@@ -53,14 +53,8 @@
             <div id="main_2" style="display: none;" >
                 <h1 style="text-align: center;">加载区块</h1>
                 <p>
-                    &emsp;&emsp;命令模拟器在进入世界时会在世界原点附近生成5个玩家，每个玩家都以玩家所在的区块为中心，以模拟距离为半径，
-                    将这个圆形区域所覆盖的区块全部设置为加载区块。
-                </p>
-                <div style="text-align:center"><img src="../picture/tutorial/load_chunk.jpg" alt="" width="250" height="250"></div>
-                <p>
-                    &emsp;&emsp;例如图中的Player所在的区块为ChunkPos，模拟距离为4。则该圆形区域以ChunkPos为起点，半径为4个区块，
-                    包含的区块A到Z1都会被标记为加载区块。你可以观察这张图并总结更大的模拟距离会影响多少范围的区块。tickingarea命令的circle模式同理。
-                </p>
+                    &emsp;&emsp;命令模拟器在进入世界时会在世界原点附近生成4个玩家，每个玩家都以玩家所在的区块为中心，     
+                    以模拟区块距离为曼哈顿距离，计算需要加载的区块。
                 <p>
                     &emsp;&emsp;超出加载区块的位置会影响clone、setblock等方块处理命令。
                     并且在命令模拟器中，超出加载区块的实体在下一个游戏刻将不会被读取和搜索。
