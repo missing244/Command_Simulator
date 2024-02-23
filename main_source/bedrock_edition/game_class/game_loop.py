@@ -212,9 +212,11 @@ class runing_command_block_obj:
                     elif isinstance(ret, list):
                         self.cb_schedules.append(ret)
                         break
-                    elif ret is None:
+                    else:
                         cur = next_pos
                         load_successful = False
+                else:
+                    break
 
     def schedule_tick(self, schedule) -> None:
         """Runs every tick for every schedules"""
