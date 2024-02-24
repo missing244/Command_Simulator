@@ -5,7 +5,18 @@ import io,brotli,os,sys,traceback,time
 from .function import get_operation
 from .operation import match_string_bytes
 
-
+Oper_Obj = List[Union[OperationCode.CreateConstantString,OperationCode.PlaceBlockWithBlockStates1,
+            OperationCode.AddInt16ZValue0,OperationCode.PlaceBlock,OperationCode.AddZValue0,OperationCode.NOP,
+            OperationCode.AddInt32ZValue0,OperationCode.PlaceBlockWithBlockStates2,OperationCode.AddXValue,
+            OperationCode.SubtractXValue,OperationCode.AddYValue,OperationCode.SubtractYValue,OperationCode.AddZValue,
+            OperationCode.SubtractZValue,OperationCode.AddInt16XValue,OperationCode.AddInt32XValue,OperationCode.AddInt16YValue,
+            OperationCode.AddInt32YValue,OperationCode.AddInt16ZValue,OperationCode.AddInt32ZValue,OperationCode.SetCommandBlockData,
+            OperationCode.PlaceBlockWithCommandBlockData,OperationCode.AddInt8XValue,OperationCode.AddInt8YValue,OperationCode.AddInt8ZValue,
+            OperationCode.UseRuntimeIDPool,OperationCode.PlaceRuntimeBlock,OperationCode.placeBlockWithRuntimeId,
+            OperationCode.PlaceRuntimeBlockWithCommandBlockData,OperationCode.PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID,
+            OperationCode.PlaceCommandBlockWithCommandBlockData,OperationCode.PlaceRuntimeBlockWithChestData,
+            OperationCode.PlaceRuntimeBlockWithChestDataAndUint32RuntimeID,OperationCode.AssignDebugData,OperationCode.PlaceBlockWithChestData,
+            OperationCode.PlaceBlockWithNBTData,OperationCode.Terminate]]
 """
 sys.path.append(os.path.realpath(os.path.join(__file__, os.pardir)))
 
@@ -46,18 +57,7 @@ class BDX_File :
         else : self._file = file
         
         self.author = ""
-        self.operation_list : List[Union[OperationCode.CreateConstantString,OperationCode.PlaceBlockWithBlockStates1,
-            OperationCode.AddInt16ZValue0,OperationCode.PlaceBlock,OperationCode.AddZValue0,OperationCode.NOP,
-            OperationCode.AddInt32ZValue0,OperationCode.PlaceBlockWithBlockStates2,OperationCode.AddXValue,
-            OperationCode.SubtractXValue,OperationCode.AddYValue,OperationCode.SubtractYValue,OperationCode.AddZValue,
-            OperationCode.SubtractZValue,OperationCode.AddInt16XValue,OperationCode.AddInt32XValue,OperationCode.AddInt16YValue,
-            OperationCode.AddInt32YValue,OperationCode.AddInt16ZValue,OperationCode.AddInt32ZValue,OperationCode.SetCommandBlockData,
-            OperationCode.PlaceBlockWithCommandBlockData,OperationCode.AddInt8XValue,OperationCode.AddInt8YValue,OperationCode.AddInt8ZValue,
-            OperationCode.UseRuntimeIDPool,OperationCode.PlaceRuntimeBlock,OperationCode.placeBlockWithRuntimeId,
-            OperationCode.PlaceRuntimeBlockWithCommandBlockData,OperationCode.PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID,
-            OperationCode.PlaceCommandBlockWithCommandBlockData,OperationCode.PlaceRuntimeBlockWithChestData,
-            OperationCode.PlaceRuntimeBlockWithChestDataAndUint32RuntimeID,OperationCode.AssignDebugData,OperationCode.PlaceBlockWithChestData,
-            OperationCode.PlaceBlockWithNBTData,OperationCode.Terminate]] = []
+        self.operation_list : Oper_Obj = []
 
         self.__closed = False
         self.__mode = mode

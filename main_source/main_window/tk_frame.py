@@ -910,7 +910,7 @@ class Choose_Expand(tkinter.Frame) :
         self.main_win = main_win
         self.expand_pack_list = {
             "c0414919-e6ed-4b41-b2ac-130119684144": {
-                "crc32": None, "pack_name": "原版拓展(模拟器专用)", "import":["pycparser","cffi",'brotlipy']
+                "crc32": None, "pack_name": "原版拓展(模拟存档必装)", "import":["pycparser","cffi",'brotlipy']
             }}
         self.is_installing = False #正在安装拓展包
 

@@ -29,6 +29,14 @@ class tools :
         if a == Exception : return False
         elif mode == "if" : return var1 <= a <= var2
         elif mode == "unless" : return not(var1 <= a <= var2)
+    
+    def name_test(entity:BaseNbtClass.entity_nbt, name_list:List[str]) :
+        entity_name = entity.CustomName.lower()
+        if entity_name.__len__() : return entity_name in name_list
+        if entity_name in name_list : return True
+        entity_id = entity.Identifier.replace("minecraft:","",1)
+        CustomName = Constants.TRANSLATE_ID["[实体]"].get(entity_id, "entity.%s.name" % entity_id)
+        return CustomName in name_list
 
 def Selector_Var_Condition_Test(execute_var:COMMAND_CONTEXT, game_tread:RunTime.minecraft_thread, origin:Tuple[int,int,int],
     selector_var:dict, entity:BaseNbtClass.entity_nbt, is_alive:bool=True) -> bool :
@@ -49,8 +57,8 @@ def Selector_Var_Condition_Test(execute_var:COMMAND_CONTEXT, game_tread:RunTime.
     if "type_if" in selector_var and entity.Identifier not in selector_var["type_if"] : return False
     if "type_unless" in selector_var and entity.Identifier in selector_var["type_unless"] : return False
 
-    if "name_if" in selector_var and entity.CustomName.lower() not in selector_var["name_if"] : return False
-    if "name_unless" in selector_var and entity.CustomName.lower() in selector_var["name_unless"] : return False
+    if "name_if" in selector_var and not tools.name_test(entity, selector_var["name_if"]) : return False
+    if "name_unless" in selector_var and tools.name_test(entity, selector_var["name_if"]) : return False
 
     if "tag_if" in selector_var :
         if "" in selector_var["tag_if"] and (len(selector_var["tag_if"]) > 1 or len(entity.Tags)) : return False
