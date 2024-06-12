@@ -130,6 +130,12 @@ class camera :
                     _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+5, is_single=True)
                     return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
                 else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
+            elif token_list[index]["token"].group() == "view_offset" :
+                for i in range(1,3,1) :
+                    view_offset = token_list[index+i]["token"]
+                    if not (-100 <= int(view_offset.group()) <= 100) : 
+                        raise CompileError("视点偏量应该在-100~100之间", pos=(view_offset.start(),view_offset.end()))
+                return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
             else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
 
     def clear(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :

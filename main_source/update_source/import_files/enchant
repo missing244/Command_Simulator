@@ -11,8 +11,14 @@
   "blast_protection": {
     "max_level": 4
   },
+  "breach": {
+    "max_level": null
+  },
   "channeling": {
     "max_level": 1
+  },
+  "density": {
+    "max_level": null
   },
   "depth_strider": {
     "max_level": 3
@@ -112,5 +118,8 @@
   },
   "vanishing": {
     "max_level": 1
+  },
+  "wind_burst": {
+    "max_level": null
   }
 }

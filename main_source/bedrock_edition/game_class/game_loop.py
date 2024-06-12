@@ -6,7 +6,6 @@ from typing import List,Dict,Union,Literal,Tuple,Callable,Generator
 DIMENSION_LIST = list(Constants.DIMENSION_INFO)
 KEYWORD_END = re.compile("[ ]{0,}(e|E)(n|N)(d|D)[ ]{0,}$")
 KEYWORD_PASS = (re.compile("[ ]{0,}(p|P)(a|A)(s|S)(s|S)[ ]{0,}"), re.compile("[0-9]{1,}[ ]{0,}$"))
-KEYWORD_COMMENTARY = re.compile("//")
 KEYWORD_TERMINAL_COMMAND = re.compile("[ ]{0,}#")
 
 RUN_TERMINAL_END:Dict[int,Callable] = {}
@@ -337,10 +336,10 @@ def terminal_running(self:RunTime.minecraft_thread) :
             mid1 = int(0 if times is None else times.group())
             if mid1 < 1 : feedback_list.append((lines, "pass 的参数应该为正整数", keyword_end)) ; continue
             pass_times = mid1
-        elif KEYWORD_COMMENTARY.match(command_text) : continue
         elif KEYWORD_TERMINAL_COMMAND.match(command_text) : 
             a = TerminalCommand.Terminal_Compiler(self,command_text)
             if isinstance(a, Exception) : feedback_list.append((lines, a.args[0], a.pos[0] if hasattr(a,"pos") else 0))
+            elif a is None : continue
             else : 
                 command_function.append( (command_text,a) )
                 if id(a.func) == id(TerminalCommand.set_version) : a(context, self)

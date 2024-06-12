@@ -43,11 +43,12 @@ terminal_command_parser = CommandParser.ParserSystem.Command_Parser(
                     *CommandParser.CommandTree.Command_Tree.tree_leaves
                 )
             ),
+            CommandParser.BaseMatch.AnyMsg("Note").add_leaves( CommandParser.BaseMatch.END_NODE )
         )
     )
 )
 
-def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) -> Union[Exception, functools.partial] :
+def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) -> Union[None, Exception, functools.partial] :
     Terminal_Command = {
         "reload" : command_reload,
         "set" : command_set,
@@ -56,7 +57,9 @@ def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) -> Union[Exception,
     token_list = terminal_command_parser.parser(s, _game.game_version)
     if isinstance(token_list, tuple) : return token_list[1]
     token_list.pop(0)
-    return Terminal_Command[token_list[0]["token"].group()](_game, s, token_list)
+    Command = token_list[0]["token"].group()
+    if Command not in Terminal_Command : return None
+    return Terminal_Command[Command](_game, s, token_list)
 
 
 def command_reload(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) :

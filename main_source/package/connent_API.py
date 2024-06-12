@@ -16,7 +16,7 @@ parser = MyHTMLParser()
 
 
 request_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.54'}
-qq_share_re_search = (re.compile('<script type="text/javascript">window.syncData = '), re.compile(';</script>'))
+qq_share_re_search = (re.compile('<script type="text/javascript">window\\.syncData = '), re.compile(';</script>'))
 
 
 class AES_mode:
@@ -268,7 +268,6 @@ MANUAL_LOGIN = ["https://command.infinityfreeapp.com/manual_login.php?i=1","http
 UPDATE_EXPAND_PACK = ["https://command.infinityfreeapp.com/expand_pack_get.php?i=1","https://commandsimulatorapi.great-site.net/expand_pack_get.php?i=1"]
 
 UPDATE_BE_ID = "https://ca.projectxero.top/idlist/data/beta/vanilla.zip"
-BLOCK_TEXTURE_DOWNLOAD = "https://z4a.net/images/2023/10/01/block_texture.png"
 
 
 

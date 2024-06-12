@@ -6449,6 +6449,1528 @@
       }
     ]
   },
+  "loot_tables/chests/trial_chambers/corridor.json": {
+    "pools": [
+      {
+        "rolls": {
+          "min": 1,
+          "max": 3
+        },
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:iron_axe",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.4,
+                  "max": 0.9
+                }
+              },
+              {
+                "function": "enchant_randomly"
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:honeycomb",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:stone_axe",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.15,
+                  "max": 0.8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:stone_pickaxe",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.15,
+                  "max": 0.8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:ender_pearl",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bamboo_hanging_sign",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 4
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bamboo_planks",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 3,
+                  "max": 6
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:scaffolding",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 10
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:torch",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 3,
+                  "max": 6
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:tuff",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 8,
+                  "max": 20
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/entrance.json": {
+    "pools": [
+      {
+        "rolls": {
+          "min": 2,
+          "max": 3
+        },
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:trial_key",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:stick",
+            "weight": 5,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:wooden_axe",
+            "weight": 10,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:honeycomb",
+            "weight": 10,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 10,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 5,
+                  "max": 10
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/intersection.json": {
+    "pools": [
+      {
+        "rolls": {
+          "min": 1,
+          "max": 3
+        },
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:diamond_block",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:emerald_block",
+            "weight": 5,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_axe",
+            "weight": 5,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.1,
+                  "max": 0.5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_pickaxe",
+            "weight": 5,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.1,
+                  "max": 0.5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond",
+            "weight": 10,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:cake",
+            "weight": 20,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 4
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:amethyst_shard",
+            "weight": 20,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 8,
+                  "max": 20
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_block",
+            "weight": 20,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/intersection_barrel.json": {
+    "pools": [
+      {
+        "rolls": {
+          "min": 1,
+          "max": 3
+        },
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:diamond_axe",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.4,
+                  "max": 0.9
+                }
+              },
+              {
+                "function": "enchant_randomly"
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_pickaxe",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.15,
+                  "max": 0.8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:compass",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.15,
+                  "max": 0.8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bucket",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:golden_axe",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.15,
+                  "max": 0.8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:golden_pickaxe",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.15,
+                  "max": 0.8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bamboo_planks",
+            "weight": 10,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 5,
+                  "max": 15
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:baked_potato",
+            "weight": 10,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 6,
+                  "max": 10
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_common.json",
+            "weight": 8
+          },
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_rare.json",
+            "weight": 2
+          }
+        ]
+      },
+      {
+        "rolls": {
+          "min": 1,
+          "max": 3
+        },
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_common.json",
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_unique.json",
+            "weight": 1
+          }
+        ],
+        "conditions": [
+          {
+            "condition": "random_chance",
+            "chance": 0.25
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward_common.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 4,
+            "aux_val": 26,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 8
+                }
+              },
+              {
+                "function": "set_data",
+                "data": 26
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:emerald",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 4
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:wind_charge",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_ingot",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 4
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:honey_bottle",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:ominous_bottle",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_ominous_bottle_amplifier",
+                "amplifier": {
+                  "min": 0,
+                  "max": 1
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:wind_charge",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 12
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward_ominous.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_ominous_common.json",
+            "weight": 8
+          },
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_ominous_rare.json",
+            "weight": 2
+          }
+        ]
+      },
+      {
+        "rolls": {
+          "min": 1,
+          "max": 3
+        },
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_ominous_common.json",
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/chests/trial_chambers/reward_ominous_unique.json",
+            "weight": 1
+          }
+        ],
+        "conditions": [
+          {
+            "condition": "random_chance",
+            "chance": 0.75
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward_ominous_common.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:emerald",
+            "weight": 5,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 10
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:wind_charge",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 8,
+                  "max": 12
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 3,
+            "aux_val": 43,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 12
+                }
+              },
+              {
+                "function": "set_data",
+                "data": 43
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:ominous_bottle",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_ominous_bottle_amplifier",
+                "amplifier": {
+                  "min": 2,
+                  "max": 4
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward_ominous_rare.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:emerald_block",
+            "weight": 5
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_block",
+            "weight": 4
+          },
+          {
+            "type": "item",
+            "name": "minecraft:crossbow",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 5.0,
+                  "max": 20.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:golden_apple",
+            "weight": 3
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_axe",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 10.0,
+                  "max": 20.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_chestplate",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 10.0,
+                  "max": 20.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:book",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_book_for_trading",
+                "enchantments": [
+                  {
+                    "name": "knockback",
+                    "min": 1,
+                    "max": 2
+                  },
+                  {
+                    "name": "punch",
+                    "min": 1,
+                    "max": 2
+                  },
+                  {
+                    "name": "smite",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "name": "looting",
+                    "min": 1,
+                    "max": 3
+                  },
+                  {
+                    "name": "multishot",
+                    "min": 1,
+                    "max": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:book",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_book_for_trading",
+                "enchantments": [
+                  {
+                    "name": "breach",
+                    "min": 1,
+                    "max": 4
+                  },
+                  {
+                    "name": "density",
+                    "min": 1,
+                    "max": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:book",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_book_for_trading",
+                "enchantments": [
+                  {
+                    "name": "wind_burst",
+                    "min": 1,
+                    "max": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_block",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward_ominous_unique.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:enchanted_golden_apple",
+            "weight": 3
+          },
+          {
+            "type": "item",
+            "name": "minecraft:flow_armor_trim_smithing_template",
+            "weight": 3
+          },
+          {
+            "type": "item",
+            "name": "minecraft:flow_banner_pattern",
+            "weight": 2
+          },
+          {
+            "type": "item",
+            "name": "minecraft:music_disc_creator",
+            "weight": 1
+          },
+          {
+            "type": "item",
+            "name": "minecraft:heavy_core",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward_rare.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:emerald",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 4
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:shield",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.5,
+                  "max": 1.0
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bow",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 5.0,
+                  "max": 15.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:crossbow",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 5.0,
+                  "max": 20.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_axe",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 0.0,
+                  "max": 10.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_chestplate",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 0.0,
+                  "max": 10.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:golden_carrot",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:book",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_book_for_trading",
+                "enchantments": [
+                  {
+                    "name": "sharpness",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "name": "bane_of_arthropods",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "name": "efficiency",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "name": "fortune",
+                    "min": 1,
+                    "max": 3
+                  },
+                  {
+                    "name": "silk_touch",
+                    "min": 1,
+                    "max": 1
+                  },
+                  {
+                    "name": "feather_falling",
+                    "min": 1,
+                    "max": 4
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:book",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "enchant_book_for_trading",
+                "enchantments": [
+                  {
+                    "name": "riptide",
+                    "min": 1,
+                    "max": 3
+                  },
+                  {
+                    "name": "loyalty",
+                    "min": 1,
+                    "max": 3
+                  },
+                  {
+                    "name": "channeling",
+                    "min": 1,
+                    "max": 1
+                  },
+                  {
+                    "name": "impaling",
+                    "min": 1,
+                    "max": 5
+                  },
+                  {
+                    "name": "mending",
+                    "min": 1,
+                    "max": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_chestplate",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 5.0,
+                  "max": 15.0
+                },
+                "treasure": true
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_axe",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "enchant_with_levels",
+                "levels": {
+                  "min": 5.0,
+                  "max": 15.0
+                },
+                "treasure": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/reward_unique.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:golden_apple",
+            "weight": 4
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bolt_armor_trim_smithing_template",
+            "weight": 3
+          },
+          {
+            "type": "item",
+            "name": "minecraft:guster_banner_pattern",
+            "weight": 2
+          },
+          {
+            "type": "item",
+            "name": "minecraft:music_disc_precipice",
+            "weight": 2
+          },
+          {
+            "type": "item",
+            "name": "minecraft:trident",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/chests/trial_chambers/supply.json": {
+    "pools": [
+      {
+        "rolls": {
+          "min": 3,
+          "max": 5
+        },
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 14
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "aux_val": 26,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 8
+                }
+              },
+              {
+                "function": "set_data",
+                "data": 26
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "aux_val": 18,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 8
+                }
+              },
+              {
+                "function": "set_data",
+                "data": 18
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:baked_potato",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 4
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:glow_berries",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 10
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:acacia_planks",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 3,
+                  "max": 6
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:moss_block",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bone_meal",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:tuff",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 5,
+                  "max": 10
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:torch",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 3,
+                  "max": 6
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:potion",
+            "weight": 1,
+            "aux_val": 28,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 2.0
+              },
+              {
+                "function": "set_data",
+                "data": 28
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:potion",
+            "weight": 1,
+            "aux_val": 31,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 2.0
+              },
+              {
+                "function": "set_data",
+                "data": 31
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:stone_pickaxe",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_damage",
+                "damage": {
+                  "min": 0.15,
+                  "max": 0.8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:milk_bucket",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
   "loot_tables/chests/village/village_armorer.json": {
     "pools": [
       {
@@ -6947,13 +8469,7 @@
           },
           {
             "type": "item",
-            "functions": [
-              {
-                "function": "minecraft:set_data",
-                "data": 0
-              }
-            ],
-            "name": "minecraft:red_flower"
+            "name": "minecraft:poppy"
           },
           {
             "type": "item",
@@ -7998,6 +9514,271 @@
       }
     ]
   },
+  "loot_tables/dispensers/trial_chambers/chamber.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:water_bucket",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 4,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:snowball",
+            "weight": 6,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:egg",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:fire_charge",
+            "weight": 6,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:splash_potion",
+            "weight": 1,
+            "aux_val": 17,
+            "functions": [
+              {
+                "function": "set_data",
+                "data": 17
+              },
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:splash_potion",
+            "weight": 1,
+            "aux_val": 25,
+            "functions": [
+              {
+                "function": "set_data",
+                "data": 25
+              },
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:splash_potion",
+            "weight": 1,
+            "aux_val": 34,
+            "functions": [
+              {
+                "function": "set_data",
+                "data": 34
+              },
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 17,
+            "functions": [
+              {
+                "function": "set_data",
+                "data": 17
+              },
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 25,
+            "functions": [
+              {
+                "function": "set_data",
+                "data": 25
+              },
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 34,
+            "functions": [
+              {
+                "function": "set_data",
+                "data": 34
+              },
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 21,
+            "functions": [
+              {
+                "function": "set_data",
+                "data": 21
+              },
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 5
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/dispensers/trial_chambers/corridor.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 4,
+                  "max": 8
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/dispensers/trial_chambers/water.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:water_bucket",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/entities/armadillo_brush.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:armadillo_scute"
+          }
+        ]
+      }
+    ]
+  },
   "loot_tables/entities/armor_set_chain.json": {
     "pools": [
       {
@@ -8532,6 +10313,171 @@
   "loot_tables/entities/boat.json": {
     "pools": [
       {}
+    ]
+  },
+  "loot_tables/entities/bogged.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 0,
+                  "max": 2
+                }
+              },
+              {
+                "function": "looting_enchant",
+                "count": {
+                  "min": 0,
+                  "max": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:bone",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 0,
+                  "max": 2
+                }
+              },
+              {
+                "function": "looting_enchant",
+                "count": {
+                  "min": 0,
+                  "max": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "auxVal": 26,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 0,
+                  "max": 1
+                }
+              },
+              {
+                "function": "looting_enchant",
+                "count": {
+                  "min": 0,
+                  "max": 1
+                },
+                "limit": 1
+              },
+              {
+                "function": "minecraft:set_data",
+                "data": 26
+              }
+            ]
+          }
+        ],
+        "conditions": [
+          {
+            "condition": "killed_by_player"
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/entities/bogged_shear.json": {
+    "pools": [
+      {
+        "rolls": 2,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:brown_mushroom",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "minecraft:set_data_from_color_index"
+              },
+              {
+                "function": "set_count",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:red_mushroom",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "minecraft:set_data_from_color_index"
+              },
+              {
+                "function": "set_count",
+                "count": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/entities/breeze.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:breeze_rod",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              },
+              {
+                "function": "looting_enchant",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          }
+        ],
+        "conditions": [
+          {
+            "condition": "killed_by_player_or_pets"
+          }
+        ]
+      }
     ]
   },
   "loot_tables/entities/brown_mooshroom_shear.json": {
@@ -9959,7 +11905,7 @@
         "entries": [
           {
             "type": "item",
-            "name": "minecraft:red_flower",
+            "name": "minecraft:poppy",
             "weight": 1,
             "functions": [
               {
@@ -10736,6 +12682,38 @@
                 }
               }
             ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/entities/pillager_captain.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:ominous_bottle",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1
+              },
+              {
+                "function": "set_ominous_bottle_amplifier",
+                "amplifier": {
+                  "min": 0,
+                  "max": 4
+                }
+              }
+            ]
+          }
+        ],
+        "conditions": [
+          {
+            "condition": "killed_by_player"
           }
         ]
       }
@@ -13243,6 +15221,393 @@
       }
     ]
   },
+  "loot_tables/equipment/trial_chamber.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/equipment/trial_chamber_chainmail.json",
+            "weight": 4
+          },
+          {
+            "type": "loot_table",
+            "name": "loot_tables/equipment/trial_chamber_iron.json",
+            "weight": 2
+          },
+          {
+            "type": "loot_table",
+            "name": "loot_tables/equipment/trial_chamber_diamond.json",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/equipment/trial_chamber_chainmail.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "conditions": [
+          {
+            "chance": 0.5,
+            "condition": "random_chance"
+          }
+        ],
+        "entries": [
+          {
+            "type": "item",
+            "functions": [
+              {
+                "function": "set_armor_trim",
+                "material": "copper",
+                "pattern": "bolt"
+              },
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "fire_protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "projectile_protection",
+                    "level": 4
+                  }
+                ]
+              }
+            ],
+            "name": "minecraft:chainmail_helmet"
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "conditions": [
+          {
+            "chance": 0.5,
+            "condition": "random_chance"
+          }
+        ],
+        "entries": [
+          {
+            "type": "item",
+            "functions": [
+              {
+                "function": "set_armor_trim",
+                "material": "copper",
+                "pattern": "bolt"
+              },
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "fire_protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "projectile_protection",
+                    "level": 4
+                  }
+                ]
+              }
+            ],
+            "name": "minecraft:chainmail_chestplate"
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/equipment/trial_chamber_diamond.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "conditions": [
+          {
+            "chance": 0.5,
+            "condition": "random_chance"
+          }
+        ],
+        "entries": [
+          {
+            "type": "item",
+            "functions": [
+              {
+                "function": "set_armor_trim",
+                "material": "copper",
+                "pattern": "flow"
+              },
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "fire_protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "projectile_protection",
+                    "level": 4
+                  }
+                ]
+              }
+            ],
+            "name": "minecraft:diamond_helmet"
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "conditions": [
+          {
+            "chance": 0.5,
+            "condition": "random_chance"
+          }
+        ],
+        "entries": [
+          {
+            "type": "item",
+            "functions": [
+              {
+                "function": "set_armor_trim",
+                "material": "copper",
+                "pattern": "flow"
+              },
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "fire_protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "projectile_protection",
+                    "level": 4
+                  }
+                ]
+              }
+            ],
+            "name": "minecraft:diamond_chestplate"
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/equipment/trial_chamber_iron.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "conditions": [
+          {
+            "chance": 0.5,
+            "condition": "random_chance"
+          }
+        ],
+        "entries": [
+          {
+            "type": "item",
+            "functions": [
+              {
+                "function": "set_armor_trim",
+                "material": "copper",
+                "pattern": "flow"
+              },
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "fire_protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "projectile_protection",
+                    "level": 4
+                  }
+                ]
+              }
+            ],
+            "name": "minecraft:iron_helmet"
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "conditions": [
+          {
+            "chance": 0.5,
+            "condition": "random_chance"
+          }
+        ],
+        "entries": [
+          {
+            "type": "item",
+            "functions": [
+              {
+                "function": "set_armor_trim",
+                "material": "copper",
+                "pattern": "flow"
+              },
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "fire_protection",
+                    "level": 4
+                  },
+                  {
+                    "id": "projectile_protection",
+                    "level": 4
+                  }
+                ]
+              }
+            ],
+            "name": "minecraft:iron_chestplate"
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/equipment/trial_chamber_melee.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/equipment/trial_chamber.json",
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:iron_sword",
+            "weight": 4
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_sword",
+            "functions": [
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "sharpness",
+                    "level": 1
+                  }
+                ]
+              }
+            ],
+            "weight": 1
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_sword",
+            "functions": [
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "knockback",
+                    "level": 1
+                  }
+                ]
+              }
+            ],
+            "weight": 1
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_sword",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/equipment/trial_chamber_ranged.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "loot_table",
+            "name": "loot_tables/equipment/trial_chamber.json",
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:bow",
+            "weight": 2
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bow",
+            "functions": [
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "power",
+                    "level": 1
+                  }
+                ]
+              }
+            ],
+            "weight": 1
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bow",
+            "functions": [
+              {
+                "function": "specific_enchants",
+                "enchants": [
+                  {
+                    "id": "punch",
+                    "level": 1
+                  }
+                ]
+              }
+            ],
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
   "loot_tables/gameplay/fishing.json": {
     "pools": [
       {
@@ -13554,6 +15919,25 @@
                 "data": 10
               }
             ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/gameplay/entities/sniffer_seeds.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:torchflower_seeds",
+            "weight": 1
+          },
+          {
+            "type": "item",
+            "name": "minecraft:pitcher_pod",
+            "weight": 1
           }
         ]
       }
@@ -13885,6 +16269,497 @@
                 "treasure": true
               }
             ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/pots/trial_chambers/corridor.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:emerald",
+            "weight": 125,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 100,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 8
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:iron_ingot",
+            "weight": 100,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:trial_key",
+            "weight": 10,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:music_disc_creator_music_box",
+            "weight": 5
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond",
+            "weight": 5,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:emerald_block",
+            "weight": 5,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:diamond_block",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/spawners/ominous/trial_chamber/consumables.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:cooked_beef",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:baked_potato",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 2,
+                  "max": 4
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:golden_carrot",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 2
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:potion",
+            "weight": 1,
+            "aux_val": 28,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 28
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:potion",
+            "weight": 1,
+            "aux_val": 31,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 31
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/spawners/ominous/trial_chamber/key.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:ominous_trial_key",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/spawners/trial_chamber/consumables.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:cooked_chicken",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:bread",
+            "weight": 3,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:baked_potato",
+            "weight": 2,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:potion",
+            "weight": 1,
+            "aux_val": 28,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 28
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:potion",
+            "weight": 1,
+            "aux_val": 14,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 14
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/spawners/trial_chamber/items_to_drop_when_ominous.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 43,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 43
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 45,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 45
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 44,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 44
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 46,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 46
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 31,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 31
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 14,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 14
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:lingering_potion",
+            "weight": 1,
+            "aux_val": 40,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 40
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "aux_val": 26,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 26
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:arrow",
+            "weight": 1,
+            "aux_val": 43,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": 1.0
+              },
+              {
+                "function": "set_data",
+                "data": 43
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:fire_charge",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "type": "item",
+            "name": "minecraft:wind_charge",
+            "weight": 1,
+            "functions": [
+              {
+                "function": "set_count",
+                "count": {
+                  "min": 1,
+                  "max": 3
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "loot_tables/spawners/trial_chamber/key.json": {
+    "pools": [
+      {
+        "rolls": 1,
+        "entries": [
+          {
+            "type": "item",
+            "name": "minecraft:trial_key",
+            "weight": 1
           }
         ]
       }

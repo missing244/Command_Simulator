@@ -75,6 +75,11 @@
       "overworld"
     ]
   },
+  "trial_chambers": {
+    "dimension": [
+      "overworld"
+    ]
+  },
   "village": {
     "dimension": [
       "overworld"

@@ -93,9 +93,10 @@ class NBTTagEnd(NBTTagBase):
     """
     
     _type_id = TAG_END
+    _byte_save = ( Struct(">b"), Struct("<b") )
 
     def __init__(self):
-        self.fmt = Struct(">b") if BIG_OR_LITTLE else Struct("<b")
+        self.fmt = self._byte_save[not BIG_OR_LITTLE]
         super().__init__()
 
     def _read_buffer(self, buffer):
@@ -183,9 +184,10 @@ class NBTTagContainerList(NBTTagBase, _util.RestrictedList):
 class NBTTagByte(NBTTagSingleValue):
 
     _type_id = TAG_BYTE
+    _byte_save = ( Struct(">b"), Struct("<b") )
     
     def __init__(self, value=0, **kwargs):
-        self.fmt = Struct(">b") if BIG_OR_LITTLE else Struct("<b")
+        self.fmt = self._byte_save[not BIG_OR_LITTLE]
         super().__init__(value=value, **kwargs)
     
     def _validate(self, v):
@@ -195,9 +197,10 @@ class NBTTagByte(NBTTagSingleValue):
 class NBTTagShort(NBTTagSingleValue):
 
     _type_id = TAG_SHORT
+    _byte_save = ( Struct(">h"), Struct("<h") )
 
     def __init__(self, value=0, **kwargs):
-        self.fmt = Struct(">h") if BIG_OR_LITTLE else Struct("<h")
+        self.fmt = self._byte_save[not BIG_OR_LITTLE]
         super().__init__(value=value, **kwargs)
 
     def _validate(self, v):
@@ -207,9 +210,10 @@ class NBTTagShort(NBTTagSingleValue):
 class NBTTagInt(NBTTagSingleValue):
 
     _type_id = TAG_INT
+    _byte_save = ( Struct(">i"), Struct("<i") )
 
     def __init__(self, value=0, **kwargs):
-        self.fmt = Struct(">i") if BIG_OR_LITTLE else Struct("<i")
+        self.fmt = self._byte_save[not BIG_OR_LITTLE]
         super().__init__(value=value, **kwargs)
 
     def _validate(self, v):
@@ -219,9 +223,10 @@ class NBTTagInt(NBTTagSingleValue):
 class NBTTagLong(NBTTagSingleValue):
 
     _type_id = TAG_LONG
+    _byte_save = ( Struct(">q"), Struct("<q") )
 
     def __init__(self, value=0, **kwargs):
-        self.fmt = Struct(">q") if BIG_OR_LITTLE else Struct("<q")
+        self.fmt = self._byte_save[not BIG_OR_LITTLE]
         super().__init__(value=value, **kwargs)
 
     def _validate(self, v):
@@ -231,9 +236,10 @@ class NBTTagLong(NBTTagSingleValue):
 class NBTTagFloat(NBTTagSingleValue):
 
     _type_id = TAG_FLOAT
+    _byte_save = ( Struct(">f"), Struct("<f") )
 
     def __init__(self, value=.0, **kwargs):
-        self.fmt = Struct(">f") if BIG_OR_LITTLE else Struct("<f")
+        self.fmt = self._byte_save[not BIG_OR_LITTLE]
         super().__init__(value=value, **kwargs)
 
     def _validate(self, v):
@@ -243,9 +249,10 @@ class NBTTagFloat(NBTTagSingleValue):
 class NBTTagDouble(NBTTagSingleValue):
 
     _type_id = TAG_DOUBLE
+    _byte_save = ( Struct(">d"), Struct("<d") )
 
     def __init__(self, value=.0, **kwargs):
-        self.fmt = Struct(">d") if BIG_OR_LITTLE else Struct("<d")
+        self.fmt = self._byte_save[not BIG_OR_LITTLE]
         super().__init__(value=value, **kwargs)
 
     def _validate(self, v):
@@ -312,13 +319,13 @@ class NBTTagIntArray(NBTTagContainerList):
 
     def _read_buffer(self, buffer):
         length = NBTTagInt(buffer=buffer).value
-        fmt = Struct((">" if BIG_OR_LITTLE else "<") + str(length) + "i") 
+        fmt = Struct("%s%si" % (">" if BIG_OR_LITTLE else "<"), length)
         self.clear()
         self.extend(list(fmt.unpack(buffer.read(fmt.size))))
 
     def _write_buffer(self, buffer):
         length = len(self.value)
-        fmt = Struct((">" if BIG_OR_LITTLE else "<") + str(length) + "i")
+        fmt = Struct("%s%si" % (">" if BIG_OR_LITTLE else "<"), length)
         NBTTagInt(length)._write_buffer(buffer)
         buffer.write(fmt.pack(*self.value))
 
@@ -337,13 +344,13 @@ class NBTTagLongArray(NBTTagContainerList):
 
     def _read_buffer(self, buffer):
         length = NBTTagInt(buffer=buffer).value
-        fmt = Struct((">" if BIG_OR_LITTLE else "<") + str(length) + "q")
+        fmt = Struct("%s%sq" % (">" if BIG_OR_LITTLE else "<"), length)
         self.clear()
         self.extend(list(fmt.unpack(buffer.read(fmt.size))))
 
     def _write_buffer(self, buffer):
         length = len(self.value)
-        fmt = Struct((">" if BIG_OR_LITTLE else "<") + str(length) + "q")
+        fmt = Struct("%s%sq" % (">" if BIG_OR_LITTLE else "<"), length)
         NBTTagInt(length)._write_buffer(buffer)
         buffer.write(fmt.pack(*self.value))
 
@@ -544,7 +551,8 @@ def read_from_nbt_file(file:Union[str,FileIO,bytes,BytesIO], byteorder:Literal['
     _name = NBTTagString(buffer=_file).value
     return TAGLIST[_type](buffer=_file)
 
-def write_to_nbt_file(file:Union[str,FileIO,BytesIO], tag:NBTTagCompound, name='',gzip:Literal[True,False]=True,byteorder:Literal['big','little'] = 'big'):
+def write_to_nbt_file(file:Union[str,FileIO,BytesIO], tag:NBTTagCompound, name='', 
+    gzip:Literal[True,False]=True, byteorder:Literal['big','little'] = 'big')  :
     """
     Write a NBTTagCompound to a NBT file
     name affects nothing currently

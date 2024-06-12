@@ -79,8 +79,8 @@ class tk_Msgbox(tkinter.Toplevel) :
         self.title("MsgBox")
         self.resizable(False, False)
         self.geometry("%sx%s+%s+%s"%(int(parent_window.winfo_width()*2/3), int(parent_window.winfo_height()/4),
-                                    int(parent_window.winfo_x() + parent_window.winfo_width()/2 - parent_window.winfo_width()/3),
-                                    int(parent_window.winfo_y() + parent_window.winfo_height()/2 - parent_window.winfo_height()/10)))
+            int(parent_window.winfo_x() + parent_window.winfo_width()/2 - parent_window.winfo_width()/3),
+            int(parent_window.winfo_y() + parent_window.winfo_height()/2 - parent_window.winfo_height()/10)))
 
         # 禁用关闭按钮
         self.protocol("WM_DELETE_WINDOW", lambda: None)
@@ -132,6 +132,16 @@ class tk_Scrollbar_ListBox(tkinter.Frame) :
             sco2.config(command=self.input_box.xview)
             sco2.grid(row=1,column=0,sticky=tkinter.W+tkinter.E)
 
+
+class tk_TellBox(tkinter.Canvas) :
+
+    def __init__(self, master: tkinter.Misc, parent_window:typing.Union[tkinter.Tk,tkinter.Toplevel], **karg) :
+        if not isinstance(parent_window,tkinter.Tk) : raise TypeError("parent_window 类型不正确")
+        super().__init__(master,width=int(parent_window.winfo_width()/1.1), height=int(parent_window.winfo_height()/3.9),**karg)
+
+        # 设置Toplevel窗口的标题
+        self.rootx = int(parent_window.winfo_x() + parent_window.winfo_width()/2 - parent_window.winfo_width()/1.1/2.1) - parent_window.winfo_x()
+        self.rooty = int(parent_window.winfo_y() + parent_window.winfo_height()/2 + parent_window.winfo_height()/10) - parent_window.winfo_y()
 
 
 def copy_to_clipboard(text:str) :

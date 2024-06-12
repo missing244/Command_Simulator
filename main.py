@@ -3,10 +3,9 @@
 
 #原生模块加载与设置
 from idlelib.calltip_w import CalltipWindow
-import http.server,ssl,importlib
-import json,tkinter,tkinter.font,time,threading,sys,gzip,gc
-import platform,os,types,traceback,itertools,re,functools,cProfile
-import functools,tkinter.messagebox
+import http.server, ssl, importlib
+import json, tkinter, tkinter.font, tkinter.messagebox, time,threading, sys, gzip, gc
+import platform, os, types, traceback, webbrowser, re, functools
 from tkinter import ttk
 from typing import List,Dict,Union,Literal
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -38,16 +37,23 @@ if True : #启用软件前的加载项目
                 url_obj = parse.urlparse(self.path)
                 if url_obj.path == "/" and url_obj.query != "" :
                     query_components = parse.parse_qs(url_obj.query)
-                    if "pack" not in query_components : return None
-                    for key,value in debug_windows.expand_pack_open_list.items() :
-                        if key != query_components['pack'][0] : continue
-                        path1 = os.path.join("expand_pack",value["dir_name"],"index.html")
+                    if "pack" not in query_components or "page" not in query_components : return None
+                    if query_components['pack'][0] not in debug_windows.expand_pack_open_list : return None
+                    
+                    pack_dir_name = debug_windows.expand_pack_open_list[query_components['pack'][0]]["dir_name"]
+                    if query_components["page"][0] == "index" :
+                        path1 = os.path.join("expand_pack", pack_dir_name, "index.html")
                         if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                        self.send_response(200)
-                        self.send_header('Content-type', 'text/html')
-                        self.end_headers()
-                        self.wfile.write(file_IO.read_a_file(path1,"readbyte"))
-                        break
+                        send_bytes = file_IO.read_a_file(path1,"readbyte")
+                    elif query_components["page"][0] == "help" :
+                        path1 = os.path.join("expand_pack", pack_dir_name, "help.html")
+                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
+                        send_bytes = file_IO.read_a_file(path1,"readbyte")
+
+                    self.send_response(200)
+                    self.send_header('Content-type', 'texthtml')
+                    self.end_headers()
+                    self.wfile.write(send_bytes)
                 else : super().do_GET()
 
             def do_POST(self):
@@ -91,7 +97,7 @@ class control_windows :
         self.calltip_win = CalltipWindow(self.window)
 
         self.display_frame:Dict[str,tkinter.Frame] = {}
-        self.now_display_frame = ""
+        self.now_display_frame:str = ""
         self.focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry] = None
         self.expand_pack_open_list:Dict[str,Dict[Literal["dir_name","frame","module","object"],
             Union[str,tkinter.Frame,types.ModuleType,object]]] = {}
@@ -113,7 +119,8 @@ class control_windows :
         for i in self.initialization_process : i.start()
         self.window.protocol("WM_DELETE_WINDOW", self.window_exit)
 
-        self.paset_thread_time = 0  #输入降频计时
+        self.paset_thread_time:int = 0  #输入降频计时
+        self.tutorial_mode:bool = False  #是否在教程模式
         self.platform:Literal["windows","android"] = None #系统名称
         system_info = platform.uname()
         if system_info.system.lower() == 'windows' : self.platform = 'windows'
@@ -138,6 +145,16 @@ class control_windows :
         self.set_display_frame("game_ready")
 
         self.user_manager.save_data["open_app_count"] += 1
+        if self.user_manager.save_data["open_app_count"] == 1 and self.platform == "android" :
+            yesorno = tkinter.messagebox.askquestion("question", "看起来您是第一次打开\n需要熟悉软件如何使用吗？(新用户请务必点击确定！)")
+            if self.platform == "android" and yesorno == "yes" : app_function.Beginner_Tutorial(self, False)
+            elif self.platform == "windows" and yesorno == "yes" : webbrowser.open("http://localhost:32323/tutorial/Instructions.html")
+        
+        self.bind_events()
+
+    def bind_events(self):
+        self.window.bind("<Button-3>", lambda e : self.display_frame["right_click_menu"].post(
+            e.x_root, e.y_root-self.display_frame["right_click_menu"].winfo_reqheight()))
 
     def window_exit(self) :
         threading.Thread(target=lambda:[time.sleep(10), os._exit(0)]).start()
@@ -180,14 +197,20 @@ class control_windows :
 
 
     def set_display_frame(self, name:str) :
-        if name not in self.display_frame : return
-        if name == self.now_display_frame : return
+        if name == "forget_all" : 
+            if self.now_display_frame in self.display_frame :
+                self.display_frame[self.now_display_frame].pack_forget()
+            self.now_display_frame = ""
+            return None
+
+        if name not in self.display_frame or name == self.now_display_frame: return None
         if self.now_display_frame != "" : self.display_frame[self.now_display_frame].pack_forget()
         if "expand_pack" in (self.now_display_frame, name) :
             test_flag = False
             for uuid,data in self.expand_pack_open_list.items() : #判断隶属的拓展包
                 if data["frame"] != self.display_frame["expand_pack"] : continue
                 test_flag = True ; break
+
             if test_flag and self.now_display_frame == "expand_pack" and name != "expand_pack" : #退出拓展包界面
                 right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
                 while right_click_menu.item_counter > 4 : right_click_menu.remove_item()
@@ -198,6 +221,7 @@ class control_windows :
                 if hasattr(data["object"],"exit_method") : data["object"].exit_method()
         self.now_display_frame = name
         self.display_frame[self.now_display_frame].pack()
+        self.focus_input = None
 
     def game_ready_or_run(self):
         if not self.game_process : self.set_display_frame("game_ready")
@@ -233,6 +257,15 @@ class control_windows :
         a = self.expand_pack_open_list.get(uuid, None)
         if a is None : return None
         return a.get('object')
+
+    def get_display_expand_pack_record(self) :
+        if self.now_display_frame != "expand_pack" : return None
+
+        saves = None
+        for packUUID in self.expand_pack_open_list : 
+            if self.display_frame["expand_pack"] is not self.expand_pack_open_list[packUUID]["frame"] : continue
+            saves = self.expand_pack_open_list[packUUID]
+        return saves
 
     def add_can_change_hight_component(self,component_list:list) :
         # 第一个为变高元素，其他为基准元素
@@ -306,3 +339,7 @@ importlib.reload(Minecraft_BE.Command_Tokenizer_Compiler(debug_windows.game_proc
 importlib.reload(Minecraft_BE.CommandCompiler.Command1)
 #debug_windows.game_process.minecraft_chunk.loading_chunk["overworld"][(0,0)]
 debug_windows.game_process.minecraft_chunk.player
+debug_windows.game_process.minecraft_ident.functions.keys()
+
+# //[a-zA-Z \\+->:_.'\\",~0-9()]{0,}   update_pack\bedrock_edition\**\**\**.json
+debug_windows.get_display_expand_pack_record()

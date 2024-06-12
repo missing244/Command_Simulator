@@ -225,6 +225,11 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     ),
                     BaseMatch.Char("Type_Argument","rot").add_leaves(
                         *SpecialMatch.Rotation_Tree( BaseMatch.END_NODE )
+                    ),
+                    BaseMatch.Char("Type_Argument", "view_offset").add_leaves(
+                        BaseMatch.Float("viewX").add_leaves(
+                            BaseMatch.Float("viewY").add_leaves( BaseMatch.END_NODE )
+                        )
                     )
                 )
             )
@@ -530,7 +535,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Enum("Argument","hide","reset").add_leaves( 
                 BaseMatch.Enum("Hud_Type","air_bubbles","all","armor","crosshair","health","horse_health",
-                "hotbar","hunger","paperdoll","progress_bar","tooltips","touch_controls").add_leaves(BaseMatch.END_NODE),
+                "hotbar","hunger","paperdoll","progress_bar","tooltips","touch_controls","item_text","status_effects").add_leaves(BaseMatch.END_NODE),
                 BaseMatch.END_NODE 
             )
         )
@@ -1131,7 +1136,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.END_NODE
     ),
     # volumearea ✓ V
-    BaseMatch.Char("Command","volumearea").add_leaves(
+    BaseMatch.Char("Command","volumearea").set_version(1,21,10,"max").add_leaves(
         BaseMatch.Char("Argument","add").add_leaves(
             *SpecialMatch.String_Tree("Identifier",
                 *SpecialMatch.Pos_Tree(

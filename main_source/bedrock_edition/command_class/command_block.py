@@ -5,7 +5,7 @@ import main_source.package.python_nbt as python_nbt
 from typing import Dict,List,Tuple
 
 
-KEYWORD_COMMENTARY = re.compile("^[ ]{0,}//")
+KEYWORD_COMMENTARY = re.compile("^[ ]{0,}#")
 KEYWORD_START = (
     re.compile("^[ ]{0,}start"), re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), 
     re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), re.compile("[ ]{0,}$")

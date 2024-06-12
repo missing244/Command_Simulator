@@ -1,4 +1,4 @@
-import os,traceback,json,time,threading,re,base64,zlib
+import os,inspect,json,time,threading,re,base64,zlib,traceback
 import main_source.package.file_operation as FileOperation
 from typing import List,Literal,Union
 from tkinter import ttk ; import tkinter ; import tkinter.messagebox
@@ -108,74 +108,75 @@ class Text_Bind_Events :
         def __init__(self, main_win, **karg) -> None:
             self.main_win = main_win
             self.is_post = False
-            self.last_post_x = 0 ; self.last_post_y = 0
 
-            list1 = {'删除':lambda:self.mode_using("clear"), "剪切":lambda:self.mode_using("cut"),
-                     '复制':lambda:self.mode_using("copy"),  '粘贴':lambda:self.mode_using("paste")}
+            list1 = {"剪切":lambda:self.mode_using("cut"), '复制':lambda:self.mode_using("copy"), 
+                     "换行":lambda:self.mode_using("return"), '粘贴':lambda:self.mode_using("paste"), 
+                     "粘贴对象":lambda:self.mode_using("paste_object")}
             self.menu_list:List[tkinter.Menu] = []
             for key,value in list1.items() :
                 Menu = tkinter.Menu(main_win.window, tearoff=False, font=tk_tool.get_default_font(10), **karg)
                 Menu.add_command(label=key, command=value)
                 self.menu_list.append(Menu)
                 Menu.update()
-            if app_constant.jnius : 
-                Menu = tkinter.Menu(main_win.window, tearoff=False, font=tk_tool.get_default_font(10), **karg)
-                Menu.add_command(label='键盘', command=lambda:self.mode_using("weakup_keyboard"))
-                self.menu_list.append(Menu)
-            self.winfo_reqheight = self.menu_list[0].winfo_reqwidth()
 
         def mode_using(self, mode) :
             focus_input = self.main_win.focus_input
-            mode_using(focus_input, mode)
+            mode_using(self.main_win, focus_input, mode)
             for index,item in enumerate(self.menu_list) : item.unpost()
         
         def post(self, x:int, y:int) :
-            only_width = self.winfo_reqheight
-            half_width = self.winfo_reqheight * len(self.menu_list) // 2
-            start_x = x - half_width
-            for index,item in enumerate(self.menu_list) : item.post(start_x + only_width * index, y)
+            c1 = self.main_win.get_display_expand_pack_record()
+            c11 = c1 is not None and hasattr(c1['module'], "Paste_event")
+
+            all_width = [i.winfo_reqwidth()-20 for i in self.menu_list]
+            if not c11 : all_width.pop()
+            start_x = x - (sum(all_width) // 2)
+
+            for index,item in enumerate(self.menu_list) : 
+                if item is self.menu_list[-1] and not c11 : continue
+                item.post(start_x + sum(all_width[0:index]), y)
             self.is_post = True
-            self.last_post_x = x ; self.last_post_y = y
 
         def unpost(self) :
             if not self.is_post : return None
             for index,item in enumerate(self.menu_list) : item.unpost()
             self.is_post = False
 
-        def set_other_menu(self, other_menu) :
-            self.other_menu = other_menu
-
     class Local_Right_Click_Menu_2 :
 
         def __init__(self, main_win, **karg) -> None :
             self.main_win = main_win
             self.is_post = False
-            self.last_post_x = 0 ; self.last_post_y = 0
 
-            list1 = {"回车":lambda:self.mode_using("return"), '粘贴':lambda:self.mode_using("paste"),
-                     "行首":lambda:self.mode_using("jump_line_start"), '行尾':lambda:self.mode_using("jump_line_end"),
-                     "选行":lambda:self.mode_using("line_select")}
+            list1 = {"全选":lambda:self.mode_using("select_all"), "选行":lambda:self.mode_using("line_select"),
+                     "换行":lambda:self.mode_using("return"), "粘贴":lambda:self.mode_using("paste"),
+                     "粘贴对象":lambda:self.mode_using("paste_object")}
             self.menu_list:List[tkinter.Menu] = []
             for key,value in list1.items() :
                 Menu = tkinter.Menu(main_win.window, tearoff=False, font=tk_tool.get_default_font(10), **karg)
                 Menu.add_command(label=key, command=value)
                 self.menu_list.append(Menu)
                 Menu.update()
-            self.winfo_reqwidth = self.menu_list[0].winfo_reqwidth()
 
         def mode_using(self, mode) :
             focus_input = self.main_win.focus_input
-            mode_using(focus_input, mode)
+            mode_using(self.main_win, focus_input, mode)
             for index,item in enumerate(self.menu_list) : item.unpost()
             if mode == "line_select" : self.other_menu.post(self.last_post_x, self.last_post_y)
 
         def post(self, x:int, y:int) :
-            only_width = self.winfo_reqwidth
-            half_width = self.winfo_reqwidth * len(self.menu_list) // 2
-            start_x = x - half_width
-            for index,item in enumerate(self.menu_list) : item.post(start_x + only_width * index, y)
+            c1 = self.main_win.get_display_expand_pack_record()
+            c11 = c1 is not None and hasattr(c1['module'], "Paste_event")
+
+            all_width = [i.winfo_reqwidth()-20 for i in self.menu_list]
+            if not c11 : all_width.pop()
+            start_x = x - (sum(all_width) // 2)
+
+            for index,item in enumerate(self.menu_list) : 
+                if item is self.menu_list[-1] and not c11 : continue
+                item.post(start_x + sum(all_width[0:index]), y)
+
             self.is_post = True
-            self.last_post_x = x ; self.last_post_y = y
 
         def unpost(self) :
             if not self.is_post : return None
@@ -187,12 +188,10 @@ class Text_Bind_Events :
 
     def __init__(self, main_win, Text:tkinter.Text) -> None :
         import main_source.main_window.constant as app_constant
-        import main_source.main_window.tk_frame as tk_frame
         self.main_win = main_win
         self.app_constants = app_constant
-        self.Right_Click_Menu_1 = self.Local_Right_Click_Menu_1(main_win)
-        self.Right_Click_Menu_2 = self.Local_Right_Click_Menu_2(main_win)
-        self.Right_Click_Menu_1.set_other_menu(self.Right_Click_Menu_2)
+        self.Right_Click_Menu_1 = self.Local_Right_Click_Menu_1(main_win, background="#ffaec8")
+        self.Right_Click_Menu_2 = self.Local_Right_Click_Menu_2(main_win, background="#ffaec8")
         self.Right_Click_Menu_2.set_other_menu(self.Right_Click_Menu_1)
         self.Text = Text
 
@@ -200,21 +199,37 @@ class Text_Bind_Events :
         self.is_have_select = False
         self.insert_pos_save = None
     
+    def __weakup_keyboard__(self) :
+        inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
+            self.app_constants.Context.INPUT_METHOD_SERVICE)
+        isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
+        if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
+
+    def __weakdown_keyboard__(self) :
+        inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
+            self.app_constants.Context.INPUT_METHOD_SERVICE)
+        isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
+        if isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
+
     def update_INSERT_pos(self, widget:Union[tkinter.Text, tkinter.Entry, ttk.Entry]) :
+        Menu = self.Right_Click_Menu_2
+
         if isinstance(widget, tkinter.Text) : insert_pos = list(widget.bbox(tkinter.INSERT))[0:2]
         else : insert_pos = [widget.index(tkinter.INSERT)*40, widget.winfo_rooty()]
-        
         if self.insert_pos_save is None : self.insert_pos_save = insert_pos ; return None
+
         if not(self.insert_pos_save[0]-100 <= insert_pos[0] <= self.insert_pos_save[0]+100) :
-            self.insert_pos_save = insert_pos ; return None
+            self.insert_pos_save = insert_pos  ; Menu.unpost(); return None
         if not(self.insert_pos_save[1]-40 <= insert_pos[1] <= self.insert_pos_save[1]+40) :
-            self.insert_pos_save = insert_pos ; return None
-        Menu = self.Right_Click_Menu_2
+            self.insert_pos_save = insert_pos ; Menu.unpost() ; return None
+
         if isinstance(widget, tkinter.Text) : x1,y1,x2,y2 = widget.bbox(tkinter.INSERT)
         else : y1 = widget.winfo_rooty()
         x1 = self.main_win.window.winfo_width() // 2
-        Menu.post(x1, y1 - (widget.winfo_height()-40 if isinstance(widget, (tkinter.Entry, ttk.Entry)) else 0))
-
+        if not Menu.is_post : 
+            if isinstance(widget, (tkinter.Entry, ttk.Entry)) : Menu.post(x1, y1 - widget.winfo_height() - 30)
+            else : Menu.post(x1, widget.winfo_rooty() + y1 - 100)
+        else : Menu.unpost()
 
     def left_click_motion_event(self,e:tkinter.Event) :
         if not self.is_left_motion :
@@ -232,39 +247,45 @@ class Text_Bind_Events :
             if isinstance(e.widget, tkinter.Text) : x1,y1,x2,y2 = e.widget.bbox(tkinter.SEL_FIRST)
             else : x1,y1 = e.widget.winfo_rootx(), e.widget.winfo_rooty()
             x1 = self.main_win.window.winfo_width() // 2
-            if isinstance(e.widget, tkinter.Text) : Menu.post(x1, y1 - e.widget.winfo_height())
-            else : Menu.post(x1, y1 - e.widget.winfo_height() - 40)
-            self.is_have_select=True
+            if isinstance(e.widget, tkinter.Text) : Menu.post(x1, e.widget.winfo_rooty() + y1 - 100)
+            else : Menu.post(x1, y1 - e.widget.winfo_reqheight() - 30)
+
+            self.__weakup_keyboard__()
+            self.is_have_select = True
             self.is_left_motion = False
             return None
 
         if self.is_left_motion : self.is_left_motion = False ; return None
         if self.is_have_select : self.is_have_select = False ; return None
-        if isinstance(e,tkinter.Event) : self.update_INSERT_pos(e.widget)
-
-        inputMethodManager = self.app_constants.PythonActivity.mActivity.getSystemService(
-            self.app_constants.Context.INPUT_METHOD_SERVICE)
-        isInputOpen = inputMethodManager.inputMethodWindowVisibleHeight
-        if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
+        if isinstance(e, tkinter.Event) : self.update_INSERT_pos(e.widget)
+        self.__weakup_keyboard__()
 
     def key_press_event(self, e:tkinter.Event) :
         self.Right_Click_Menu_1.unpost()
         self.Right_Click_Menu_2.unpost()
 
 
-
-def mode_using(focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry], mode, word=None) : 
+def mode_using(main_win, focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry], mode, word=None) : 
     import main_source.main_window.constant as app_constant
     if focus_input is None : return None
 
     if mode == "select_all" : focus_input.event_generate("<<SelectAll>>")
     elif mode == "cut" : 
-        focus_input.event_generate("<<Cut>>")
-        focus_input.event_generate("<ButtonRelease>")
-    elif mode == "copy" : focus_input.event_generate("<<Copy>>")
+        c1 = main_win.get_display_expand_pack_record()
+        if c1 is not None and hasattr(c1['module'], "Copy_event") :
+            if isinstance(focus_input, tkinter.Text) : c1['module'].Copy_event(focus_input)
+        else :
+            focus_input.event_generate("<<Cut>>")
+            focus_input.event_generate("<ButtonRelease>")
+    elif mode == "copy" : 
+        c1 = main_win.get_display_expand_pack_record()
+        if c1 is not None and hasattr(c1['module'], "Copy_event") :
+            if isinstance(focus_input, tkinter.Text) : c1['module'].Copy_event(focus_input)
+        else : focus_input.event_generate("<<Copy>>")
     elif mode == "paste" : 
         try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
         except : pass
+
         if app_constant.PythonActivity and app_constant.Context :
             clipboard = app_constant.PythonActivity.mActivity.getSystemService(app_constant.Context.CLIPBOARD_SERVICE)
             clip_data = clipboard.getPrimaryClip()
@@ -274,6 +295,14 @@ def mode_using(focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry], mode, wo
                 else : focus_input.event_generate("<<Paste>>")
         else : focus_input.event_generate("<<Paste>>")
         focus_input.event_generate("<ButtonRelease>")
+    elif mode == "paste_object" :
+        try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
+        except : pass
+
+        c1 = main_win.get_display_expand_pack_record()
+        if c1 is not None and hasattr(c1['module'], "Paste_event") :
+            if isinstance(focus_input, tkinter.Text) : c1['module'].Paste_event(focus_input)
+
     elif mode == "undo" : 
         try : focus_input.edit_undo()
         except : pass
@@ -293,11 +322,7 @@ def mode_using(focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry], mode, wo
         focus_input.event_generate("<<Clear>>")
     elif mode == "clear" : 
         focus_input.event_generate("<<Clear>>")
-    elif mode == "input" :
-        if isinstance(word,type("")) : return None
-        try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
-        except : pass
-        focus_input.insert(tkinter.INSERT,word)
+
     elif mode == "line_select" :
         if isinstance(focus_input,tkinter.Text) : 
             line1 = focus_input.index(tkinter.INSERT).split(".")[0]
@@ -364,6 +389,7 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         if not i() : break
     user.write_back() ; log.set_time_end()
     if user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
+        return
         tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
         user.save_data['online_get']['app_version']))
 
@@ -435,3 +461,158 @@ def flash_minecraft_source(user:user_manager, log:initialization_log) :
     log.set_time_end()
 
 
+
+def Beginner_Tutorial(main_win, ask=True) :
+    if ask : 
+        yesorno = tkinter.messagebox.askquestion("question", "需要进入新手须知吗？")
+        if yesorno != "yes" : return None
+    main_win.tutorial_mode = True
+    threading.Thread(target=Tutorial_Start_1, args=(main_win, )).start()
+
+def Tutorial_Start_1(main_win) :
+    def Exit() : main_win.tutorial_mode = False
+    main_win.button_bar.pack_forget()
+    main_win.set_display_frame("forget_all")
+    Exit_Button = tkinter.Button(main_win.window, text="< 退出须知", background="#959cff", font=tk_tool.get_default_font(12), command=Exit)
+    Exit_Button.place(x = 16 if main_win.platform == 'android' else 4, 
+        y = 16 if main_win.platform == 'android' else 4 )
+
+    try : Tutorial_Start_2(main_win)
+    except Exception as e : 
+        #traceback.print_exc()
+        for key, value in e.args[0].items() :
+            if key in {"TK", "main_win", "app_tk_frame", "event_class"} : continue
+            if isinstance(value, (float, int, bool, str, tkinter.StringVar, type(Tutorial_Start_1))) : continue
+            if value.winfo_exists() : value.destroy()
+
+    Exit_Button.destroy()
+    main_win.bind_events()
+    main_win.button_bar.pack(side="bottom")
+    main_win.set_display_frame("setting_frame")
+
+def Tutorial_Start_2(main_win) :
+    import main_source.main_window.tk_frame as app_tk_frame
+    TK:tkinter.Tk = main_win.window
+
+    TellWin_1 = tk_tool.tk_TellBox(TK, TK, highlightcolor='green', bg="black")
+    TellWin_1.place(x=TellWin_1.rootx, y=TellWin_1.rooty)
+    StrVar_1 = tkinter.StringVar(TellWin_1)
+    Label_1 = tkinter.Label(TellWin_1, bg="black", fg="white", font=tk_tool.get_default_font(11), textvariable=StrVar_1)
+    TellWin_1.create_window(0+TellWin_1.winfo_reqwidth()/2, 0+TellWin_1.winfo_reqheight()/2, window=Label_1)
+
+    sleep_time(main_win, 1)
+    play_captions(main_win, StrVar_1, "欢迎来到新手须知\n本教程可以让你熟悉\n必要的操作技巧与方法")
+    sleep_time(main_win, 3)
+
+    #技巧1
+    def event1(e:tkinter.Event) : 
+        nonlocal wait_bool_1
+        wait_bool_1 = False
+        main_win.display_frame["right_click_menu"].post(
+            e.x_root, e.y_root-main_win.display_frame["right_click_menu"].winfo_reqheight())
+    wait_bool_1 = True
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "技巧一   右键菜单\n\n长按屏幕唤起右键菜单\n你可以尝试唤起右键菜单")
+    TK.bind("<Button-3>", event1)
+    while bool_test(main_win, wait_bool_1) : time.sleep(0.1)
+    sleep_time(main_win, 0.3)
+
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "你已成功打开右键菜单\n\n右键菜单中有许多辅助功能\n可在帮助文档-使用须知中\n查看具体使用方法")
+    sleep_time(main_win, 4)
+
+    #技巧2
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "命令模拟器使用TK搭建\n许多文字操作无法直接与\n安卓输入法中的功能进行兼容\n\n")
+    play_captions(main_win, StrVar_1, "因此需要设计文本操作菜单\n实现文本的复制粘贴操作")
+    sleep_time(main_win, 6)
+
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "技巧二   文本操作菜单1\n\n在文本框中缓慢拖动选中文字\n松手后唤起文本操作菜单1\n\n你可以尝试唤起文本操作菜单1")
+    Text_1 = tkinter.Text(TK, width=18, height=6, font=tk_tool.get_default_font(14))
+    event_class = Text_Bind_Events(main_win, Text_1)
+    Text_1.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
+    Text_1.bind("<B1-Motion>", event_class.left_click_motion_event, add="+")
+    Text_1.insert("1.0", "236789312736172489812947612821379802174861287948012784")
+    Text_1.place(x=(TK.winfo_width() // 2) - (Text_1.winfo_reqwidth() // 2),
+        y = int(TK.winfo_height() / 4))
+    while bool_test(main_win, not event_class.Right_Click_Menu_1.is_post) : time.sleep(0.1)
+    sleep_time(main_win, 0.3)
+    event_class.__weakdown_keyboard__()
+
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "你已唤起文本操作菜单1\n\n文本操作菜单1会在\n文字选中时显现")
+    sleep_time(main_win, 3)
+    Text_1.place_forget()
+
+    #技巧3
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "技巧三   文本操作菜单2\n\n在文本框中光标位置缓慢点击\n即可唤起文本操作菜单2\n\n你可以尝试唤起文本操作菜单2")
+    Text_2 = tkinter.Text(TK, width=18, height=6, font=tk_tool.get_default_font(14))
+    event_class = Text_Bind_Events(main_win, Text_2)
+    Text_2.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
+    Text_2.bind("<B1-Motion>", event_class.left_click_motion_event, add="+")
+    Text_2.insert("1.0", "236789312736172489812947612821379802174861287948012784")
+    Text_2.place(x=(TK.winfo_width() // 2) - (Text_2.winfo_reqwidth() // 2),
+        y = int(TK.winfo_height() / 4))
+    while bool_test(main_win, not event_class.Right_Click_Menu_2.is_post) : time.sleep(0.1)
+    sleep_time(main_win, 0.3)
+    event_class.__weakdown_keyboard__()
+
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "你已唤起文本操作菜单2\n\n文本操作菜单2会在\n多次点击相同光标位置时显现")
+    sleep_time(main_win, 5)
+    Text_2.place_forget()
+
+    #技巧4
+    Button_Bar = app_tk_frame.Bottom_Bar(main_win)
+    click_menu = False
+    def update_menu_text(e:tkinter, self=Button_Bar) : 
+        nonlocal click_menu
+        test_pass = False
+        for text_id_1 in self.menu_list :
+            x1,y1,x2,y2 = self.bbox(text_id_1)
+            if not(x1 <= e.x <= x2 and y1 <= e.y <= y2) : continue
+            if text_id_1 == self.menu_list[4] : self.Menu.post(e.x_root, e.y_root-self.Menu.winfo_reqheight())
+            if text_id_1 == self.menu_list[4] : click_menu = True ; continue
+            self.itemconfig(text_id_1, fill="#00ff00")
+            test_pass = True
+            break
+        [self.itemconfig(text_id_2, fill="white") for text_id_2 in self.menu_list if (
+        test_pass and text_id_1 != text_id_2 and text_id_2 != self.menu_list[-1])]
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "技巧四   底栏菜单\n\n底栏菜单位于界面底部\n\n你可以尝试唤起底栏菜单")
+    Button_Bar.pack(side="bottom")
+    Button_Bar.bind("<ButtonRelease-1>", update_menu_text)
+    while bool_test(main_win, not click_menu) : time.sleep(0.1)
+    sleep_time(main_win, 0.5)
+
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "你已唤起底栏菜单")
+    sleep_time(main_win, 2)
+    Button_Bar.pack_forget()
+    
+    StrVar_1.set("")
+    play_captions(main_win, StrVar_1, "恭喜你完成了新手教程\n\n如有问题可在设置中\n添加QQ群进行交流\n\n4秒后返回设置界面...")
+    sleep_time(main_win, 4)
+
+    raise RuntimeError(inspect.currentframe().f_locals)
+
+def sleep_time(main_win, sleep_time:int) :
+    while sleep_time > 0 :
+        if not main_win.tutorial_mode : 
+            raise RuntimeError(inspect.currentframe().f_back.f_locals)
+        time.sleep(0.1)
+        sleep_time -= 0.1
+
+def play_captions(main_win, Var:tkinter.StringVar, text:str) :
+    for str1 in text :
+        if not main_win.tutorial_mode : 
+            raise RuntimeError(inspect.currentframe().f_back.f_locals)
+        Var.set("%s%s" % (Var.get(), str1)) 
+        time.sleep(0.1)
+
+def bool_test(main_win, bool1:bool) :
+    if not main_win.tutorial_mode : 
+        raise RuntimeError(inspect.currentframe().f_back.f_locals)
+    return bool1

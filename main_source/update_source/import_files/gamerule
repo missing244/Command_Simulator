@@ -29,9 +29,11 @@
   "sendcommandfeedback": {},
   "showbordereffect": {},
   "showcoordinates": {},
+  "showdaysplayed": {},
   "showdeathmessages": {},
   "showrecipemessages": {},
   "showtags": {},
   "spawnradius": {},
-  "tntexplodes": {}
+  "tntexplodes": {},
+  "tntexplosiondropdecay": {}
 }

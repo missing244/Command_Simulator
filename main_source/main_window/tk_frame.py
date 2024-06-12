@@ -114,12 +114,6 @@ class Bottom_Bar_Menu(tkinter.Menu) :
         self.add_command(label='撤销',command=lambda : self.mode_using("undo"))
         self.add_command(label='恢复',command=lambda : self.mode_using("redo"))
         self.add_command(label='清空',command=lambda : self.mode_using("clear_all"))
-        self.add_command(label='回车',command=lambda : self.mode_using("return"))
-        self.add_separator()
-        self.add_command(label="全选",command=lambda : self.mode_using("select_all"))
-        self.add_command(label="剪切",command=lambda : self.mode_using("cut"))
-        self.add_command(label='复制',command=lambda : self.mode_using("copy"))
-        self.add_command(label='粘贴',command=lambda : self.mode_using("paste"))
         self.add_separator()
         self.add_command(label='行首',command=lambda : self.mode_using("jump_line_start"))
         self.add_command(label='行尾',command=lambda : self.mode_using("jump_line_end"))
@@ -130,7 +124,7 @@ class Bottom_Bar_Menu(tkinter.Menu) :
 
     def mode_using(self, mode) :
         focus_input = self.main_win.focus_input
-        app_function.mode_using(focus_input, mode)
+        app_function.mode_using(self.main_win, focus_input, mode)
 
     def exit(self) :
         user_manager:app_function.user_manager = self.main_win.user_manager
@@ -155,7 +149,6 @@ class Global_Right_Click_Menu(tk_tool.tk_Menu) :
         self.add_command(label="查询游戏内ID",command=lambda : Find_Minecraft_ID(main_win, small_win_width, small_win_height).mainloop())
         self.add_command(label="复制文件命令",command=lambda : Copy_File_Command(main_win, small_win_width, small_win_height).mainloop())
 
-        main_win.window.bind("<Button-3>", lambda e : self.post(e.x_root, e.y_root-self.winfo_reqheight()))
 
 
 class Special_Char(tkinter.Toplevel) :
@@ -998,11 +991,6 @@ class Choose_Expand(tkinter.Frame) :
                 tkinter.messagebox.showerror("Error", "模块 %s 安装失败\n日志 install_pack.txt 已保存" % element)
                 return None
 
-            msg_laber.config(text=msg_laber.cget("text") + "正在下载材质图片...\n")
-            a = connent_API.request_url_without_error(connent_API.BLOCK_TEXTURE_DOWNLOAD)
-            if not a : tkinter.messagebox.showerror("Error", "材质图片下载失败") ; return None
-            FileOperation.write_a_file(os.path.join("html_output","picture","block_texture.png"),a,"wb")
-
             try : import brotli
             except : tkinter.messagebox.showerror("Error", "原版拓展安装失败")
             else : msg_laber.config(text=msg_laber.cget("text") + "原版拓展安装成功")
@@ -1149,8 +1137,6 @@ class Choose_Expand(tkinter.Frame) :
                 expand_pack_open_list[uid]['module'] = module
                 expand_pack_open_list[uid]['object'] = module.pack_class()
                 module.UI_set(self.main_win, expand_pack_open_list[uid]["frame"])
-            if hasattr(expand_pack_open_list[uid]['module'], "Menu_set") : 
-                expand_pack_open_list[uid]['module'].Menu_set(tkinter.Menu())
         except Exception as err: 
             _expand_error(err)
             if uid in expand_pack_open_list : del expand_pack_open_list[uid]
@@ -1193,12 +1179,16 @@ class Setting(tkinter.Frame) :
         tkinter.Label(self,text="软件帮助",fg='black',font=tk_tool.get_default_font(18),width=15,height=1).pack()
         frame_0 = tkinter.Frame(self)
         tkinter.Button(frame_0,text='帮助文档',font=tk_tool.get_default_font(12), bg='#D369a9', width=9, height=1,
-            command = lambda : webbrowser.open("http://localhost:32323")).grid(row=0,column=0)
+            command = lambda:webbrowser.open("http://localhost:32323")).grid(row=0,column=0)
         tkinter.Label(frame_0,font=tk_tool.get_default_font(10),width=1,height=1).grid(row=0,column=1)
         tkinter.Button(frame_0,text='常见问题',font=tk_tool.get_default_font(12),bg='#D369a9' ,width=9, height=1,
-            command = lambda : webbrowser.open("https://missing254.github.io/cs-tool/tool/Question/")).grid(row=0,column=2)
+            command = lambda:webbrowser.open("https://commandsimulator.great-site.net/tool/Question/")).grid(row=0,column=2)
+        if main_win.platform == 'android' :
+            tkinter.Label(frame_0, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1).grid(row=1,column=0)
+            tkinter.Button(frame_0,text='新手须知',font=tk_tool.get_default_font(12),bg='#D369a9' ,width=9, height=1,
+                command = lambda:app_function.Beginner_Tutorial(self.main_win)).grid(row=2,column=0)
         frame_0.pack()
-            
+
         tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1).pack()
 
         tkinter.Label(self,text="软件信息",fg='black',font=tk_tool.get_default_font(18),width=15,height=1).pack()
@@ -1224,7 +1214,7 @@ class Setting(tkinter.Frame) :
             lambda:webbrowser.open("https://afdian.net/u/3c2e5dc43fd111edb9c052540025c377")).pack(side=tkinter.LEFT)
         tkinter.Label(frame_0,font=('Arial',10),width=1,height=1).pack(side=tkinter.LEFT)
         tkinter.Button(frame_0,text='交流群',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
-            lambda:webbrowser.open("https://missing254.github.io/cs-tool/qq_group.html")).pack(side=tkinter.LEFT)
+            lambda:webbrowser.open("https://commandsimulator.great-site.net/qq_group.html")).pack(side=tkinter.LEFT)
         frame_0.pack()
 
 class Login(tkinter.Frame) :
@@ -1347,4 +1337,5 @@ class Policy(tkinter.Frame) :
 
         main_win.add_can_change_hight_component([self.input_box4, self.policy_title,a2])
         #self.add_can_change_hight_component([self.input_box4,a1,frame_m3,a2])
+
 

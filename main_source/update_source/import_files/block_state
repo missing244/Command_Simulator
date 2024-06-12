@@ -52,10 +52,10 @@
         "0b1101":{"age_bit":true,"bamboo_leaf_size":"large_leaves","bamboo_stalk_thickness":"thick"}
     },
     "minecraft:bamboo_sapling":{
-        "default": {"age_bit":false,"sapling_type":"oak"},
-        "support_value": {"age_bit":[false,true],"sapling_type":["oak","spruce","jungle","dark_oak","birch","acacia"]},
-        "0b0":{"age_bit":false,"sapling_type":"oak"},
-        "0b1":{"age_bit":true,"sapling_type":"oak"}
+        "default": {"age_bit":false},
+        "support_value": {"age_bit":[false,true]},
+        "0b0":{"age_bit":false},
+        "0b1":{"age_bit":true}
     },
     "minecraft:standing_banner":{
         "default": {"ground_sign_direction":0},
@@ -5845,15 +5845,15 @@
     },
 
     "minecraft:trial_spawner":  {
-        "default": {"trial_spawner_state": 0},
-        "support_value": {"trial_spawner_state": [0,1,2,3,4,5]},
-        "0b0": {"trial_spawner_state": false}
+        "default": {"trial_spawner_state": 0, "ominous":false},
+        "support_value": {"trial_spawner_state": [0,1,2,3,4,5], "ominous":[false, true]},
+        "0b0": {"trial_spawner_state": 0, "ominous":false}
     },
 
     "minecraft:vault":  {
-        "default": {"minecraft:cardinal_direction": "south", "vault_state":"unlocking"},
-        "support_value": {"minecraft:cardinal_direction": ["south","north","east","west"], "vault_state":["unlocking","active","ejecting","inactive"]},
-        "0b0": {"minecraft:cardinal_direction": false, "vault_state":"unlocking"}
+        "default": {"minecraft:cardinal_direction": "south", "vault_state":"unlocking", "ominous":false},
+        "support_value": {"minecraft:cardinal_direction": ["south","north","east","west"], "vault_state":["unlocking","active","ejecting","inactive"], "ominous":[false, true]},
+        "0b0": {"minecraft:cardinal_direction": "south", "vault_state":"unlocking", "ominous":false}
     }
 }
 
