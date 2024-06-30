@@ -60,7 +60,7 @@ def copy_all_file(start:str,end:str):
 
 def write_a_file(path:str,data:Union[str,bytes],mode:Literal["w+","wb"]="w+"):
         base_path = os.path.realpath(os.path.join(path, os.pardir))
-        os.makedirs(base_path,exist_ok=True)
+        os.makedirs(base_path, exist_ok=True)
         if mode == "w+" : file2 = open(path,"w+",encoding='utf-8')
         elif mode == "wb" : file2 = open(path,"wb")
         file2.write(data)

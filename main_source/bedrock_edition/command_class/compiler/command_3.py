@@ -1265,9 +1265,12 @@ class spreadplayers :
         range1 = float(token_list[4]["token"].group())
         if range1 + 1 < distance : raise CompileError("散播距离应该比区域范围大1", pos=(token_list[4]["token"].start(), token_list[4]["token"].end()))
         index, entity_func = Selector.Selector_Compiler(_game, token_list, 5)
-        return functools.partial(cls.run, entity_get=entity_func, pos=pos, distance=distance, range1=range1)
+        if index >= len(token_list) : return functools.partial(cls.run, entity_get=entity_func, pos=pos, distance=distance, range1=range1)
+        maxheight1 = pos[1] = token_list[index]["token"].group()
+        return functools.partial(cls.run, entity_get=entity_func, pos=pos, distance=distance, range1=range1, maxheight=maxheight1)
 
-    def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, pos:List[str], distance:float, range1:float) :
+    def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, 
+            pos:List[str], distance:float, range1:float, maxheight:float=None) :
         entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         start_pos = [math.floor(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
@@ -1275,7 +1278,7 @@ class spreadplayers :
 
         flag = False
         area_height_min = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"][0]
-        area_height_max = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"][1]
+        area_height_max = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"][1] if maxheight is None else start_pos[1]
         range_var = (start_pos[0]-range1, start_pos[0]+range1, start_pos[2]-range1, start_pos[2]+range1)
         pos_list:List[List[float]] = [[random.uniform(range_var[0], range_var[1]), area_height_max, 
         random.uniform(range_var[2], range_var[3])] for i in range(len(entity_list))]

@@ -159,10 +159,15 @@ class Text_Bind_Events :
                 Menu.update()
 
         def mode_using(self, mode) :
-            focus_input = self.main_win.focus_input
+            focus_input:Union[tkinter.Text, tkinter.Entry] = self.main_win.focus_input
             mode_using(self.main_win, focus_input, mode)
             for index,item in enumerate(self.menu_list) : item.unpost()
-            if mode == "line_select" : self.other_menu.post(self.last_post_x, self.last_post_y)
+            if mode in {"line_select", "select_all"} : 
+                if isinstance(focus_input, tkinter.Text) : x1,y1,x2,y2 = focus_input.bbox(tkinter.SEL_FIRST)
+                else : x1,y1 = focus_input.winfo_rootx(), focus_input.winfo_rooty()
+                x1 = self.main_win.window.winfo_width() // 2
+                if isinstance(focus_input, tkinter.Text) : self.other_menu.post(x1, focus_input.winfo_rooty() + y1 - 100)
+                else : self.other_menu.post(x1, y1 - focus_input.winfo_reqheight() - 30)
 
         def post(self, x:int, y:int) :
             c1 = self.main_win.get_display_expand_pack_record()
@@ -242,7 +247,7 @@ class Text_Bind_Events :
     def left_click_release_event(self, e:tkinter.Event) :
         #显示选中文字的菜单
         if self.is_left_motion and ((isinstance(e.widget, tkinter.Text) and e.widget.tag_ranges("sel")) or (
-        isinstance(e.widget, (tkinter.Entry, ttk.Entry)) and e.widget.select_present())) : 
+        isinstance(e.widget, (tkinter.Entry, ttk.Entry)) and e.widget.select_present())) :
             Menu = self.Right_Click_Menu_1
             if isinstance(e.widget, tkinter.Text) : x1,y1,x2,y2 = e.widget.bbox(tkinter.SEL_FIRST)
             else : x1,y1 = e.widget.winfo_rootx(), e.widget.winfo_rooty()
@@ -389,7 +394,6 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         if not i() : break
     user.write_back() ; log.set_time_end()
     if user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
-        return
         tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
         user.save_data['online_get']['app_version']))
 

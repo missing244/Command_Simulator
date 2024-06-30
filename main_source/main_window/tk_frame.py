@@ -1111,7 +1111,7 @@ class Choose_Expand(tkinter.Frame) :
         def reload_module(base_module:types.ModuleType) :
             pack_path = os.path.dirname(base_module.__file__)
             for keys in list(sys.modules.keys()) :
-                if not hasattr(sys.modules[keys],"__file__") : continue
+                if not hasattr(sys.modules[keys], "__file__") : continue
                 if sys.modules[keys].__file__ is None : continue
                 if base_module.__file__ == sys.modules[keys].__file__ : continue
                 if pack_path in sys.modules[keys].__file__ : importlib.reload(sys.modules[keys])
@@ -1131,6 +1131,7 @@ class Choose_Expand(tkinter.Frame) :
                 if uid in expand_pack_open_list and hasattr(expand_pack_open_list[uid]['object'],"reload_method") : 
                     expand_pack_open_list[uid]['object'].reload_method()
                 reload_module(module) #重载拓展包模块
+                if "frame" in expand_pack_open_list.get(uid, {}) : expand_pack_open_list[uid]["frame"].destroy()
                 expand_pack_open_list[uid] = {}
                 expand_pack_open_list[uid]["dir_name"] = dir_name
                 expand_pack_open_list[uid]["frame"] = tkinter.Frame(self.main_win.window)

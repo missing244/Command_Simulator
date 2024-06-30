@@ -68,7 +68,7 @@ class BDX_File :
         bdx_code = io.BytesIO(brotli.decompress(self._file.read()))
         #print(bdx_code.getvalue().__len__())
         if bdx_code.read(4) != b'BDX\0' : raise BXDFileReadError("不是bdx数据文件")
-        self.author = match_string_bytes(bdx_code).decode("utf-8")
+        self.author = match_string_bytes(bdx_code).decode("utf-8", errors="ignore")
         try :
             while 1 : 
                 a = bdx_code.read(1)
@@ -85,7 +85,7 @@ class BDX_File :
         if self.__closed : raise BXDFileClosed("BXDFile 已被关闭")
 
 
-    def save_as(self,save_path:str=None) :
+    def save_as(self, save_path:str=None) :
         Writer1 = io.BytesIO(b"")
         Writer1.write(b'BDX\0')
         Writer1.write(self.author.encode("utf-8"))
@@ -94,8 +94,10 @@ class BDX_File :
             self.operation_list.append(OperationCode.Terminate())
         for i in self.operation_list : Writer1.write(i.to_bytes())
 
-        if self.__mode == "rb" or isinstance(self._file,io.BytesIO) :
-            Writer2 = open(save_path,'wb')
+        if self.__mode == "rb" or isinstance(self._file, io.BytesIO) :
+            base_path = os.path.realpath(os.path.join(save_path, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            Writer2 = open(save_path, "wb")
             Writer2.write(b"BD@")
             Writer2.write(brotli.compress(Writer1.getvalue(),quality=6))
             Writer1.close() ; Writer2.close()
@@ -110,6 +112,9 @@ class BDX_File :
         self.__closed = True
         self.operation_list.clear()
         self._file.close()
+    
+    def __del__(self) :
+        if not self.__closed : self.close()
 
 
 

@@ -92,7 +92,7 @@ class Command_Parser :
                         self.current_leaves = i
                         if isinstance(i,BaseMatch.End_Node) : break
                         command_str_pointer = a["token"].end()
-                        Token_list.append(a)
+                        if a["type"] != "Command_Start" : Token_list.append(a)
                         break
 
             if is_not_successs : 
@@ -118,7 +118,7 @@ class Command_Parser :
         except Exception as e : 
             s = "%s\n错误位于字符%s至%s" % (e.args[0], e.pos[0], e.pos[1])
             return (s,e)
-        else : return [i for i in a if i["type"] != "Command_Start"] 
+        else : return a
 
 
 

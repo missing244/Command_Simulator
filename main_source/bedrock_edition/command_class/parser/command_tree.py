@@ -908,7 +908,11 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         *SpecialMatch.Rotation_Tree(
             BaseMatch.Float("Spread_Distance").add_leaves(
                 BaseMatch.Float("Max_Range").add_leaves(
-                    *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
+                    *SpecialMatch.BE_Selector_Tree( 
+                        BaseMatch.Float("Max_Height").add_leaves( BaseMatch.END_NODE ),
+                        SpecialMatch.Relative_Offset_Float("Relative_Max_Height").add_leaves( BaseMatch.END_NODE ),
+                        BaseMatch.END_NODE
+                    )
                 )
             )
         )

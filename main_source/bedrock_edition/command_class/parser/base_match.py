@@ -343,7 +343,7 @@ class AnyMsg(Match_Base) :
     
     def __init__(self, token_type:str) -> None :
         super().__init__(token_type)
-        self.re_match = re.compile(".{0,}")
+        self.re_match = re.compile("(.|\\u000a|\\u000d){0,}")
 
     def _match_string(self, s:str, s_pointer:int): 
         _match = self.re_match.match(s, pos=s_pointer)

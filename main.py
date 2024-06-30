@@ -10,13 +10,14 @@ from tkinter import ttk
 from typing import List,Dict,Union,Literal
 ssl._create_default_https_context = ssl._create_unverified_context
 
+#删除旧文件
+import main_source.main_window.update_change as update_change
+
 #自定义模块加载与设置
 import main_source.main_window.constant as app_constants
 import main_source.main_window.function as app_function
 import main_source.main_window.tk_frame as app_tk_frame
 import main_source.package.file_operation as file_IO
-import main_source.package.tk_tool as tk_tool
-import main_source.package.python_numpy as np
 
 #模拟世界模块加载
 import main_source.bedrock_edition as Minecraft_BE

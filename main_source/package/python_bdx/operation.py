@@ -20,7 +20,7 @@ PlaceBlockWithNBTData 会涉及到nbt的修改\n
 
 
 import ctypes,io
-from ..python_nbt import nbt
+from .. import python_nbt as nbt
 from typing import Union,List
 
 
@@ -49,7 +49,7 @@ class OperationBase :
 
 
 def print_test(a) :
-    if isinstance(a,nbt.TAG_Compound) : return a._value_json_obj(False)
+    if isinstance(a,nbt.TAG_Compound) : return a
     else : return a
 
 def match_string_bytes(bytes_io:io.BytesIO) -> bytes:
@@ -58,7 +58,7 @@ def match_string_bytes(bytes_io:io.BytesIO) -> bytes:
     return bytes_io.getvalue()[last_pointer : bytes_io.tell() - 1]
 
 def read_chest_data(SaveList:list,bytes_io:io.BytesIO) :
-    name = match_string_bytes(bytes_io).decode("utf-8")
+    name = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
     count = int.from_bytes(bytes_io.read(1),'big',signed=False)
     data = int.from_bytes(bytes_io.read(2),'big',signed=False)
     slotID = int.from_bytes(bytes_io.read(1),'big',signed=False)
@@ -99,7 +99,7 @@ class CreateConstantString(OperationBase) :
     @classmethod
     def from_bytes(cls,bytes_io:Union[bytes,io.BytesIO]) :
         if isinstance(bytes_io,bytes) : bytes_io = io.BytesIO(bytes_io)
-        a = match_string_bytes(bytes_io).decode("utf-8")
+        a = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         return cls(a)
 
     def to_bytes(self) -> bytes :
@@ -308,7 +308,7 @@ class PlaceBlockWithBlockStates2(OperationBase) :
     def from_bytes(cls,bytes_io:Union[bytes,io.BytesIO]) :
         if isinstance(bytes_io,bytes) : bytes_io = io.BytesIO(bytes_io)
         blockConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
-        a = match_string_bytes(bytes_io).decode("utf-8")
+        a = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         return cls(blockConstantStringID,a)
 
     def to_bytes(self) -> bytes :
@@ -691,8 +691,8 @@ class SetCommandBlockData(OperationBase) :
     def from_bytes(cls,bytes_io:Union[bytes,io.BytesIO]) :
         if isinstance(bytes_io,bytes) : bytes_io = io.BytesIO(bytes_io)
         mode = int.from_bytes(bytes_io.read(4),'big',signed=False)
-        command = match_string_bytes(bytes_io).decode("utf-8")
-        customName = match_string_bytes(bytes_io).decode("utf-8")
+        command = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
+        customName = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         match_string_bytes(bytes_io)
         tickdelay = int.from_bytes(bytes_io.read(4),'big',signed=True)
         executeOnFirstTick = int.from_bytes(bytes_io.read(1),'big',signed=False)
@@ -764,8 +764,8 @@ class PlaceBlockWithCommandBlockData(OperationBase) :
         blockConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
         blockData = int.from_bytes(bytes_io.read(2),'big',signed=False)
         mode = int.from_bytes(bytes_io.read(4),'big',signed=False)
-        command = match_string_bytes(bytes_io).decode("utf-8")
-        customName = match_string_bytes(bytes_io).decode("utf-8")
+        command = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
+        customName = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         match_string_bytes(bytes_io)
         tickdelay = int.from_bytes(bytes_io.read(4),'big',signed=True)
         executeOnFirstTick = int.from_bytes(bytes_io.read(1),'big',signed=False)
@@ -1033,8 +1033,8 @@ class PlaceRuntimeBlockWithCommandBlockData(OperationBase) :
         if isinstance(bytes_io,bytes) : bytes_io = io.BytesIO(bytes_io)
         runtimeId = int.from_bytes(bytes_io.read(2),'big',signed=False)
         mode = int.from_bytes(bytes_io.read(4),'big',signed=False)
-        command = match_string_bytes(bytes_io).decode("utf-8")
-        customName = match_string_bytes(bytes_io).decode("utf-8")
+        command = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
+        customName = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         match_string_bytes(bytes_io)
         tickdelay = int.from_bytes(bytes_io.read(4),'big',signed=True)
         executeOnFirstTick = int.from_bytes(bytes_io.read(1),'big',signed=False)
@@ -1102,8 +1102,8 @@ class PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID(OperationBase) :
         if isinstance(bytes_io,bytes) : bytes_io = io.BytesIO(bytes_io)
         runtimeId = int.from_bytes(bytes_io.read(4),'big',signed=False)
         mode = int.from_bytes(bytes_io.read(4),'big',signed=False)
-        command = match_string_bytes(bytes_io).decode("utf-8")
-        customName = match_string_bytes(bytes_io).decode("utf-8")
+        command = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
+        customName = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         match_string_bytes(bytes_io)
         tickdelay = int.from_bytes(bytes_io.read(4),'big',signed=True)
         executeOnFirstTick = int.from_bytes(bytes_io.read(1),'big',signed=False)
@@ -1171,8 +1171,8 @@ class PlaceCommandBlockWithCommandBlockData(OperationBase) :
         if isinstance(bytes_io,bytes) : bytes_io = io.BytesIO(bytes_io)
         data = int.from_bytes(bytes_io.read(2),'big',signed=False)
         mode = int.from_bytes(bytes_io.read(4),'big',signed=False)
-        command = match_string_bytes(bytes_io).decode("utf-8")
-        customName = match_string_bytes(bytes_io).decode("utf-8")
+        command = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
+        customName = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         match_string_bytes(bytes_io)
         tickdelay = int.from_bytes(bytes_io.read(4),'big',signed=True)
         executeOnFirstTick = int.from_bytes(bytes_io.read(1),'big',signed=False)
@@ -1391,7 +1391,7 @@ class PlaceBlockWithNBTData(OperationBase) :
 
     operation_code = 0x29
 
-    def __init__(self, blockConstantStringID:int, blockStatesConstantStringID:int, nbt:nbt.NBTTagCompound) -> None:
+    def __init__(self, blockConstantStringID:int, blockStatesConstantStringID:int, nbt:nbt.TAG_Compound) -> None:
         self.blockConstantStringID = ctypes.c_uint16(blockConstantStringID).value
         self.blockStatesConstantStringID = ctypes.c_uint16(blockStatesConstantStringID).value
         self.nbt = nbt
@@ -1402,9 +1402,9 @@ class PlaceBlockWithNBTData(OperationBase) :
         blockConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
         blockStatesConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
         int.from_bytes(bytes_io.read(2),'big',signed=False)
-        newReader = io.BytesIO(bytes_io.getvalue()[bytes_io.tell():])
-        nbt1 = nbt.read_from_nbt_file(newReader,'little')
-        bytes_io.read(newReader.tell())
+        newReader = bytes_io.getvalue()[bytes_io.tell():]
+        nbt1 = nbt.read_from_nbt_file(newReader, byteorder='little')
+        bytes_io.read(nbt1.bytes_len)
         return cls(blockConstantStringID,blockStatesConstantStringID,nbt1)
 
     def to_bytes(self) -> bytes :

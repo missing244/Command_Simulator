@@ -1,7 +1,8 @@
-import re,time,random,json,threading,traceback
+import re,time,random,json,traceback
 from urllib import parse,request
 from typing import Union,List
 from html.parser import HTMLParser
+from .lanzou import fetch_direct_link
 
 class MyHTMLParser(HTMLParser):
     def __init__(self):
@@ -14,7 +15,7 @@ class MyHTMLParser(HTMLParser):
 parser = MyHTMLParser()
 
 
-
+lanzou_re = re.compile("^\\u0068\\u0074\\u0074\\u0070\\u0073\\u003a\\u002f\\u002f\\u0077\\u0077\\u006d\\u002e\\u006c\\u0061\\u006e\\u007a\\u006f\\u0075")
 request_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.54'}
 qq_share_re_search = (re.compile('<script type="text/javascript">window\\.syncData = '), re.compile(';</script>'))
 
@@ -218,21 +219,6 @@ class js_execute :
         d = cipher.decrypt(text1,key,vi)
         return js_execute.toHex(d)
 
-
-def request_API_url(url:Union[str,List[str]], post_data:dict=None, cookie_data:str=None, timeout_s:float=3) -> bytes: 
-    """产生异常\n这个函数一定要运行于多线程"""
-    if cookie_data : request_headers["cookie"] = cookie_data
-    if post_data is not None : post_data = parse.urlencode(post_data).encode('utf-8')
-    if isinstance(url,str) : url = [url]
-    
-    for url1 in url :
-        for times1 in range(2) :
-            req1 = request.Request(url1, headers=request_headers, data = post_data)
-            response2:bytes = request.urlopen(req1,timeout=3).read()
-            if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :
-                request_headers["cookie"] = js_execute.decode(response2.decode("utf-8")) ; time.sleep(0.25)
-            else : return response2
-
 def request_url_without_error(url:Union[str,List[str]], post_data:dict=None, cookie_data:str=None, timeout_s:float=3) -> Union[None,bytes] : 
     """不产生异常,这个函数一定要运行于多线程"""
     if cookie_data : request_headers["cookie"] = cookie_data
@@ -241,13 +227,17 @@ def request_url_without_error(url:Union[str,List[str]], post_data:dict=None, coo
     
     for url1 in url :
         for times1 in range(2) :
-            req1 = request.Request(url1, headers=request_headers, data = post_data)
-            try : response2:bytes = request.urlopen(req1,timeout=timeout_s).read()
-            except : response2 = None; print(url1) ; print(traceback.format_exc().split("\n")[-2]) ; continue
+            if lanzou_re.search(url1) :
+                response2:bytes = fetch_direct_link(url1)
+                if response2 : return response2
             else :
-                if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :
-                    request_headers["cookie"] = js_execute.decode(response2.decode("utf-8")) ; time.sleep(0.25)
-                else : return response2
+                req1 = request.Request(url1, headers=request_headers, data = post_data)
+                try : response2:bytes = request.urlopen(req1,timeout=timeout_s).read()
+                except : response2 = None; print(url1) ; print(traceback.format_exc().split("\n")[-2]) ; continue
+                else :
+                    if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :
+                        request_headers["cookie"] = js_execute.decode(response2.decode("utf-8")) ; time.sleep(0.25)
+                    else : return response2
     
 
 def transfor_qq_share(a:str) -> str :

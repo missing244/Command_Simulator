@@ -235,54 +235,52 @@ class command_block_compile_system :
         a.close()
 
     def transfor_mcstructure_file(self, _game:RunTime.minecraft_thread) :
-
-        python_nbt.nbt.change_to_little()
-
+        
         def return_mcstructure_format() :
-            a = python_nbt.nbt.NBTTagCompound()
-            a['format_version'] = python_nbt.nbt.NBTTagInt(1)
+            a = python_nbt.TAG_Compound()
+            a['format_version'] = python_nbt.TAG_Int(1)
 
-            a['structure_world_origin'] = python_nbt.nbt.NBTTagList(tag_type=python_nbt.nbt.NBTTagInt)
-            for i in range(3) : a['structure_world_origin'].append(python_nbt.nbt.NBTTagInt(0))
+            a['structure_world_origin'] = python_nbt.TAG_List(type=python_nbt.TAG_Int)
+            for i in range(3) : a['structure_world_origin'].append(python_nbt.TAG_Int(0))
 
-            a['structure'] = python_nbt.nbt.NBTTagCompound()
-            a['structure']['block_indices'] = python_nbt.nbt.NBTTagList(tag_type=python_nbt.nbt.NBTTagList)
-            for i in range(2) : a['structure']['block_indices'].append(python_nbt.nbt.NBTTagList(tag_type=python_nbt.nbt.NBTTagInt))
+            a['structure'] = python_nbt.TAG_Compound()
+            a['structure']['block_indices'] = python_nbt.TAG_List(type=python_nbt.TAG_List)
+            for i in range(2) : a['structure']['block_indices'].append(python_nbt.TAG_List(type=python_nbt.TAG_Int))
 
-            a['structure']['entities'] = python_nbt.nbt.NBTTagList(tag_type=python_nbt.nbt.NBTTagCompound)
+            a['structure']['entities'] = python_nbt.TAG_List(type=python_nbt.TAG_Compound)
 
-            a['structure']['palette'] = python_nbt.nbt.NBTTagCompound()
-            a['structure']['palette']['default'] = python_nbt.nbt.NBTTagCompound()
-            a['structure']['palette']['default']['block_palette'] = python_nbt.nbt.NBTTagList(tag_type=python_nbt.nbt.NBTTagCompound)
-            a['structure']['palette']['default']['block_position_data'] = python_nbt.nbt.NBTTagCompound()
+            a['structure']['palette'] = python_nbt.TAG_Compound()
+            a['structure']['palette']['default'] = python_nbt.TAG_Compound()
+            a['structure']['palette']['default']['block_palette'] = python_nbt.TAG_List(type=python_nbt.TAG_Compound)
+            a['structure']['palette']['default']['block_position_data'] = python_nbt.TAG_Compound()
 
             return a
 
         def return_command_block_data_format() :
-            base = python_nbt.nbt.NBTTagCompound()
-            a = python_nbt.nbt.NBTTagCompound()
-            a["Command"] = python_nbt.nbt.NBTTagString()
-            a["CustomName"] = python_nbt.nbt.NBTTagString()
-            a["ExecuteOnFirstTick"] = python_nbt.nbt.NBTTagByte(1)
-            a["LPCommandMode"] = python_nbt.nbt.NBTTagInt()
-            a["LPCondionalMode"] = python_nbt.nbt.NBTTagByte()
-            a["LPRedstoneMode"] = python_nbt.nbt.NBTTagByte()
-            a["LastExecution"] = python_nbt.nbt.NBTTagLong()
-            a["LastOutput"] = python_nbt.nbt.NBTTagString()
-            a["LastOutputParams"] = python_nbt.nbt.NBTTagList(tag_type=python_nbt.nbt.NBTTagInt)
-            a["SuccessCount"] = python_nbt.nbt.NBTTagInt()
-            a["TickDelay"] = python_nbt.nbt.NBTTagInt()
-            a["TrackOutput"] = python_nbt.nbt.NBTTagByte(1)
-            a["Version"] = python_nbt.nbt.NBTTagInt(19 if MathFunction.version_compare(_game.game_version,[1,19,50]) == -1 else 36)
-            a["auto"] = python_nbt.nbt.NBTTagByte()
-            a["conditionMet"] = python_nbt.nbt.NBTTagByte()
-            a["conditionalMode"] = python_nbt.nbt.NBTTagByte()
-            a["id"] = python_nbt.nbt.NBTTagString("CommandBlock")
-            a["isMovable"] = python_nbt.nbt.NBTTagByte(1)
-            a["powered"] = python_nbt.nbt.NBTTagByte()
-            a["x"] = python_nbt.nbt.NBTTagInt()
-            a["y"] = python_nbt.nbt.NBTTagInt()
-            a["z"] = python_nbt.nbt.NBTTagInt()
+            base = python_nbt.TAG_Compound()
+            a = python_nbt.TAG_Compound()
+            a["Command"] = python_nbt.TAG_String()
+            a["CustomName"] = python_nbt.TAG_String()
+            a["ExecuteOnFirstTick"] = python_nbt.TAG_Byte(1)
+            a["LPCommandMode"] = python_nbt.TAG_Int()
+            a["LPCondionalMode"] = python_nbt.TAG_Byte()
+            a["LPRedstoneMode"] = python_nbt.TAG_Byte()
+            a["LastExecution"] = python_nbt.TAG_Long()
+            a["LastOutput"] = python_nbt.TAG_String()
+            a["LastOutputParams"] = python_nbt.TAG_List(type=python_nbt.TAG_Int)
+            a["SuccessCount"] = python_nbt.TAG_Int()
+            a["TickDelay"] = python_nbt.TAG_Int()
+            a["TrackOutput"] = python_nbt.TAG_Byte(1)
+            a["Version"] = python_nbt.TAG_Int(19 if MathFunction.version_compare(_game.game_version,[1,19,50]) == -1 else 36)
+            a["auto"] = python_nbt.TAG_Byte()
+            a["conditionMet"] = python_nbt.TAG_Byte()
+            a["conditionalMode"] = python_nbt.TAG_Byte()
+            a["id"] = python_nbt.TAG_String("CommandBlock")
+            a["isMovable"] = python_nbt.TAG_Byte(1)
+            a["powered"] = python_nbt.TAG_Byte()
+            a["x"] = python_nbt.TAG_Int()
+            a["y"] = python_nbt.TAG_Int()
+            a["z"] = python_nbt.TAG_Int()
             base["block_entity_data"] = a
             return base
 
@@ -297,40 +295,40 @@ class command_block_compile_system :
             structure_size[2] = max(structure_size[2],i[2] - 1600)
         for i in range(len(structure_size)) : structure_size[i] += 1
         
-        mcstructure_format['size'] = python_nbt.nbt.NBTTagList(tag_type=python_nbt.nbt.NBTTagInt)
-        for i in structure_size : mcstructure_format['size'].append(python_nbt.nbt.NBTTagInt(i))
+        mcstructure_format['size'] = python_nbt.TAG_List(type=python_nbt.TAG_Int)
+        for i in structure_size : mcstructure_format['size'].append(python_nbt.TAG_Int(i))
             
         if 1 :
-            mc_block = python_nbt.nbt.NBTTagCompound()
-            mc_block['name'] = python_nbt.nbt.NBTTagString("minecraft:air")
-            mc_block['version'] = python_nbt.nbt.NBTTagInt(
+            mc_block = python_nbt.TAG_Compound()
+            mc_block['name'] = python_nbt.TAG_String("minecraft:air")
+            mc_block['version'] = python_nbt.TAG_Int(
                 17959425 if MathFunction.version_compare(_game.game_version,[1,19,50]) == -1 else 18098179)
-            mc_block['states'] = python_nbt.nbt.NBTTagCompound()
+            mc_block['states'] = python_nbt.TAG_Compound()
             mcstructure_format['structure']['palette']['default']['block_palette'].append(mc_block)
 
         for i in itertools.product(cb_type,cb_condition,cb_facing) :
-            command_block = python_nbt.nbt.NBTTagCompound()
-            command_block['name'] = python_nbt.nbt.NBTTagString(i[0])
-            command_block['version'] = python_nbt.nbt.NBTTagInt(
+            command_block = python_nbt.TAG_Compound()
+            command_block['name'] = python_nbt.TAG_String(i[0])
+            command_block['version'] = python_nbt.TAG_Int(
                 17959425 if MathFunction.version_compare(_game.game_version,[1,19,50]) == -1 else 18098179)
-            command_block['states'] = python_nbt.nbt.NBTTagCompound()
-            command_block['states']["conditional_bit"] = python_nbt.nbt.NBTTagByte(i[1])
-            command_block['states']["facing_direction"] = python_nbt.nbt.NBTTagInt(i[2])
+            command_block['states'] = python_nbt.TAG_Compound()
+            command_block['states']["conditional_bit"] = python_nbt.TAG_Byte(i[1])
+            command_block['states']["facing_direction"] = python_nbt.TAG_Int(i[2])
             mcstructure_format['structure']['palette']['default']['block_palette'].append(command_block)
 
         for i in enumerate( itertools.product(range(structure_size[0]),range(-64,-64+structure_size[1],1),range(structure_size[2]))) :
             aaa = (i[1][0] + 1600, i[1][1], i[1][2] + 1600)
             if aaa not in self.command_block_data : 
-                mcstructure_format['structure']['block_indices'][0].append(python_nbt.nbt.NBTTagInt())
+                mcstructure_format['structure']['block_indices'][0].append(python_nbt.TAG_Int())
                 continue
             menory = self.command_block_data[aaa]
             command_block_format = return_command_block_data_format()
-            command_block_format["block_entity_data"]["Command"] = python_nbt.nbt.NBTTagString(menory["command"])
-            command_block_format["block_entity_data"]["TickDelay"] = python_nbt.nbt.NBTTagInt(menory["delay"])
-            command_block_format["block_entity_data"]["auto"] = python_nbt.nbt.NBTTagByte(menory["auto"])
-            command_block_format["block_entity_data"]["x"] = python_nbt.nbt.NBTTagInt(i[1][0])
-            command_block_format["block_entity_data"]["y"] = python_nbt.nbt.NBTTagInt(i[1][1])
-            command_block_format["block_entity_data"]["z"] = python_nbt.nbt.NBTTagInt(i[1][2])
+            command_block_format["block_entity_data"]["Command"] = python_nbt.TAG_String(menory["command"])
+            command_block_format["block_entity_data"]["TickDelay"] = python_nbt.TAG_Int(menory["delay"])
+            command_block_format["block_entity_data"]["auto"] = python_nbt.TAG_Byte(menory["auto"])
+            command_block_format["block_entity_data"]["x"] = python_nbt.TAG_Int(i[1][0])
+            command_block_format["block_entity_data"]["y"] = python_nbt.TAG_Int(i[1][1])
+            command_block_format["block_entity_data"]["z"] = python_nbt.TAG_Int(i[1][2])
             
             mcstructure_format['structure']['palette']['default']['block_position_data'][str(i[0])] = command_block_format
             palette_index = ( 
@@ -338,12 +336,13 @@ class command_block_compile_system :
                 cb_condition.index(int(menory["block_state"]["conditional_bit"])) * len(cb_facing) +
                 cb_facing.index(menory["block_state"]["facing_direction"]) + 1
             )
-            mcstructure_format['structure']['block_indices'][0].append(python_nbt.nbt.NBTTagInt(palette_index))
+            mcstructure_format['structure']['block_indices'][0].append(python_nbt.TAG_Int(palette_index))
 
+        one = python_nbt.TAG_Int(-1)
         for i in range(structure_size[0] * structure_size[1] * structure_size[2]) :
-            mcstructure_format['structure']['block_indices'][1].append(python_nbt.nbt.NBTTagInt(-1))
+            mcstructure_format['structure']['block_indices'][1].append(one)
 
-        python_nbt.nbt.write_to_nbt_file(
+        python_nbt.write_to_nbt_file(
             os.path.join("functionality","structure_output", _game.world_name + ".mcstructure"),
             mcstructure_format, gzip=False, byteorder="little"
         )
