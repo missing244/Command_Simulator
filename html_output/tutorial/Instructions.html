@@ -47,40 +47,48 @@
                 </p>
 
                 <h1 style="text-align: center;">界面操作栏</h1>
-                <p>
-                    &emsp;&emsp;进入调试程序主界面，最下方的界面操作栏，可以在不同界面中分别切换，菜单按钮除外。
-                </p>
+                <p>&emsp;&emsp;进入调试程序主界面，最下方的界面操作栏，可以在不同界面中分别切换，菜单按钮除外。</p>
                 <div style="text-align:center"><img src="../picture/tutorial/menu1.jpg" alt="" width="250" height="40"></div>
                 <p>&emsp;&emsp;图1是窗口切换，你可以在游戏界面、拓展包选择界面、拓展包窗口界面、设置界面中分别切换。可以花一些时间对这几个界面进行熟悉。</p>
-                <div style="text-align:center"><img src="../picture/tutorial/menu2.jpg" alt="" width="80" height="330"></div>
+                <div style="text-align:center"><img src="../picture/tutorial/menu2.jpg" alt="" width="80" height="220"></div>
                 <p>
-                    &emsp;&emsp;图2是为文字输入而单独设计的功能按钮，适用于本程序所有的文本输入框。设计这些按钮的原因是因为Pydroid
+                    &emsp;&emsp;图2是为文字输入而单独设计的功能按钮，适用于本程序所有的文本输入框。设计这些按钮的原因是因为安卓用户的Pydroid
                     3无法直接使用输入法中的这些功能，所以需要额外设计的按钮进行支持。
                 </p>
 
-                <h1 style="text-align: center;">原版拓展包</h1>
-                <p>&emsp;&emsp;如果用户只是为了单纯使用拓展包，则不需要安装原版拓展。用户可以根据需要自行选择安装。</p>
+                <h1 style="text-align: center;">拓展包</h1>
                 <p>
-                    &emsp;&emsp;如果用户需要使用命令模拟器的主体内容，则需要点击安装原版拓展，原版拓展是模拟器必须使用的模块，
-                    如果拒绝安装则无法运行命令模拟器的主要内容。<samp class="red_text">安卓用户</samp>需要耐心等待安装过程，
+                    &emsp;&emsp;拓展包分为原版拓展包和第三方拓展包。如果用户需要使用命令模拟器的主体内容，则需要点击安装原版拓展，
+                    原版拓展是模拟器必须使用的模块，如果拒绝安装则无法运行命令模拟器的主要内容。
+                    <samp class="red_text">安卓用户</samp>需要耐心等待安装过程，
                     大约需要1~2分钟，因为模块在下载完成后需要进行本地编译过程。
                 </p>
                 <div style="text-align:center"><img src="../picture/tutorial/expand1.jpg" alt="" width="250" height="270"></div>
-                <p>
-                    &emsp;&emsp;<samp class="red_text">注意：安卓用户在按照原版拓展时需要将本程序以前台或小窗模式运行，
-                    程序设置在后台则会暂停运行，安装过程将不会有任何进展。</samp>
-                </p>
     
+                <p>
+                    &emsp;&emsp;第三方拓展包为命令模拟器附加的服务，使用第三方拓展包需要注册命令模拟器的账户，
+                    并在官网选购拓展包，拓展包将会根据未来用户的反馈进行更新。第三方拓展包并不是只由命令模拟器作者进行开发，
+                    未来可能有拓展包开发者对自己的拓展包进行定价，请各位用户尊重拓展包开发者的著作权。
+                </p>
+                <p>
+                    &emsp;&emsp;第三方拓展包有启动和重启两个开启方式。如果点击启动，则将恢复用户上一次对该拓展包内容的修改，
+                    如果点击重启，则销毁上一次的修改重新启动拓展包。
+                </p>
+                <p>
+                    &emsp;&emsp;注意：<samp class="red_text">由于拓展包是贴近python代码进行开发，请不要安装未知的第三方拓展包。</samp>
+                    安装第三方拓展包造成的设备损害，开发者将不对此进行负责。
+                </p>
             </div>
 
             <div id="main_2" style="display: none;" >
-                <h1 style="text-align: center;">本地文件</h1>
+                <h1 style="text-align: center;">本地文件存储</h1>
                 <p>&emsp;&emsp;命令模拟器的世界储存和源代码位于同一目录位置。</p>
                 <p>&emsp;&emsp;Windows的本地文件储存在用户自己选择的文件夹目录。</p>
                 <p style="overflow-wrap:break-word">
                     &emsp;&emsp;Android的本地文件需要用户需要在MT管理器中，点击最上方路径栏，跳转至/storage/emulated/0/Android/data/ru.iiec.pydroid3(
                     <a href="#" onclick="clipboard.copy('/storage/emulated/0/Android/data/ru.iiec.pydroid3')">点击复制</a>)
-                    如果是Android 13系统则需要按照MT管理器指引授权此文件夹。进入该目录，在此目录下有files文件夹，命令模拟器本地文件就储存于此。
+                    如果是Android 13系统则需要按照MT管理器<samp class="red_text">授权</samp>或<samp class="red_text">下载Shuziku</samp>。
+                    进入该目录，在此目录下有files文件夹，命令模拟器本地文件就储存于此。
                 </p>
                 <p>&emsp;&emsp;用户可以在MT管理器中点击右上角菜单，对此目录<samp class="red_text">设置首页</samp>或<samp class="red_text">添加书签</samp>以方便下一次寻找该目录。</p>
 
@@ -97,7 +105,7 @@
             </div>
 
             <div id="main_3" style="display: none;" >
-                <h1 style="text-align: center;">文字输入</h1>
+                <h1 style="text-align: center;">文字输入和操作</h1>
                 <p>&emsp;&emsp;命令模拟器使用tkinter UI库进行搭建，因此很多文字操作功能无法直接在<samp class="red_text">安卓和Windows</samp>中同时进行兼容。</p>
                 <p>&emsp;&emsp;命令模拟器中的撤回和恢复操作需要<samp class="red_text">界面操作栏</samp>中的菜单按钮进行撤回和恢复。</p>
                 <p>
@@ -105,15 +113,14 @@
                     需要依靠快捷操作菜单中的按钮进行支持。
                     部分安卓用户由于输入法差距，换行也无法使用，快捷操作菜单中的按钮也支持换行。
                 </p>
-                
-                <h1 style="text-align: center;">快捷操作菜单</h1>
+
+                <h1 style="text-align: center;">文本操作菜单</h1>
                 <div style="text-align:center"><img src="../picture/tutorial/select_menu1.jpg" alt=""></div>
-                <p>如果用户在输入框中，在输入框中进行<samp class="red_text">缓慢的拖动操作</samp>，即可选中输入框内的文字。这时会显示一个快捷操作菜单，如上图所示。
+                <p>如果用户在输入框中，在输入框中进行<samp class="red_text">缓慢的拖动操作</samp>，即可选中输入框内的文字。这时会显示文本操作菜单1，如上图所示。
                 点击对应菜单即可执行对应的操作。</p>
                 <div style="text-align:center"><img src="../picture/tutorial/select_menu2.jpg" alt=""></div>
-                <p>如果用户在输入框中，对同一位置进行<samp class="red_text">多次缓慢的点击</samp>，即可显示另一个快捷操作菜单，如上图所示。
+                <p>如果用户在输入框中，对同一位置进行<samp class="red_text">多次缓慢的点击</samp>，即可显示文本操作菜单2，如上图所示。
                 点击对应菜单即可执行对应的操作。</p>
-
             </div>
 
             <div id="main_4" style="display: none;" >
@@ -150,9 +157,8 @@
             <div id="main_6" style="display: none;" >
                 <h1 style="text-align: center;">软件更新</h1>
                 <p>&emsp;&emsp;命令模拟器在服务器查询到最新版本时会提醒用户是否需要更新。</p>
-                <p>&emsp;&emsp;安卓用户在根目录需要寻找update.py文件，使用Pydroid 3打开文件后，运行文件即可更新。</p>
-                <p>&emsp;&emsp;Windows用户在根目录需要寻找 Windows更新.bat 文件，双击运行后即可更新。</p>
-                <p>&emsp;&emsp;如果用户误删除了程序的重要文件，也可以通过更新来进行恢复。</p>
+                <p>&emsp;&emsp;安卓用户需要在main.py所在的目录，寻找update.py文件，使用Pydroid 3打开文件后，运行文件即可更新。</p>
+                <p>&emsp;&emsp;Windows用户在根目录需要寻找 Windows更新.bat 文件，双击运行后即可更新。如果用户误删除了程序的重要文件，也可以通过更新来进行恢复。</p>
             </div>
         </div>
 

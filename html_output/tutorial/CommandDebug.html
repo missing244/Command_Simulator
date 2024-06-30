@@ -67,43 +67,43 @@
                         &emsp;&emsp; [MC命令]<br>
                         &emsp;&emsp; ........<br>
                         &emsp;③ [方向,属性] empty<br>
-                        &emsp;④ //注释内容<br>
+                        &emsp;④ #注释内容<br>
                     </p>
                 </div>
                 <p>
                     &emsp;&emsp;start语法表示从某个局部位置开始部署命令方块，局部位置一定要满足以下条件：<samp class="red_text">x为0到95，y为-64到319，z为0到95。在世界内的命令方块将在(1600,-64,1600)加上局部位置后开始布置。</samp><br>
-                    &emsp;&emsp;方向是必填参数，表示从start位置开始，朝什么方向布置命令方块，可填参数<samp class="red_text">x+、x-、y+、y-，z-，z+、0、1、2、3、4、5。</samp>
+                    &emsp;&emsp;方向是必填参数，表示从start位置开始，朝什么方向布置命令方块，命令方块自身的朝向也由该参数决定。可填参数<samp class="red_text">x+、x-、y+、y-，z-，z+、0、1、2、3、4、5。</samp>
                     属性是选填参数，表示该位置的命令方块具体设置，可填参数<samp class="red_text">(循环/连锁/脉冲)(有条件/无条件)(红石/常开)(延时)，参数可以使用逗号或分号隔开。</samp><br>
-                    &emsp;&emsp;第三种语法用于插入一个空白的命令方块。<br>
-                    &emsp;&emsp;第四种语法用于插入一行注释内容，注释不影响命令方块的结构。<br><br>
+                    &emsp;&emsp;语法③用于插入一个空白的命令方块。<br>
+                    &emsp;&emsp;语法④用于插入一行注释内容，注释不影响命令方块的结构。<br><br>
                     &emsp;&emsp;默认的属性是[连锁，无条件，常开，0]，如果指定新的属性则会覆盖默认属性，
                     当下一条MC命令没有指定方向和属性参数时，则会使用最后一次设置的方向和属性参数。下面将使用一个例子进行解析。<br>
                 </p>
                 <div style="background-color: white;"><code>
-                    //设置起始位置 1602 -60 1625<br>
+                    # 设置起始位置 1602 -60 1625<br>
                     <span class="blue_text">start 2 -60 25</span><br>
-                    //位置1602 -60 1625为无条件常开延时为0的脉冲命令方块<br>
+                    # 位置1602 -60 1625为无条件常开延时为0的脉冲命令方块(朝向y+)<br>
                     <span class="blue_text">[y+,脉冲,无条件，0]say aaaa</span><br>
-                    //位置1602 -59 1625为有条件常开延时为0的连锁命令方块<br>
-                    <span class="blue_text">[y+,有条件，0]testfor aaaa</span><br>
-                    //位置1602 -58 1625为有条件常开延时为0的连锁命令方块<br>
+                    # 位置1602 -59 1625为有条件常开延时为0的连锁命令方块(朝向y+)<br>
+                    <span class="blue_text">[y+,连锁，有条件，0]testfor aaaa</span><br>
+                    # 位置1602 -58 1625为有条件常开延时为0的连锁命令方块(朝向y+)<br>
                     <span class="blue_text">testfor bbbb</span><br>
-                    //位置1602 -57 1625为有条件常开延时为0的连锁命令方块<br>
+                    # 位置1602 -57 1625为有条件常开延时为0的连锁命令方块(朝向y+)<br>
                     <span class="blue_text">testfor bbbb</span><br>
                     <br><br>
-                    //起始命令方块的位置 22 -40 76<br>
-                    <span class="blue_text">start 22 -40 76</span><br>
-                    //位置1622 -40 1676为无条件常开延时为0的脉冲命令方块<br>
+                    # 起始命令方块的位置 1622 -40 1676<br>
+                    <span class="blue_text">start 1622 -40 1676</span><br>
+                    # 位置1622 -40 1676为无条件常开延时为0的脉冲命令方块(朝向y+)<br>
                     <span class="blue_text">[y+,脉冲,无条件，0]say aaaa</span><br>
-                    //位置1622 -39 1676为无条件常开延时为0的连锁命令方块<br>
-                    <span class="blue_text">[y+]say aaaa</span><br>
-                    //位置1622 -38 1676为无条件常开延时为0的连锁命令方块<br>
+                    # 位置1622 -39 1676为无条件常开延时为0的连锁命令方块(朝向y+)<br>
+                    <span class="blue_text">[y+,连锁]say aaaa</span><br>
+                    # 位置1622 -38 1676为无条件常开延时为0的连锁命令方块(朝向y+)<br>
                     <span class="blue_text">say aaaa</span><br>
-                    //位置1622 -37 1676为无条件常开延时为0的连锁命令方块<br>
+                    # 位置1622 -37 1676为无条件常开延时为0的连锁命令方块(朝向y+)<br>
                     <span class="blue_text">say aaaa</span><br>
                 </code></div>
                 <p>
-                    &emsp;&emsp;编辑完成命令方块文件后，用户需要在发送命令窗口运行“#reload”终端命令来对文件进行语法检查，检查通过后，
+                    &emsp;&emsp;编辑完成命令方块文件后，用户需要在发送命令窗口运行“#reload”<samp class="red_text">终端命令</samp>来对文件进行语法检查，检查通过后，
                     命令方块才会写入世界。<samp class="red_text">注意：注册完成并写入游戏的红石控制命令方块只能接受红石块的激活响应。</samp>
                 </p>
             </div>
@@ -125,9 +125,7 @@
 
             <div id="main_4" style="display: none;" >
                 <h1 style="text-align: center;">终端关键字</h1>
-                <p>
-                    &emsp;&emsp;终端关键字是对终端命令进行控制的语法关键字，命令模拟器支持以下两种语法关键字。
-                </p>
+                <p>&emsp;&emsp;终端关键字是对终端命令进行控制的语法关键字，命令模拟器支持以下两种语法关键字。</p>
                 <div style="background-color: white;">
                     <p>
                         &emsp;① pass &#60;int&#62;<br>
@@ -140,10 +138,9 @@
                 </p>
 
                 <h1 style="text-align: center;">终端命令</h1>
+                <p>&emsp;&emsp;终端命令是命令模拟器对与调试参数设置的内置特殊命令，命令模拟器支持以下终端命令。如果以#开头但并不符合以下终端命令的格式，将会当做注释处理。</p>
                 <h3>#reload</h3>
-                <p>
-                    格式: #reload [open_cb_view] [transfor]
-                </p>
+                <p>格式: #reload [open_cb_view] [transfor]</p>
                 <p>
                     &emsp;&emsp;将行为包中的函数和用户的命令方块注册文件全部重新进行语法检查和加载。
                     如果含有语法错误，则会在检查完毕后自动弹出语法反馈的窗口。
