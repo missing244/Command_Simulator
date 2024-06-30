@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html>
+
+    <style>
+        body{
+            margin: 0px auto;
+            background-color: rgba(0, 26, 255, 0.118);
+        }
+        @media (min-width: 700px) {
+            body {width: 700px}
+        }
+
+        .red_text{
+            color: red;
+            font-size: 17px;
+        }
+        .blue_text{
+            color: blue;
+            font-size: 17px;
+        }
+    </style>
+
+	<head>
+		<meta charset="utf-8">
+		<title> 语法转换 </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+    
+    <body>
+    
+        <div style="height: 40px;"></div>
+
+        <div style="width: 85%; margin: 0px auto;">
+            <h1 style="text-align: center;">语法转换</h1>
+            <p style="text-align: center;">作者: Missing245</p>
+            <p>
+                &emsp;&emsp;新execute语法将在1.19.50版本启用，新summon命令语法将在1.19.70启用，新方块状态语法将在1.20.10版本启用，
+                该拓展包实现了execute和summon的语法转换，fill、clone、testforblock、setblock命令的方块数据值的转换。同时实现了适配于1.20.10版本的方块状态的语法转换。
+            </p>
+
+            <h2 style="text-align: center;">使用方法</h2>
+            <p>&emsp;&emsp;命令种类：用户需要选择需要转换的命令种类。例如当用户只勾选summon转换，则会只对summon命令和execute-summon命令进行转换。</p>
+            <p>&emsp;&emsp;原命令版本：用户提供的命令或者文件保存的命令是在指定的游戏版本下解析正确。例如选择1.19.0则会正确解析execute旧语法，execute新语法会解析错误而无法转换。</p>
+            <p>&emsp;&emsp;导出版本：用户最终将命令或者文件作用于游戏版本下执行。例如选择1.19.70则会在勾选summon命令转换的条件下，自动转换summon旧语法。</p>
+            
+            <h2 style="text-align: center;">转换模式</h2>
+            <p>&emsp;&emsp;有两种转换模式，<samp class="red_text">文字转换</samp>和<samp class="red_text">文件转换</samp>。</p>
+            <p>
+                &emsp;&emsp;文字转换指的是将输入区的每一行命令都转换到输出区。<br>
+                &emsp;&emsp;文件转换指的是将<samp class="red_text">expand_pack\ExecuteChange\input</samp>文件夹内的所有文件进行语法转换。
+                转换结果将会生成在<samp class="red_text">expand_pack\ExecuteChange\output</samp>文件夹内，支持被转换的文件有.txt .mcfunction .bdx。
+            </p>
+            <p>在文件转换模式下，如果需要转换的命令存在语法错误，最终会生成一个错误汇总。用户可点击错误汇总下的按钮进行命令修改。</p>
+
+            <h2 style="text-align: center;">转换注意</h2>
+            <p>
+                &emsp;&emsp;输入命令版本有1.19.0和1.19.50两个版本。区别在于前者是对execute和方块数据值进行转换；
+                后者是仅仅对方块数据值和方块状态做适配于1.20的语法转换，在这个版本要求的execute语法一定为新版本语法。
+                <samp class="red_text">格式错误的命令不支持转换，并且非execute，summon，fill等命令不支持错误检查。</samp>
+            </p>
+            <p>&emsp;&emsp;你可以在输入区输入<samp class="red_text">setblock ~ ~ ~ bedrock 0</samp>查看输出结果。</p>
+        </div>
+    </body>
+
+</html>
