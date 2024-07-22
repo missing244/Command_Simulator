@@ -1,4 +1,4 @@
-import os,inspect,json,time,threading,re,base64,zlib,traceback
+import os,inspect,json,time,threading,re,base64,zlib,traceback,subprocess,sys
 import main_source.package.file_operation as FileOperation
 from typing import List,Literal,Union
 from tkinter import ttk ; import tkinter ; import tkinter.messagebox
@@ -11,7 +11,9 @@ class user_manager :
 
     save_timestemp = 0
     save_path = os.path.join("save_world", "user_data.data")
-    save_data = {} ; info_update = False
+    save_path_bak = os.path.join("save_world", "user_data.bak")
+    save_data = {}
+    info_update = False
     save_data_template = {
         "cookies": {"api_web_cookie":""}, 
         "online_get": {}, 
@@ -23,7 +25,14 @@ class user_manager :
 
     def __init__(self) :
         if FileOperation.is_file(self.save_path) :
-            try : self.save_data = json.load(fp=open(self.save_path, "r", encoding="utf-8"))
+            try : self.save_data = json.loads(FileOperation.read_a_file(self.save_path))
+            except : 
+                if FileOperation.is_file(self.save_path_bak) : 
+                    try : self.save_data = json.loads(FileOperation.read_a_file(self.save_path_bak))
+                    except : self.save_data = self.save_data_template
+                else : self.save_data = self.save_data_template
+        elif FileOperation.is_file(self.save_path_bak) : 
+            try : self.save_data = json.loads(FileOperation.read_a_file(self.save_path_bak))
             except : self.save_data = self.save_data_template
         else : self.save_data = self.save_data_template
 
@@ -45,11 +54,15 @@ class user_manager :
         while 1 :
             if time.time() > self.save_timestemp : 
                 self.write_back()
-                self.save_timestemp = time.time() + 600
-            time.sleep(6)
+                self.save_timestemp = time.time() + 900
+            time.sleep(10)
 
     def write_back(self) :
-        json.dump(self.save_data, fp=open(self.save_path, "w+", encoding="utf-8"), indent=4)
+        FileOperation.write_a_file(self.save_path, json.dumps(self.save_data, indent=4))
+        FileOperation.write_a_file(self.save_path_bak, json.dumps(self.save_data, indent=4))
+
+    def write_back_without_bak(self) :
+        FileOperation.write_a_file(self.save_path, json.dumps(self.save_data, indent=4))
 
     def get_account(self) : 
         json1:dict = self.save_data["user"]
@@ -365,14 +378,20 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         if response2 is None : 
             Announcement.set_notification(None)
             log.write_log("软件信息获取失败", 2) ; user.info_update = True ; return True
-        response2 = connent_API.transfor_qq_share(response2.decode("utf-8"))
-        response2 = zlib.decompress(base64.b64decode(response2.encode("utf-8"))).decode("utf-8")
-        response2 = json.loads(response2)
-        user.save_data['online_get'] = response2
+        
+        try : 
+            response2 = connent_API.transfor_qq_share(response2.decode("utf-8"))
+            response2 = zlib.decompress(base64.b64decode(response2.encode("utf-8"))).decode("utf-8")
+            response2 = json.loads(response2)
+            user.save_data['online_get'] = response2
 
-        Announcement.set_notification(response2['notification'])
-        connent_API.get_online_api(response2['api'])
-        user.info_update = True ; log.write_log("软件信息同步完成",2) ; return True
+            Announcement.set_notification(response2['notification'])
+            connent_API.get_online_api(response2['api'])
+            user.info_update = True ; log.write_log("软件信息同步完成",2)
+            return True
+        except :
+            log.write_log("无法同步信息，已使用上一次数据", 2)
+            return True
 
     def test_network() :
         request1 = connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL)
@@ -392,7 +411,8 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
 
     for i in [updata_info, test_network, get_info] :
         if not i() : break
-    user.write_back() ; log.set_time_end()
+    user.write_back()
+    log.set_time_end()
     if user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
         tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
         user.save_data['online_get']['app_version']))
@@ -463,6 +483,28 @@ def flash_minecraft_source(user:user_manager, log:initialization_log) :
     for i in [download_online_source,generate_online_source] :
         if not i() : break
     log.set_time_end()
+
+def check_c_extension(platform:Literal["windows","android"], log:initialization_log) :
+    log.write_log("正在检查C拓展库...")
+    try : import leveldb
+    except : 
+        log.write_log("leveldb库验证失败，正在安装...", 2)
+        if platform == "windows" :
+            for iii in ['Cython', "leveldb-py"] :
+                m1 = subprocess.getstatusoutput("pip3 install " + iii)
+                if not m1[0] : continue
+                FileOperation.write_a_file(os.path.join("log","install_extension.txt"), m1[1])
+                log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
+                return None
+        elif platform == "android" :
+            py_version = (sys.version_info.major, sys.version_info.minor)
+            start_path = os.path.join("C_extension", "py_leveldb_%s.%s" % py_version)
+            if not FileOperation.is_dir(start_path) : 
+                log.write_log("无法找到依赖库 leveldb, py=%s.%s" % py_version, 2) ; return None
+            end_path = "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python%s.%s/site-packages" % py_version
+            FileOperation.copy_all_file(start_path, end_path)
+        log.write_log("leveldb库安装完成", 2)
+    else : log.write_log("leveldb库验证通过", 2)
 
 
 

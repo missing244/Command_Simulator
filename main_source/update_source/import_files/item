@@ -921,6 +921,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:chipped_anvil": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:chiseled_bookshelf": {
     "damage_max": null,
     "can_enchant": []
@@ -938,6 +942,18 @@
     "can_enchant": []
   },
   "minecraft:chiseled_polished_blackstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chiseled_quartz_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chiseled_red_sandstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:chiseled_sandstone": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -986,6 +1002,10 @@
     "can_enchant": []
   },
   "minecraft:coal_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:coarse_dirt": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1258,7 +1278,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:cut_red_sandstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:cut_red_sandstone_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cut_sandstone": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1307,6 +1335,14 @@
     "can_enchant": []
   },
   "minecraft:cyan_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:damaged_anvil": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dandelion": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2871,6 +2907,70 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:light_block_0": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_1": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_10": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_11": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_12": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_13": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_14": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_15": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_2": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_3": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_4": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_5": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_6": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_7": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_8": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_block_9": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:light_blue_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -4133,6 +4233,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:quartz_pillar": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:quartz_slab": {
     "damage_max": null,
     "can_enchant": []
@@ -4242,6 +4346,10 @@
     "can_enchant": []
   },
   "minecraft:red_nether_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_sand": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4522,6 +4630,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:smooth_quartz": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:smooth_quartz_slab": {
     "damage_max": null,
     "can_enchant": []
@@ -4530,11 +4642,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:smooth_red_sandstone": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:smooth_red_sandstone_slab": {
     "damage_max": null,
     "can_enchant": []
   },
   "minecraft:smooth_red_sandstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:smooth_sandstone": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5612,10 +5732,6 @@
     "can_enchant": []
   },
   "minecraft:yellow_dye": {
-    "damage_max": null,
-    "can_enchant": []
-  },
-  "minecraft:yellow_flower": {
     "damage_max": null,
     "can_enchant": []
   },

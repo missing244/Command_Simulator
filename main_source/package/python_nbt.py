@@ -595,6 +595,7 @@ class NBTFile(TAG_Compound):
         super(NBTFile, self).__init__()
         if isinstance(data, str) : file = GzipFile(data, 'rb') if gzip else open(data, "rb")
         elif isinstance(data, bytes) : file = GzipFile(fileobj=BytesIO(data), mode="rb") if gzip else BytesIO(data)
+        else : file = GzipFile(fileobj=data, mode="rb") if gzip else data
         self.type = TAG_Byte(self.id)
         # make a file object
         # parse the file given initially
@@ -613,7 +614,7 @@ class NBTFile(TAG_Compound):
     def write_nbt(self, obj:Union[str, BytesIO], gzip:bool):
         """Write this NBT file to a file."""
         if isinstance(obj, str) : file = GzipFile(obj, "wb") if gzip else open(obj, "wb")
-        elif isinstance(obj, BytesIO) : file = GzipFile(fileobj=obj, mode="wb") if gzip else obj
+        else : file = GzipFile(fileobj=obj, mode="wb") if gzip else obj
         # Render tree to file
         TAG_Byte(self.id)._render_buffer(file)
         TAG_String(self.name)._render_buffer(file)

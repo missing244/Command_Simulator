@@ -176,6 +176,8 @@ class summon_1_0_0 :
     def summon_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_id:str, 
                       pos:List[str]=["~", "~", "~"], entity_event:str=None, entity_name:str=None) :
         summon_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], summon_pos) :
+            return Response.Response_Template("无法在未加载区域召唤实体").substitute()
 
         aaa = game.minecraft_chunk.__summon_entity__(game.minecraft_world.difficulty, 
             execute_var["dimension"], entity_id, summon_pos, entity_name, entity_event
@@ -226,6 +228,9 @@ class summon_1_70_0 :
     def summon_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_id:str, 
                       pos:List[str]=["~", "~", "~"], facing:List[str]=None, entity_event:str=None, entity_name:str=None) :
         summon_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        if not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], summon_pos) :
+            return Response.Response_Template("无法在未加载区域召唤实体").substitute()
+
         if isinstance(facing, (list,tuple)) and len(facing) == 2 :
             facing_x_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][0]), facing[0], "ry")
             facing_y_var = MathFunction.mc_rotate_compute(float(execute_var["rotate"][1]), facing[1], "rx")
@@ -795,7 +800,7 @@ class titleraw :
                 raise CompileError("天气时长不能为非正整数", pos=(time_m.start(), time_m.end()))
             return functools.partial(cls.set_time, entity_get=entity_func)
         elif token_list[index]["token"].group() in ("title", "subtitle", "actionbar") : 
-            ttt = token_list[index]["token"].group()
+            ttt = token_list[index]["token"].group() ; index += 1
             if token_list[index + 1]["type"] == "Msg" :
                 aa,bb = Msg_Compiler(_game, token_list[index + 1]["token"].group(), token_list[index + 1]["token"].start())
                 return functools.partial(cls.display_1, entity_get=entity_func, type1=ttt, msg=aa, search_entity=bb)

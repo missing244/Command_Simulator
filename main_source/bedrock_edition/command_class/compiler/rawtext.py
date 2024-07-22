@@ -6,7 +6,6 @@ import re,functools
 
 selector_tree = CommandParser.SpecialMatch.Command_Root().add_leaves(*CommandParser.SpecialMatch.BE_Selector_Tree(CommandParser.BaseMatch.END_NODE))
 Parser = CommandParser.ParserSystem.Command_Parser(selector_tree)
-selector_test = re.compile("^[ ]{0,}@")
 
 
 def Rawtext_Compiler(_game:RunTime.minecraft_thread, version:List[int], rawtext_json:dict):
@@ -34,13 +33,13 @@ def Rawtext_Analysis(_game:RunTime.minecraft_thread, version:List[int], rawtext_
             if not isinstance(text_json["scores"]["objective"], str) : raise CompileError("rawtext json的 scores.objective 需要提供字符串")
             if "name" not in text_json["scores"] : raise CompileError("rawtext json的 scores 需要提供 name 指定")
             if not isinstance(text_json["scores"]["name"], str) : raise CompileError("rawtext json的 scores.name 需要提供字符串")
-            a = selector_test.search(text_json["scores"]["name"]) 
-            if a is None : continue
             token_list = Parser.parser(text_json["selector"], version)
             if isinstance(token_list, tuple) : raise CompileError("选择器" + token_list[0])
-            _,entity_func = Selector.Selector_Compiler(_game, token_list, 0, is_player=True)
+            if token_list[0]["token"].group()[0] == "@" :
+                _,entity_func = Selector.Selector_Compiler(_game, token_list, 0, is_player=True)
+                text_json["scores"]["name"] = entity_func
 
-        if "translate" in text_json :
+        elif "translate" in text_json :
             if not isinstance(text_json["translate"], str) : raise CompileError("rawtext json的 translate 需要提供字符串")
             if "with" in text_json and isinstance(text_json["with"], dict) : Rawtext_Compiler(_game, version, text_json["with"])
             elif "with" in text_json and isinstance(text_json["with"], list) and not all([isinstance(i,str) for i in text_json["with"]]) :
@@ -73,7 +72,7 @@ def RunTime_Analysis(execute_var:COMMAND_CONTEXT, _game:RunTime.minecraft_thread
             if isinstance(entity_list, Response.Response_Template) : continue
             text_list.append(", ".join( (_game.minecraft_scoreboard.____get_score____(board, i) for i in entity_list) ))
 
-        if "translate" in text_json :
+        elif "translate" in text_json :
             rawtext_list = []
             if "with" in text_json and isinstance(text_json["with"], dict) :
                 rawtext_list = RunTime_Analysis(execute_var, _game, text_json["with"])
