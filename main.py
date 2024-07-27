@@ -22,6 +22,9 @@ import main_source.package.file_operation as file_IO
 #模拟世界模块加载
 import main_source.bedrock_edition as Minecraft_BE
 
+
+
+WebMemory = None
 if True : #启用软件前的加载项目
     for i in app_constants.First_Load_Build_Dir : os.makedirs(i,exist_ok=True)
     os.makedirs(os.path.join("functionality","example","example_bp","functions"),exist_ok=True)
@@ -66,9 +69,9 @@ if True : #启用软件前的加载项目
                 respones = debug_windows.post_data(datas, debug_windows.user_manager.save_data['install_pack_list'])
                 self.wfile.write(gzip.compress(json.dumps(respones,separators=(',', ':'),
                     default=Minecraft_BE.DataSave.encoding).encode('utf-8')))
-        
+
         server_address = ('', 32323)
-        http_Resquest = functools.partial(http_Resquest,directory="html_output")
+        http_Resquest = functools.partial(http_Resquest, directory="html_output")
         httpd = server_class(server_address, http_Resquest)
         httpd.serve_forever()
     threading.Thread(target=http_server_create).start()
@@ -89,6 +92,7 @@ if True : #启用软件前的加载项目
     threading.Thread(target=listen_cmd_input).start()
 
 
+
 class control_windows :
 
     def __init__(self):
@@ -102,30 +106,31 @@ class control_windows :
         self.focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry] = None
         self.expand_pack_open_list:Dict[str,Dict[Literal["dir_name","frame","module","object"],
             Union[str,tkinter.Frame,types.ModuleType,object]]] = {}
+
         self.change_hight_component_list = [] #可变高度组件列表
-
-        Announcement = app_tk_frame.Announcement(self)
-        Announcement.pack()
-
-        self.user_manager = app_function.user_manager() #用户管理
-        self.initialization_log = [app_function.initialization_log() for i in range(3)]
-        self.initialization_process:List[threading.Thread] = [
-            threading.Thread(target=app_function.get_app_infomation_and_login, args=(Announcement, self.user_manager, self.initialization_log[0])),
-            threading.Thread(target=app_function.flash_minecraft_id, args=(self.initialization_log[1], )),
-            threading.Thread(target=app_function.flash_minecraft_source, args=(self.user_manager, self.initialization_log[2])),
-        ]
-        self.game_process:Minecraft_BE.RunTime.minecraft_thread = None #模拟世界线程
-
-        #self.windows_constant()
-        for i in self.initialization_process : i.start()
-        self.window.protocol("WM_DELETE_WINDOW", self.window_exit)
-
         self.paset_thread_time:int = 0  #输入降频计时
         self.tutorial_mode:bool = False  #是否在教程模式
         self.platform:Literal["windows","android"] = None #系统名称
         system_info = platform.uname()
         if system_info.system.lower() == 'windows' : self.platform = 'windows'
         elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : self.platform = 'android'
+
+        Announcement = app_tk_frame.Announcement(self)
+        Announcement.pack()
+
+        self.user_manager = app_function.user_manager() #用户管理
+        self.initialization_log = [app_function.initialization_log() for i in range(4)]
+        self.initialization_process:List[threading.Thread] = [
+            threading.Thread(target=app_function.get_app_infomation_and_login, args=(Announcement, self.user_manager, self.initialization_log[0])),
+            threading.Thread(target=app_function.flash_minecraft_id, args=(self.initialization_log[1], )),
+            threading.Thread(target=app_function.flash_minecraft_source, args=(self.user_manager, self.initialization_log[2])),
+            threading.Thread(target=app_function.check_c_extension, args=(self.platform, self.initialization_log[3])),
+        ]
+        self.game_process:Minecraft_BE.RunTime.minecraft_thread = None #模拟世界线程
+
+        #self.windows_constant()
+        for i in self.initialization_process : i.start()
+        self.window.protocol("WM_DELETE_WINDOW", self.window_exit)
 
 
     def creat_windows(self):
@@ -143,6 +148,7 @@ class control_windows :
         self.display_frame["login_frame"] = app_tk_frame.Login(self)
         self.display_frame["policy_frame"] = app_tk_frame.Policy(self)
         self.display_frame["user_info"] = app_tk_frame.User_Info(self)
+        self.display_frame["log_display"] = app_tk_frame.Log_Display(self)
         self.set_display_frame("game_ready")
 
         self.user_manager.save_data["open_app_count"] += 1
@@ -159,7 +165,7 @@ class control_windows :
 
     def window_exit(self) :
         threading.Thread(target=lambda:[time.sleep(10), os._exit(0)]).start()
-        self.user_manager.write_back()
+        self.user_manager.write_back_without_bak()
         if self.game_process is not None :
             text = self.display_frame["game_run"].input_box1.get("0.0","end")[:-1]
             self.game_process.world_infomation['terminal_command'] = text
@@ -253,6 +259,9 @@ class control_windows :
         self.display_frame["policy_frame"].input_box4.insert("end",text1)
         self.set_display_frame("policy_frame")
 
+    def set_error_log(self, error_msg:str, log:str, save_path:str=None) :
+        self.display_frame["log_display"].set_log(error_msg, log, save_path)
+
 
     def get_expand_pack_class_object(self,uuid:str) -> object :
         a = self.expand_pack_open_list.get(uuid, None)
@@ -307,10 +316,16 @@ class control_windows :
             time.sleep(0.5)
 
 
+    def set_web_memory(self, data) :
+        global WebMemory
+        WebMemory = data
+
+
     def post_data(self, data_1:bytes, pack_list:dict) :
         post_json = json.loads(data_1.decode('utf-8'))
         
         operation_json = {
+            "get_web_memory" : self.post_to_web_memory,
             "expand_pack_run" : self.post_to_expand_pack,
         }
         
@@ -325,10 +340,16 @@ class control_windows :
             traceback.print_exc()
             return {"state" : 5 , "msg" : traceback.format_exc()}
 
-    def post_to_expand_pack(self,post_json:dict) : 
+    def post_to_expand_pack(self, post_json:dict) : 
         if not hasattr(self.expand_pack_open_list[post_json["pack_id"]]['object'],"do_POST") : 
             return {"state" : 6 , "msg" : "拓展包并没有指定Post处理方法"}
         return self.expand_pack_open_list[post_json["pack_id"]]['object'].do_POST(post_json)
+
+    def post_to_web_memory(self) :
+        global WebMemory
+        return WebMemory
+
+
 
 
 debug_windows = control_windows()
