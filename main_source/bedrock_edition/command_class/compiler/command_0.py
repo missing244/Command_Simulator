@@ -300,11 +300,11 @@ def subcommand_test_score_compare(execute_var:COMMAND_CONTEXT, game:RunTime.mine
 
     if not game.minecraft_scoreboard.____score_exists____(scb1, scb_names1[0]) : 
         return Response.Response_Template("$entity在$scb_name计分板没有分数").substitute(entity=ID_tracker(scb_names1[0]), scb_name=scb1)
-    if not game.minecraft_scoreboard.____score_exists____(scb2, scb_names2[1]) : 
+    if not game.minecraft_scoreboard.____score_exists____(scb2, scb_names2[0]) : 
        return Response.Response_Template("$entity在$scb_name计分板没有分数").substitute(entity=ID_tracker(scb_names2[0]), scb_name=scb2)
 
     a = game.minecraft_scoreboard.____get_score____(scb1, scb_names1[0])
-    b = game.minecraft_scoreboard.____get_score____(scb2, scb_names2[1])
+    b = game.minecraft_scoreboard.____get_score____(scb2, scb_names2[0])
     if SCORE_COMPARE[mode](a,b) ^ unless :
         return Response.Response_Template("分数条件($v1$mode$v2)测试通过", 1, 1).substitute(v1=a, v2=b, mode=mode)
     else : return Response.Response_Template("分数条件($v1$mode$v2)测试失败", 0, 0).substitute(v1=a, v2=b, mode=mode)
@@ -349,7 +349,7 @@ class execute_1_19_50 :
                 subcommand_list.append( functools.partial(subcommand_at, entity_get=entity_func) )
             elif token_list[index]["token"].group() == "facing" :
                 if token_list[index+1]["token"].group() == "entity" :
-                    index, entity_func = Selector.Selector_Compiler(_game, token_list, index+2)
+                    index, entity_func = Selector.Selector_Compiler(_game, token_list, index+2, is_single=True)
                     anchor_1 = token_list[index]["token"].group() ; index += 1
                     subcommand_list.append( functools.partial(subcommand_facing_entity, entity_get=entity_func, anchor=anchor_1) )
                 else :
@@ -407,12 +407,12 @@ class execute_1_19_50 :
                     if index >= len(token_list) : break
                 elif token_list[index]["token"].group() == "score" :
                     if token_list[index+1]["type"] in "Player_Name" : index, entity_func_1 = index+2, token_list[index+1]["token"].group()
-                    else : index, entity_func_1 = Selector.Selector_Compiler(_game, token_list, index+1)
+                    else : index, entity_func_1 = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
                     scoreboard_name_1 = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
                     operation_mode = token_list[index]["token"].group() ; index += 1
                     if operation_mode != "matches" :
-                        if token_list[index]["type"] == "Player_Name" : index, entity_func_2 = index+1, token_list[3]["token"].group()
-                        else : index, entity_func_2 = Selector.Selector_Compiler(_game, token_list, index)
+                        if token_list[index]["type"] == "Player_Name" : entity_func_2 = token_list[index]["token"].group() ; index += 1
+                        else : index, entity_func_2 = Selector.Selector_Compiler(_game, token_list, index, is_single=True)
                         scoreboard_name_2 = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
                         cls.add_func(subcommand_list[-1], functools.partial(subcommand_test_score_compare, unless=unless_mode, entity_get1=entity_func_1, 
                         scb1=scoreboard_name_1, mode=operation_mode, entity_get2=entity_func_2, scb2=scoreboard_name_2))

@@ -93,7 +93,7 @@ class minecraft_thread :
             self.runtime_variable.all_command_response[now_time] = {"delay_command":[],"loop_command":[],"command_block":[],"end_command":[]}
         self.runtime_variable.all_command_response[now_time][response_type].append(response.set_command(command))
 
-    def __game_loading__(self, word_name:str, func:Callable) :
+    def __game_loading__(self, word_name:str, *func:Callable) :
         from . import ExpandPackAPI,JoinWorld
 
         self.world_name:str = word_name
@@ -103,8 +103,7 @@ class minecraft_thread :
             self.minecraft_scoreboard = json.loads(FileOperation.read_a_file(os.path.join('save_world',word_name,'scoreboard')),object_hook=DataSave.decoding)
             self.minecraft_chunk = json.loads(FileOperation.read_a_file(os.path.join('save_world',word_name,'chunk_data')),object_hook=DataSave.decoding)
         except :
-            traceback.print_exc(file=open(os.path.join("log", "join_world.txt")))
-            return Exception("启动世界失败\n日志join_world.txt已保存")
+            return Exception("启动世界失败\n日志join_world.txt已保存", traceback.format_exc(), "join_world.txt")
 
         os.makedirs(os.path.join("save_world", self.world_name, "resource_packs"),exist_ok=True)
         os.makedirs(os.path.join("save_world", self.world_name, "behavior_packs"),exist_ok=True)
@@ -118,18 +117,18 @@ class minecraft_thread :
             self.visualization_object = ExpandPackAPI.visualization(self)
             a = JoinWorld.join_game_load(self)
             if a : 
-                with open(os.path.join("log", "join_world.txt"),"w+",encoding="utf-8") as f : f.write("\n".join(a))
-                result = Warning("加入世界成功, 有文件加载失败\n日志join_world.txt已保存\n游戏版本：%s.%s.%s" % self.game_version)
+                result = Exception("加入世界成功, 有文件加载失败\n日志join_world.txt已保存\n游戏版本：%s.%s.%s" % self.game_version, 
+                "\n".join(a), "join_world.txt")
             else : result = "加入世界成功\n游戏版本：%s.%s.%s" % self.game_version
         else : 
             self.verification_challenge_object = None
             JoinWorld.join_game_load(self)
             result = Warning("你已进入每周挑战世界\n本世界无法进行交互\n可以自行删除这个世界")
 
-        self.loop_thread = threading.Thread(target=self.__game_looping__, args=(func,))
+        self.loop_thread = threading.Thread(target=self.__game_looping__, args=func)
         return result
 
-    def __game_looping__(self, func_set:Callable) :
+    def __game_looping__(self, func_set:Callable, func_error:Callable) :
         from . import GameLoop
         try :
             while self.in_game_tag :
@@ -137,8 +136,7 @@ class minecraft_thread :
                 for func in GameLoop.loop_function_list : func(self)
                 time.sleep(0.25)
         except : 
-            traceback.print_exc(file=open(os.path.join("log","game_run.txt"), "w+",encoding="utf-8"))
-            tkinter.messagebox.showerror("Error", "游戏运行出现错误\n日志 game_run.txt 已保存")
+            func_error("游戏运行出现错误\n日志 game_run.txt 已保存", traceback.format_exc(), "game_run.txt")
 
         self.game_over = True
 
@@ -150,6 +148,11 @@ class minecraft_thread :
         if not self.game_load_over : return Warning("不保存退出世界成功")
         while not self.game_over : time.sleep(0.33)
         try :
+            GameLoop.modify_termial_end_hook("clear")
+            GameLoop.modify_test_end_hook("clear")
+            GameLoop.modify_tick_end_hook("clear")
+            GameLoop.modify_async_func("clear")
+
             save_file = os.path.join("save_world", self.world_name, "level_name")
             json1 = json.dumps(self.world_infomation, separators=(',', ':'))
             FileOperation.write_a_file(save_file, json1)
@@ -168,10 +171,4 @@ class minecraft_thread :
 
             self.minecraft_chunk.____save_and_write_db_file____(self.world_name)
         except : 
-            traceback.print_exc(file=open(os.path.join("log","save_world.txt"), "w", encoding="utf-8"))
-            return Exception("世界保存出错\n日志save_world.txt已保存")
-
-        GameLoop.modify_termial_end_hook("clear")
-        GameLoop.modify_test_end_hook("clear")
-        GameLoop.modify_tick_end_hook("clear")
-        GameLoop.modify_async_func("clear")
+            return Exception("世界保存出错\n日志save_world.txt已保存", traceback.format_exc(), "save_world.txt")

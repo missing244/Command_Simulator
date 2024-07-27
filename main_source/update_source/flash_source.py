@@ -135,16 +135,17 @@ class bedrock_id_info :
 
     dimension = {
         "overworld":{
-            "structure" : ["ruined_portal"],
+            "structure" : ["minecraft:ruined_portal"],
             "biome": []
         },
         "nether": {
-            "structure" : ["bastion_remnant","fortress","ruined_portal"],
-            "biome": ["hell","soulsand_valley","crimson_forest","warped_forest","basalt_deltas"]
+            "structure" : ["minecraft:bastion_remnant","minecraft:fortress","minecraft:ruined_portal"],
+            "biome": ["minecraft:hell","minecraft:soulsand_valley","minecraft:crimson_forest",
+                      "minecraft:warped_forest","minecraft:basalt_deltas"]
         },
         "the_end": {
-            "structure" : ["end_city"],
-            "biome": ["the_end"]
+            "structure" : ["minecraft:end_city"],
+            "biome": ["minecraft:the_end"]
         }
     }
 
@@ -213,7 +214,7 @@ def read_minecraft_id_files(file_name:str, path:str) -> List[str] :
     if not FileOperation.is_file(path) : raise FileNotFoundError("%s.txt 文件不存在" % file_name)
     text1 = FileOperation.read_a_file(path)
     if isinstance(text1,tuple) : raise UnicodeDecodeError("%s.txt 文件 utf-8 解码失败" % file_name)
-    id_match = re.compile("^[a-zA-Z0-9_\u002e]+")
+    id_match = re.compile("^[a-zA-Z0-9_\\u002e]+\\u003a[a-zA-Z0-9_\\u002e]+|^[a-zA-Z0-9_\\u002e]+")
     return [id_match.match(i).group() for i in text1.split("\n") if id_match.match(i)]
 
 def update_minecraft_id() -> Dict[Literal["success","error"],Union[list,list]] :
@@ -230,10 +231,12 @@ def update_minecraft_id() -> Dict[Literal["success","error"],Union[list,list]] :
             "info_data": {"max_level": bedrock_id_operation.get_enchant_level_max}
         },
         "biome": {
+            "need_namespace": True,
             "path": os.path.join(source_unzip_dir,"minecraft_id","biome.txt"), 
             "info_data": {"dimension":bedrock_id_operation.dimension_of_biome}
         },
         "structure": {
+            "need_namespace": True,
             "path": os.path.join(source_unzip_dir,"minecraft_id","location.txt"),
             "info_data": {"dimension": bedrock_id_operation.dimension_of_structure}
         },
@@ -256,7 +259,8 @@ def update_minecraft_id() -> Dict[Literal["success","error"],Union[list,list]] :
                 info_data = minecraft_id[id_name]["info_data"].copy()
                 for key in info_data : info_data[key] = info_data[key](name)
                 if "need_namespace" in minecraft_id[id_name] and minecraft_id[id_name]["need_namespace"] : 
-                    result_json["minecraft:%s" % name] = info_data
+                    if name[0:10] == "minecraft:" : result_json[name] = info_data
+                    else : result_json["minecraft:%s" % name] = info_data
                 else : result_json[name] = info_data
             FileOperation.write_a_file(os.path.join(source_unzip_dir,"import_files","%s" % id_name), json.dumps(result_json,indent=2))
             logs["success"].append("文件 %s 成功刷新" % id_name)

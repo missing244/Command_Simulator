@@ -1402,9 +1402,10 @@ class PlaceBlockWithNBTData(OperationBase) :
         blockConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
         blockStatesConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
         int.from_bytes(bytes_io.read(2),'big',signed=False)
-        newReader = bytes_io.getvalue()[bytes_io.tell():]
+        newReader = io.BytesIO(bytes_io.getvalue()[bytes_io.tell():])
         nbt1 = nbt.read_from_nbt_file(newReader, byteorder='little')
-        bytes_io.read(nbt1.bytes_len)
+        bytes_io.read(newReader.tell())
+        newReader.close()
         return cls(blockConstantStringID,blockStatesConstantStringID,nbt1)
 
     def to_bytes(self) -> bytes :

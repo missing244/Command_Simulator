@@ -1,427 +1,427 @@
 {
-  "bamboo_jungle": {
+  "minecraft:bamboo_jungle": {
     "dimension": [
       "overworld"
     ]
   },
-  "bamboo_jungle_hills": {
+  "minecraft:bamboo_jungle_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "basalt_deltas": {
+  "minecraft:basalt_deltas": {
     "dimension": [
-      "nether"
+      "overworld"
     ]
   },
-  "beach": {
+  "minecraft:beach": {
     "dimension": [
       "overworld"
     ]
   },
-  "birch_forest": {
+  "minecraft:birch_forest": {
     "dimension": [
       "overworld"
     ]
   },
-  "birch_forest_hills": {
+  "minecraft:birch_forest_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "birch_forest_hills_mutated": {
+  "minecraft:birch_forest_hills_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "birch_forest_mutated": {
+  "minecraft:birch_forest_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "cherry_grove": {
+  "minecraft:cherry_grove": {
     "dimension": [
       "overworld"
     ]
   },
-  "cold_beach": {
+  "minecraft:cold_beach": {
     "dimension": [
       "overworld"
     ]
   },
-  "cold_ocean": {
+  "minecraft:cold_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "cold_taiga": {
+  "minecraft:cold_taiga": {
     "dimension": [
       "overworld"
     ]
   },
-  "cold_taiga_hills": {
+  "minecraft:cold_taiga_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "cold_taiga_mutated": {
+  "minecraft:cold_taiga_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "crimson_forest": {
+  "minecraft:crimson_forest": {
     "dimension": [
-      "nether"
+      "overworld"
     ]
   },
-  "deep_cold_ocean": {
+  "minecraft:deep_cold_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "deep_dark": {
+  "minecraft:deep_dark": {
     "dimension": [
       "overworld"
     ]
   },
-  "deep_frozen_ocean": {
+  "minecraft:deep_frozen_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "deep_lukewarm_ocean": {
+  "minecraft:deep_lukewarm_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "deep_ocean": {
+  "minecraft:deep_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "desert": {
+  "minecraft:desert": {
     "dimension": [
       "overworld"
     ]
   },
-  "desert_hills": {
+  "minecraft:desert_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "desert_mutated": {
+  "minecraft:desert_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "dripstone_caves": {
+  "minecraft:dripstone_caves": {
     "dimension": [
       "overworld"
     ]
   },
-  "extreme_hills": {
+  "minecraft:extreme_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "extreme_hills_edge": {
+  "minecraft:extreme_hills_edge": {
     "dimension": [
       "overworld"
     ]
   },
-  "extreme_hills_mutated": {
+  "minecraft:extreme_hills_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "extreme_hills_plus_trees": {
+  "minecraft:extreme_hills_plus_trees": {
     "dimension": [
       "overworld"
     ]
   },
-  "extreme_hills_plus_trees_mutated": {
+  "minecraft:extreme_hills_plus_trees_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "flower_forest": {
+  "minecraft:flower_forest": {
     "dimension": [
       "overworld"
     ]
   },
-  "forest": {
+  "minecraft:forest": {
     "dimension": [
       "overworld"
     ]
   },
-  "forest_hills": {
+  "minecraft:forest_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "frozen_ocean": {
+  "minecraft:frozen_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "frozen_peaks": {
+  "minecraft:frozen_peaks": {
     "dimension": [
       "overworld"
     ]
   },
-  "frozen_river": {
+  "minecraft:frozen_river": {
     "dimension": [
       "overworld"
     ]
   },
-  "grove": {
+  "minecraft:grove": {
     "dimension": [
       "overworld"
     ]
   },
-  "hell": {
+  "minecraft:hell": {
     "dimension": [
-      "nether"
+      "overworld"
     ]
   },
-  "ice_mountains": {
+  "minecraft:ice_mountains": {
     "dimension": [
       "overworld"
     ]
   },
-  "ice_plains": {
+  "minecraft:ice_plains": {
     "dimension": [
       "overworld"
     ]
   },
-  "ice_plains_spikes": {
+  "minecraft:ice_plains_spikes": {
     "dimension": [
       "overworld"
     ]
   },
-  "jagged_peaks": {
+  "minecraft:jagged_peaks": {
     "dimension": [
       "overworld"
     ]
   },
-  "jungle": {
+  "minecraft:jungle": {
     "dimension": [
       "overworld"
     ]
   },
-  "jungle_edge": {
+  "minecraft:jungle_edge": {
     "dimension": [
       "overworld"
     ]
   },
-  "jungle_edge_mutated": {
+  "minecraft:jungle_edge_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "jungle_hills": {
+  "minecraft:jungle_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "jungle_mutated": {
+  "minecraft:jungle_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "legacy_frozen_ocean": {
+  "minecraft:legacy_frozen_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "lukewarm_ocean": {
+  "minecraft:lukewarm_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "lush_caves": {
+  "minecraft:lush_caves": {
     "dimension": [
       "overworld"
     ]
   },
-  "mangrove_swamp": {
+  "minecraft:mangrove_swamp": {
     "dimension": [
       "overworld"
     ]
   },
-  "meadow": {
+  "minecraft:meadow": {
     "dimension": [
       "overworld"
     ]
   },
-  "mega_taiga": {
+  "minecraft:mega_taiga": {
     "dimension": [
       "overworld"
     ]
   },
-  "mega_taiga_hills": {
+  "minecraft:mega_taiga_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "mesa": {
+  "minecraft:mesa": {
     "dimension": [
       "overworld"
     ]
   },
-  "mesa_bryce": {
+  "minecraft:mesa_bryce": {
     "dimension": [
       "overworld"
     ]
   },
-  "mesa_plateau": {
+  "minecraft:mesa_plateau": {
     "dimension": [
       "overworld"
     ]
   },
-  "mesa_plateau_mutated": {
+  "minecraft:mesa_plateau_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "mesa_plateau_stone": {
+  "minecraft:mesa_plateau_stone": {
     "dimension": [
       "overworld"
     ]
   },
-  "mesa_plateau_stone_mutated": {
+  "minecraft:mesa_plateau_stone_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "mushroom_island": {
+  "minecraft:mushroom_island": {
     "dimension": [
       "overworld"
     ]
   },
-  "mushroom_island_shore": {
+  "minecraft:mushroom_island_shore": {
     "dimension": [
       "overworld"
     ]
   },
-  "ocean": {
+  "minecraft:ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "plains": {
+  "minecraft:plains": {
     "dimension": [
       "overworld"
     ]
   },
-  "redwood_taiga_hills_mutated": {
+  "minecraft:redwood_taiga_hills_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "redwood_taiga_mutated": {
+  "minecraft:redwood_taiga_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "river": {
+  "minecraft:river": {
     "dimension": [
       "overworld"
     ]
   },
-  "roofed_forest": {
+  "minecraft:roofed_forest": {
     "dimension": [
       "overworld"
     ]
   },
-  "roofed_forest_mutated": {
+  "minecraft:roofed_forest_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "savanna": {
+  "minecraft:savanna": {
     "dimension": [
       "overworld"
     ]
   },
-  "savanna_mutated": {
+  "minecraft:savanna_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "savanna_plateau": {
+  "minecraft:savanna_plateau": {
     "dimension": [
       "overworld"
     ]
   },
-  "savanna_plateau_mutated": {
+  "minecraft:savanna_plateau_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "snowy_slopes": {
+  "minecraft:snowy_slopes": {
     "dimension": [
       "overworld"
     ]
   },
-  "soulsand_valley": {
+  "minecraft:soulsand_valley": {
     "dimension": [
-      "nether"
+      "overworld"
     ]
   },
-  "stone_beach": {
+  "minecraft:stone_beach": {
     "dimension": [
       "overworld"
     ]
   },
-  "stony_peaks": {
+  "minecraft:stony_peaks": {
     "dimension": [
       "overworld"
     ]
   },
-  "sunflower_plains": {
+  "minecraft:sunflower_plains": {
     "dimension": [
       "overworld"
     ]
   },
-  "swampland": {
+  "minecraft:swampland": {
     "dimension": [
       "overworld"
     ]
   },
-  "swampland_mutated": {
+  "minecraft:swampland_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "taiga": {
+  "minecraft:taiga": {
     "dimension": [
       "overworld"
     ]
   },
-  "taiga_hills": {
+  "minecraft:taiga_hills": {
     "dimension": [
       "overworld"
     ]
   },
-  "taiga_mutated": {
+  "minecraft:taiga_mutated": {
     "dimension": [
       "overworld"
     ]
   },
-  "the_end": {
+  "minecraft:the_end": {
     "dimension": [
-      "the_end"
+      "overworld"
     ]
   },
-  "warm_ocean": {
+  "minecraft:warm_ocean": {
     "dimension": [
       "overworld"
     ]
   },
-  "warped_forest": {
+  "minecraft:warped_forest": {
     "dimension": [
-      "nether"
+      "overworld"
     ]
   }
 }

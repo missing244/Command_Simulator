@@ -385,11 +385,15 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
             response2 = json.loads(response2)
             user.save_data['online_get'] = response2
 
-            Announcement.set_notification(response2['notification'])
-            connent_API.get_online_api(response2['api'])
+            Announcement.set_notification(user.save_data['online_get']['notification'])
+            connent_API.get_online_api(user.save_data['online_get']['api'])
             user.info_update = True ; log.write_log("软件信息同步完成",2)
             return True
         except :
+            if "notification" in user.save_data['online_get'] :
+                Announcement.set_notification(user.save_data['online_get']['notification'])
+            if "api" in user.save_data['online_get'] :
+                connent_API.get_online_api(user.save_data['online_get']['api'])
             log.write_log("无法同步信息，已使用上一次数据", 2)
             return True
 

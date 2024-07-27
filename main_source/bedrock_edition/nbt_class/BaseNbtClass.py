@@ -1103,7 +1103,7 @@ class chunk_nbt :
                 if (db_file_path not in self.loading_db_file[keys]) : 
                     if not FileOperation.is_file(db_file_path) : self.loading_db_file[keys][db_file_path] = ["" for i in range(25*25)]
                     else : self.loading_db_file[keys][db_file_path] = FileOperation.read_a_file(db_file_path).split("\n")
-                
+
                 save_chunk_pos = ((will_load_chunk[0] - db_tuple[0])//16, (will_load_chunk[1] - db_tuple[1])//16)
                 save_index = save_chunk_pos[1] * 25 + save_chunk_pos[0]
                 if not self.____in_load_chunk____(keys, (will_load_chunk[0], 0, will_load_chunk[1])) :

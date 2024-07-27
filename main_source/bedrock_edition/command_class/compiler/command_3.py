@@ -117,12 +117,12 @@ class locate :
         else : locate_mode = "structure" ; index = 1
 
         if locate_mode == "structure" :
-            structure_name = token_list[index]["token"].group()
+            structure_name = ID_transfor(token_list[index]["token"].group())
             if structure_name not in Constants.STRUCTURE : raise CompileError("不存在的结构ID：%s" % structure_name, 
                 pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
             return functools.partial(cls.search_structure, structure_name=structure_name)
         else :
-            biome_name = token_list[index]["token"].group()
+            biome_name = ID_transfor(token_list[index]["token"].group())
             if biome_name not in Constants.BIOME : raise CompileError("不存在的生物群系ID：%s" % biome_name, 
                 pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
             return functools.partial(cls.search_biome, biome_name=biome_name)

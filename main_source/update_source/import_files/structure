@@ -1,5 +1,86 @@
 {
-  "minecraft": {
+  "minecraft:ancient_city": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:bastion_remnant": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "minecraft:buried_treasure": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:end_city": {
+    "dimension": [
+      "the_end"
+    ]
+  },
+  "minecraft:fortress": {
+    "dimension": [
+      "nether"
+    ]
+  },
+  "minecraft:mansion": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:mineshaft": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:monument": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:pillager_outpost": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:ruined_portal": {
+    "dimension": [
+      "nether",
+      "overworld"
+    ]
+  },
+  "minecraft:ruins": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:shipwreck": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:stronghold": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:temple": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:trail_ruins": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:trial_chambers": {
+    "dimension": [
+      "overworld"
+    ]
+  },
+  "minecraft:village": {
     "dimension": [
       "overworld"
     ]

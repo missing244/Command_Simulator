@@ -557,10 +557,11 @@ class Game_Ready(tkinter.Frame) :
         else : importlib.reload(Minecraft_BE.Constants)
         game_process = Minecraft_BE.RunTime.minecraft_thread()
         world_name = self.list_select.get(self.list_select.curselection()).split("-->")[1]
-        func = self.main_win.display_frame["game_run"].set_gametime
-        aaa = game_process.__game_loading__(world_name, func)
+        func1 = self.main_win.display_frame["game_run"].set_gametime
+        func2 = self.main_win.set_error_log
+        aaa = game_process.__game_loading__(world_name, func1, func2)
         if isinstance(aaa, Warning) : tkinter.messagebox.showwarning("Warning", aaa.args[0])
-        elif isinstance(aaa, Exception) : tkinter.messagebox.showerror("Error", aaa.args[0]) ; return None
+        elif isinstance(aaa, Exception) : self.main_win.set_error_log(*aaa.args) ; return None
         self.main_win.game_process = game_process
         self.main_win.game_ready_or_run()
         self.main_win.display_frame["game_run"].join_world()
@@ -713,8 +714,8 @@ class Creat_World(tkinter.Frame) :
                 json.dumps(chunk_data, ensure_ascii=False, default=Minecraft_BE.DataSave.encoding))
         except :
             FileOperation.delete_all_file(os.path.join("save_world",rand_text))
-            tkinter.messagebox.showerror("Error","创建世界错误\n日志 create_world.txt 已生成")
-            traceback.print_exc(file=open(os.path.join("log","create_world.txt"), "w+",encoding="utf-8"))
+            self.main_win.set_error_log("创建世界错误\n日志 create_world.txt 已保存", 
+                traceback.format_exc(), "create_world.txt")
             return None
 
         os.makedirs(os.path.join("save_world",rand_text,"behavior_packs"),exist_ok=True)
@@ -798,13 +799,14 @@ class Game_Run(tkinter.Frame) :
         game_process:Minecraft_BE.RunTime.minecraft_thread = self.main_win.game_process
         game_process.world_infomation['terminal_command'] = self.input_box1.get("0.0","end")[:-1]
 
-        aaa = game_process.__exit_world__()
-        if isinstance(aaa, Warning) : tkinter.messagebox.showwarning("Warning", aaa.args[0])
-        elif isinstance(aaa, Exception) : tkinter.messagebox.showerror("Error", aaa.args[0])
-
         self.main_win.game_process = None
         self.main_win.game_ready_or_run()
         threading.Thread(target=lambda:[time.sleep(4), gc.collect()]).start()
+
+        aaa = game_process.__exit_world__()
+        if isinstance(aaa, Warning) : tkinter.messagebox.showwarning("Warning", aaa.args[0])
+        elif isinstance(aaa, Exception) : self.main_win.set_error_log(*aaa.args)
+
 
     def send_command(self) :
         game_process:Minecraft_BE.RunTime.minecraft_thread = self.main_win.game_process
@@ -987,8 +989,8 @@ class Choose_Expand(tkinter.Frame) :
                 msg_laber.config(text=msg_laber.cget("text") + ("正在安装 %s...\n" % element))
                 m1 = subprocess.getstatusoutput("pip install %s" % element)
                 if not m1[0] : continue
-                FileOperation.write_a_file(os.path.join("log","install_pack.txt"),m1[1])
-                tkinter.messagebox.showerror("Error", "模块 %s 安装失败\n日志 install_pack.txt 已保存" % element)
+                self.main_win.set_error_log("模块 %s 安装失败\n日志 install_pack.txt 已保存" % element, 
+                    m1[1], "install_pack.txt")
                 return None
 
             try : import brotli
@@ -1053,8 +1055,8 @@ class Choose_Expand(tkinter.Frame) :
                 msg_laber.config(text=msg_laber.cget("text") + "正在安装 %s ...\n" % iii)
                 m1 = subprocess.getstatusoutput("pip3 install " + iii)
                 if not m1[0] : continue
-                FileOperation.write_a_file(os.path.join("log","install_pack.txt"),m1[1])
-                tkinter.messagebox.showerror("Error","依赖库 %s 安装失败\n日志 install_pack.txt 已保存" % iii)
+                self.main_win.set_error_log("模块 %s 安装失败\n日志 install_pack.txt 已保存" % iii, 
+                    m1[1], "install_pack.txt")
                 return None
             
             msg_laber.config(text=msg_laber.cget("text") + ("%s 安装成功" % name1))
@@ -1097,8 +1099,10 @@ class Choose_Expand(tkinter.Frame) :
             tkinter.messagebox.showerror("Error", "%s 拓展包\n你还未安装" % name1)
 
         def _expand_error(err) : # 与Python解析拓展包有关错误
-            traceback.print_exc(file=open(os.path.join("log","enable_expand.txt"), "w+",encoding="utf-8"))
-            tkinter.messagebox.showerror("Error", "%s\n拓展包加载出错，日志已保存" % name1)
+            self.main_win.set_error_log(
+                "%s\n拓展包加载出错，日志已保存" % name1, 
+                traceback.format_exc(), "enable_expand.txt"
+            )
 
         dir_name = self.expand_pack_list[uid]["dir_name"]
         save_path1 = os.path.join("expand_pack", dir_name, "saves.zip")
@@ -1338,5 +1342,57 @@ class Policy(tkinter.Frame) :
 
         main_win.add_can_change_hight_component([self.input_box4, self.policy_title,a2])
         #self.add_can_change_hight_component([self.input_box4,a1,frame_m3,a2])
+
+
+
+class Log_Display(tkinter.Frame) :
+    
+    def __init__(self, main_win, **karg) -> None:
+        super().__init__(main_win.window, **karg)
+        self.main_win = main_win
+        self.last_frame_name = None
+
+        self.log_title = tkinter.Label(self, bg="#d98719",fg="white",font=tk_tool.get_default_font(12), width=21, height=1)
+        self.log_title.config(text="后台日志信息")
+        self.log_title.pack()
+        frame_m10 = tkinter.Frame(self)
+        sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+        sco2 = tkinter.Scrollbar(frame_m10,orient='horizontal')
+        self.input_box4 = tkinter.Text(frame_m10,height=21,width=25,font=tk_tool.get_default_font(10),
+            yscrollcommand=sco1.set, xscrollcommand=sco2.set, wrap="none")
+        self.input_box4.grid()
+        sco1.config(command=self.input_box4.yview)
+        sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
+        sco2.config(command=self.input_box4.xview)
+        sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
+        frame_m10.pack()
+
+        frame_0 = tkinter.Frame(self)
+        tkinter.Button(frame_0,text='返回界面',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
+            self.back_to_frame).pack(side=tkinter.LEFT)
+        tkinter.Label(frame_0,font=('Arial',10),width=1,height=1).pack(side=tkinter.LEFT)
+        tkinter.Button(frame_0,text='复制日志',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
+            self.copy_clipboard).pack(side=tkinter.LEFT)
+        frame_0.pack()
+
+        main_win.add_can_change_hight_component([self.input_box4, sco2, self.log_title, frame_0])
+
+    def set_log(self, error_msg:str, log:str, save_path:str=None) :
+        self.last_frame_name = self.main_win.now_display_frame
+        if save_path : FileOperation.write_a_file(os.path.join("log", save_path), log)
+        self.input_box4.delete("0.0", "end")
+        self.input_box4.insert("0.0", log)
+        self.main_win.set_display_frame("log_display")
+        tkinter.messagebox.showerror("Error", error_msg)
+
+
+    def back_to_frame(self) :
+        self.main_win.set_display_frame(self.last_frame_name)
+    
+    def copy_clipboard(self) :
+        tk_tool.copy_to_clipboard(self.input_box4.get("0.0", "end")[:-1])
+
+
+
 
 
