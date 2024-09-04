@@ -24,7 +24,6 @@ import main_source.bedrock_edition as Minecraft_BE
 
 
 
-WebMemory = None
 if True : #启用软件前的加载项目
     for i in app_constants.First_Load_Build_Dir : os.makedirs(i,exist_ok=True)
     os.makedirs(os.path.join("functionality","example","example_bp","functions"),exist_ok=True)
@@ -119,12 +118,13 @@ class control_windows :
         Announcement.pack()
 
         self.user_manager = app_function.user_manager() #用户管理
-        self.initialization_log = [app_function.initialization_log() for i in range(4)]
+        self.initialization_log = [app_function.initialization_log() for i in range(5)]
         self.initialization_process:List[threading.Thread] = [
             threading.Thread(target=app_function.get_app_infomation_and_login, args=(Announcement, self.user_manager, self.initialization_log[0])),
             threading.Thread(target=app_function.flash_minecraft_id, args=(self.initialization_log[1], )),
             threading.Thread(target=app_function.flash_minecraft_source, args=(self.user_manager, self.initialization_log[2])),
-            threading.Thread(target=app_function.check_c_extension, args=(self.platform, self.initialization_log[3])),
+            threading.Thread(target=app_function.check_leveldb_c_extension, args=(self.platform, self.initialization_log[3])),
+            threading.Thread(target=app_function.check_brotli_c_extension, args=(self.platform, self.initialization_log[4])),
         ]
         self.game_process:Minecraft_BE.RunTime.minecraft_thread = None #模拟世界线程
 
@@ -165,7 +165,6 @@ class control_windows :
 
     def window_exit(self) :
         threading.Thread(target=lambda:[time.sleep(10), os._exit(0)]).start()
-        self.user_manager.write_back_without_bak()
         if self.game_process is not None :
             text = self.display_frame["game_run"].input_box1.get("0.0","end")[:-1]
             self.game_process.world_infomation['terminal_command'] = text
@@ -249,18 +248,20 @@ class control_windows :
         self.display_frame["policy_frame"].input_box4.config(wrap="char" if mode != "open" else "none")
         self.display_frame["policy_frame"].input_box4.delete("0.0","end")
         self.display_frame["policy_frame"].policy_title.config(text = a[mode])
+        self.display_frame["policy_frame"].notes.config(text = "")
         if mode == "use" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","use.txt"))
         elif mode == "privacy" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","privacy.txt"))
         elif mode == "about" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","about_app.txt"))
         elif mode == "open" : 
+            self.display_frame["policy_frame"].notes.config(text = "重新进入 “启动日志” 即可刷新内容")
             text1 = "\n".join([i.log_text for i in self.initialization_log])
             if not any([i.is_alive() for i in self.initialization_process]) : 
                 text1 += "\n初始化完毕，耗时%s秒" % (int(max([i.get_spend_time() for i in self.initialization_log]) * 1000) / 1000)
         self.display_frame["policy_frame"].input_box4.insert("end",text1)
         self.set_display_frame("policy_frame")
 
-    def set_error_log(self, error_msg:str, log:str, save_path:str=None) :
-        self.display_frame["log_display"].set_log(error_msg, log, save_path)
+    def set_error_log(self, *arg, **karg) :
+        self.display_frame["log_display"].set_log(*arg, **karg)
 
 
     def get_expand_pack_class_object(self,uuid:str) -> object :
@@ -316,16 +317,10 @@ class control_windows :
             time.sleep(0.5)
 
 
-    def set_web_memory(self, data) :
-        global WebMemory
-        WebMemory = data
-
-
     def post_data(self, data_1:bytes, pack_list:dict) :
         post_json = json.loads(data_1.decode('utf-8'))
         
         operation_json = {
-            "get_web_memory" : self.post_to_web_memory,
             "expand_pack_run" : self.post_to_expand_pack,
         }
         
@@ -345,9 +340,6 @@ class control_windows :
             return {"state" : 6 , "msg" : "拓展包并没有指定Post处理方法"}
         return self.expand_pack_open_list[post_json["pack_id"]]['object'].do_POST(post_json)
 
-    def post_to_web_memory(self) :
-        global WebMemory
-        return WebMemory
 
 
 

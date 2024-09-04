@@ -24,7 +24,7 @@
 		const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
 		const controls = new OrbitControls(camera, canvas);
-		controls.target = new THREE.Vector3(0.5, 0.5, 0.5);
+		controls.target = new THREE.Vector3(4.5, 0.5, 0.5);
 		controls.minDistance = 1;
 		camera.position.x = 10;
 		camera.position.y = 5;
@@ -73,14 +73,32 @@
 
 
         setTimeout( () => {
-            const Structure = new BlockChunk({cellSizeX:3, cellSizeY:1, cellSizeZ:3, TextureWidth:16, TextureHeight:96,
-                tileSize:16, blockMap:[ {id:"minecraft:air", "state":{}}, {id:"minecraft:stone", "state":{}} ]})
+			const BlockMap = [ 
+				{name:"minecraft:air", states:{}},
+				{name:"minecraft:blue_stained_glass_pane", states:{}},
+				{name:"minecraft:blue_terracotta", states:{}},
+				{name:"minecraft:blue_wool", states:{}},
+				{name:"minecraft:bone_block", states:{}},
+				{name:"minecraft:bookshelf", states:{}},
+				{name:"minecraft:border_block", states:{}},
+				{name:"minecraft:brain_coral", states:{}},
+				{name:"minecraft:brain_coral_block", states:{}},
+				{name:"minecraft:brain_coral_fan", states:{}},
+				{name:"minecraft:brain_coral_wall_fan", states:{}},
+			]
+            const Structure = new BlockChunk({
+				cellSizeX:20, cellSizeY:20, cellSizeZ:20, 
+				tileSize:16, blockMap:BlockMap})
 
-			Structure.setVoxel(0, 0, 0, 1)
-			Structure.setVoxel(0, 0, 1, 1)
-			Structure.setVoxel(0, 0, 2, 1)
-            const Mesh = Structure.generateMesh()
-            scene.add(Mesh)
+			for (let x = 0; x < BlockMap.length-1; x++) {
+				for (let y = 0; y < 1; y++) {
+					for (let z = 0; z < 1; z++) {
+						Structure.setVoxel(x, y, z, x+1)
+					}
+				}
+			}
+            const MeshList = Structure.generateMeshList()
+            MeshList.forEach(element => {scene.add(element)})
 			render()
         }, 500)
 
