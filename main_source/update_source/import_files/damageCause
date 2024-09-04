@@ -50,6 +50,9 @@
   "lightning": {
     "modify_in_tick": false
   },
+  "mace_smash": {
+    "modify_in_tick": false
+  },
   "magic": {
     "modify_in_tick": false
   },

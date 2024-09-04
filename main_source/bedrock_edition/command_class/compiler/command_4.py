@@ -22,3 +22,18 @@ class hud :
             mode = "隐藏" if mode == "hide" else "显示",
             entity = ", ".join( (ID_tracker(i) for i in entity_list) ),
         )
+
+class scriptevent :
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        message_id = token_list[1]["token"].group()
+        if ":" not in message_id : raise CompileError("需要提供自定义命名空间", 
+            pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+        if "minecraft:" in message_id[0:10] : raise CompileError("需要提供非minecraft的自定义命名空间", 
+            pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+        message = token_list[2]["token"].group()
+        return functools.partial(cls.run, message_id=message_id, message=message)
+
+    def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, message_id:str, message:str) :
+        return Response.Response_Template("已发送脚本事件（仅模拟）", 1, 1).substitute()

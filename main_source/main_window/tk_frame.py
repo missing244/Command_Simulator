@@ -131,7 +131,6 @@ class Bottom_Bar_Menu(tkinter.Menu) :
         aaa = tkinter.messagebox.askquestion("Question","是否退出本软件？？")
         if aaa == "yes" : 
             threading.Thread(target=lambda:[time.sleep(10), os._exit(0)]).start()
-            user_manager.write_back()
             game_process:Minecraft_BE.RunTime.minecraft_thread = self.main_win.game_process
             if game_process is not None :
                 text = self.main_win.display_frame["game_run"].input_box1.get("0.0","end")[:-1]
@@ -528,7 +527,10 @@ class Game_Ready(tkinter.Frame) :
 
     def create_world(self):
         try : import brotli
-        except : tkinter.messagebox.showerror("Error","命令模拟器\n没有安装原版拓展")
+        except : 
+            if self.main_win.initialization_process[3].is_alive() :
+                tkinter.messagebox.showwarning("Warn","brotli 拓展库正在后台进行安装\n您可以在 设置--启动日志 中查看\nbrotli 拓展库安装完成后即可正常启用")
+            else : tkinter.messagebox.showerror("Error","brotli 拓展库安装失败\n您可以在 设置--启动日志 中查看错误日志")
         else : self.main_win.set_display_frame("creat_world")
 
     def delete_world(self):
@@ -546,14 +548,14 @@ class Game_Ready(tkinter.Frame) :
         import main_source.main_window.constant as app_constants
         if any([i.is_alive() for i in self.main_win.initialization_process]) :
             tkinter.messagebox.showerror("Error", "正在加载软件,请稍后....") ; return None
-        
+
         if len(self.list_select.curselection()) == 0 : return None
-        try : 
-            import brotli 
-            user_manager:app_function.user_manager = self.main_win.user_manager
-            pack_uuid = "c0414919-e6ed-4b41-b2ac-130119684144"
-            if pack_uuid not in user_manager.save_data["install_pack_list"] : raise Exception
-        except : tkinter.messagebox.showerror("Error", "未安装完整原版拓展\n请在拓展包界面中安装") ; return None
+        try : import brotli 
+        except : 
+            if self.main_win.initialization_process[3].is_alive() :
+                tkinter.messagebox.showwarning("Warn","brotli 拓展库正在后台进行安装\n您可以在 设置--启动日志 中查看\nbrotli 拓展库安装完成后即可正常启用")
+            else : tkinter.messagebox.showerror("Error","brotli 拓展库安装失败\n您可以在 设置--启动日志 中查看错误日志")
+            return None
         else : importlib.reload(Minecraft_BE.Constants)
         game_process = Minecraft_BE.RunTime.minecraft_thread()
         world_name = self.list_select.get(self.list_select.curselection()).split("-->")[1]
@@ -561,7 +563,7 @@ class Game_Ready(tkinter.Frame) :
         func2 = self.main_win.set_error_log
         aaa = game_process.__game_loading__(world_name, func1, func2)
         if isinstance(aaa, Warning) : tkinter.messagebox.showwarning("Warning", aaa.args[0])
-        elif isinstance(aaa, Exception) : self.main_win.set_error_log(*aaa.args) ; return None
+        elif isinstance(aaa, Exception) : func2(*aaa.args) ; return None
         self.main_win.game_process = game_process
         self.main_win.game_ready_or_run()
         self.main_win.display_frame["game_run"].join_world()
@@ -903,10 +905,7 @@ class Choose_Expand(tkinter.Frame) :
     def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
         self.main_win = main_win
-        self.expand_pack_list = {
-            "c0414919-e6ed-4b41-b2ac-130119684144": {
-                "crc32": None, "pack_name": "原版拓展(模拟存档必装)", "import":["pycparser","cffi",'brotlipy']
-            }}
+        self.expand_pack_list = {}
         self.is_installing = False #正在安装拓展包
 
         a1 = tkinter.Label(self,text="拓展包安装",bg='#82aaff',fg='black',font=tk_tool.get_default_font(20),width=15,height=1)
@@ -966,44 +965,8 @@ class Choose_Expand(tkinter.Frame) :
     def on_expand_install(self):
         uid = self.get_selecting_expand()
         if uid is None : return None
-        # 判断是否是原版拓展
-        if uid == list(self.expand_pack_list)[0] :
-            aaa = tkinter.messagebox.askquestion('Title', '如果你是首次安装\n请保持软件处于前台模式\n安装时间需要大约2分钟\n\n部分拓展包无需原版拓展！！', )
-            if aaa != "yes" : return None 
-            func = self.vanilla_expand_install
-        else : func = self.thirdparty_expand_install
+        func = self.thirdparty_expand_install
         threading.Thread(target = lambda: func(uid)).start()
-
-    def vanilla_expand_install(self, uid:str):
-        self.is_installing = True
-        user_manager:app_function.user_manager = self.main_win.user_manager
-        msg_box = tk_tool.tk_Msgbox(self.main_win.window, self.main_win.window)
-        tkinter.Label(msg_box, text="", fg='black', font=tk_tool.get_default_font(3), height=1).pack()
-        msg_laber = tkinter.Label(msg_box, text="", fg='black', font=tk_tool.get_default_font(10))
-        msg_laber.pack()
-        tkinter.Label(msg_box, text="", fg='black', font=tk_tool.get_default_font(3), height=1).pack()
-        module = self.expand_pack_list[uid]["import"]
-
-        def installing() :
-            for index,element in enumerate(module) :
-                msg_laber.config(text=msg_laber.cget("text") + ("正在安装 %s...\n" % element))
-                m1 = subprocess.getstatusoutput("pip install %s" % element)
-                if not m1[0] : continue
-                self.main_win.set_error_log("模块 %s 安装失败\n日志 install_pack.txt 已保存" % element, 
-                    m1[1], "install_pack.txt")
-                return None
-
-            try : import brotli
-            except : tkinter.messagebox.showerror("Error", "原版拓展安装失败")
-            else : msg_laber.config(text=msg_laber.cget("text") + "原版拓展安装成功")
-            user_manager.save_data["install_pack_list"][uid] = None
-            user_manager.write_back()
-            self.flash_expand_pack_list()
-            return True
-
-        if installing() : time.sleep(2)
-        self.is_installing = False
-        msg_box.destroy()
 
     def thirdparty_expand_install(self, uid:str):
         # 第三方包（非默认包）
@@ -1017,6 +980,7 @@ class Choose_Expand(tkinter.Frame) :
         name1 = self.expand_pack_list[uid]['pack_name']
         module = self.expand_pack_list[uid]["import"]
         dir_name = self.expand_pack_list[uid]["dir_name"]
+        builtin_module = self.expand_pack_list[uid].get("builtin_module", [])
 
         def installing() :
             data1 = {"userdata":user_manager.get_account(), 'expand_pack_uuid':uid}
@@ -1050,15 +1014,19 @@ class Choose_Expand(tkinter.Frame) :
             if self.expand_pack_list[uid]['crc32'] != zlib.crc32(response2) : 
                 tkinter.messagebox.showerror("Error","安装失败\n拓展包校验未通过") ; os.remove(save_path) ; return None
 
-            if len(self.expand_pack_list[uid]['import']) : msg_laber.config(text=msg_laber.cget("text") + "正在下载依赖库...(3/3)\n")
-            for iii in self.expand_pack_list[uid]['import'] :
-                msg_laber.config(text=msg_laber.cget("text") + "正在安装 %s ...\n" % iii)
-                m1 = subprocess.getstatusoutput("pip3 install " + iii)
-                if not m1[0] : continue
-                self.main_win.set_error_log("模块 %s 安装失败\n日志 install_pack.txt 已保存" % iii, 
-                    m1[1], "install_pack.txt")
-                return None
-            
+            try :
+                for index, m_name in enumerate(builtin_module) : exec("import %s" % m_name, {}, {})
+            except : 
+                for index, iii in enumerate(module) :
+                    if index == 0 : msg_laber.config(text=msg_laber.cget("text") + "正在下载依赖库...(3/3)\n")
+                    msg_laber.config(text=msg_laber.cget("text") + "正在安装 %s ...\n" % iii)
+                    m1 = subprocess.getstatusoutput("pip3 install " + iii)
+                    if not m1[0] : continue
+                    self.main_win.set_error_log(
+                        "模块 %s 安装失败\n日志 install_pack.txt 已保存" % iii, 
+                        m1[1], "install_pack.txt")
+                    return None
+
             msg_laber.config(text=msg_laber.cget("text") + ("%s 安装成功" % name1))
             user_manager.save_data["install_pack_list"][uid] = None
             user_manager.write_back()
@@ -1074,8 +1042,6 @@ class Choose_Expand(tkinter.Frame) :
         uid = self.get_selecting_expand()
         user_manager:app_function.user_manager = self.main_win.user_manager
         if uid is None : return None
-        if uid == list(self.expand_pack_list)[0] :
-            tkinter.messagebox.showerror("Error","原版拓展 并不是拓展包\n请选择其他拓展包运行") ; return None
 
         name1 = self.expand_pack_list[uid]['pack_name']
         dir_name = self.expand_pack_list[uid]["dir_name"]
@@ -1216,7 +1182,7 @@ class Setting(tkinter.Frame) :
         tkinter.Label(self,text="联系作者",fg='black',font=tk_tool.get_default_font(18),width=15,height=1).pack()
         frame_0 = tkinter.Frame(self)
         tkinter.Button(frame_0,text='提供赞助',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
-            lambda:webbrowser.open("https://afdian.net/u/3c2e5dc43fd111edb9c052540025c377")).pack(side=tkinter.LEFT)
+            lambda:webbrowser.open("https://afdian.com/a/commandsimulator")).pack(side=tkinter.LEFT)
         tkinter.Label(frame_0,font=('Arial',10),width=1,height=1).pack(side=tkinter.LEFT)
         tkinter.Button(frame_0,text='交流群',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
             lambda:webbrowser.open("https://commandsimulator.great-site.net/qq_group.html")).pack(side=tkinter.LEFT)
@@ -1269,7 +1235,7 @@ class Login(tkinter.Frame) :
             result1 = user_manager.login_account(login_info_1['account'],login_info_1['pass_code'],response2.decode("utf-8") if response2 is not None else "")
             if result1 : 
                 user_manager.save_data['cookies']["api_web_cookie"] = connent_API.request_headers["cookie"]
-                msg_laber.config(text=msg_laber.cget("text") + "登录成功") ; user_manager.write_back() ; return True
+                msg_laber.config(text=msg_laber.cget("text") + "登录成功") ; return True
             else : msg_laber.config(text=msg_laber.cget("text") + "登录失败")
 
         if re.search("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$",self.account_input_1.get()) is None :
@@ -1339,6 +1305,8 @@ class Policy(tkinter.Frame) :
         a2 = tkinter.Button(self,text='返      回', font=tk_tool.get_default_font(12), bg='#d19275', width=17, height=1,
             command=lambda:self.main_win.set_display_frame('setting_frame'))
         a2.pack()
+        self.notes = tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(13),fg="red")
+        self.notes.pack()
 
         main_win.add_can_change_hight_component([self.input_box4, self.policy_title,a2])
         #self.add_can_change_hight_component([self.input_box4,a1,frame_m3,a2])
@@ -1380,8 +1348,9 @@ class Log_Display(tkinter.Frame) :
     def set_log(self, error_msg:str, log:str, save_path:str=None) :
         self.last_frame_name = self.main_win.now_display_frame
         if save_path : FileOperation.write_a_file(os.path.join("log", save_path), log)
-        self.input_box4.delete("0.0", "end")
-        self.input_box4.insert("0.0", log)
+        self.input_box4.insert("0.0", error_msg+"\n")
+        self.input_box4.insert("end", log)
+        self.input_box4.insert("end", "\n\n\n")
         self.main_win.set_display_frame("log_display")
         tkinter.messagebox.showerror("Error", error_msg)
 

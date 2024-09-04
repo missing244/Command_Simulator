@@ -966,6 +966,8 @@ class gamerule :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        if 1 >= len(token_list) : return cls.read_all_rule
+
         gamerule_name = token_list[1]["token"].group().lower()
         if gamerule_name not in Constants.GAMERULE : raise CompileError("不存在的游戏规则：%s" % gamerule_name, 
             pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
@@ -985,6 +987,14 @@ class gamerule :
                 pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
         return functools.partial(cls.set_gamerule, gamerule_name=gamerule_name, value=value)
     
+    def read_all_rule(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread) :
+        text1 = []
+        for rule_name in Constants.GAMERULE :
+            text1.append("%s => %s" % (rule_name, game.minecraft_world.__getattribute__(rule_name)))
+        return Response.Response_Template("已输出所有游戏规则：\n$text", 1, 1).substitute(
+            text="\n".join( text1 )
+        )
+
     def set_gamerule(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, gamerule_name:str, value:Union[bool,int]=None) :
         if value is None : return Response.Response_Template("游戏规则 $rule 为 $value1", 1, 1).substitute(
             rule=gamerule_name, value1=game.minecraft_world.__getattribute__(gamerule_name))

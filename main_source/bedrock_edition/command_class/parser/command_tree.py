@@ -873,6 +873,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             )
         )
     ),
+    # scriptevent ✓ V
+    BaseMatch.Char("Command","scriptevent").add_leaves(
+        BaseMatch.AnyString("Message_ID").add_leaves(
+            BaseMatch.AnyMsg("Message").add_leaves(
+                BaseMatch.END_NODE
+            )
+        )
+    ),
     # setworldspawn ✓ V
     BaseMatch.Char("Command","setworldspawn").add_leaves(
         *SpecialMatch.Pos_Tree( BaseMatch.END_NODE ),

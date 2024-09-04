@@ -101,10 +101,12 @@ def Selector_Var_Condition_Test(execute_var:COMMAND_CONTEXT, game_tread:RunTime.
 
             item_count = 0
             item_id = item_test["item"] ; item_data = item_test["data"]
-            test_item_obj = BaseNbtClass.item_nbt().__create__(item_id, 1, item_data if item_data != -1 else 0)
             for item_obj in slot_item_save :
-                if item_obj.Identifier == test_item_obj.Identifier and \
-                item_obj.Damage == test_item_obj.Damage : item_count += int(item_obj.Count)
+                if item_obj.Identifier != item_id : continue
+                if item_obj.Identifier not in Constants.GAME_DATA["damage_tool"] and \
+                    item_obj.Damage == item_data : item_count += int(item_obj.Count)
+                if item_obj.Identifier in Constants.GAME_DATA["damage_tool"] and \
+                    "damage" in item_obj.tags and item_obj.tags["damage"] == item_data : item_count += int(item_obj.Count)
 
             if ("quantity_unless" in item_test) and not(item_test["quantity_unless"][0] <= item_count <= item_test["quantity_unless"][1]) : hasitem_test_save.append(True)
             elif ("quantity_unless" not in item_test) and item_test["quantity_if"][0] <= item_count <= item_test["quantity_if"][1] : hasitem_test_save.append(True)

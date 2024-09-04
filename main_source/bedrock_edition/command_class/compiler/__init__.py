@@ -129,7 +129,7 @@ be_command_list = [
     'music', 'particle', 'playanimation', 'playsound', 'replaceitem', "recipe", 'ride', 'say', 'schedule', 'scoreboard',
     'setblock', 'setworldspawn', 'spawnpoint', 'spreadplayers', 'structure', 'stopsound', 'summon', 'tag', 'teleport', 'tell', 
     'tellraw', 'testfor', 'testforblock', 'testforblocks', 'tickingarea', 'time', 'title', 'titleraw', 'toggledownfall', 'tp',
-    'volumearea', 'w', 'weather', 'xp'
+    'volumearea', 'w', 'weather', 'xp', "scriptevent"
 ]
 
 Command_to_Compiler = {
@@ -160,7 +160,7 @@ Command_to_Compiler = {
     "volumearea" : Command2.volumearea, "tell" : Command2.tell, "msg" : Command2.tell,
     "w" : Command2.tell, "weather" : Command2.weather, "xp" : Command2.xp,
 
-    "hud" : Command4.hud,
+    "hud" : Command4.hud, "scriptevent":Command4.scriptevent
 }
 
 def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], _game:RunTime.minecraft_thread, 

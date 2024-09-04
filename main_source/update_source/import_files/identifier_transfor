@@ -7,7 +7,10 @@
             "minecraft:wooden_slab","minecraft:wood","minecraft:coral_fan","minecraft:sapling","minecraft:coral_fan_dead",
             "minecraft:red_flower","minecraft:tallgrass","minecraft:coral_block","minecraft:double_plant","minecraft:monster_egg",
             "minecraft:double_stone_block_slab","minecraft:stone_block_slab2","minecraft:stone_block_slab3","minecraft:stonebrick",
-            "minecraft:double_stone_block_slab2","minecraft:double_stone_block_slab3","minecraft:double_stone_block_slab4","minecraft:prismarine"
+            "minecraft:double_stone_block_slab2","minecraft:double_stone_block_slab3","minecraft:double_stone_block_slab4",
+            "minecraft:prismarine","minecraft:light_block","minecraft:yellow_flower","minecraft:sandstone","minecraft:anvil",
+            "minecraft:dirt","minecraft:quartz_block","minecraft:red_sandstone","minecraft:sand","minecraft:purpur_block",
+            "minecraft:cobblestone_wall"
         ],
         "id_transfor" : {
             "minecraft:white_wool" : {"block_id":"minecraft:wool","block_data":{"color": "white"}},
@@ -289,7 +292,7 @@
             "minecraft:mossy_cobblestone_double_slab":{"block_id":"minecraft:double_stone_block_slab2","block_data":{"stone_slab_type_2": "mossy_cobblestone","top_slot_bit": false}},
             "minecraft:smooth_sandstone_double_slab":{"block_id":"minecraft:double_stone_block_slab2","block_data":{"stone_slab_type_2": "smooth_sandstone","top_slot_bit": false}},
             "minecraft:red_nether_brick_double_slab":{"block_id":"minecraft:double_stone_block_slab2","block_data":{"stone_slab_type_2": "red_nether_brick","top_slot_bit": false}},
-            
+
             "minecraft:end_stone_brick_double_slab":{"block_id":"minecraft:double_stone_block_slab3","block_data":{"stone_slab_type_3": "end_stone_brick","top_slot_bit": false}},
             "minecraft:smooth_red_sandstone_double_slab":{"block_id":"minecraft:double_stone_block_slab3","block_data":{"stone_slab_type_3": "smooth_red_sandstone","top_slot_bit": false}},
             "minecraft:polished_andesite_double_slab":{"block_id":"minecraft:double_stone_block_slab3","block_data":{"stone_slab_type_3": "polished_andesite","top_slot_bit": false}},
@@ -307,7 +310,74 @@
 
             "minecraft:prismarine":{"block_id":"minecraft:prismarine","block_data":{"prismarine_block_type": "default"}},
             "minecraft:dark_prismarine":{"block_id":"minecraft:prismarine","block_data":{"prismarine_block_type": "dark"}},
-            "minecraft:prismarine_bricks":{"block_id":"minecraft:prismarine","block_data":{"prismarine_block_type": "bricks"}}
+            "minecraft:prismarine_bricks":{"block_id":"minecraft:prismarine","block_data":{"prismarine_block_type": "bricks"}},
+
+
+            "minecraft:light_block_0": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 0}},
+            "minecraft:light_block_1": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 1}},
+            "minecraft:light_block_2": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 2}},
+            "minecraft:light_block_3": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 3}},
+            "minecraft:light_block_4": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 4}},
+            "minecraft:light_block_5": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 5}},
+            "minecraft:light_block_6": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 6}},
+            "minecraft:light_block_7": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 7}},
+            "minecraft:light_block_8": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 8}},
+            "minecraft:light_block_9": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 9}},
+            "minecraft:light_block_10": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 10}},
+            "minecraft:light_block_11": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 11}},
+            "minecraft:light_block_12": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 12}},
+            "minecraft:light_block_13": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 13}},
+            "minecraft:light_block_14": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 14}},
+            "minecraft:light_block_15": {"block_id":"minecraft:light_block","block_data":{"block_light_level": 15}},
+            
+            "minecraft:dandelion": {"block_id":"minecraft:yellow_flower","block_data":{}},
+
+            "minecraft:sandstone": {"block_id":"minecraft:sandstone","block_data":{"sand_stone_type": "default"}},
+            "minecraft:chiseled_sandstone": {"block_id":"minecraft:sandstone","block_data":{"sand_stone_type": "heiroglyphs"}},
+            "minecraft:cut_sandstone": {"block_id":"minecraft:sandstone","block_data":{"sand_stone_type": "cut"}},
+            "minecraft:smooth_sandstone": {"block_id":"minecraft:sandstone","block_data":{"sand_stone_type": "smooth"}},
+
+
+            "minecraft:anvil": {"block_id":"minecraft:anvil","block_data":{"damage":"undamaged","direction":0}},
+            "minecraft:chipped_anvil": {"block_id":"minecraft:anvil","block_data":{"damage":"slightly_damaged","direction":0}},
+            "minecraft:damaged_anvil": {"block_id":"minecraft:anvil","block_data":{"damage":"very_damaged","direction":0}},
+            "minecraft:deprecated_anvil": {"block_id":"minecraft:anvil","block_data":{"damage":"broken","direction":0}},
+            
+            "minecraft:dirt": {"block_id":"minecraft:dirt","block_data":{"dirt_type": "normal"}},
+            "minecraft:coarse_dirt": {"block_id":"minecraft:dirt","block_data":{"dirt_type": "coarse"}},
+
+            "minecraft:quartz_block": {"block_id":"minecraft:quartz_block","block_data":{"chisel_type": "default","pillar_axis": "y"}},
+            "minecraft:chiseled_quartz_block": {"block_id":"minecraft:quartz_block","block_data":{"chisel_type": "chiseled","pillar_axis": "y"}},
+            "minecraft:quartz_pillar": {"block_id":"minecraft:quartz_block","block_data":{"chisel_type": "lines","pillar_axis": "y"}},
+            "minecraft:smooth_quartz": {"block_id":"minecraft:quartz_block","block_data":{"chisel_type": "smooth","pillar_axis": "y"}},
+
+            "minecraft:red_sandstone": {"block_id":"minecraft:red_sandstone","block_data":{"sand_stone_type": "default"}},
+            "minecraft:chiseled_red_sandstone": {"block_id":"minecraft:red_sandstone","block_data":{"sand_stone_type": "heiroglyphs"}},
+            "minecraft:cut_red_sandstone": {"block_id":"minecraft:red_sandstone","block_data":{"sand_stone_type": "cut"}},
+            "minecraft:smooth_red_sandstone": {"block_id":"minecraft:red_sandstone","block_data":{"sand_stone_type": "smooth"}},
+            
+            "minecraft:sand": {"block_id":"minecraft:sand","block_data":{"sand_type": "normal"}},
+            "minecraft:red_sand": {"block_id":"minecraft:sand","block_data":{"sand_type": "red"}},
+            
+            "minecraft:purpur_block": {"block_id":"minecraft:purpur_block","block_data":{"chisel_type": "default","pillar_axis": "y"}},
+            "minecraft:purpur_pillar": {"block_id":"minecraft:purpur_block","block_data":{"chisel_type": "lines","pillar_axis": "y"}},
+            "minecraft:deprecated_purpur_block_1": {"block_id":"minecraft:purpur_block","block_data":{"chisel_type": "chiseled","pillar_axis": "y"}},
+            "minecraft:deprecated_purpur_block_2": {"block_id":"minecraft:purpur_block","block_data":{"chisel_type": "smooth","pillar_axis": "y"}},
+            
+            "minecraft:cobblestone_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "cobblestone","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:mossy_cobblestone_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "mossy_cobblestone","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:granite_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "granite","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:diorite_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "diorite","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:andesite_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "andesite","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:sandstone_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "sandstone","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:brick_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "brick","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:stone_brick_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "stone_brick","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:mossy_stone_brick_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "mossy_stone_brick","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:nether_brick_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "nether_brick","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:end_brick_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "end_brick","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:prismarine_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "prismarine","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:red_sandstone_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "red_sandstone","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
+            "minecraft:red_nether_brick_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "red_nether_brick","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}}
         }
     },
     "item": {
@@ -318,7 +388,10 @@
             "minecraft:wooden_slab","minecraft:wood","minecraft:coral_fan","minecraft:sapling","minecraft:coral_fan_dead",
             "minecraft:red_flower","minecraft:tallgrass","minecraft:coral_block","minecraft:double_plant","minecraft:monster_egg",
             "minecraft:double_stone_block_slab","minecraft:stone_block_slab2","minecraft:stone_block_slab3","minecraft:stonebrick",
-            "minecraft:double_stone_block_slab2","minecraft:double_stone_block_slab3","minecraft:double_stone_block_slab4","minecraft:prismarine"
+            "minecraft:double_stone_block_slab2","minecraft:double_stone_block_slab3","minecraft:double_stone_block_slab4",
+            "minecraft:prismarine","minecraft:light_block","minecraft:yellow_flower","minecraft:sandstone","minecraft:anvil",
+            "minecraft:dirt","minecraft:quartz_block","minecraft:red_sandstone","minecraft:sand","minecraft:purpur_block",
+            "minecraft:cobblestone_wall"
         ],
         "id_transfor": {
             "minecraft:white_wool" : {"item_id":"minecraft:wool","item_data":{"value": 0}},
@@ -561,14 +634,14 @@
             "minecraft:infested_cracked_stone_bricks": {"item_id":"minecraft:monster_egg","item_data":{"value": 4}},
             "minecraft:infested_chiseled_stone_bricks": {"item_id":"minecraft:monster_egg","item_data":{"value": 5}},
             
-            "smooth_stone_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 0}},
-            "sandstone_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 1}},
-            "petrified_oak_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 2}},
-            "cobblestone_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 3}},
-            "brick_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 4}},
-            "stone_brick_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 5}},
-            "quartz_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 6}},
-            "nether_brick_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 7}},
+            "minecraft:smooth_stone_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 0}},
+            "minecraft:sandstone_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 1}},
+            "minecraft:petrified_oak_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 2}},
+            "minecraft:cobblestone_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 3}},
+            "minecraft:brick_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 4}},
+            "minecraft:stone_brick_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 5}},
+            "minecraft:quartz_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 6}},
+            "minecraft:nether_brick_double_slab":{"item_id":"minecraft:double_stone_block_slab","item_data":{"value": 7}},
             
             "minecraft:red_sandstone_slab":{"item_id":"minecraft:stone_block_slab2","item_data":{"value": 0}},
             "minecraft:purpur_slab":{"item_id":"minecraft:stone_block_slab2","item_data":{"value": 1}},
@@ -619,7 +692,74 @@
 
             "minecraft:prismarine":{"item_id":"minecraft:prismarine","item_data":{"value": 0}},
             "minecraft:dark_prismarine":{"item_id":"minecraft:prismarine","item_data":{"value": 1}},
-            "minecraft:prismarine_bricks":{"item_id":"minecraft:prismarine","item_data":{"value": 2}}
+            "minecraft:prismarine_bricks":{"item_id":"minecraft:prismarine","item_data":{"value": 2}},
+
+
+            "minecraft:light_block_0": {"item_id":"minecraft:light_block","item_data":{"value": 0}},
+            "minecraft:light_block_1": {"item_id":"minecraft:light_block","item_data":{"value": 1}},
+            "minecraft:light_block_2": {"item_id":"minecraft:light_block","item_data":{"value": 2}},
+            "minecraft:light_block_3": {"item_id":"minecraft:light_block","item_data":{"value": 3}},
+            "minecraft:light_block_4": {"item_id":"minecraft:light_block","item_data":{"value": 4}},
+            "minecraft:light_block_5": {"item_id":"minecraft:light_block","item_data":{"value": 5}},
+            "minecraft:light_block_6": {"item_id":"minecraft:light_block","item_data":{"value": 6}},
+            "minecraft:light_block_7": {"item_id":"minecraft:light_block","item_data":{"value": 7}},
+            "minecraft:light_block_8": {"item_id":"minecraft:light_block","item_data":{"value": 8}},
+            "minecraft:light_block_9": {"item_id":"minecraft:light_block","item_data":{"value": 9}},
+            "minecraft:light_block_10": {"item_id":"minecraft:light_block","item_data":{"value": 10}},
+            "minecraft:light_block_11": {"item_id":"minecraft:light_block","item_data":{"value": 11}},
+            "minecraft:light_block_12": {"item_id":"minecraft:light_block","item_data":{"value": 12}},
+            "minecraft:light_block_13": {"item_id":"minecraft:light_block","item_data":{"value": 13}},
+            "minecraft:light_block_14": {"item_id":"minecraft:light_block","item_data":{"value": 14}},
+            "minecraft:light_block_15": {"item_id":"minecraft:light_block","item_data":{"value": 15}},
+            
+            "minecraft:dandelion": {"item_id":"minecraft:yellow_flower","item_data":{"value": 0}},
+
+            "minecraft:sandstone": {"item_id":"minecraft:sandstone","item_data":{"value": 0}},
+            "minecraft:chiseled_sandstone": {"item_id":"minecraft:sandstone","item_data":{"value": 1}},
+            "minecraft:cut_sandstone": {"item_id":"minecraft:sandstone","item_data":{"value": 2}},
+            "minecraft:smooth_sandstone": {"item_id":"minecraft:sandstone","item_data":{"value": 3}},
+
+
+            "minecraft:anvil": {"item_id":"minecraft:anvil","item_data":{"value": 0}},
+            "minecraft:chipped_anvil": {"item_id":"minecraft:anvil","item_data":{"value": 4}},
+            "minecraft:damaged_anvil": {"item_id":"minecraft:anvil","item_data":{"value": 8}},
+            "minecraft:deprecated_anvil": {"item_id":"minecraft:anvil","item_data":{"value": 12}},
+            
+            "minecraft:dirt": {"item_id":"minecraft:dirt","item_data":{"value": 0}},
+            "minecraft:coarse_dirt": {"item_id":"minecraft:dirt","item_data":{"value": 1}},
+
+            "minecraft:quartz_block": {"item_id":"minecraft:quartz_block","item_data":{"value": 0}},
+            "minecraft:chiseled_quartz_block": {"item_id":"minecraft:quartz_block","item_data":{"value": 1}},
+            "minecraft:quartz_pillar": {"item_id":"minecraft:quartz_block","item_data":{"value": 2}},
+            "minecraft:smooth_quartz": {"item_id":"minecraft:quartz_block","item_data":{"value": 3}},
+
+            "minecraft:red_sandstone": {"item_id":"minecraft:red_sandstone","item_data":{"value": 0}},
+            "minecraft:chiseled_red_sandstone": {"item_id":"minecraft:red_sandstone","item_data":{"value": 1}},
+            "minecraft:cut_red_sandstone": {"item_id":"minecraft:red_sandstone","item_data":{"value": 2}},
+            "minecraft:smooth_red_sandstone": {"item_id":"minecraft:red_sandstone","item_data":{"value": 3}},
+            
+            "minecraft:sand": {"item_id":"minecraft:sand","item_data":{"value": 0}},
+            "minecraft:red_sand": {"item_id":"minecraft:sand","item_data":{"value": 1}},
+            
+            "minecraft:purpur_block": {"block_id":"minecraft:purpur_block","item_data":{"value": 0}},
+            "minecraft:purpur_pillar": {"block_id":"minecraft:purpur_block","item_data":{"value": 2}},
+            "minecraft:deprecated_purpur_block_1": {"block_id":"minecraft:purpur_block","item_data":{"value": 1}},
+            "minecraft:deprecated_purpur_block_2": {"block_id":"minecraft:purpur_block","item_data":{"value": 3}},
+
+            "minecraft:cobblestone_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 0}},
+            "minecraft:mossy_cobblestone_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 1}},
+            "minecraft:granite_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 2}},
+            "minecraft:diorite_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 3}},
+            "minecraft:andesite_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 4}},
+            "minecraft:sandstone_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 5}},
+            "minecraft:brick_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 6}},
+            "minecraft:stone_brick_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 7}},
+            "minecraft:mossy_stone_brick_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 8}},
+            "minecraft:nether_brick_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 9}},
+            "minecraft:end_brick_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 10}},
+            "minecraft:prismarine_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 11}},
+            "minecraft:red_sandstone_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 12}},
+            "minecraft:red_nether_brick_wall": {"block_id":"minecraft:cobblestone_wall","item_data":{"value": 13}}
         }
     },
     "block_state": {

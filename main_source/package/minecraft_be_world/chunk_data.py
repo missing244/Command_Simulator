@@ -165,7 +165,7 @@ class ChunkSubChunkPrefix :
 
             block_index_max = max(value["block_index"])
             if min(value["block_index"]) < 0 : raise IndexError("方块索引列表中存在负数索引")
-            if block_index_max >= len(value["block"]) : raise IndexError("方块索引列表中存在超过方块列表的索引")
+            #if block_index_max >= len(value["block"]) : raise IndexError("方块索引列表中存在超过方块列表的索引")
 
             block_use_bit = bin(block_index_max).__len__() - 2
             block_count_save_in_4bytes = 32 // block_use_bit
@@ -175,7 +175,7 @@ class ChunkSubChunkPrefix :
                 save_int = 0
                 for k in value["block_index"][j:j+block_count_save_in_4bytes] :
                     save_int = (save_int | k) << block_use_bit
-                writebuffer.write( save_int.to_bytes(4, "big") )
+                writebuffer.write( (save_int >> block_use_bit).to_bytes(4, "big") )
 
             writebuffer.write( len(value["block"]).to_bytes(4, "little") )
             for block in value["block"] : write_to_nbt_file(writebuffer, block, byteorder="little")

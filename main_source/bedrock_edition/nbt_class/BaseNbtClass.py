@@ -53,6 +53,8 @@ class world_nbt :
         self.projectilescanbreakblocks = True
         self.showrecipemessages = True
         self.tntexplosiondropdecay = False
+        self.dolimitedcrafting = False
+        self.showdaysplayed = False
 
         self.maxcommandchainlength = np.int32(65536)
         self.functioncommandlimit = np.int32(10000)

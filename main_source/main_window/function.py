@@ -11,7 +11,6 @@ class user_manager :
 
     save_timestemp = 0
     save_path = os.path.join("save_world", "user_data.data")
-    save_path_bak = os.path.join("save_world", "user_data.bak")
     save_data = {}
     info_update = False
     save_data_template = {
@@ -26,13 +25,6 @@ class user_manager :
     def __init__(self) :
         if FileOperation.is_file(self.save_path) :
             try : self.save_data = json.loads(FileOperation.read_a_file(self.save_path))
-            except : 
-                if FileOperation.is_file(self.save_path_bak) : 
-                    try : self.save_data = json.loads(FileOperation.read_a_file(self.save_path_bak))
-                    except : self.save_data = self.save_data_template
-                else : self.save_data = self.save_data_template
-        elif FileOperation.is_file(self.save_path_bak) : 
-            try : self.save_data = json.loads(FileOperation.read_a_file(self.save_path_bak))
             except : self.save_data = self.save_data_template
         else : self.save_data = self.save_data_template
 
@@ -48,20 +40,8 @@ class user_manager :
         if "data" not in self.save_data["user"] : self.save_data["user"]["data"] = None
 
         self.save_timestemp = time.time() + 600
-        threading.Thread(target=self.save_thread).start()
-    
-    def save_thread(self) :
-        while 1 :
-            if time.time() > self.save_timestemp : 
-                self.write_back()
-                self.save_timestemp = time.time() + 900
-            time.sleep(10)
 
     def write_back(self) :
-        FileOperation.write_a_file(self.save_path, json.dumps(self.save_data, indent=4))
-        FileOperation.write_a_file(self.save_path_bak, json.dumps(self.save_data, indent=4))
-
-    def write_back_without_bak(self) :
         FileOperation.write_a_file(self.save_path, json.dumps(self.save_data, indent=4))
 
     def get_account(self) : 
@@ -488,27 +468,53 @@ def flash_minecraft_source(user:user_manager, log:initialization_log) :
         if not i() : break
     log.set_time_end()
 
-def check_c_extension(platform:Literal["windows","android"], log:initialization_log) :
-    log.write_log("正在检查C拓展库...")
+def check_leveldb_c_extension(platform:Literal["windows","android"], log:initialization_log) :
+    log.write_log("正在检查 leveldb C拓展库...")
     try : import leveldb
     except : 
         log.write_log("leveldb库验证失败，正在安装...", 2)
         if platform == "windows" :
             for iii in ['Cython', "leveldb-py"] :
+                log.write_log("正在安装 %s 模块" % iii, 4)
                 m1 = subprocess.getstatusoutput("pip3 install " + iii)
                 if not m1[0] : continue
                 FileOperation.write_a_file(os.path.join("log","install_extension.txt"), m1[1])
                 log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
+                log.write_log(m1[1])
                 return None
         elif platform == "android" :
             py_version = (sys.version_info.major, sys.version_info.minor)
             start_path = os.path.join("C_extension", "py_leveldb_%s.%s" % py_version)
             if not FileOperation.is_dir(start_path) : 
                 log.write_log("无法找到依赖库 leveldb, py=%s.%s" % py_version, 2) ; return None
-            end_path = "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python%s.%s/site-packages" % py_version
+            end_path = "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python%s.%s/site-packages/leveldb" % py_version
             FileOperation.copy_all_file(start_path, end_path)
         log.write_log("leveldb库安装完成", 2)
     else : log.write_log("leveldb库验证通过", 2)
+
+def check_brotli_c_extension(platform:Literal["windows","android"], log:initialization_log) :
+    log.write_log("正在检查 brotli C拓展库...")
+    try : import brotli
+    except : 
+        log.write_log("brotli库验证失败，正在安装...", 2)
+        if platform == "windows" :
+            for iii in ['pycparser', "cffi", "brotlipy"] :
+                log.write_log("正在安装 %s 模块" % iii, 4)
+                m1 = subprocess.getstatusoutput("pip3 install " + iii)
+                if not m1[0] : continue
+                FileOperation.write_a_file(os.path.join("log","install_extension.txt"), m1[1])
+                log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
+                log.write_log(m1[1])
+                return None
+        elif platform == "android" :
+            py_version = (sys.version_info.major, sys.version_info.minor)
+            start_path = os.path.join("C_extension", "py_brotli_%s.%s" % py_version)
+            if not FileOperation.is_dir(start_path) : 
+                log.write_log("无法找到依赖库 brotli, py=%s.%s" % py_version, 2) ; return None
+            end_path = "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python%s.%s/site-packages/brotli" % py_version
+            FileOperation.copy_all_file(start_path, end_path)
+        log.write_log("brotli库安装完成", 2)
+    else : log.write_log("brotli库验证通过", 2)
 
 
 

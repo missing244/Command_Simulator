@@ -115,6 +115,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:andesite_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:angler_pottery_sherd": {
     "damage_max": null,
     "can_enchant": []
@@ -616,6 +620,10 @@
     "can_enchant": []
   },
   "minecraft:brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brick_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1730,6 +1738,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:diorite_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:dirt": {
     "damage_max": null,
     "can_enchant": []
@@ -1859,6 +1871,10 @@
     "can_enchant": []
   },
   "minecraft:end_stone_brick_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:end_stone_brick_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2301,6 +2317,10 @@
     "can_enchant": []
   },
   "minecraft:granite_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:granite_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2903,10 +2923,6 @@
     "damage_max": null,
     "can_enchant": []
   },
-  "minecraft:light_block": {
-    "damage_max": null,
-    "can_enchant": []
-  },
   "minecraft:light_block_0": {
     "damage_max": null,
     "can_enchant": []
@@ -3333,11 +3349,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:mossy_cobblestone_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:mossy_stone_brick_slab": {
     "damage_max": null,
     "can_enchant": []
   },
   "minecraft:mossy_stone_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mossy_stone_brick_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3486,6 +3510,10 @@
     "can_enchant": []
   },
   "minecraft:nether_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:nether_brick_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4133,6 +4161,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:prismarine_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:prize_pottery_sherd": {
     "damage_max": null,
     "can_enchant": []
@@ -4206,6 +4238,10 @@
     "can_enchant": []
   },
   "minecraft:purpur_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:purpur_pillar": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4349,6 +4385,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:red_nether_brick_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:red_sand": {
     "damage_max": null,
     "can_enchant": []
@@ -4362,6 +4402,10 @@
     "can_enchant": []
   },
   "minecraft:red_sandstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_sandstone_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4466,6 +4510,10 @@
     "can_enchant": []
   },
   "minecraft:sandstone_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:sandstone_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4857,6 +4905,10 @@
     "can_enchant": []
   },
   "minecraft:stone_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stone_brick_wall": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5548,6 +5600,10 @@
     "can_enchant": []
   },
   "minecraft:weeping_vines": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wet_sponge": {
     "damage_max": null,
     "can_enchant": []
   },
