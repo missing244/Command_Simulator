@@ -34,11 +34,11 @@
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color( 'lightblue' );
 
-		const light = new THREE.AmbientLight(0xfaffff); // soft white light
-		scene.add(light);
-
 		const axesHelper = new THREE.AxesHelper(200);
 		scene.add(axesHelper);
+		
+		const light = new THREE.AmbientLight(0xfaffff); // soft white light
+		scene.add(light);
 
 		function resizeRendererToDisplaySize(renderer) {
 			const canvas = renderer.domElement;
@@ -71,23 +71,32 @@
 
 		controls.addEventListener( 'change', requestRenderIfNotRequested )
 
-
         setTimeout( () => {
 			const BlockMap = [ 
 				{name:"minecraft:air", states:{}},
-				{name:"minecraft:blue_stained_glass_pane", states:{}},
-				{name:"minecraft:blue_terracotta", states:{}},
-				{name:"minecraft:blue_wool", states:{}},
-				{name:"minecraft:bone_block", states:{}},
-				{name:"minecraft:bookshelf", states:{}},
-				{name:"minecraft:border_block", states:{}},
-				{name:"minecraft:brain_coral", states:{}},
-				{name:"minecraft:brain_coral_block", states:{}},
-				{name:"minecraft:brain_coral_fan", states:{}},
-				{name:"minecraft:brain_coral_wall_fan", states:{}},
+				{name:"minecraft:jigsaw", states:{}},
+				{name:"minecraft:jukebox", states:{}},
+				{name:"minecraft:jungle_button", states:{}},
+				{name:"minecraft:jungle_door|down", states:{}},
+				{name:"minecraft:jungle_door|up", states:{}},
+				{name:"minecraft:jungle_double_slab", states:{}},
+				{name:"minecraft:jungle_fence", states:{}},
+				{name:"minecraft:jungle_fence_gate", states:{}},
+				{name:"minecraft:jungle_hanging_sign", states:{}},
+				{name:"minecraft:jungle_leaves", states:{}},
+				{name:"minecraft:jungle_log", states:{}},
+				{name:"minecraft:jungle_planks", states:{}},
+				{name:"minecraft:jungle_pressure_plate", states:{}},
+				{name:"minecraft:jungle_sapling", states:{}},
+				{name:"minecraft:jungle_slab", states:{}},
+				{name:"minecraft:jungle_stairs", states:{}},
+				{name:"minecraft:jungle_trapdoor", states:{}},
+				{name:"minecraft:jungle_wood", states:{}},
+				{name:"minecraft:jungle_standing_sign", states:{}},
+				{name:"minecraft:jungle_wall_sign", states:{}},
 			]
             const Structure = new BlockChunk({
-				cellSizeX:20, cellSizeY:20, cellSizeZ:20, 
+				cellSizeX:50, cellSizeY:30, cellSizeZ:50, 
 				tileSize:16, blockMap:BlockMap})
 
 			for (let x = 0; x < BlockMap.length-1; x++) {
@@ -105,3 +114,4 @@
 	</script>
 
 </html>
+

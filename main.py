@@ -321,14 +321,14 @@ class control_windows :
         post_json = json.loads(data_1.decode('utf-8'))
         
         operation_json = {
-            "expand_pack_run" : self.post_to_expand_pack,
+            "expand_pack_run": self.post_to_expand_pack,
         }
         
-        if ("operation" not in post_json) : return {"state" : 1 , "msg" : "传输数据不合法"}
-        if (post_json["operation"] not in operation_json) : return {"state" : 2 , "msg" : "指定操作不合法"}
-        if (post_json["operation"] == "expand_pack_run") and ("pack_id" not in post_json) : return {"state" : 1 , "msg" : "传输数据不合法"}
-        if (post_json["operation"] == "expand_pack_run" and post_json["pack_id"] not in pack_list) : return {"state" : 3 , "msg" : "无效的拓展包ID"}
-        if (post_json["operation"] == "expand_pack_run" and post_json["pack_id"] not in self.expand_pack_open_list) : return {"state" : 4 , "msg" : "指定的拓展包未启动"}
+        if ("operation" not in post_json) : return {"state": 1 , "msg": "传输数据不合法"}
+        if (post_json["operation"] not in operation_json) : return {"state": 2 , "msg": "指定操作不合法"}
+        if (post_json["operation"] == "expand_pack_run") and ("pack_id" not in post_json) : return {"state": 1 , "msg": "传输数据不合法"}
+        if (post_json["operation"] == "expand_pack_run" and post_json["pack_id"] not in pack_list) : return {"state": 3 , "msg": "无效的拓展包ID"}
+        if (post_json["operation"] == "expand_pack_run" and post_json["pack_id"] not in self.expand_pack_open_list) : return {"state": 4 , "msg": "指定的拓展包未启动"}
 
         try : return operation_json[post_json["operation"]](post_json)
         except :
