@@ -7,7 +7,7 @@ import main_source.main_window.function as app_function
 import main_source.main_window.constant as app_constant
 
 import main_source.package.tk_tool as tk_tool
-import main_source.package.mc_be_icon as mc_be_icon
+import main_source.package.MCBEIcon as MCBEIcon
 import main_source.package.file_operation as FileOperation
 import main_source.package.connent_API as connent_API
 
@@ -158,8 +158,8 @@ class Special_Char(tkinter.Toplevel) :
         self.display_id = 0
         self.mode_id = "ByteCode"
         self.image_list = [
-            ( mc_be_icon.tk_Image(i) if self.main_win.platform == "windows" else mc_be_icon.tk_Image(i).zoom(4,4)
-            ) for i in mc_be_icon.icon_list
+            ( MCBEIcon.tk_Image(i) if self.main_win.platform == "windows" else MCBEIcon.tk_Image(i).zoom(4,4)
+            ) for i in MCBEIcon.icon_list
         ]
 
         small_win_width, small_win_height = int(self.master.winfo_width()*0.95), int(self.master.winfo_height()*0.43)
@@ -169,7 +169,7 @@ class Special_Char(tkinter.Toplevel) :
         self.title('特殊字符')
 
         frame_icon = tkinter.Frame(self)
-        self.image_group = Frame_list = [tkinter.Frame(frame_icon) for i in range((len(mc_be_icon.icon_list)//4) + 1)]
+        self.image_group = Frame_list = [tkinter.Frame(frame_icon) for i in range((len(MCBEIcon.icon_list)//4) + 1)]
         tkinter.Button(frame_icon,width=1,height=5,text="←",bg="#c8bfe7",command=lambda : self.change_page(-1)).pack(side=tkinter.LEFT)
         tkinter.Button(frame_icon,width=1,height=5,text="→",bg="#c8bfe7",command=lambda : self.change_page(1)).pack(side=tkinter.RIGHT)
         frame_icon.pack()
@@ -189,7 +189,7 @@ class Special_Char(tkinter.Toplevel) :
 
         for i,j in enumerate(self.image_list) : 
             label = tkinter.Label(Frame_list[i//4],image=j)
-            label.word_id = mc_be_icon.icon_list[i]
+            label.word_id = MCBEIcon.icon_list[i]
             label.bind('<Button-1>',lambda event : self.mode_effect(event))
             label.pack(side=tkinter.LEFT)
         Frame_list[0].pack(); Frame_list[1].pack(); Frame_list[2].pack(); Frame_list[3].pack()
@@ -1348,7 +1348,7 @@ class Log_Display(tkinter.Frame) :
     def set_log(self, error_msg:str, log:str, save_path:str=None) :
         self.last_frame_name = self.main_win.now_display_frame
         if save_path : FileOperation.write_a_file(os.path.join("log", save_path), log)
-        self.input_box4.insert("0.0", error_msg+"\n")
+        self.input_box4.insert("end", error_msg+"\n")
         self.input_box4.insert("end", log)
         self.input_box4.insert("end", "\n\n\n")
         self.main_win.set_display_frame("log_display")

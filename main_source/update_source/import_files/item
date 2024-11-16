@@ -391,6 +391,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:black_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:black_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -468,6 +472,10 @@
     "can_enchant": []
   },
   "minecraft:blaze_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -627,6 +635,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:brown_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:brown_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -700,6 +712,10 @@
     "can_enchant": []
   },
   "minecraft:budding_amethyst": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -961,6 +977,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:chiseled_resin_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:chiseled_sandstone": {
     "damage_max": null,
     "can_enchant": []
@@ -998,6 +1018,10 @@
     "can_enchant": []
   },
   "minecraft:clock": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:closed_eyeblossom": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1187,7 +1211,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:creaking_heart": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:creaking_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:creeper_banner_pattern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:creeper_head": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1299,6 +1335,10 @@
     "can_enchant": []
   },
   "minecraft:cut_sandstone_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cyan_bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1771,6 +1811,10 @@
     "can_enchant": []
   },
   "minecraft:dragon_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dragon_head": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2336,6 +2380,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:gray_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:gray_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -2377,6 +2425,10 @@
     "can_enchant": []
   },
   "minecraft:gray_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:green_bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2987,6 +3039,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:light_blue_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:light_blue_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -3028,6 +3084,10 @@
     "can_enchant": []
   },
   "minecraft:light_blue_wool": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3084,6 +3144,10 @@
     "can_enchant": []
   },
   "minecraft:lily_of_the_valley": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3158,6 +3222,10 @@
     "can_enchant": []
   },
   "minecraft:mace": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3398,6 +3466,10 @@
     "can_enchant": []
   },
   "minecraft:mule_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:mushroom_stem": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3757,6 +3829,14 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:open_eyeblossom": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:orange_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:orange_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -3857,6 +3937,86 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:pale_hanging_moss": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_moss_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_moss_carpet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_button": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_chest_boat": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_fence": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_fence_gate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_hanging_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_leaves": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_planks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_pressure_plate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_sign": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_trapdoor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:panda_spawn_egg": {
     "damage_max": null,
     "can_enchant": []
@@ -3901,11 +4061,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:piglin_head": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:piglin_spawn_egg": {
     "damage_max": null,
     "can_enchant": []
   },
   "minecraft:pillager_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_bundle": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3970,6 +4138,10 @@
     "can_enchant": []
   },
   "minecraft:pitcher_pod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:player_head": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4193,6 +4365,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:purple_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:purple_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -4341,6 +4517,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:red_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:red_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -4462,6 +4642,34 @@
     "can_enchant": []
   },
   "minecraft:repeating_command_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:resin_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:resin_brick": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:resin_brick_slab": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:resin_brick_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:resin_brick_wall": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:resin_bricks": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:resin_clump": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4627,16 +4835,13 @@
     "damage_max": null,
     "can_enchant": []
   },
-  "minecraft:skeleton_spawn_egg": {
+  "minecraft:skeleton_skull": {
     "damage_max": null,
     "can_enchant": []
   },
-  "minecraft:skull": {
+  "minecraft:skeleton_spawn_egg": {
     "damage_max": null,
-    "can_enchant": [
-      "binding",
-      "vanishing"
-    ]
+    "can_enchant": []
   },
   "minecraft:skull_banner_pattern": {
     "damage_max": null,
@@ -5056,6 +5261,14 @@
     "can_enchant": []
   },
   "minecraft:stripped_oak_wood": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_pale_oak_log": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:stripped_pale_oak_wood": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5615,6 +5828,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:white_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:white_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -5676,6 +5893,10 @@
     "can_enchant": []
   },
   "minecraft:wither_rose": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wither_skeleton_skull": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5771,6 +5992,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:yellow_bundle": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:yellow_candle": {
     "damage_max": null,
     "can_enchant": []
@@ -5816,6 +6041,10 @@
     "can_enchant": []
   },
   "minecraft:zoglin_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:zombie_head": {
     "damage_max": null,
     "can_enchant": []
   },

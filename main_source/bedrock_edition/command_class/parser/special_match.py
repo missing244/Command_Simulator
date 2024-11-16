@@ -2,7 +2,7 @@
 针对 Minecraft 中特殊的结构内建的匹配类
 """
 
-from main_source.bedrock_edition.command_class.parser.base_match import TERMINATOR_RE
+from .base_match import TERMINATOR_RE
 from . import BaseMatch
 from typing import Dict,Union,List,Tuple
 import re

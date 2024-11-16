@@ -1,6 +1,7 @@
 # 蓝奏云直链解析脚本
 # 作者：笨蛋ovo
 # https://github.com/liuran001/Lanzou_DirectLink_sh
+__version__ = (1, 0, 0)
 
 import random
 from urllib import request

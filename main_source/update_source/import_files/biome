@@ -309,6 +309,11 @@
       "overworld"
     ]
   },
+  "minecraft:pale_garden": {
+    "dimension": [
+      "overworld"
+    ]
+  },
   "minecraft:plains": {
     "dimension": [
       "overworld"

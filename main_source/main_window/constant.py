@@ -4,7 +4,7 @@ try :
     if platform.system() == "Windows" : raise Exception
 except : jnius = None
 
-APP_VERSION = "2.2.0" ; debug_testing = False
+APP_VERSION = "2.3.0" ; debug_testing = True
 PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius else None
 Context = jnius.autoclass('android.content.Context') if jnius else None
 

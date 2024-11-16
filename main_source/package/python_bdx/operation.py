@@ -24,11 +24,10 @@ from .. import python_nbt as nbt
 from typing import Union,List
 
 
-
 class Int_Meta(type) :
     
-    def __init__(self, *arg) :
-        super().__init__(*arg)
+    def __init__(self, *arg, **karg) :
+        super().__init__(*arg, **karg)
         self._memory = {}
     
     def __call__(self, v:int) :
@@ -255,7 +254,7 @@ class NOP(OperationBase) :
         ])
 
 
-class AddInt32ZValue0(OperationBase) :
+class AddInt32ZValue0(OperationBase, metaclass=Int_Meta) :
     """
     将画笔的 Z 坐标增加 value\n
     ---------------------------------\n

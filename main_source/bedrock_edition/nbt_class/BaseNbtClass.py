@@ -437,25 +437,40 @@ class block_nbt :
     def __change_to_entity__(self, dimension:Literal["overworld","nether","the_end"], pos:List[Union[float,np.float32]]) :
         if self.Identifier in Constants.BLOCK_LOOT and "summon" in Constants.BLOCK_LOOT[self.Identifier] :
             return entity_nbt().__create__(Constants.BLOCK_LOOT[self.Identifier]["summon"], dimension, pos)
-        else :
-            nbt1 = {
-                "CustomName" : "", 'Item':{
-                'Identifier':"","Count":np.int8(1),"Damage":np.int16(0),"CanDestroy":[],"CanPlaceOn":[],"LockInInventory":False,
-                "LockInSlot":False,"KeepOnDeath":False,"tags":{'Display':{'Name':"",'Lore':[]}}
-            }}
+        
+        nbt1 = {
+            "CustomName" : "", 'Item':{
+            'Identifier':"","Count":np.int8(1),"Damage":np.int16(0),"CanDestroy":[],"CanPlaceOn":[],"LockInInventory":False,
+            "LockInSlot":False,"KeepOnDeath":False,"tags":{'Display':{'Name':"",'Lore':[]}}
+        }}
 
-            if self.Identifier not in Constants.BLOCK_LOOT or Constants.BLOCK_LOOT[self.Identifier]['loot'] == "__self__" :
-                nbt1['Item']['Identifier'] = self.Identifier
-            elif isinstance(Constants.BLOCK_LOOT[self.Identifier]['loot'], dict) :
-                item_of_loot = Constants.BLOCK_LOOT[self.Identifier]['loot']
-                nbt1['Item']['Identifier'] = list(item_of_loot)[0]
-                nbt1['Item']['Count'] = np.int8( item_of_loot[list(item_of_loot)[0]] )
+        if self.Identifier not in Constants.BLOCK_LOOT or Constants.BLOCK_LOOT[self.Identifier]['loot'] == "__self__" :
+            nbt1['Item']['Identifier'] = self.Identifier
+        elif isinstance(Constants.BLOCK_LOOT[self.Identifier]['loot'], dict) :
+            item_of_loot = Constants.BLOCK_LOOT[self.Identifier]['loot']
+            nbt1['Item']['Identifier'] = list(item_of_loot)[0]
+            nbt1['Item']['Count'] = np.int8( item_of_loot[list(item_of_loot)[0]] )
 
-            item_name = nbt1["Item"]["Identifier"].replace("minecraft:","",1)
-            nbt1['Item']['tags']["Display"]["Name"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name).split("/")[0]
-            nbt1["CustomName"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name).split("/")[0]
+        item_name = nbt1["Item"]["Identifier"].replace("minecraft:","",1)
+        nbt1['Item']['tags']["Display"]["Name"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name).split("/")[0]
+        nbt1["CustomName"] = Constants.TRANSLATE_ID["[物品]"].get(item_name, "item.%s.name" % item_name).split("/")[0]
 
-            return entity_nbt().__create__("minecraft:item", dimension, pos).__force_write_nbt__(nbt1)
+        return entity_nbt().__create__("minecraft:item", dimension, pos).__force_write_nbt__(nbt1)
+
+    def __change_to_item__(self) :
+        if self.Identifier in Constants.BLOCK_LOOT and "summon" in Constants.BLOCK_LOOT[self.Identifier] :
+            return item_nbt().__create__(Constants.BLOCK_LOOT[self.Identifier]["summon"])
+        
+        Item = item_nbt()
+        if self.Identifier not in Constants.BLOCK_LOOT : Item.__create__(self.Identifier)
+        elif len(Constants.BLOCK_LOOT[self.Identifier]) == 0 : return None
+        elif Constants.BLOCK_LOOT[self.Identifier].get("loot", None) == "__self__" : Item.__create__(self.Identifier)
+        elif isinstance(Constants.BLOCK_LOOT[self.Identifier].get("loot", None), dict) :
+            item_of_loot = Constants.BLOCK_LOOT[self.Identifier]['loot']
+            Item = Item.__create__( list(item_of_loot)[0] )
+            Item.Count = np.int8( item_of_loot[list(item_of_loot)[0]] )
+
+        return Item
 
     def __save__(self) :
         all_data = {}

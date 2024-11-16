@@ -1,3 +1,6 @@
+__version__ = (1, 0, 0)
+
+
 from . import operation as OperationCode
 from typing import Union,Literal,List
 import io,brotli,os,sys,traceback,time

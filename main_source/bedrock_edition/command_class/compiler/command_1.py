@@ -588,16 +588,21 @@ class effect :
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_get = Selector.Selector_Compiler(_game, token_list, 1)
         effect_id = token_list[index]["token"].group() ; index += 1
-        if effect_id == "clear" : return functools.partial(cls.clear, entity_get=entity_get)
+        if effect_id == "clear" : 
+            if index >= len(token_list) : return functools.partial(cls.clear, entity_get=entity_get)
+            clear_effect_id = token_list[index]["token"].group() ; index += 1
+            return functools.partial(cls.clear, entity_get=entity_get, effect_id=clear_effect_id)
 
         if effect_id not in Constants.EFFECT :
             raise CompileError("不存在的药水效果：%s" % effect_id, pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
         if index >= len(token_list) : return functools.partial(cls.give, entity_get=entity_get, effect_id=effect_id)
 
-        times = int(token_list[index]["token"].group()) ; index += 1
-        if not(0 <= times <= 1000000) :
-            raise CompileError("药水效果时长应该在 0~1000000 内", pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
-        if index >= len(token_list) : return functools.partial(cls.give, entity_get=entity_get, effect_id=effect_id, times=times)
+        if token_list[index]["token"].group() != "infinite" :
+            times = int(token_list[index]["token"].group()) ; index += 1
+            if not(0 <= times <= 1000000) : raise CompileError("药水效果时长应该在 0~1000000 内", pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        else : times = -1 ; index += 1
+        if index >= len(token_list) and times != 0 : return functools.partial(cls.give, entity_get=entity_get, effect_id=effect_id, times=times)
+        elif index >= len(token_list) : return functools.partial(cls.clear, entity_get=entity_get, effect_id=effect_id)
 
         amplifier = int(token_list[index]["token"].group()) ; index += 1
         if not(0 <= amplifier <= 255) :
@@ -618,8 +623,10 @@ class effect :
                 if entity.ActiveEffects.__len__() : entity.ActiveEffects.clear() ; success_list.append(ID_tracker(entity))
                 else : faild_list.append(ID_tracker(entity))
                 continue
-            if effect_id in entity.ActiveEffects : del entity.ActiveEffects[effect_id]
-            success_list.append(ID_tracker(entity))
+            elif effect_id in entity.ActiveEffects : 
+                del entity.ActiveEffects[effect_id]
+                success_list.append(ID_tracker(entity))
+            else : faild_list.append(ID_tracker(entity))
         return Response.Response_Template("$success$is_line$fiald", min(1,len(success_list)), len(success_list)).substitute(
             success=success.substitute(entity=", ".join(success_list)) if success_list else "",
             is_line = "\n" if success_list and faild_list else "",

@@ -156,7 +156,7 @@ class Text_Bind_Events :
             mode_using(self.main_win, focus_input, mode)
             for index,item in enumerate(self.menu_list) : item.unpost()
             if mode in {"line_select", "select_all"} : 
-                if isinstance(focus_input, tkinter.Text) : x1,y1,x2,y2 = focus_input.bbox(tkinter.SEL_FIRST)
+                if isinstance(focus_input, tkinter.Text) : x1,y1,x2,y2 = focus_input.bbox(tkinter.INSERT)
                 else : x1,y1 = focus_input.winfo_rootx(), focus_input.winfo_rooty()
                 x1 = self.main_win.window.winfo_width() // 2
                 if isinstance(focus_input, tkinter.Text) : self.other_menu.post(x1, focus_input.winfo_rooty() + y1 - 100)

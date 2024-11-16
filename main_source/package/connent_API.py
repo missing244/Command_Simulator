@@ -1,3 +1,6 @@
+__version__ = (1, 0, 0)
+
+
 import re,time,random,json,traceback
 from urllib import parse,request
 from typing import Union,List

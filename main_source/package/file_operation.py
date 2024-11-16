@@ -1,3 +1,5 @@
+__version__ = (1, 0, 0)
+
 import os
 from typing import List,Tuple,Literal,Union
 

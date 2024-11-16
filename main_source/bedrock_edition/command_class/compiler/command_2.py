@@ -1003,7 +1003,7 @@ class xp :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        if token_list[1]["token"].group()[-1] == "L" : lvl_value = int(token_list[1]["token"].group()[:-1]) ; func = cls.modify_level
+        if token_list[1]["token"].group()[-1] in {"L", "l"} : lvl_value = int(token_list[1]["token"].group()[:-1]) ; func = cls.modify_level
         else : lvl_value = int(token_list[1]["token"].group()) ; func = cls.modify_point
 
         if 2 >= token_list.__len__() : return functools.partial(func, entity_get=None, value=lvl_value)

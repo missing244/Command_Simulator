@@ -79,7 +79,7 @@ class minecraft_thread :
         self.minecraft_chunk:BaseNbtClass.chunk_nbt = None
         self.minecraft_scoreboard:BaseNbtClass.scoreboard_nbt = None
 
-        self.game_version = (1, 21, 0)
+        self.game_version = (1, 21, 50)
         self.runtime_variable = runtime_variable()
         EntityComponent.set_source(self.minecraft_ident)
         LootTable.set_source(self.minecraft_ident)

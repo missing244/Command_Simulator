@@ -41,7 +41,7 @@ class Response_Template(Template) :
         self.response_id = response_id
         self.command = ""
         self.command_msg = ""
-        self.success_count = int(success_count)
+        self.success_count = int(bool(success_count))
         self.result_count  = int(result_count)
         self.Function_Feedback:List[Function_Response_Group] = [] if mcfunction else None
 

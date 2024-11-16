@@ -165,27 +165,45 @@ class locate :
     
 
 class loot :
+    def LootModeTest(_game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, index:int) :
+        if token_list[index]["token"].group() == "kill" :
+            index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
+        elif token_list[index]["token"].group() == "loot" : 
+            loot_get = "loot_tables/%s.json" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
+            if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
+            pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
+        elif token_list[index]["token"].group() == "mine" : 
+            loot_get = [token_list[i]["token"].group() for i in range(index+1,index+4,1)] ; index += 4
+
+        if index >= len(token_list) : return loot_get
+
+        item_id = ID_transfor(token_list[index]["token"].group()) ; index += 1
+        if item_id not in {"mainhand", "offhand"} and item_id not in _game.minecraft_ident.items : 
+            raise CompileError("不存在的物品ID：%s" % item_id, 
+            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        return loot_get
+
+    def GetLoot(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, loot_get:Union[list, str]) :
+        if isinstance(loot_get, list) : 
+            block_pos = MathFunction.mc_pos_compute(execute_var["pos"], loot_get, execute_var["rotate"])
+            if  not game.minecraft_chunk.____in_build_area____(execute_var["dimension"], block_pos) or \
+                not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], block_pos) :
+                return Response.Response_Template("$pos位于世界外或未加载区块").substitute(pos=tuple(block_pos))
+            block_index = game.minecraft_chunk.____find_block____(execute_var["dimension"], block_pos)
+            Item = game.minecraft_chunk.block_mapping[block_index].__change_to_item__()
+            item_list = [Item] if Item else []
+        else : item_list = LootTable.generate(loot_get)
+        return item_list
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) : 
         if token_list[1]["token"].group() == "give" :
             index, entity_func_1 = Selector.Selector_Compiler(_game, token_list, 2, is_player=True)
-            if token_list[index]["token"].group() == "kill" :
-                index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
-            else : 
-                loot_get = "loot_tables/%s.json" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
-                if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
-                pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
-            return functools.partial(cls.give, entity_get=entity_func_1, loot_get=loot_get)
+            return functools.partial(cls.give, entity_get=entity_func_1, loot_get=cls.LootModeTest(_game, token_list, index))
         if token_list[1]["token"].group() in ("insert", "spawn") :
             index, pos = 5, [token_list[i]["token"].group() for i in range(2,5,1)]
-            if token_list[index]["token"].group() == "kill" :
-                index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
-            else : 
-                loot_get = "loot_tables/%s.json" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
-                if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
-                pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
-            return functools.partial(cls.insert if token_list[1]["token"].group() == "insert" else cls.spawn, pos=pos, loot_get=loot_get)
+            return functools.partial(cls.insert if token_list[1]["token"].group() == "insert" else cls.spawn, pos=pos, 
+                loot_get=cls.LootModeTest(_game, token_list, index))
         if token_list[1]["token"].group() == "replace" :
             if token_list[2]["token"].group() == "block" :
                 index, pos = 7, [token_list[i]["token"].group() for i in range(3,6,1)]
@@ -197,13 +215,8 @@ class loot :
                     if slot_count <= 0 : raise CompileError("栏位范围不能为负数或0", 
                         pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
                 else : slot_count = 1
-                if token_list[index]["token"].group() == "kill" :
-                    index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
-                else : 
-                    loot_get = "loot_tables/%s.json" % Quotation_String_transfor_1(token_list[index+1]["token"].group())
-                    if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
-                    pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
-                return functools.partial(cls.replace_block, pos=pos, slot_id=slot_id, slot_count=slot_count, loot_get=loot_get)
+                return functools.partial(cls.replace_block, pos=pos, slot_id=slot_id, slot_count=slot_count, 
+                    loot_get=cls.LootModeTest(_game, token_list, index))
             if token_list[2]["token"].group() == "entity" :
                 index, entity_func_1 = Selector.Selector_Compiler(_game, token_list, 3, is_player=True)
                 slot = token_list[index]["token"].group() ; index += 1
@@ -215,25 +228,24 @@ class loot :
                     if slot_count <= 0 : raise CompileError("栏位索引不能为负数或0", 
                         pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
                 else : slot_count = 1
-                if token_list[index]["token"].group() == "kill" :
-                    index, loot_get = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
-                else : 
-                    loot_get = "loot_tables/%s.json" % token_list[index+1]["token"].group()
-                    if loot_get not in _game.minecraft_ident.loot_tables : raise CompileError("不存在的战利品表ID：%s" % loot_get, 
-                    pos=(token_list[index+1]["token"].start(), token_list[index+1]["token"].end()))
-                return functools.partial(cls.replace_entity, entity_get=entity_func_1, slot=slot, slot_index=slot_id, slot_count=slot_count, loot_get=loot_get)
+                return functools.partial(cls.replace_entity, entity_get=entity_func_1, slot=slot, slot_index=slot_id, slot_count=slot_count, 
+                    loot_get=cls.LootModeTest(_game, token_list, index))
 
-    def give(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, loot_get:Union[str,Callable]) :
+    def give(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, loot_get:Union[str,Callable,List[str]]) :
         entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        if not isinstance(loot_get, str) :
+
+        if isinstance(loot_get, str) : pass
+        elif isinstance(loot_get, list) : pass
+        else :
             loot_get_entity_list:List[BaseNbtClass.entity_nbt] = loot_get(execute_var, game)
             if isinstance(loot_get_entity_list, Response.Response_Template) : return loot_get_entity_list
             loot_get = loot_get_entity_list[0].DeathLootTable if hasattr(loot_get_entity_list[0], "DeathLootTable") else ""
 
         item_count:List[int] = []
         for player in entity_list :
-            item_list = LootTable.generate(loot_get)
+            item_list = loot.GetLoot(execute_var, game, loot_get)
+            if isinstance(item_list, Response.Response_Template) : return item_list
             for item in item_list : player.__pickup_item__(item)
             item_count.append( len(item_list) )
 
@@ -245,7 +257,7 @@ class loot :
             msg="\n".join(success_list)
         )
         
-    def insert(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str], loot_get:Union[str,Callable]) :
+    def insert(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str], loot_get:Union[str,Callable,List[str]]) :
         block_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
         if  not game.minecraft_chunk.____in_build_area____(execute_var["dimension"], block_pos) or \
             not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], block_pos) :
@@ -253,26 +265,33 @@ class loot :
         block_nbt = game.minecraft_chunk.____find_block_nbt____(execute_var["dimension"], block_pos)
         if (block_nbt is None) or ("Items" not in block_nbt) :
             return Response.Response_Template("$pos的方块并不是容器").substitute(pos=tuple(block_pos))
-        if not isinstance(loot_get, str) :
+
+        if isinstance(loot_get, str) : pass
+        elif isinstance(loot_get, list) : pass
+        else :
             loot_get_entity_list:List[BaseNbtClass.entity_nbt] = loot_get(execute_var, game)
             if isinstance(loot_get_entity_list, Response.Response_Template) : return loot_get_entity_list
             loot_get = loot_get_entity_list[0].DeathLootTable if hasattr(loot_get_entity_list[0], "DeathLootTable") else ""
 
-        item_list = LootTable.generate(loot_get)
+        item_list = loot.GetLoot(execute_var, game, loot_get)
+        if isinstance(item_list, Response.Response_Template) : return item_list
         for item in item_list : game.minecraft_chunk.__block_pickup_item__(execute_var["dimension"],block_pos,item)
 
         return Response.Response_Template("$pos方块内填充了$count个战利品", 1, len(item_list)).substitute(
             pos=tuple(block_pos), count=len(item_list)
         )
 
-    def spawn(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str], loot_get:Union[str,Callable]) :
+    def spawn(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str], loot_get:Union[str,Callable,List[str]]) :
         spawn_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
-        if not isinstance(loot_get, str) :
+        if isinstance(loot_get, str) : pass
+        elif isinstance(loot_get, list) : pass
+        else :
             loot_get_entity_list:List[BaseNbtClass.entity_nbt] = loot_get(execute_var, game)
             if isinstance(loot_get_entity_list, Response.Response_Template) : return loot_get_entity_list
             loot_get = loot_get_entity_list[0].DeathLootTable if hasattr(loot_get_entity_list[0], "DeathLootTable") else ""
 
-        item_list = LootTable.generate(loot_get)
+        item_list = loot.GetLoot(execute_var, game, loot_get)
+        if isinstance(item_list, Response.Response_Template) : return item_list
         for item in item_list : 
             item_entity = item.__change_to_entity__(execute_var["dimension"], spawn_pos)
             game.minecraft_chunk.__add_entity__(item_entity)
@@ -282,7 +301,7 @@ class loot :
         )
 
     def replace_block(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str], slot_id:int,
-                      slot_count:int, loot_get:Union[str,Callable]) :
+                      slot_count:int, loot_get:Union[str,Callable,List[str]]) :
         block_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
         if  not game.minecraft_chunk.____in_build_area____(execute_var["dimension"], block_pos) or \
             not game.minecraft_chunk.____in_load_chunk____(execute_var["dimension"], block_pos) :
@@ -291,12 +310,16 @@ class loot :
         if (block_nbt is None) or ("Items" not in block_nbt) :
             return Response.Response_Template("$pos的方块并不是容器").substitute(pos=tuple(block_pos))
         if not(0 < slot_id <= len(block_nbt["Items"])) : return Response.Response_Template("指定的栏位位置超过容器的容量").substitute()
-        if not isinstance(loot_get, str) :
+
+        if isinstance(loot_get, str) : pass
+        elif isinstance(loot_get, list) : pass
+        else :
             loot_get_entity_list:List[BaseNbtClass.entity_nbt] = loot_get(execute_var, game)
             if isinstance(loot_get_entity_list, Response.Response_Template) : return loot_get_entity_list
             loot_get = loot_get_entity_list[0].DeathLootTable if hasattr(loot_get_entity_list[0], "DeathLootTable") else ""
 
-        item_list = LootTable.generate(loot_get)
+        item_list = loot.GetLoot(execute_var, game, loot_get)
+        if isinstance(item_list, Response.Response_Template) : return item_list
         for index in range(min(len(item_list), slot_count)) : block_nbt["Items"][index] = item_list[index]
 
         return Response.Response_Template("$pos方块内填充了$count个战利品", 1, len(item_list)).substitute(
@@ -304,10 +327,13 @@ class loot :
         )
 
     def replace_entity(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, 
-                       slot:str, slot_index:int, slot_count:int, loot_get:Union[str,Callable]) :
+                       slot:str, slot_index:int, slot_count:int, loot_get:Union[str,Callable,List[str]]) :
         entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
-        if not isinstance(loot_get, str) :
+
+        if isinstance(loot_get, str) : pass
+        elif isinstance(loot_get, list) : pass
+        else :
             loot_get_entity_list:List[BaseNbtClass.entity_nbt] = loot_get(execute_var, game)
             if isinstance(loot_get_entity_list, Response.Response_Template) : return loot_get_entity_list
             loot_get = loot_get_entity_list[0].DeathLootTable if hasattr(loot_get_entity_list[0], "DeathLootTable") else ""
@@ -330,7 +356,8 @@ class loot :
             if item_list is None : continue
             if not(0 < slot_index <= len(item_list[0])) : continue
 
-            loot_item_list = LootTable.generate(loot_get)
+            loot_item_list = loot.GetLoot(execute_var, game, loot_get)
+            if isinstance(loot_item_list, Response.Response_Template) : return loot_item_list
             if not loot_item_list : 
                 success_list.append(success.substitute(player=ID_tracker(entity), count=len(loot_item_list))) ; continue
             for index,item in enumerate(loot_item_list) : 
@@ -442,7 +469,7 @@ class particle :
         return functools.partial(cls.run, particle_id=particle_id, pos=pos)
 
     def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, particle_id:str, pos:List[str]=["~","~","~"]) :
-        spawn_pos = [float(i) for i in MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])]
+        spawn_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
         
         now_time = str(game.minecraft_world.game_time + 40)
         particle_alive = game.runtime_variable.particle_alive
@@ -868,27 +895,61 @@ class schedule :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) : 
         if token_list[1]["token"].group() == "on_area_loaded" :
-            if token_list[3]["token"].group() == "circle" :
-                pos = [token_list[i]["token"].group() for i in range(4,7,1)]
-                radius = int(token_list[7]["token"].group())
-                if not(0 <= radius <= 4) : raise CompileError("区块半径只能在 0~4 范围内", pos=(token_list[7]["token"].start(), token_list[7]["token"].end()))
-                function_path = token_list[8]["token"].group()
-                if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
-                    pos=(token_list[8]["token"].start(), token_list[8]["token"].end()))
-                return functools.partial(cls.circle, from_pos=pos, radius=radius, mcfunc=function_path)
-            if token_list[3]["token"].group() == "tickingarea" :
-                tickarea_name = Quotation_String_transfor_1(token_list[4]["token"].group())
-                function_path = token_list[5]["token"].group()
-                if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
-                    pos=(token_list[5]["token"].start(), token_list[5]["token"].end()))
-                return functools.partial(cls.tickingarea, name=tickarea_name, mcfunc=function_path)
-            else :
-                from_pos = [token_list[3+i]["token"].group() for i in range(3)]
-                to_pos = [token_list[6+i]["token"].group() for i in range(3)]
-                function_path = token_list[9]["token"].group()
-                if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
-                    pos=(token_list[9]["token"].start(), token_list[9]["token"].end()))
-                return functools.partial(cls.area, from_pos=from_pos, to_pos=to_pos, mcfunc=function_path)
+            if token_list[2]["token"].group() == "add" :
+                if token_list[3]["token"].group() == "circle" :
+                    pos = [token_list[i]["token"].group() for i in range(4,7,1)]
+                    radius = int(token_list[7]["token"].group())
+                    if not(0 <= radius <= 4) : raise CompileError("区块半径只能在 0~4 范围内", pos=(token_list[7]["token"].start(), token_list[7]["token"].end()))
+                    function_path = token_list[8]["token"].group()
+                    if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
+                        pos=(token_list[8]["token"].start(), token_list[8]["token"].end()))
+                    return functools.partial(cls.circle, from_pos=pos, radius=radius, mcfunc=function_path)
+                elif token_list[3]["token"].group() == "tickingarea" :
+                    tickarea_name = Quotation_String_transfor_1(token_list[4]["token"].group())
+                    function_path = token_list[5]["token"].group()
+                    if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
+                        pos=(token_list[5]["token"].start(), token_list[5]["token"].end()))
+                    return functools.partial(cls.tickingarea, name=tickarea_name, mcfunc=function_path)
+                else :
+                    from_pos = [token_list[3+i]["token"].group() for i in range(3)]
+                    to_pos = [token_list[6+i]["token"].group() for i in range(3)]
+                    function_path = token_list[9]["token"].group()
+                    if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
+                        pos=(token_list[9]["token"].start(), token_list[9]["token"].end()))
+                    return functools.partial(cls.area, from_pos=from_pos, to_pos=to_pos, mcfunc=function_path)
+            elif token_list[2]["token"].group() == "clear" :
+                if token_list[3]["token"].group() == "function" :
+                    function_path = token_list[4]["token"].group()
+                    return functools.partial(cls.clear_loadarea_func, mcfunc=function_path)
+                elif token_list[3]["token"].group() == "tickingarea" :
+                    tickingarea_name = token_list[4]["token"].group()
+                    if 5 >= len(token_list) : return functools.partial(cls.clear_loadarea_tickarea_func, tickingarea=tickingarea_name)
+                    else : return functools.partial(cls.clear_loadarea_tickarea_func, tickingarea=tickingarea_name, mcfunc=token_list[5]["token"].group())
+
+        elif token_list[1]["token"].group() == "clear" :
+            function_path = token_list[2]["token"].group()
+            if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
+                pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+            return functools.partial(cls.clear_func, mcfunc=function_path)
+
+        elif token_list[1]["token"].group() == "delay" :
+            function_path = token_list[3]["token"].group()
+            if function_path not in _game.minecraft_ident.functions : raise CompileError("不存在的函数：%s" % function_path, 
+                pos=(token_list[3]["token"].start(), token_list[3]["token"].end()))
+
+            if token_list[2]["token"].group() == "clear" : return functools.partial(cls.clear_delay_func, mcfunc=function_path)
+            elif token_list[2]["token"].group() == "add" :
+                time = token_list[4]["token"].group()
+                if time[-1] in "0123456789" : time = int(time)
+                elif time[-1] in "tT" : time = int(time[:-2])
+                elif time[-1] in "sS" : time = int(time[:-2]) * 20
+                elif time[-1] in "dD" : time = int(time[:-2]) * 24000
+
+                if time < 0 :  raise CompileError("延时时间应该为非负数" % function_path, 
+                    pos=(token_list[4]["token"].start(), token_list[4]["token"].end()))
+                if len(token_list) <= 5 : replace = False
+                else : replace = token_list[5]["token"].group() == "replace"
+                return functools.partial(cls.delay, delay_tick=time, mcfunc=function_path, replace=replace)
 
     def circle(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, from_pos:List[str], radius:int, mcfunc:str) :
         start_pos = [math.floor(i)//16*16 for i in MathFunction.mc_pos_compute(execute_var["pos"], from_pos, execute_var["rotate"])]
@@ -900,26 +961,26 @@ class schedule :
         force_load = [chunk_pos for chunk_pos in itertools.product(
             range(load_range[0], load_range[1], 16), range(load_range[2], load_range[3], 16))]
         
-        def async_func() :
+        def async_func(schedule_mode:str, func_name:str) :
             set1 = set(force_load) & game.minecraft_chunk.loading_chunk_pos[execute_var["dimension"]]
             if set1.__len__() != force_load.__len__() : return None
             a = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":game.game_version}
-            Command0.function.run(a, game, mcfunc)
+            Command0.function.run(a, game, func_name)
             return "end"
         from ... import GameLoop
-        GameLoop.modify_async_func("add", async_func)
+        GameLoop.modify_async_func("add", functools.partial(async_func, schedule_mode="on_area_loaded", func_name=mcfunc))
 
         return Response.Response_Template("已将$func函数放入队列中等待执行", 1, 1).substitute(func=mcfunc)
 
     def tickingarea(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, name:str, mcfunc:str) :
 
-        def async_func() :
-            if name not in game.minecraft_chunk.tickingarea : return None
+        def async_func(schedule_mode:str, tickarea_name:str, func_name:str) :
+            if tickarea_name not in game.minecraft_chunk.tickingarea : return None
             a = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":game.game_version}
-            Command0.function.run(a, game, mcfunc)
+            Command0.function.run(a, game, func_name)
             return "end"
         from ... import GameLoop
-        GameLoop.modify_async_func("add", async_func)
+        GameLoop.modify_async_func("add", functools.partial(async_func, schedule_mode="on_area_loaded", tickarea_name=name, func_name=mcfunc))
 
         return Response.Response_Template("已将$func函数放入队列中等待执行", 1, 1).substitute(func=mcfunc)
 
@@ -933,16 +994,74 @@ class schedule :
             return Response.Response_Template("区域内区块数量大于100个").substitute()
 
         force_load = [i for i in itertools.product(range(start_pos[0], end_pos[0]+1, 16), range(start_pos[2], end_pos[2]+1, 16))]
-        def async_func() :
+        def async_func(schedule_mode:str, func_name:str) :
             set1 = set(force_load) & game.minecraft_chunk.loading_chunk_pos[execute_var["dimension"]]
             if set1.__len__() != force_load.__len__() : return None
             a = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":game.game_version}
-            Command0.function.run(a, game, mcfunc)
+            Command0.function.run(a, game, func_name)
             return "end"
         from ... import GameLoop
-        GameLoop.modify_async_func("add", async_func)
+        GameLoop.modify_async_func("add", functools.partial(async_func, schedule_mode="on_area_loaded", func_name=mcfunc))
 
         return Response.Response_Template("已将$func函数放入队列中等待执行", 1, 1).substitute(func=mcfunc)
+
+    def delay(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, delay_tick:int, mcfunc:str, replace=False) :
+        def async_func(schedule_mode:str, current_tick:int, delay_tick:str, func_name:str) :
+            if current_tick + delay_tick >= game.minecraft_world.game_time: return None
+            a = {"executer":"server","execute_dimension":"overworld","execute_pos":[0,0,0],"execute_rotate":[0,0],"version":game.game_version}
+            Command0.function.run(a, game, func_name)
+            return "end"
+        from ... import GameLoop
+        if replace : schedule.clear_delay_func(execute_var, game, mcfunc)
+        GameLoop.modify_async_func("add", functools.partial(async_func, schedule_mode="delay", 
+            current_tick=game.minecraft_world.game_time, delay_tick=delay_tick, func_name=mcfunc))
+
+        return Response.Response_Template("已将$func函数放入队列中等待执行", 1, 1).substitute(func=mcfunc)
+
+    def clear_func(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, mcfunc:str) :
+        from ... import GameLoop
+        index_list:List[int] = []
+        for index, FuncObj in enumerate(GameLoop.ASYNC_FUNCTION) :
+            if not isinstance(FuncObj, functools.partial) : continue
+            if "schedule_mode" not in FuncObj.keywords : continue
+            if FuncObj.keywords.get("func_name", None) == mcfunc : index_list.append(index)
+        index_list.reverse()
+        for index in index_list : GameLoop.ASYNC_FUNCTION.pop(index)
+        return Response.Response_Template("删除了 $count 个队列函数", index_list, len(index_list)).substitute(count=len(index_list))
+
+    def clear_loadarea_func(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, mcfunc:str) :
+        from ... import GameLoop
+        index_list:List[int] = []
+        for index, FuncObj in enumerate(GameLoop.ASYNC_FUNCTION) :
+            if not isinstance(FuncObj, functools.partial) : continue
+            if FuncObj.keywords.get("schedule_mode", None) != "on_area_loaded" : continue
+            if FuncObj.keywords.get("func_name", None) == mcfunc : index_list.append(index)
+        index_list.reverse()
+        for index in index_list : GameLoop.ASYNC_FUNCTION.pop(index)
+        return Response.Response_Template("删除了 $count 个队列函数", index_list, len(index_list)).substitute(count=len(index_list))
+
+    def clear_loadarea_tickarea_func(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, tickingarea:str, mcfunc:str=None) :
+        from ... import GameLoop
+        index_list:List[int] = []
+        for index, FuncObj in enumerate(GameLoop.ASYNC_FUNCTION) :
+            if not isinstance(FuncObj, functools.partial) : continue
+            if FuncObj.keywords.get("schedule_mode", None) != "on_area_loaded" : continue
+            if FuncObj.keywords.get("tickarea_name", None) != tickingarea : continue
+            if mcfunc is None or FuncObj.keywords.get("func_name", None) == mcfunc : index_list.append(index)
+        index_list.reverse()
+        for index in index_list : GameLoop.ASYNC_FUNCTION.pop(index)
+        return Response.Response_Template("删除了 $count 个队列函数", index_list, len(index_list)).substitute(count=len(index_list))
+
+    def clear_delay_func(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, mcfunc:str) :
+        from ... import GameLoop
+        index_list:List[int] = []
+        for index, FuncObj in enumerate(GameLoop.ASYNC_FUNCTION) :
+            if not isinstance(FuncObj, functools.partial) : continue
+            if FuncObj.keywords.get("schedule_mode", None) != "delay" : continue
+            if FuncObj.keywords.get("func_name", None) == mcfunc : index_list.append(index)
+        index_list.reverse()
+        for index in index_list : GameLoop.ASYNC_FUNCTION.pop(index)
+        return Response.Response_Template("删除了 $count 个队列函数", index_list, len(index_list)).substitute(count=len(index_list))
 
 
 class scoreboard :

@@ -309,8 +309,8 @@ def entity_things(self:RunTime.minecraft_thread) :
 
         if hasattr(entity1,"ActiveEffects") :
             for effect1 in list(entity1.ActiveEffects) :
-                if entity1.ActiveEffects[effect1]["Duration"] < 1 : del entity1.ActiveEffects[effect1]
-                elif entity1.ActiveEffects[effect1]["Duration"] > 0 : entity1.ActiveEffects[effect1]["Duration"] -= 1
+                if entity1.ActiveEffects[effect1]["Duration"] > 0 : entity1.ActiveEffects[effect1]["Duration"] -= 1
+                elif entity1.ActiveEffects[effect1]["Duration"] == 0 : del entity1.ActiveEffects[effect1]
 
         entity1.__sit_update__(self.minecraft_chunk.player)
 
@@ -341,8 +341,9 @@ def terminal_running(self:RunTime.minecraft_thread) :
             if isinstance(a, Exception) : feedback_list.append((lines, a.args[0], a.pos[0] if hasattr(a,"pos") else 0))
             elif a is None : continue
             else : 
-                command_function.append( (command_text,a) )
                 if id(a.func) == id(TerminalCommand.set_version) : a(context, self)
+                elif id(a.func) == id(TerminalCommand.reload_doing) : a(context, self)
+                else : command_function.append( (command_text,a) )
         else :
             func_object = Command_Tokenizer_Compiler(self, command_text, self.game_version)
             if isinstance(func_object, tuple) : 
@@ -352,7 +353,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
 
     if len(feedback_list) == 0 :
         for command,function in command_function : 
-            try : feedback = function(context, self)
+            try : feedback = function(context, self) ; feedback.set_command
             except Exception as e : print(command, function) ; raise e
             else : feedback_list.append( feedback.set_command(command) )
 

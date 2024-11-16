@@ -353,7 +353,9 @@ def spawn_player(game:RunTime.minecraft_thread) :
 
 def new_version_change(game:RunTime.minecraft_thread) :
     for player1 in game.minecraft_chunk.player :
-        player1.Permission = {'camera':'enabled','movement':'enabled'}
+        player1.Permission = {'camera':'enabled','movement':'enabled',"dismount":'enabled',"jump":'enabled',
+            "lateral_movement":'enabled',"mount":'enabled',"move_backward":'enabled',"move_forward":'enabled',
+            "move_left":'enabled',"move_right":'enabled',"sneak":'enabled'}
         if not hasattr(player1 , "UnlockRecipe") : player1.UnlockRecipe = []
         player1.support_nbt += ['UnlockRecipe']
 
