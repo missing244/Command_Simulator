@@ -2,13 +2,17 @@ import re,os,itertools
 from . import HtmlGenerate,Command_Tokenizer_Compiler
 from .. import MathFunction,Constants,RunTime,FileOperation,np,BlockComponent
 import main_source.package.python_nbt as python_nbt
+import main_source.package.MCStructureManage.StructureBDX as python_bdx
 from typing import Dict,List,Tuple
 
 
 KEYWORD_COMMENTARY = re.compile("^[ ]{0,}#")
 KEYWORD_START = (
-    re.compile("^[ ]{0,}start"), re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), 
-    re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), re.compile("[ ]{0,}$")
+    re.compile("^[ ]{0,}start"), 
+    re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), 
+    re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), 
+    re.compile("[ ]{0,}[\\+-]{0,1}[0-9]{1,}"), 
+    re.compile("[ ]{0,}$")
 )
 INT_RE_TEST = re.compile("^[0-9]{1,}$")
 KEYWORD_EMPTY = re.compile("^[ ]{0,}empty")
@@ -210,10 +214,20 @@ class command_block_compile_system :
 
 
     def transfor_bdx_file(self, _game:RunTime.minecraft_thread) :
-        import main_source.package.python_bdx as python_bdx
-        a = python_bdx.BDX_File(os.path.join("functionality", "structure_output", _game.world_name+".bdx"),"wb")
+        node = python_nbt.NBT_Builder()
+        GameVersion = 19 if MathFunction.version_compare(_game.game_version,[1,19,50]) == -1 else 36
+
+        FilePath = os.path.join("functionality", "structure_output", _game.world_name+".bdx")
+        a = python_bdx.BDX_File()
         a.author = "Command_Simulator"
-        pos_start = [0,0,0] ; cb_type = {"minecraft:command_block":0,"minecraft:repeating_command_block":1,"minecraft:chain_command_block":2}
+        pos_start = [0,0,0]
+        CB_TYPE = {"minecraft:command_block":0, "minecraft:chain_command_block":1, "minecraft:repeating_command_block":2}
+        a.operation_list.append(python_bdx.OperationCode.CreateConstantString("minecraft:command_block"))
+        a.operation_list.append(python_bdx.OperationCode.CreateConstantString("minecraft:chain_command_block"))
+        a.operation_list.append(python_bdx.OperationCode.CreateConstantString("minecraft:repeating_command_block"))
+        for i,j in itertools.product(["false", "true"], [0,1,2,3,4,5]) :
+            a.operation_list.append(python_bdx.OperationCode.CreateConstantString(
+            '["conditional_bit":%s, "facing_direction":%s]' % (i,j)))
         for i in list(self.command_block_data) :
             posx = i[0] - pos_start[0] ; pos_start[0] = i[0]
             posy = i[1] - pos_start[1] ; pos_start[1] = i[1]
@@ -223,16 +237,23 @@ class command_block_compile_system :
             if posz != 0 : a.operation_list.append(python_bdx.OperationCode.AddInt8ZValue(posz))
             cb_data = self.command_block_data[i]
             a.operation_list.append(
-                python_bdx.OperationCode.PlaceCommandBlockWithCommandBlockData(
-                    data = cb_data["block_state"]["facing_direction"],
-                    mode = cb_type[cb_data["id"]],
-                    command = cb_data["command"],
-                    tickdelay = cb_data["delay"],
-                    conditional = cb_data["block_state"]["conditional_bit"],
-                    needsRedstone = not cb_data["auto"],
+                python_bdx.OperationCode.PlaceBlockWithNBTData(
+                    CB_TYPE[cb_data["id"]], 
+                    3 + cb_data["block_state"]["conditional_bit"]*6 + cb_data["block_state"]["facing_direction"],
+                    node.compound(
+                        id = node.string("CommandBlock"),
+                        Command = node.string(cb_data["command"]),
+                        CustomName = node.string(""),
+                        ExecuteOnFirstTick = node.byte(1),
+                        auto = node.byte(cb_data["auto"]),
+                        conditionalMode = node.byte(cb_data["block_state"]["conditional_bit"]),
+                        TickDelay = node.int(cb_data["delay"]),
+                        TrackOutput = node.int(1),
+                        Version = node.int(GameVersion),
+                    )
                 )
             )
-        a.close()
+        a.save_as(FilePath)
 
     def transfor_mcstructure_file(self, _game:RunTime.minecraft_thread) :
         
@@ -267,7 +288,7 @@ class command_block_compile_system :
             a["LPRedstoneMode"] = python_nbt.TAG_Byte()
             a["LastExecution"] = python_nbt.TAG_Long()
             a["LastOutput"] = python_nbt.TAG_String()
-            a["LastOutputParams"] = python_nbt.TAG_List(type=python_nbt.TAG_Int)
+            a["LastOutputParams"] = python_nbt.TAG_List(type=python_nbt.TAG_String)
             a["SuccessCount"] = python_nbt.TAG_Int()
             a["TickDelay"] = python_nbt.TAG_Int()
             a["TrackOutput"] = python_nbt.TAG_Byte(1)
@@ -306,7 +327,7 @@ class command_block_compile_system :
             mc_block['states'] = python_nbt.TAG_Compound()
             mcstructure_format['structure']['palette']['default']['block_palette'].append(mc_block)
 
-        for i in itertools.product(cb_type,cb_condition,cb_facing) :
+        for i in itertools.product(cb_type, cb_condition, cb_facing) :
             command_block = python_nbt.TAG_Compound()
             command_block['name'] = python_nbt.TAG_String(i[0])
             command_block['version'] = python_nbt.TAG_Int(
@@ -316,7 +337,8 @@ class command_block_compile_system :
             command_block['states']["facing_direction"] = python_nbt.TAG_Int(i[2])
             mcstructure_format['structure']['palette']['default']['block_palette'].append(command_block)
 
-        for i in enumerate( itertools.product(range(structure_size[0]),range(-64,-64+structure_size[1],1),range(structure_size[2]))) :
+        for i in enumerate( itertools.product( range(structure_size[0]),
+            range(-64,-64+structure_size[1],1), range(structure_size[2]) )) :
             aaa = (i[1][0] + 1600, i[1][1], i[1][2] + 1600)
             if aaa not in self.command_block_data : 
                 mcstructure_format['structure']['block_indices'][0].append(python_nbt.TAG_Int())
@@ -326,6 +348,8 @@ class command_block_compile_system :
             command_block_format["block_entity_data"]["Command"] = python_nbt.TAG_String(menory["command"])
             command_block_format["block_entity_data"]["TickDelay"] = python_nbt.TAG_Int(menory["delay"])
             command_block_format["block_entity_data"]["auto"] = python_nbt.TAG_Byte(menory["auto"])
+            command_block_format["block_entity_data"]["conditionalMode"] = python_nbt.TAG_Byte(
+                menory["block_state"]["conditional_bit"].__int__())
             command_block_format["block_entity_data"]["x"] = python_nbt.TAG_Int(i[1][0])
             command_block_format["block_entity_data"]["y"] = python_nbt.TAG_Int(i[1][1])
             command_block_format["block_entity_data"]["z"] = python_nbt.TAG_Int(i[1][2])
@@ -344,7 +368,7 @@ class command_block_compile_system :
 
         python_nbt.write_to_nbt_file(
             os.path.join("functionality","structure_output", _game.world_name + ".mcstructure"),
-            mcstructure_format, gzip=False, byteorder="little"
+            mcstructure_format, byteorder="little"
         )
 
 

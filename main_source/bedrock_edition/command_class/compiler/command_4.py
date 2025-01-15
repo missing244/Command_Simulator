@@ -97,6 +97,18 @@ class place :
             
             location = [token_list[i]["token"].group() for i in range(index, index+3, 1)]
             return functools.partial(cls.structure, pos=location)
+        elif token_list[index]["token"].group() == "feature" :
+            index += 2
+            if index >= len(token_list) : return functools.partial(cls.feature, pos=["~", "~", "~"])
+            
+            location = [token_list[i]["token"].group() for i in range(index, index+3, 1)]
+            return functools.partial(cls.feature, pos=location)
+        elif token_list[index]["token"].group() == "featurerule" :
+            index += 2
+            if index >= len(token_list) : return functools.partial(cls.featurerule, pos=["~", "~", "~"])
+            
+            location = [token_list[i]["token"].group() for i in range(index, index+3, 1)]
+            return functools.partial(cls.featurerule, pos=location)
 
     def jigsaw(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str]) :
         spawn_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
@@ -114,4 +126,18 @@ class place :
             x = spawn_pos[0], y = spawn_pos[1], z = spawn_pos[2]
         )
 
+    def feature(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str]) :
+        spawn_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        for i in range(3) : spawn_pos[i] = int(spawn_pos[i])
 
+        return Response.Response_Template("已在$x, $y, $z位置生成地物（仅模拟）", 1, 1).substitute(
+            x = spawn_pos[0], y = spawn_pos[1], z = spawn_pos[2]
+        )
+
+    def featurerule(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str]) :
+        spawn_pos = MathFunction.mc_pos_compute(execute_var["pos"], pos, execute_var["rotate"])
+        for i in range(3) : spawn_pos[i] = int(spawn_pos[i])
+
+        return Response.Response_Template("已在$x, $y, $z位置生成规则地物（仅模拟）", 1, 1).substitute(
+            x = spawn_pos[0], y = spawn_pos[1], z = spawn_pos[2]
+        )

@@ -996,8 +996,8 @@ class Choose_Expand(tkinter.Frame) :
             user_manager.save_data['cookies']["api_web_cookie"] = connent_API.request_headers["cookie"]
 
             json1 = json.loads(response1)
-            if 'stat_code' in json1 and json1['stat_code'] > 0 : tkinter.messagebox.showerror("Error",json1['msg']) ; return None
-            elif 'stat_code' not in json1 :tkinter.messagebox.showerror("Error","网络下送数据异常-1") ; return None
+            if 'state_code' in json1 and json1['state_code'] > 0 : tkinter.messagebox.showerror("Error",json1['msg']) ; return None
+            elif 'state_code' not in json1 :tkinter.messagebox.showerror("Error","网络下送数据异常-1") ; return None
             elif 'url' not in json1 : tkinter.messagebox.showerror("Error","网络下送数据异常-2") ; return None
 
             save_path = os.path.join("expand_pack", dir_name, "saves.zip")
@@ -1201,7 +1201,7 @@ class Login(tkinter.Frame) :
         self.account_input_1.pack()
         self.account_input_1.bind("<FocusIn>",lambda a : main_win.set_focus_input(a))
         tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1).pack()
-        tkinter.Label(self, text="请在下框输入通行码", fg='black', font=tk_tool.get_default_font(12), width=28, height=1).pack()
+        tkinter.Label(self, text="请在下框输入密码", fg='black', font=tk_tool.get_default_font(12), width=28, height=1).pack()
         self.account_input_2 = tkinter.Entry(self,font=tk_tool.get_default_font(10),width=26)
         self.account_input_2.pack()
         self.account_input_2.bind("<FocusIn>",lambda a : main_win.set_focus_input(a))
@@ -1212,9 +1212,9 @@ class Login(tkinter.Frame) :
         tkinter.Label(self, text="如果你没有账号\n请点击下方按钮注册", fg='black', font=tk_tool.get_default_font(12), width=28, height=2).pack()
         tkinter.Button(self,text='用户注册',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=17, height=1,
             command=lambda:webbrowser.open("https://commandsimulator.great-site.net/register.html")).pack()
-        tkinter.Label(self, text="如果你需要通行码\n请点击下方按钮申领", fg='black', font=tk_tool.get_default_font(12), width=28, height=2).pack()
-        tkinter.Button(self,text='申领注册码',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=17, height=1,
-            command=lambda:webbrowser.open("https://commandsimulator.great-site.net/forgot_pass.html")).pack()
+        tkinter.Label(self, text="如果你忘记密码\n请点击下方按钮申领", fg='black', font=tk_tool.get_default_font(12), width=28, height=2).pack()
+        tkinter.Button(self,text='重置密码',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=17, height=1,
+            command=lambda:webbrowser.open("https://commandsimulator.great-site.net/forgot.html")).pack()
         tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1).pack()
         tkinter.Button(self,text='返      回',font=tk_tool.get_default_font(12),bg='#d19275' ,width=17, height=1,
             command=lambda:self.main_win.set_display_frame('setting_frame')).pack()
@@ -1225,14 +1225,14 @@ class Login(tkinter.Frame) :
     def user_send_login(self) : 
 
         def start_login() :            
-            login_info_1 = {"account":self.account_input_1.get(), "pass_code":self.account_input_2.get()}
+            login_info_1 = {"account":self.account_input_1.get(), "password":self.account_input_2.get()}
             login_info_2 = base64.b64encode(json.dumps(login_info_1).encode("utf-8")).decode("utf-8")
 
             if connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL) is None :
                 msg_laber.config(text=msg_laber.cget("text") + "网络连接验证失败\n") ; return None 
 
-            response2 = connent_API.request_url_without_error(connent_API.MANUAL_LOGIN,{"userdata":login_info_2},user_manager.save_data['cookies']["api_web_cookie"])
-            result1 = user_manager.login_account(login_info_1['account'],login_info_1['pass_code'],response2.decode("utf-8") if response2 is not None else "")
+            response2 = connent_API.request_url_without_error(connent_API.MANUAL_LOGIN, {"userdata":login_info_2}, user_manager.save_data['cookies']["api_web_cookie"])
+            result1 = user_manager.login_account(login_info_1['account'],login_info_1['password'],response2.decode("utf-8") if response2 is not None else "")
             if result1 : 
                 user_manager.save_data['cookies']["api_web_cookie"] = connent_API.request_headers["cookie"]
                 msg_laber.config(text=msg_laber.cget("text") + "登录成功") ; return True
@@ -1241,7 +1241,7 @@ class Login(tkinter.Frame) :
         if re.search("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$",self.account_input_1.get()) is None :
             tkinter.messagebox.showerror("Error","用户邮箱格式不正确") ; return None
         if re.search("^[a-zA-Z0-9]+$",self.account_input_2.get()) is None  :
-            tkinter.messagebox.showerror("Error","用户通行码格式不正确") ; return None
+            tkinter.messagebox.showerror("Error","用户密码格式不正确") ; return None
 
         user_manager:app_function.user_manager = self.main_win.user_manager
         msg_box = tk_tool.tk_Msgbox(self.main_win.window, self.main_win.window)

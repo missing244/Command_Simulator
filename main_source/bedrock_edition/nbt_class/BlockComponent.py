@@ -23,7 +23,7 @@ class block_components :
         self.chain_command_block = {"LastTickActivated":False,"auto":False,"LastExecution":0,"Success":0,"Command":"","CustomName":"[!]","LastOutput":"","TickDelay":np.int32(0)}
         self.repeating_command_block = {"LastTickActivated":False,"auto":False,"LastExecution":0,"Success":0,"Command":"","CustomName":"[!]","LastOutput":"","TickDelay":np.int32(0)}
         self.dispenser = {"LootTable":None,"LootTableSeed":np.int32(0),"Items":[ None for i in range(9) ]}
-        self.droprer = {"LootTable":None,"LootTableSeed":np.int32(0),"Items":[ None for i in range(9) ]}
+        self.dropper = {"LootTable":None,"LootTableSeed":np.int32(0),"Items":[ None for i in range(9) ]}
         self.enchanting_table = {"rott":np.float32(0)}
         self.end_gateway = {"ExitPortal":[np.int32(1827),np.int32(79),np.int32(1872)]}
         self.flower_pot = {"PlantBlock":None}

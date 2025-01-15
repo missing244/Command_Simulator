@@ -87,7 +87,7 @@ Command_Loot = [
             BaseMatch.END_NODE
         )
     ),
-    BaseMatch.Char("Argument","mine").add_leaves(
+    BaseMatch.Char("Argument","mine").set_version(1, 21, 60, "min").add_leaves(
         *SpecialMatch.Pos_Tree(
             BaseMatch.Enum("Tool_Type","mainhand","offhand").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.AnyString("Tool_Type").add_leaves( BaseMatch.END_NODE ),
@@ -766,7 +766,19 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     )
                 )
             )
-        )
+        ),
+        BaseMatch.Char("PlaceType", "feature").add_leaves(
+            *SpecialMatch.String_Tree("Feature",
+                *SpecialMatch.Pos_Tree(BaseMatch.END_NODE),
+                BaseMatch.END_NODE
+            )
+        ),
+        BaseMatch.Char("PlaceType", "featurerule").add_leaves(
+            *SpecialMatch.String_Tree("FeatureRule",
+                *SpecialMatch.Pos_Tree(BaseMatch.END_NODE),
+                BaseMatch.END_NODE
+            )
+        ),
     ),
     # recipe ✓ V
     BaseMatch.Char("Command","recipe").set_version(1,20,30,"min").add_leaves(

@@ -16,7 +16,7 @@ class user_manager :
     save_data_template = {
         "cookies": {"api_web_cookie":""}, 
         "online_get": {}, 
-        "user": {"account":None, "pass_code":None, "data":None},
+        "user": {"account":None, "password":None, "data":None},
         "open_app_count": 0,
         "install_pack_list": {},
     }
@@ -36,7 +36,7 @@ class user_manager :
 
         if "user" not in self.save_data : self.save_data["user"] = {"account":None, "password":None, "data":None}
         if "account" not in self.save_data["user"] : self.save_data["user"]["account"] = None
-        if "pass_code" not in self.save_data["user"] : self.save_data["user"]["pass_code"] = None
+        if "password" not in self.save_data["user"] : self.save_data["user"]["password"] = None
         if "data" not in self.save_data["user"] : self.save_data["user"]["data"] = None
 
         self.save_timestemp = time.time() + 600
@@ -46,14 +46,14 @@ class user_manager :
 
     def get_account(self) : 
         json1:dict = self.save_data["user"]
-        if not(json1.get("account",None) and json1.get("pass_code",None)) : 
+        if not(json1.get("account",None) and json1.get("password",None)) : 
             self.login_out_account() ; return None
         return base64.b64encode(
-            json.dumps({"account":json1["account"], "pass_code":json1["pass_code"]}).encode("utf-8")
+            json.dumps({"account":json1["account"], "password":json1["password"]}).encode("utf-8")
         ).decode("utf-8")
 
     def login_out_account(self) :
-        self.save_data["user"] = {"account":None, "pass_code":None, "data":None}
+        self.save_data["user"] = {"account":None, "password":None, "data":None}
         self.write_back()
 
     def login_account(self, account:str, passcode:str, request_msg:str) :
@@ -64,10 +64,10 @@ class user_manager :
         try : msg_json = json.loads(account_log_msg)
         except : self.login_out_account() ; return None
 
-        if ('stat_code' not in msg_json) or msg_json['stat_code'] > 0 : self.login_out_account() ; return None
+        if ('state_code' not in msg_json) or msg_json['state_code'] > 0 : self.login_out_account() ; return None
         
         if account : self.save_data["user"]["account"] = account
-        if passcode : self.save_data["user"]["pass_code"] = passcode
+        if passcode : self.save_data["user"]["password"] = passcode
         self.save_data["user"]['data'] = msg_json["server_back"]
         self.write_back()
         return True
