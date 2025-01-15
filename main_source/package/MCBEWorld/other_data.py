@@ -1,6 +1,6 @@
-from . import read_from_nbt_file, write_to_nbt_file, leveldb, TAG_Compound
+from ..python_nbt import read_from_nbt_file, write_to_nbt_file, TAG_Compound
 from typing import Literal,List,Union,Dict,Tuple
-import io
+import leveldb, io
 
 
 class LocalPlayer :

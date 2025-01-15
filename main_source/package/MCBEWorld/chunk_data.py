@@ -1,6 +1,6 @@
-from . import read_from_nbt_file, write_to_nbt_file, leveldb, TAG_Compound
+from ..python_nbt import read_from_nbt_file, write_to_nbt_file, TAG_Compound
 from typing import Literal,List,Union,Dict
-import itertools, functools, io, traceback
+import itertools, functools, io, traceback, leveldb, math, array
 
 def generate_chunk_key(dimension:Literal["overworld", "nether", "the_end"], 
     chunk_pos_x:int, chunk_pos_z:int, operation_id:int=None) :
@@ -41,11 +41,11 @@ class Data3D :
     def from_leveldb(cls, leveldb:leveldb.LevelDB, dimension:Literal["overworld", "nether", "the_end"], 
         chunk_pos_x:int, chunk_pos_z:int) :
         key = generate_chunk_key(dimension, chunk_pos_x, chunk_pos_z, cls.operation_id)
-        try : value = leveldb.get(key)
+        try : value = io.BytesIO(leveldb.get(key))
         except : return None
 
-        heightmap = [int.from_bytes(value[i:i+2], "little") for i in range(0, 512, 2)]
-        Biomepalette = value[512:]
+        heightmap = list(array.array("H", value.read(512)))
+        Biomepalette = value.read()
         return cls(chunk_pos_x, chunk_pos_z, dimension, heightmap, Biomepalette)
 
     def to_leveldb(self, leveldb:leveldb.LevelDB) :
@@ -105,6 +105,9 @@ class Chunks :
 
     operation_id = 47
     
+    chunk_layer_key = {int.to_bytes(i, length=1, byteorder="little", 
+    signed=True):i for i in range(-128, 128) }
+    
     def __init__(self, x:int, z:int, dimension:Literal["overworld", "nether", "the_end"]) -> None:
         self.chunk_x = x
         self.chunk_z = z
@@ -118,35 +121,35 @@ class Chunks :
         key = generate_chunk_key(dimension, chunk_pos_x, chunk_pos_z, cls.operation_id)
         Object = cls(chunk_pos_x, chunk_pos_z, dimension)
 
-        func = functools.partial(int.to_bytes, length=1, byteorder="little", signed=True)
-        for i in itertools.starmap(func, [(i, ) for i in range(-128, 128)] ) : 
-            chunk_key = b"%s%s" % (key, i)
-            try : chunk_bytesIO = io.BytesIO( leveldb.get(chunk_key) )
-            except : continue
+        for layer_key, layer_int in Object.chunk_layer_key.items() : 
+            chunk_key = b"%s%s" % (key, layer_key)
+            if chunk_key not in leveldb : continue
+            
+            chunk_bytesIO = io.BytesIO( leveldb.get(chunk_key) )
+            header = chunk_bytesIO.read(3)  # 读取头字节
+            block_use_bit = chunk_bytesIO.read(1)[0] >> 1  # 字节使用的bit位数
+            block_count_save_in_4bytes = 32 // block_use_bit # 4个字节能存储多少索引
+            read_items = math.ceil(4096 / block_count_save_in_4bytes) # 一共需要多少个int型
 
-            header = chunk_bytesIO.read(3)
-            block_use_bit = int.from_bytes(chunk_bytesIO.read(1), byteorder="little", signed=False) >> 1
-            block_count_save_in_4bytes = 32 // block_use_bit
-            if 4096 % block_count_save_in_4bytes == 0 : read_times = 4096 // block_count_save_in_4bytes
-            else : read_times = (4096 // block_count_save_in_4bytes) + 1
-
+            # 获取用于截断的掩码
             number_of_and = 0xffffffff >> (32 - block_use_bit)
-            block_index = [] ; blocks = [] ; memory = []
+            data_array = array.array("I", chunk_bytesIO.read(read_items * 4))
+            block_index = [None] * 4150
+
             #解析方块索引
-            for j in range(read_times) :
-                int1 = int.from_bytes(chunk_bytesIO.read(4), "big")
-                for k in range(block_count_save_in_4bytes) :
-                    memory.append(int1 & number_of_and)
-                    int1 >>= block_use_bit
-                memory.reverse()
-                block_index.extend(memory)
-                memory.clear()
+            for data_count, data in zip(range(0, 4096, block_count_save_in_4bytes), data_array) :
+                for i in range(data_count, data_count+block_count_save_in_4bytes) :
+                    block_index[i] = data & number_of_and
+                    data >>= block_use_bit
+
             #解析方块
             block_count = int.from_bytes(chunk_bytesIO.read(4), "little")
-            for j in range(block_count) : blocks.append( read_from_nbt_file(chunk_bytesIO, byteorder="little") )
+            blocks = [None] * block_count
+            for j in range(block_count) : 
+                blocks[j] = read_from_nbt_file(chunk_bytesIO, byteorder="little").get_tag()
             
-            layer = int.from_bytes(i, "little", signed=True)
-            Object.chunk_data[layer] = {"header":header, "block_index":block_index[0:4096], "block":blocks}
+            Object.chunk_data[layer_int] = {"header":header, 
+                "block_index":block_index[0:4096], "block":blocks}
             chunk_bytesIO.close()
 
         return Object
