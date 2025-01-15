@@ -10,7 +10,7 @@ from tkinter import ttk
 from typing import List,Dict,Union,Literal
 ssl._create_default_https_context = ssl._create_unverified_context
 
-#删除旧文件
+#更新后需要更改的文件
 import main_source.main_window.update_change as update_change
 
 #自定义模块加载与设置
@@ -237,9 +237,9 @@ class control_windows :
         if self.user_manager.get_account_info() : 
             json1 = self.user_manager.get_account_info()
             self.display_frame["user_info"].user_info_1.config(text=self.user_manager.save_data["user"]['account'])
-            self.display_frame["user_info"].user_info_2.config(text=json1['creat_date'])
-            self.display_frame["user_info"].user_info_3.config(text=json1['pay_point'])
-            self.display_frame["user_info"].user_info_4.config(text=json1['challenge'])
+            self.display_frame["user_info"].user_info_2.config(text=json1['create_date'])
+            self.display_frame["user_info"].user_info_3.config(text=str(json1['pay_point']))
+            self.display_frame["user_info"].user_info_4.config(text=str(json1['challenge']))
             self.set_display_frame("user_info")
         else : self.set_display_frame("login_frame")
 
