@@ -257,12 +257,12 @@ class Structure :
         for i in leveldb.keys() :
             if i[0:18] != b'structuretemplate_' : continue
             str1 = i.decode("utf-8").split("_", 1)
-            Object.structures[str1[1]] = read_from_nbt_file(leveldb.get(i), byteorder="little")
+            Object.structures[str1[1]] = read_from_nbt_file(leveldb.get(i), byteorder="little").get_tag()
 
         return Object
 
     def to_leveldb(self, leveldb:leveldb.LevelDB) :
-        for name, value in self.structures :
+        for name, value in self.structures.items() :
             buffer = io.BytesIO(b"")
             write_to_nbt_file(buffer, value, byteorder="little")
             key = ("structuretemplate_%s" % name).encode("utf-8")

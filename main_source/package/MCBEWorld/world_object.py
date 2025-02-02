@@ -1,12 +1,39 @@
-from typing import Literal,Union
-import leveldb,os,io,array,itertools
+from typing import Literal,Union,List,Tuple
+import leveldb,os,io,array,itertools,weakref
 from ..python_nbt import read_from_nbt_file, write_to_nbt_file, TAG_Compound
-from ..file_operation import is_file, is_dir, delete_all_file, file_in_path
 from . import chunk_data as ChunkData
 from . import other_data as OtherData
 
 Encrypt_Header = b"\x80\x1d\x30\x01"
 DimensionType = Literal["overworld", "nether", "the_end"]
+
+
+def is_file(path:str) :
+    return os.path.exists(path) and os.path.isfile(path)
+
+def is_dir(path:str) :
+    return os.path.exists(path) and os.path.isdir(path)
+
+def search_file(path1:str,condition_func=None) -> List[Tuple[Literal["file","dir"],str,str]]:
+    """
+    condition_func(base_path_name, file_name) -> 1/0
+    """
+    search_result = []
+    search_file_list = list(os.walk(path1))
+    for base_path_name,_,file_name_list in search_file_list :
+        for file_name in file_name_list :
+            if condition_func and not condition_func(base_path_name,file_name) : continue
+            search_result.append( ("file", base_path_name, os.path.join(base_path_name,file_name)) )
+        if len(file_name_list) == 0 : search_result.append( ("dir", base_path_name ) )
+        return search_result
+
+def delete_all_file(path1:str):
+    file1 = search_file(path1)
+    for group1 in file1 :
+        if group1[0] == "file" : os.remove(group1[2])
+        try : os.removedirs(group1[1])
+        except : pass
+
 
 
 class MinecraftLevelDB(leveldb.LevelDB) :
@@ -95,6 +122,7 @@ class BedrockWorld :
     """
     基岩版存档对象
     -----------------------
+    * 数据库中提供了很多方法可修改世界数据
     * 请注意显式调用close方法保存和释放资源
     -----------------------
     * 可用属性 world_name : 世界名
@@ -121,6 +149,7 @@ class BedrockWorld :
         self.world_name = world_name
         self.world_data = world_data
         self.world_db = MinecraftLevelDB(self.world_path)
+        weakref.finalize(self, self.close)
 
     def __setattr__(self, name:str, value):
         if name == "world_path" and hasattr(self, name) :
@@ -128,9 +157,6 @@ class BedrockWorld :
         elif hasattr(self, name) and not isinstance( value, type(getattr(self, name)) ) : 
             raise RuntimeError("不允许修改%s修改为类型不同的值" % name)
         else : super().__setattr__(name, value)
-
-    def __del__(self) :
-        self.close()
 
 
     def close(self) :
@@ -152,6 +178,7 @@ class NeteaseWorld(BedrockWorld) :
     """
     网易版存档对象
     -----------------------
+    * 数据库中提供了很多方法可修改世界数据
     * 请注意显式调用close方法保存和释放资源
     -----------------------
     * 可用属性 world_name  : 世界名
@@ -219,11 +246,11 @@ class NeteaseWorld(BedrockWorld) :
 
 
 
-def GetWorldEdtion(path:str) -> Literal["Bedrock", "Netease", None] :
+def GetWorldEdtion(path:str) :
     """
     获取文件路径对应的存档类型
-    * 返回 "Bedrock" : 世界是基岩版世界
-    * 返回 "Netease" : 世界是网易版世界
+    * 返回 NeteaseWorld 类: 世界是基岩版世界
+    * 返回 BedrockWorld 类: 世界是网易版世界
     * 返回 None : 此存档并不是世界存档
     """
     if not is_file(os.path.join(path, "level.dat")) : return None
@@ -231,5 +258,5 @@ def GetWorldEdtion(path:str) -> Literal["Bedrock", "Netease", None] :
 
     with open(os.path.join(path, "db", "CURRENT"), "rb") as _file :
         byte1 = _file.read(4)
-        if byte1 == Encrypt_Header : return "Netease"
-        else : return "Bedrock"
+        if byte1 == Encrypt_Header : return NeteaseWorld
+        else : return BedrockWorld

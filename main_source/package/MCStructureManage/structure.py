@@ -1,19 +1,37 @@
 from . import nbt,TypeCheckList,Encoder,Decoder
-from io import BytesIO,RawIOBase
+from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
 import os, json, re, array, ctypes, itertools, functools
 from math import floor
 
 class BLOCK_TYPE(TypedDict): 
     name: str
-    states: Union[str, ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long]
+    states: Dict[str, Union[ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long]]
 
-SupportEncoder = Union[Encoder.BDX, Encoder.MCSTRUCTURE]
-SupportDecoder = Union[Decoder.BDX, Decoder.MCSTRUCTURE]
+SupportEncoder = Union[Encoder.BDX, Encoder.MCSTRUCTURE, Encoder.SCHEMATIC]
+SupportDecoder = Union[Decoder.BDX, Decoder.MCSTRUCTURE, Decoder.SCHEMATIC]
 
 
 
 class CommonStructure :
+    """
+    基岩版通用结构对象
+    -----------------------
+    * 所有结构文件将会转换为该结构对象（可能会损失信息）
+    * 方块按照 xyz 顺序进行储存（z坐标变化最频繁）
+    -----------------------
+    * 可用属性 size : 结构长宽高(x, y, z)
+    * 可用属性 origin : 结构保存时的位置
+    * 可用属性 block_index : 方块索引列表（数量与结构体积相同, -1代表跳过）
+    * 可用属性 water_log : 方块是否含水，不含水为-1，含水为1（数量与结构体积相同）
+    * 可用属性 block_palette : 方块对象列表
+    * 可用属性 entity_nbt : 实体对象列表
+    * 可用属性 block_nbt : 以方块索引字符串数字和nbt对象组成的字典
+    -----------------------
+    * 可用类方法 from_buffer : 指定解码器，并且通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as :指定编码器，并且通过路径 或 流式缓冲区 保存对象数据
+    """
+
 
     def __init__(self):
         self.size: array.array = array.array("i", [0,0,0])
@@ -38,13 +56,17 @@ class CommonStructure :
 
 
     @classmethod
-    def from_buffer(cls, Decoder:SupportDecoder, Reader:Union[str, bytes, RawIOBase]) :
+    def from_buffer(cls, Decoder:SupportDecoder, Reader:Union[str, bytes, IOBase]) :
         Common = cls()
         Decoder(Common).decode(Reader)
         return Common
 
-    def save_as(self, Encoder:SupportEncoder, Writer:Union[str, RawIOBase]) :
-        Encoder(self).decode(Writer)
+    def save_as(self, Encoder:SupportEncoder, Writer:Union[str, IOBase], IgnoreAir:bool=True) :
+        """
+        * 使用json格式输出时，Writer一定为字符串缓冲区或带有编码的文件缓冲区
+        * IgnoreAir参数，不在mcstructure和schematic文件中生效
+        """
+        Encoder(self, IgnoreAir).encode(Writer)
 
 
     @property

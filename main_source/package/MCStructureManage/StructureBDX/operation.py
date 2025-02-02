@@ -7,7 +7,7 @@ SubtractZValue, AddInt16XValue, AddInt32XValue, AddInt16YValue, \n
 AddInt32YValue, AddInt16ZValue, AddInt32ZValue, \n
 SetCommandBlockData, PlaceBlockWithCommandBlockData, \n
 AddInt8XValue, AddInt8YValue, AddInt8ZValue, UseRuntimeIDPool, \n
-PlaceRuntimeBlock, placeBlockWithRuntimeId, PlaceRuntimeBlockWithCommandBlockData, \n
+PlaceRuntimeBlock, PlaceBlockWithRuntimeId, PlaceRuntimeBlockWithCommandBlockData, \n
 PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID, \n
 PlaceCommandBlockWithCommandBlockData, PlaceRuntimeBlockWithChestData, \n
 PlaceRuntimeBlockWithChestDataAndUint32RuntimeID, \n
@@ -21,8 +21,14 @@ PlaceBlockWithNBTData 会涉及到nbt的修改\n
 
 import ctypes,io
 from .. import nbt
-from typing import Union,List,Dict,Literal
-ChestDataType = List[Dict[Literal["name", "count", "data", "slotID"], Union[str, int, int, int]]]
+from typing import TypedDict
+
+class ChestDataType(TypedDict): 
+    name: str
+    count: int
+    data: int
+    slotID: int
+
 
 
 class Int_Meta(type) :
@@ -56,8 +62,9 @@ def match_string_bytes(bytes_io:io.BytesIO) -> bytes:
     p = bytes_io.tell()
     b = bytes_io.getvalue()
     p2 = b.find(b'\0', p)
-    strbytes = bytes_io.read(p2-p+1)
-    return strbytes[:-1]
+    strbytes = bytes_io.read(p2-p)
+    bytes_io.seek(1, 1)
+    return strbytes
 
 def read_chest_data(SaveList:list,bytes_io:io.BytesIO) :
     name = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
@@ -220,12 +227,10 @@ class AddZValue0(OperationBase) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        return cls()
+        return memory_list[4]
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return self.operation_code.to_bytes(1,'big',signed=False)
 
 class NOP(OperationBase) :
     """
@@ -333,9 +338,7 @@ class AddXValue(OperationBase) :
         return memory_list[0]
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return b"\x0e"
 
 class SubtractXValue(OperationBase) :
     """
@@ -357,9 +360,7 @@ class SubtractXValue(OperationBase) :
         return memory_list[1]
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return b"\x0f"
 
 class AddYValue(OperationBase) :
     """
@@ -377,13 +378,11 @@ class AddYValue(OperationBase) :
         pass
 
     @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :
+    def from_bytes(cls, bytes_io:io.BytesIO) :
         return memory_list[2]
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return b"\x10"
 
 class SubtractYValue(OperationBase) :
     """
@@ -405,9 +404,7 @@ class SubtractYValue(OperationBase) :
         return memory_list[3]
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return b"\x11"
 
 class AddZValue(OperationBase) :
     """
@@ -429,9 +426,7 @@ class AddZValue(OperationBase) :
         return memory_list[4]
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return b"\x12"
 
 class SubtractZValue(OperationBase) :
     """
@@ -452,9 +447,7 @@ class SubtractZValue(OperationBase) :
     def from_bytes(cls,bytes_io:io.BytesIO) :        return memory_list[5]
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return b"\x13"
 
 
 class AddInt16XValue(OperationBase, metaclass=Int_Meta) :
@@ -942,7 +935,7 @@ class PlaceRuntimeBlock(OperationBase, metaclass=Int_Meta) :
             self.runtimeId.to_bytes(2,'big',signed=False)
         ])
 
-class placeBlockWithRuntimeId(OperationBase, metaclass=Int_Meta) :
+class PlaceBlockWithRuntimeId(OperationBase, metaclass=Int_Meta) :
     """
     使用特定的 运行时ID 放置方块\n
     ---------------------------------\n
@@ -1423,51 +1416,44 @@ class Terminate(OperationBase) :
 
 
 
-def reduce_memory() :
-    global memory_list
-    memory_list = [AddXValue(), SubtractXValue(), AddYValue(), SubtractYValue(), AddZValue(), SubtractZValue()]
-
-reduce_memory()
-
-
-
+memory_list = [AddXValue(), SubtractXValue(), AddYValue(), SubtractYValue(), AddZValue(), SubtractZValue()]
 
 OPERATION_BYTECODES = { 
-    0x01 : CreateConstantString,
-    0x05 : PlaceBlockWithBlockStates1,
-    0x06 : AddInt16ZValue0,
-    0x07 : PlaceBlock,
-    0x08 : AddZValue0,
-    0x09 : NOP,
-    0x0c : AddInt32ZValue0,
-    0x0d : PlaceBlockWithBlockStates2,
-    0x0e : AddXValue,
-    0x0f : SubtractXValue,
-    0x10 : AddYValue,
-    0x11 : SubtractYValue,
-    0x12 : AddZValue,
-    0x13 : SubtractZValue,
-    0x14 : AddInt16XValue,
-    0x15 : AddInt32XValue,
-    0x16 : AddInt16YValue,
-    0x17 : AddInt32YValue,
-    0x18 : AddInt16ZValue,
-    0x19 : AddInt32ZValue,
-    0x1a : SetCommandBlockData,
-    0x1b : PlaceBlockWithCommandBlockData,
-    0x1c : AddInt8XValue,
-    0x1d : AddInt8YValue,
-    0x1e : AddInt8ZValue,
-    0x1f : UseRuntimeIDPool,
-    0x20 : PlaceRuntimeBlock,
-    0x21 : placeBlockWithRuntimeId,
-    0x22 : PlaceRuntimeBlockWithCommandBlockData,
-    0x23 : PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID,
-    0x24 : PlaceCommandBlockWithCommandBlockData,
-    0x25 : PlaceRuntimeBlockWithChestData,
-    0x26 : PlaceRuntimeBlockWithChestDataAndUint32RuntimeID,
-    0x27 : AssignDebugData,
-    0x28 : PlaceBlockWithChestData,
-    0x29 : PlaceBlockWithNBTData,
-    0x58 : Terminate,
+    b"\x01" : CreateConstantString,
+    b"\x05" : PlaceBlockWithBlockStates1,
+    b"\x06" : AddInt16ZValue0,
+    b"\x07" : PlaceBlock,
+    b"\x08" : AddZValue0,
+    b"\x09" : NOP,
+    b"\x0c" : AddInt32ZValue0,
+    b"\x0d" : PlaceBlockWithBlockStates2,
+    b"\x0e" : AddXValue,
+    b"\x0f" : SubtractXValue,
+    b"\x10" : AddYValue,
+    b"\x11" : SubtractYValue,
+    b"\x12" : AddZValue,
+    b"\x13" : SubtractZValue,
+    b"\x14" : AddInt16XValue,
+    b"\x15" : AddInt32XValue,
+    b"\x16" : AddInt16YValue,
+    b"\x17" : AddInt32YValue,
+    b"\x18" : AddInt16ZValue,
+    b"\x19" : AddInt32ZValue,
+    b"\x1a" : SetCommandBlockData,
+    b"\x1b" : PlaceBlockWithCommandBlockData,
+    b"\x1c" : AddInt8XValue,
+    b"\x1d" : AddInt8YValue,
+    b"\x1e" : AddInt8ZValue,
+    b"\x1f" : UseRuntimeIDPool,
+    b"\x20" : PlaceRuntimeBlock,
+    b"\x21" : PlaceBlockWithRuntimeId,
+    b"\x22" : PlaceRuntimeBlockWithCommandBlockData,
+    b"\x23" : PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID,
+    b"\x24" : PlaceCommandBlockWithCommandBlockData,
+    b"\x25" : PlaceRuntimeBlockWithChestData,
+    b"\x26" : PlaceRuntimeBlockWithChestDataAndUint32RuntimeID,
+    b"\x27" : AssignDebugData,
+    b"\x28" : PlaceBlockWithChestData,
+    b"\x29" : PlaceBlockWithNBTData,
+    b"\x58" : Terminate,
 }

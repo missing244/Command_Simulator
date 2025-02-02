@@ -5,7 +5,7 @@ from io import FileIO, BytesIO
 
 class BLOCK_TYPE(TypedDict): 
     name: str
-    states: Union[str, ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long]
+    states: Dict[str, Union[ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long]]
 
 
 class Mcstructure :
@@ -21,7 +21,7 @@ class Mcstructure :
     * 可用属性 water_log : 方块是否含水，不含水为-1，含水为1（数量与结构体积相同）
     * 可用属性 block_palette : 方块对象列表
     * 可用属性 entity_nbt : 实体对象列表
-    * 可用属性 block_data : 以方块索引字符串数字和nbt对象组成的列表
+    * 可用属性 block_nbt : 以方块索引字符串数字和nbt对象组成的字典
     -----------------------
     * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
     * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据

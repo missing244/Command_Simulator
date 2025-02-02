@@ -12,7 +12,7 @@ Operation = Union[OperationCode.CreateConstantString,OperationCode.PlaceBlockWit
     OperationCode.SubtractZValue,OperationCode.AddInt16XValue,OperationCode.AddInt32XValue,OperationCode.AddInt16YValue,
     OperationCode.AddInt32YValue,OperationCode.AddInt16ZValue,OperationCode.AddInt32ZValue,OperationCode.SetCommandBlockData,
     OperationCode.PlaceBlockWithCommandBlockData,OperationCode.AddInt8XValue,OperationCode.AddInt8YValue,OperationCode.AddInt8ZValue,
-    OperationCode.UseRuntimeIDPool,OperationCode.PlaceRuntimeBlock,OperationCode.placeBlockWithRuntimeId,
+    OperationCode.UseRuntimeIDPool,OperationCode.PlaceRuntimeBlock,OperationCode.PlaceBlockWithRuntimeId,
     OperationCode.PlaceRuntimeBlockWithCommandBlockData,OperationCode.PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID,
     OperationCode.PlaceCommandBlockWithCommandBlockData,OperationCode.PlaceRuntimeBlockWithChestData,
     OperationCode.PlaceRuntimeBlockWithChestDataAndUint32RuntimeID,OperationCode.AssignDebugData,OperationCode.PlaceBlockWithChestData,
@@ -101,7 +101,6 @@ class BDX_File :
             while 1 : 
                 a = bdx_code.read(1)
                 if not a or a == b"\x58" : break
-                a = int.from_bytes(a, "big", signed=False)
                 SuperAppend(OPERATION_BYTECODES[a].from_bytes(bdx_code))
         except Exception as e :
             #print(len(bdx_code.getvalue()),bdx_code.tell(),bdx_code.getvalue()[bdx_code.tell()-1:])

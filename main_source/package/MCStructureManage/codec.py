@@ -1,6 +1,9 @@
-from . import nbt,TypeCheckList,StructureBDX,StructureMCS
+from . import nbt, TypeCheckList
+from . import StructureBDX, StructureMCS
+from . import StructureRUNAWAY, StructureSCHEMATIC
+
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
-import abc, re, os, io, json, array, itertools
+import abc, re, os, io, json, array, itertools, urllib.parse
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 BlockDataToState = json.load(fp=open(os.path.join(CurrentPath, "blockstate.json"), "r", encoding="utf-8"))
 CommandBlockIDTest = re.compile("command_block$")
@@ -15,7 +18,8 @@ KeyMatch   = re.compile('"(\\\\.|[^\\\\"]){0,}"')
 EqualMatch = re.compile('=|:')
 ValueMatch = re.compile('"(\\\\.|[^\\\\"]){0,}"|true|false|[0-9]+')
 NextMatch  = re.compile(',')
-def StringTransforBlockStates(s:str) :
+def StringTransforBlockStates(id:str, s:str) :
+    BLOCK_ID = TransforNamespaceID(id)
     index = SpaceMatch.match(s).end()
     if s[index] != "[" : return {}
     else : index += 1
@@ -42,8 +46,11 @@ def StringTransforBlockStates(s:str) :
         index = SpaceMatch.match(s, pos=index).end()
         if s[index] == "," : index += 1
         else : break
-    
-    return dict( sorted(StateSave.items()) )
+
+    DictCopy:dict = BlockDataToState[BLOCK_ID]["default"].copy()
+    DictKey = set(DictCopy) - set(StateSave)
+    for key in DictKey : DictCopy[key] = StateSave[key]
+    return dict( sorted(DictCopy.items()) )
 
 def DatavalueTransforBlockStates(id:str, v:int) :
     BLOCK_ID = TransforNamespaceID(id)
@@ -52,6 +59,15 @@ def DatavalueTransforBlockStates(id:str, v:int) :
     STATES:dict = BlockDataToState[BLOCK_ID].get(bin(v), None)
     if STATES is None : STATES = BlockDataToState[BLOCK_ID]["default"]
     return dict( sorted(STATES.items()) )
+
+def BlockStatesTransforDatavalue(id:str, states:dict) :
+    if id not in BlockDataToState : Data = 0
+    else :
+        Cache1 = BlockDataToState[id].copy()
+        del Cache1['default'] ; del Cache1['support_value']
+        DataList = [key for key, Value in Cache1.items() if Value == states]
+        Data = int(DataList[0], 2) if DataList else 0
+    return Data
 
 def GetRuntimeID(runtime:int) -> Tuple[str, int] :
     return StructureBDX.RunTimeID_117[runtime]
@@ -62,11 +78,25 @@ BlockNBT_ID = {"minecraft:chest": "Chest", "minecraft:trapped_chest": "Chest",
 "minecraft:barrel": "Barrel", "minecraft:dispenser": "Dispenser", "minecraft:dropper": "Dropper", 
 "minecraft:furnace": "Furnace", "minecraft:lit_furnace": "Furnace", "minecraft:smoker": "Smoker", 
 "minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace"}
+CommandBlockGangBan = {"minecraft:repeating_command_block":"Repeating", 
+"minecraft:chain_command_block":"Chain", "minecraft:command_block":"Tick"}
 
 
 class Decoder :
+    """
+    解码器类
+    ---------------------------------
+    * 通过 Decoder.XXXX 调用指定的解码器
+    ---------------------------------
+    * 可用类 BDX: 解析bdx文件的解码器
+    * 可用类 MCSTRUCTURE: 解析mcstructure文件的解码器
+    * 可用类 SCHEMATIC: 解析schematic文件的解码器
+    * 可用类 MIANYANG: 解析绵阳结构文件的解码器
+    * 可用类 GangBan: 解析钢板结构文件的解码器
+    * 可用类 RunAway: 解析跑路官方结构文件的解码器
+    """
 
-    class DecodeBase(abc.ABCMeta) :
+    class DecodeBase(abc.ABC) :
 
         def __init__(self, Common):
             from . import CommonStructure
@@ -84,6 +114,7 @@ class Decoder :
             PosStart, PosEnd = BDX.get_volume()
 
             StructureObject = self.Common
+            StructureObject.origin = array.array("i", [i for i in PosStart])
             StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
             StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
 
@@ -99,12 +130,12 @@ class Decoder :
             Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] ={}
 
             def RegisterBlock(BlockDict:dict, id:str, data_or_state:Union[str, int, dict]) -> int :
-                if isinstance(data_or_state, str) : BlockStates = StringTransforBlockStates(data_or_state)
+                if isinstance(data_or_state, str) : BlockStates = StringTransforBlockStates(id, data_or_state)
                 elif isinstance(data_or_state, int) : BlockStates = DatavalueTransforBlockStates(id, data_or_state)
                 else : BlockStates = data_or_state
                 Hash = hash(id) + hash( json.dumps(data_or_state) )
-                if Hash not in BlockDict : BlockDict[Hash] = {"name": TransforNamespaceID(id), 
-                    "states": BlockStates, "index": len(BlockDict)+1 }
+                if Hash not in BlockDict : BlockDict[Hash] = {
+                    "name": TransforNamespaceID(id), "states": BlockStates, "index": len(BlockDict)+1 }
                 return Hash
 
             def Operation_0x05(Oper: StructureBDX.OperationCode.PlaceBlockWithBlockStates1) -> int :
@@ -133,17 +164,15 @@ class Decoder :
 
                 node = nbt.NBT_Builder()
                 CommandBlockNbt = node.compound(
-                    block_entity_data = node.compound(
                         id = node.string("CommandBlock"),
                         Command = node.string(Oper.command),
                         CustomName = node.string(Oper.customName),
                         ExecuteOnFirstTick = node.byte(int(Oper.executeOnFirstTick)),
                         auto = node.byte(int(not Oper.needsRedstone)),
-                        conditionalMode = node.byte(0),
                         TickDelay = node.int(Oper.tickdelay),
+                        conditionalMode = node.byte(Oper.conditional),
                         TrackOutput = node.int(1),
                         Version = node.int(19),
-                    )
                 ).build()
                 StructureObject.block_nbt[PosIndex] = CommandBlockNbt
 
@@ -158,17 +187,15 @@ class Decoder :
 
                 node = nbt.NBT_Builder()
                 CommandBlockNbt = node.compound(
-                    block_entity_data = node.compound(
                         id = node.string("CommandBlock"),
                         Command = node.string(Oper.command),
                         CustomName = node.string(Oper.customName),
                         ExecuteOnFirstTick = node.byte(int(Oper.executeOnFirstTick)),
                         auto = node.byte(int(not Oper.needsRedstone)),
-                        conditionalMode = node.byte(0),
                         TickDelay = node.int(Oper.tickdelay),
+                        conditionalMode = node.byte(Oper.conditional),
                         TrackOutput = node.int(1),
                         Version = node.int(19),
-                    )
                 ).build()
                 StructureObject.block_nbt[PosIndex] = CommandBlockNbt
 
@@ -188,17 +215,15 @@ class Decoder :
 
                 node = nbt.NBT_Builder()
                 CommandBlockNbt = node.compound(
-                    block_entity_data = node.compound(
                         id = node.string("CommandBlock"),
                         Command = node.string(Oper.command),
                         CustomName = node.string(Oper.customName),
                         ExecuteOnFirstTick = node.byte(int(Oper.executeOnFirstTick)),
                         auto = node.byte(int(not Oper.needsRedstone)),
-                        conditionalMode = node.byte(0),
                         TickDelay = node.int(Oper.tickdelay),
+                        conditionalMode = node.byte(Oper.conditional),
                         TrackOutput = node.int(1),
                         Version = node.int(19),
-                    )
                 ).build()
                 StructureObject.block_nbt[PosIndex] = CommandBlockNbt
 
@@ -211,17 +236,15 @@ class Decoder :
 
                 node = nbt.NBT_Builder()
                 CommandBlockNbt = node.compound(
-                    block_entity_data = node.compound(
-                        id = node.string("CommandBlock"),
-                        Command = node.string(Oper.command),
-                        CustomName = node.string(Oper.customName),
-                        ExecuteOnFirstTick = node.byte(int(Oper.executeOnFirstTick)),
-                        auto = node.byte(int(not Oper.needsRedstone)),
-                        conditionalMode = node.byte(0),
-                        TickDelay = node.int(Oper.tickdelay),
-                        TrackOutput = node.int(1),
-                        Version = node.int(19),
-                    )
+                    id = node.string("CommandBlock"),
+                    Command = node.string(Oper.command),
+                    CustomName = node.string(Oper.customName),
+                    ExecuteOnFirstTick = node.byte(int(Oper.executeOnFirstTick)),
+                    auto = node.byte(int(not Oper.needsRedstone)),
+                    conditionalMode = node.byte(Oper.conditional),
+                    TickDelay = node.int(Oper.tickdelay),
+                    TrackOutput = node.int(1),
+                    Version = node.int(19),
                 ).build()
                 StructureObject.block_nbt[PosIndex] = CommandBlockNbt
 
@@ -234,7 +257,6 @@ class Decoder :
                 if Blocks[Hash]["name"] not in BlockNBT_ID : return Blocks[Hash]["index"]
                 node = nbt.NBT_Builder()
                 ContainerNbt = node.compound(
-                    block_entity_data = node.compound(
                         id = node.string(BlockNBT_ID[Blocks[Hash]["name"]]),
                         Items = node.list(*[
                             node.compound(
@@ -245,7 +267,6 @@ class Decoder :
                                 tag = node.compound()
                             ) for Item in Oper.ChestData
                         ])
-                    )
                 ).build()
                 StructureObject.block_nbt[PosIndex] = ContainerNbt
 
@@ -259,18 +280,16 @@ class Decoder :
                 if Blocks[Hash]["name"] not in BlockNBT_ID : return Blocks[Hash]["index"]
                 node = nbt.NBT_Builder()
                 ContainerNbt = node.compound(
-                    block_entity_data = node.compound(
-                        id = node.string(BlockNBT_ID[Blocks[Hash]["name"]]),
-                        Items = node.list(*[
-                            node.compound(
-                                Count = node.byte(Item["count"]),
-                                Damage = node.short(Item["data"]),
-                                Name = node.string(Item["name"]),
-                                Slot = node.byte(Item["slotID"]),
-                                tag = node.compound()
-                            ) for Item in Oper.ChestData
-                        ])
-                    )
+                    id = node.string(BlockNBT_ID[Blocks[Hash]["name"]]),
+                    Items = node.list(*[
+                        node.compound(
+                            Count = node.byte(Item["count"]),
+                            Damage = node.short(Item["data"]),
+                            Name = node.string(Item["name"]),
+                            Slot = node.byte(Item["slotID"]),
+                            tag = node.compound()
+                        ) for Item in Oper.ChestData
+                    ])
                 ).build()
                 StructureObject.block_nbt[PosIndex] = ContainerNbt
 
@@ -281,9 +300,7 @@ class Decoder :
                     ConstStr[Oper.blockConstantStringID], 
                     ConstStr[Oper.blockStatesConstantStringID])
 
-                a = nbt.TAG_Compound()
-                a["block_entity_data"] = Oper.nbt
-                StructureObject.block_nbt[PosIndex] = a
+                StructureObject.block_nbt[PosIndex] = Oper.nbt
 
                 return Blocks[Hash]["index"]
 
@@ -324,14 +341,207 @@ class Decoder :
             StructureObject.entity_nbt = MCS.entity_nbt
             StructureObject.block_nbt = MCS.block_nbt
 
+            for key, value in StructureObject.block_nbt.items() :
+                StructureObject.block_nbt[key] = value["block_entity_data"]
+
+    class SCHEMATIC(DecodeBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.RawIOBase]):
+            SCHMATIC = StructureSCHEMATIC.Schematic.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.size = SCHMATIC.size
+            StructureObject.origin = SCHMATIC.origin
+            StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * len(SCHMATIC.block_index))
+            StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * len(SCHMATIC.block_index))
+            
+            Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] ={}
+            def RegisterBlock(id_index:int, data_or_state:int) -> int :
+                Hash = (id_index << 16) + data_or_state
+                if Hash not in Blocks : 
+                    id = StructureSCHEMATIC.RuntimeID_to_Block[id_index]
+                    BlockStates = DatavalueTransforBlockStates(id, data_or_state)
+                    Blocks[Hash] = {"name": id, "states": BlockStates, "index": len(Blocks) }
+                return Hash
+
+            StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
+            PosIter = itertools.product(range(SCHMATIC.size[1]), range(SCHMATIC.size[2]), range(SCHMATIC.size[0]))
+            for (posy, posz, posx), id_index, data in zip(PosIter, SCHMATIC.block_index, SCHMATIC.block_data) :
+                blockHash = RegisterBlock(id_index, data)
+                Index = posx * StructY * StructZ + posy * StructZ + posz
+                StructureObject.block_index[Index] = Blocks[blockHash]["index"]
+
+            MaxIndex = max(block["index"] for block in Blocks.values())
+            super(TypeCheckList, StructureObject.block_palette).extend(None for i in range(MaxIndex+1))
+            for value in Blocks.values() : 
+                StructureObject.block_palette[value["index"]] = value
+                del value["index"]
+
+    class MIANYANG(DecodeBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.MianYang.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.origin = array.array("i", [i for i in PosStart])
+            StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
+            StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
+
+            Volume = StructureObject.size[0] * StructureObject.size[1] * StructureObject.size[2]
+            StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
+            StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
+
+            StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
+            Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
+            def RegisterBlock(id_index:int, data_or_state:int) -> int :
+                Hash = (id_index << 16) + data_or_state
+                if Hash not in Blocks : 
+                    id = TransforNamespaceID(Struct1.block_palette[id_index])
+                    BlockStates = DatavalueTransforBlockStates(id, data_or_state)
+                    Blocks[Hash] = {"name": id, "states": BlockStates, "index": len(Blocks)+1 }
+                return Hash
+
+            for chunk in Struct1.chunks :
+                o_x, o_z = chunk["startX"]-PosStart[0], chunk["startZ"]-PosStart[2]
+                for block in chunk["blocks"] :
+                    BlockHash = RegisterBlock(block[0], block[1])
+                    block_index = Blocks[BlockHash]["index"]
+                    posx, posy, posz = o_x + block[2], block[3] - PosStart[1], o_z + block[4]
+                    Index = posx * StructY * StructZ + posy * StructZ + posz
+                    StructureObject.block_index[Index] = block_index
+
+                    if block[-1].__class__ != str : continue
+                    try : BlockJsonData = json.loads(block[-1])
+                    except : continue
+                    nbtstr = urllib.parse.unquote(BlockJsonData['blockCompleteNBT'])
+
+                    try : 
+                        NBT = nbt.read_from_snbt_file(io.StringIO(nbtstr)).get_tag()
+                        NBT["id"] = nbt.TAG_String("CommandBlock")
+                        NBT["conditionalMode"] = nbt.TAG_Byte(Blocks[BlockHash]["states"]["conditional_bit"])
+                        StructureObject.block_nbt[Index] = NBT
+                    except : pass
+
+            MaxIndex = max(block["index"] for block in Blocks.values())
+            super(TypeCheckList, StructureObject.block_palette).extend(None for i in range(MaxIndex))
+            for value in Blocks.values() : 
+                StructureObject.block_palette[value["index"]] = value
+                del value["index"]
+
+    class GangBan(DecodeBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.GangBan.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.origin = array.array("i", [i for i in Struct1.origin])
+            StructureObject.size = array.array("i", [i for i in Struct1.size])
+            StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
+
+            Volume = StructureObject.size[0] * StructureObject.size[1] * StructureObject.size[2]
+            StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
+            StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
+
+            O_X, O_Y, O_Z = StructureObject.origin[0], StructureObject.origin[1], StructureObject.origin[2]
+            StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
+            Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
+            def RegisterBlock(id_index:int, data_or_state:int) -> int :
+                Hash = (id_index << 16) + data_or_state
+                if Hash not in Blocks : 
+                    id = TransforNamespaceID(Struct1.block_palette[id_index])
+                    BlockStates = DatavalueTransforBlockStates(id, data_or_state)
+                    Blocks[Hash] = {"name": id, "states": BlockStates, "index": len(Blocks)+1 }
+                return Hash
+
+            for block in Struct1.blocks :
+                BlockHash = RegisterBlock(block["id"], block.get("aux", 0))
+                block_index = Blocks[BlockHash]["index"]
+                posx, posy, posz = block["p"][0] - O_X, block["p"][1] - O_Y, block["p"][2] - O_Z
+                Index = posx * StructY * StructZ + posy * StructZ + posz
+                StructureObject.block_index[Index] = block_index
+
+                if "cmds" not in block : continue
+                node = nbt.NBT_Builder()
+                BlockData = node.compound(
+                    id = node.string("CommandBlock"),
+                    Command = node.string(block["cmds"]["cmd"]),
+                    CustomName = node.string(block["cmds"]["name"]),
+                    ExecuteOnFirstTick = node.byte(1),
+                    auto = node.byte(block["cmds"]["on"]),
+                    TickDelay = node.int(block["cmds"]["tick"]),
+                    TrackOutput = node.int(block["cmds"]["should"]),
+                    conditionalMode = node.byte(Blocks[BlockHash]["states"]["conditional_bit"]),
+                    Version = node.int(19),
+                ).build()
+                StructureObject.block_nbt[Index] = BlockData
+
+            MaxIndex = max(block["index"] for block in Blocks.values())
+            super(TypeCheckList, StructureObject.block_palette).extend(None for i in range(MaxIndex))
+            for value in Blocks.values() : 
+                StructureObject.block_palette[value["index"]] = value
+                del value["index"]
+
+    class RunAway(DecodeBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.RunAway.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.origin = array.array("i", [i for i in PosStart])
+            StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
+            StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
+
+            Volume = StructureObject.size[0] * StructureObject.size[1] * StructureObject.size[2]
+            StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
+            StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
+
+            O_X, O_Y, O_Z = StructureObject.origin[0], StructureObject.origin[1], StructureObject.origin[2]
+            StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
+            Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
+            def RegisterBlock(id:str, data_or_state:int) -> int :
+                Hash = f"{id}:{data_or_state}"
+                if Hash not in Blocks : 
+                    id = TransforNamespaceID(id)
+                    BlockStates = DatavalueTransforBlockStates(id, data_or_state)
+                    Blocks[Hash] = {"name": id, "states": BlockStates, "index": len(Blocks)+1 }
+                return Hash
+
+            for block in Struct1.blocks :
+                BlockHash = RegisterBlock(block["name"], block.get("aux", 0))
+                block_index = Blocks[BlockHash]["index"]
+                posx, posy, posz = block["x"] - O_X, block["y"] - O_Y, block["z"] - O_Z
+                Index = posx * StructY * StructZ + posy * StructZ + posz
+                StructureObject.block_index[Index] = block_index
+
+            MaxIndex = max(block["index"] for block in Blocks.values())
+            super(TypeCheckList, StructureObject.block_palette).extend(None for i in range(MaxIndex))
+            for value in Blocks.values() : 
+                StructureObject.block_palette[value["index"]] = value
+                del value["index"]
+
 
 class Encoder :
+    """
+    编码器类
+    ---------------------------------
+    * 通过 Encoder.XXXX 调用指定的解码器
+    ---------------------------------
+    * 可用类 BDX: 生成bdx文件的编码器
+    * 可用类 MCSTRUCTURE: 生成mcstructure文件的编码器
+    * 可用类 SCHEMATIC: 生成schematic文件的编码器
+    * 可用类 MIANYANG: 生成绵阳结构文件的编码器
+    * 可用类 GangBan: 生成钢板结构文件的编码器
+    * 可用类 RunAway: 生成跑路官方结构文件的编码器
+    """
 
-    class EncodeBase(abc.ABCMeta) :
+    class EncodeBase(abc.ABC) :
 
-        def __init__(self, Common):
+        def __init__(self, Common, IgnoreAir:bool=True):
             from . import CommonStructure
             self.Common:CommonStructure = Common
+            self.IgnoreAir:bool = IgnoreAir
 
         def encode(self, Writer:Union[str, io.RawIOBase]) :
             raise NotImplementedError()
@@ -339,7 +549,7 @@ class Encoder :
     class BDX(EncodeBase) :
 
         def encode(self, Writer:Union[str, io.RawIOBase]):
-            self = self.Common
+            IgnoreAir, self = self.IgnoreAir, self.Common
             BDX = StructureBDX.BDX_File()
             CreateConstantString = StructureBDX.OperationCode.CreateConstantString
             PlaceBlockWithNBTData = StructureBDX.OperationCode.PlaceBlockWithNBTData
@@ -374,11 +584,12 @@ class Encoder :
                     pos_sub = pos_z - s_posz
                     append_function(AddZValue() if pos_sub == 1 else AddInt32ZValue(pos_sub))
                     s_posz = pos_z
-
+                
+                if IgnoreAir and self.block_palette[block_index]["name"] == "minecraft:air" : continue
                 if index in self.block_nbt : append_function(PlaceBlockWithNBTData(
                     blockConstantStringID = 2*block_index,
                     blockStatesConstantStringID = 2*block_index+1,
-                    nbt = self.block_nbt[index]["block_entity_data"] ))
+                    nbt = self.block_nbt[index] ))
                 else : append_function(PlaceBlockWithBlockStates(
                     blockConstantStringID = 2*block_index,
                     blockStatesConstantStringID = 2*block_index+1))
@@ -397,9 +608,149 @@ class Encoder :
             MCS.water_log = self.water_log
             MCS.block_palette = self.block_palette
             MCS.entity_nbt = self.entity_nbt
-            MCS.block_nbt = self.block_nbt
+            MCS.block_nbt = self.block_nbt.copy()
 
+            for key, value in MCS.block_nbt.items() :
+                a = nbt.TAG_Compound({"block_entity_data":value})
+                MCS.block_nbt[key] = a
             MCS.save_as(Writer)
 
+    class SCHEMATIC(EncodeBase) :
 
+        def encode(self, Writer:Union[str, io.RawIOBase]):
+            self = self.Common
+            SCHMATIC = StructureSCHEMATIC.Schematic()
+            for i in range(3) : 
+                SCHMATIC.size[i] = self.size[i]
+                SCHMATIC.origin[i] = self.origin[i]
+
+            StructX, StructY, StructZ = self.size[0], self.size[1], self.size[2]
+            SCHMATIC.block_index = array.array("B", b"\x00" * len(self.block_index))
+            SCHMATIC.block_data = array.array("B", b"\x00" * len(self.block_index))
+
+            RuntimeIDCache:Dict[int, Tuple[int, int]] = {}
+            PosIter = itertools.product(range(self.size[0]), range(self.size[1]), range(self.size[2]))
+            for (posx, posy, posz), id_index in zip(PosIter, self.block_index) :
+                BlockID = self.block_palette[id_index]["name"]
+                if BlockID not in StructureSCHEMATIC.Block_to_RuntimeID : continue
+
+                BlockState = self.block_palette[id_index]["states"]
+                if id_index not in RuntimeIDCache :
+                    NumberID = StructureSCHEMATIC.Block_to_RuntimeID[BlockID]
+                    Data = BlockStatesTransforDatavalue(BlockID, BlockState)
+                    RuntimeIDCache[id_index] = (NumberID, Data)
+
+                Index = posy * StructZ * StructX + posz * StructX + posx
+                SCHMATIC.block_index[Index] = RuntimeIDCache[id_index][0]
+                SCHMATIC.block_data[Index] = RuntimeIDCache[id_index][1]
+
+            SCHMATIC.save_as(Writer)
+
+    class MIANYANG(EncodeBase) :
+
+        def encode(self, Writer:Union[str, io.TextIOBase]):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.MianYang()
+            
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = enumerate( zip(self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) )) )
+            
+            Chunks:Dict[Tuple[int,int], dict] = {}
+            for index, (id_index, (posx, posy, posz)) in Generator :
+                BlockID = self.block_palette[id_index]["name"]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+                BlockState = self.block_palette[id_index]["states"]
+                Data = BlockStatesTransforDatavalue(BlockID, BlockState)
+
+                realX, realY, realZ = o_x + posx, o_y + posy, o_z + posz
+                chunk_pos = (realX//16*16, realZ//16*16)
+                if chunk_pos not in Chunks : Chunks[chunk_pos] = {
+                    "startX":chunk_pos[0], "startZ":chunk_pos[1], "blocks":[]}
+                
+                chunk_block = [id_index, Data, realX-chunk_pos[0], realY, realZ-chunk_pos[1]]
+                Chunks[chunk_pos]["blocks"].append(chunk_block)
+
+                if index not in self.block_nbt : continue
+                if not CommandBlockIDTest.search(BlockID) : continue
+
+                node = nbt.NBT_Builder()
+                BlockData = node.compound(
+                    name = node.string(BlockID),
+                    states = node.compound(
+                        conditional_bit=node.byte(BlockState["conditional_bit"]),
+                        facing_direction=node.int(BlockState["facing_direction"])
+                    ),
+                    val = node.short(Data),
+                    version = node.int(17959425),
+                ).build()
+
+                BlockSNbtIO, BlockSNbtDataIO = io.StringIO(), io.StringIO()
+                nbt.write_to_snbt_file(BlockSNbtIO, BlockData)
+                nbt.write_to_snbt_file(BlockSNbtDataIO, self.block_nbt[index])
+                chunk_block.append(json.dumps({
+                    "blockNBT":urllib.parse.quote(BlockSNbtIO.getvalue()),
+                    "blockCompleteNBT":urllib.parse.quote(BlockSNbtDataIO.getvalue())
+                }))
+
+            Struct1.chunks.extend(Chunks.values())
+            Struct1.block_palette.extend(i["name"] for i in self.block_palette)
+            Struct1.save_as(Writer)
+ 
+    class GangBan(EncodeBase) :
+
+        def encode(self, Writer):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.GangBan()
+
+            Struct1.size = self.size
+            Struct1.origin = self.origin
+
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = enumerate( zip(self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) )) )
+
+            for index, (id_index, (posx, posy, posz)) in Generator :
+                BlockID = self.block_palette[id_index]["name"]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+                BlockState = self.block_palette[id_index]["states"]
+                Data = BlockStatesTransforDatavalue(BlockID, BlockState)
+                
+                block = {"id":id_index, "aux":Data, "p":[o_x + posx, o_y + posy, o_z + posz]}
+                Struct1.blocks.append(block)
+                
+                if index not in self.block_nbt : continue
+                if not CommandBlockIDTest.search(BlockID) : continue
+                block["cmds"] = {
+                    "mode":CommandBlockGangBan[BlockID],
+                    "condition":bool(BlockState["conditional_bit"]),
+                    "cmd":self.block_nbt[index]["Command"].value,
+                    "name":self.block_nbt[index]["CustomName"].value,
+                    "tick":self.block_nbt[index]["TickDelay"].value,
+                    "should":bool(self.block_nbt[index]["TrackOutput"]),
+                    "on":bool(self.block_nbt[index]["auto"])
+                }
+
+            Struct1.block_palette.extend(i["name"] for i in self.block_palette)
+            Struct1.save_as(Writer)
+
+    class RunAway(EncodeBase) :
+
+        def encode(self, Writer):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.RunAway()
+
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = enumerate( zip(self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) )) )
+
+            for index, (id_index, (posx, posy, posz)) in Generator :
+                BlockID = self.block_palette[id_index]["name"]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+                BlockState = self.block_palette[id_index]["states"]
+                Data = BlockStatesTransforDatavalue(BlockID, BlockState)
+                block = {"name":BlockID, "aux":Data, "x":o_x + posx, "y":o_y + posy, "z":o_z + posz}
+                Struct1.blocks.append(block)
+
+            Struct1.save_as(Writer)
 

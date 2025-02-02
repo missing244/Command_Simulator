@@ -1,8 +1,9 @@
 """
     bdx文件解析模块
     ---------------------------------
-    * 可用对象 BDX_File
-    * 可用模块 OperationCode
+    * 可用对象 BDX_File: 解析bdx文件的类
+    ---------------------------------
+    * 可用模块 OperationCode: bdx文件中的所有操作码类
     ---------------------------------
     * 可用变量 RunTimeID_117: 1.17版本的方块枚举列表，用于RunTimeID操作码索引指向的本列表数据
     * 可用变量 Support_OperationCode: 所有支持的操作，可用于isinstance判断
@@ -32,7 +33,7 @@ Support_OperationCode = (
     OperationCode.SetCommandBlockData, OperationCode.PlaceBlockWithCommandBlockData,
     OperationCode.AddInt8XValue, OperationCode.AddInt8YValue, OperationCode.AddInt8ZValue,
     OperationCode.UseRuntimeIDPool, OperationCode.PlaceRuntimeBlock,
-    OperationCode.placeBlockWithRuntimeId, OperationCode.PlaceRuntimeBlockWithCommandBlockData,
+    OperationCode.PlaceBlockWithRuntimeId, OperationCode.PlaceRuntimeBlockWithCommandBlockData,
     OperationCode.PlaceRuntimeBlockWithCommandBlockDataAndUint32RuntimeID,
     OperationCode.PlaceCommandBlockWithCommandBlockData, 
     OperationCode.PlaceRuntimeBlockWithChestData, 
