@@ -444,7 +444,8 @@ class SubtractZValue(OperationBase) :
         pass
 
     @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :        return memory_list[5]
+    def from_bytes(cls,bytes_io:io.BytesIO) :
+        return memory_list[5]
 
     def to_bytes(self) -> bytes :
         return b"\x13"
@@ -464,11 +465,12 @@ class AddInt16XValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x14
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int16(value).value
+        self.value = ctypes.c_int16(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -495,11 +497,12 @@ class AddInt32XValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x15
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int32(value).value
+        self.value = ctypes.c_int32(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -526,11 +529,12 @@ class AddInt16YValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x16
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int16(value).value
+        self.value = ctypes.c_int16(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -557,11 +561,12 @@ class AddInt32YValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x17
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int32(value).value
+        self.value = ctypes.c_int32(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -588,11 +593,12 @@ class AddInt16ZValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x18
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int16(value).value
+        self.value = ctypes.c_int16(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -619,11 +625,12 @@ class AddInt32ZValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x19
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int32(value).value
+        self.value = ctypes.c_int32(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -790,11 +797,12 @@ class AddInt8XValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x1c
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int8(value).value
+        self.value = ctypes.c_int8(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -821,11 +829,12 @@ class AddInt8YValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x1d
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int8(value).value
+        self.value = ctypes.c_int8(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -852,11 +861,12 @@ class AddInt8ZValue(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x1e
 
     def __init__(self,value:int) -> None:
-        self.__value = ctypes.c_int8(value).value
+        self.value = ctypes.c_int8(value).value
 
-    @property
-    def value(self) :
-        return self.__value
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -887,11 +897,12 @@ class UseRuntimeIDPool(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x1f
 
     def __init__(self,pool:int) -> None:
-        self.__pool = ctypes.c_uint8(pool).value
+        self.pool = ctypes.c_uint8(pool).value
 
-    @property
-    def pool(self) :
-        return self.__pool
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -918,11 +929,12 @@ class PlaceRuntimeBlock(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x20
 
     def __init__(self,runtimeId:int) -> None:
-        self.__runtimeId = ctypes.c_uint16(runtimeId).value
+        self.runtimeId = ctypes.c_uint16(runtimeId).value
 
-    @property
-    def runtimeId(self) :
-        return self.__runtimeId
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
@@ -949,11 +961,12 @@ class PlaceBlockWithRuntimeId(OperationBase, metaclass=Int_Meta) :
     operation_code = 0x21
 
     def __init__(self,runtimeId:int) -> None:
-        self.__runtimeId = ctypes.c_uint32(runtimeId).value
+        self.runtimeId = ctypes.c_uint32(runtimeId).value
 
-    @property
-    def runtimeId(self) :
-        return self.__runtimeId
+    def __setattr__(self, name:str, value) :
+        if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
+        else : super().__setattr__(name, value)
+
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :

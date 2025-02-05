@@ -1,6 +1,6 @@
 from .. import TypeCheckList
 from . import operation as OperationCode
-from typing import Union,Literal,List,Callable
+from typing import Union,Literal,List,Callable,Generator
 import io, brotli, os, traceback, json
 
 from .operation import match_string_bytes,OPERATION_BYTECODES
@@ -33,10 +33,13 @@ class BDX_File :
     * 在 operation.py 内写明了所有支持的操作码
     ---------------------------------
     * 可用属性 author : 作者名，必须为字符串
+    * 可用属性 const_str : 储存使用的常量字符串列表
     * 可用属性 operation_list : 储存操作码的列表
     ---------------------------------
     * 可用方法 filter : 传入回调函数，筛选符合回调函数的操作码和条件
     * 可用方法 get_volume : 返回 bdx结构 方体的两个斜对角点位置
+    * 可用方法 get_blocks : 返回 bdx结构 中所有修改或放置方块的操作码的生成器
+    ---------------------------------
     * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
     * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
     """
@@ -45,6 +48,7 @@ class BDX_File :
     def __init__(self) -> None :
         from . import Support_OperationCode
         self.author:str = ""
+        self.const_str: List[str] = []
         self.operation_list: List[Operation] = TypeCheckList().setChecker(Support_OperationCode)
 
     def __setattr__(self, name, value) :
@@ -82,6 +86,24 @@ class BDX_File :
 
         return origin_min, origin_max
 
+    def get_blocks(self) -> Generator[tuple[int, int, int, Operation], None, None] :
+        from . import PosX_Change_OperationCode, PosY_Change_OperationCode, PosZ_Change_OperationCode
+        
+        PosXChange = set(PosX_Change_OperationCode)
+        PosYChange = set(PosY_Change_OperationCode)
+        PosZChange = set(PosZ_Change_OperationCode)
+        PosX, PosY, PosZ = 0, 0, 0
+        PlaceBlockCode = {0x05, 0x07, 0x0d, 0x1a, 0x1b, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x28, 0x29}
+
+        for Oper in self.operation_list :
+            OperClass = Oper.__class__
+            if OperClass in PosXChange : PosX += Oper.value ; continue
+            elif OperClass in PosYChange : PosY += Oper.value ; continue
+            elif OperClass in PosZChange : PosZ += Oper.value ; continue
+
+            if Oper.operation_code not in PlaceBlockCode : continue
+            yield (PosX, PosY, PosZ, Oper)
+
 
     @classmethod
     def from_buffer(cls, buffer:Union[str, bytes, io.BytesIO]) :
@@ -96,12 +118,14 @@ class BDX_File :
         BDX_Object = cls()
         BDX_Object.author = match_string_bytes(bdx_code).decode("utf-8", errors="ignore")
         try :
+            StrType = OperationCode.CreateConstantString
             MList = BDX_Object.operation_list
             SuperAppend = super(MList.__class__, MList).append
             while 1 : 
                 a = bdx_code.read(1)
                 if not a or a == b"\x58" : break
-                SuperAppend(OPERATION_BYTECODES[a].from_bytes(bdx_code))
+                b = OPERATION_BYTECODES[a].from_bytes(bdx_code)
+                BDX_Object.const_str.append(b.string) if type(b) is StrType else SuperAppend(b)
         except Exception as e :
             #print(len(bdx_code.getvalue()),bdx_code.tell(),bdx_code.getvalue()[bdx_code.tell()-1:])
             #traceback.print_exc()
@@ -118,6 +142,7 @@ class BDX_File :
         Writer1.write(self.author.encode("utf-8"))
         Writer1.write(b'\0')
         
+        for i in self.const_str : Writer1.write(OperationCode.CreateConstantString(i).to_bytes())
         for i in self.operation_list : Writer1.write(i.to_bytes())
         if not HaveEndTag : Writer1.write(OperationCode.Terminate().to_bytes())
 

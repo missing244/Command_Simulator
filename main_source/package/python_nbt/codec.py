@@ -152,7 +152,8 @@ def str_to_snbt_key(data: str) -> str:
             return '"' + data + '"'
 
 def str_to_string(data: str) -> str:
-    return dumps(data)
+    return dumps(data, ensure_ascii=False)
+
 
 def string_to_str(data: str) -> str:
     def replace_string_to_str(m):
