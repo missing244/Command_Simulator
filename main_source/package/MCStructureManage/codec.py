@@ -3,7 +3,7 @@ from . import StructureBDX, StructureMCS
 from . import StructureRUNAWAY, StructureSCHEMATIC
 
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
-import abc, re, os, io, json, array, itertools, urllib.parse
+import abc, re, os, io, json, array, itertools, urllib.parse, ctypes
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 BlockDataToState = json.load(fp=open(os.path.join(CurrentPath, "blockstate.json"), "r", encoding="utf-8"))
 CommandBlockIDTest = re.compile("command_block$")
@@ -64,7 +64,11 @@ def BlockStatesTransforDatavalue(id:str, states:dict) :
     else :
         Cache1 = BlockDataToState[id].copy()
         del Cache1['default'] ; del Cache1['support_value']
-        DataList = [key for key, Value in Cache1.items() if Value == states]
+        Cache2 = states.copy()
+        for i,j in Cache2.items() :
+            if isinstance(j, ctypes.c_byte) : Cache2[i] = bool(j)
+            elif isinstance(j, ctypes.c_int32) : Cache2[i] = int(j)
+        DataList = [key for key, Value in Cache1.items() if Value == Cache2]
         Data = int(DataList[0], 2) if DataList else 0
     return Data
 
@@ -76,7 +80,12 @@ BlockNBT_ID = {"minecraft:chest": "Chest", "minecraft:trapped_chest": "Chest",
 "minecraft:white_shulker_box": "ShulkerBox", "minecraft:undyed_shulker_box": "ShulkerBox", 
 "minecraft:barrel": "Barrel", "minecraft:dispenser": "Dispenser", "minecraft:dropper": "Dropper", 
 "minecraft:furnace": "Furnace", "minecraft:lit_furnace": "Furnace", "minecraft:smoker": "Smoker", 
-"minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace"}
+"minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace", "minecraft:ender_chest":"Chest"}
+
+def GetNbtID(id:str) :
+    if id in BlockNBT_ID : return BlockNBT_ID[id]
+    elif re.compile("hanging_sign$").search(id) : return "HangingSign"
+    elif re.compile("_sign$").search(id) : return "Sign"
 
 
 class Decoder :
@@ -89,7 +98,7 @@ class Decoder :
     * 可用类 MCSTRUCTURE: 解析mcstructure文件的解码器
     * 可用类 SCHEMATIC: 解析schematic文件的解码器
     * 可用类 MIANYANG: 解析绵阳结构文件的解码器
-    * 可用类 GangBan: 解析钢板结构文件的解码器
+    * 可用类 GANGBAN_V1: 解析钢板结构文件的解码器
     * 可用类 RunAway: 解析跑路官方结构文件的解码器
     """
 
@@ -112,7 +121,6 @@ class Decoder :
             PosStart, PosEnd = BDX.get_volume()
 
             StructureObject = self.Common
-            StructureObject.origin = array.array("i", [i for i in PosStart])
             StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
             StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
 
@@ -343,7 +351,6 @@ class Decoder :
 
             StructureObject = self.Common
             StructureObject.size = SCHMATIC.size
-            StructureObject.origin = SCHMATIC.origin
             StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * len(SCHMATIC.block_index))
             StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * len(SCHMATIC.block_index))
             
@@ -376,7 +383,6 @@ class Decoder :
             PosStart, PosEnd = Struct1.get_volume()
 
             StructureObject = self.Common
-            StructureObject.origin = array.array("i", [i for i in PosStart])
             StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
             StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
 
@@ -408,7 +414,7 @@ class Decoder :
                     Index = posx * StructY * StructZ + posy * StructZ + posz
                     StructureObject.block_index[Index] = block_index
 
-                    if block[-1].__class__ is str : continue
+                    if block[-1].__class__ is not str : continue
                     try : BlockJsonData = json.loads(block[-1])
                     except : continue
                     nbtstr = urllib.parse.unquote(BlockJsonData['blockCompleteNBT'])
@@ -433,22 +439,21 @@ class Decoder :
                 StructureObject.block_palette[value["index"]] = value
                 del value["index"]
 
-    class GangBan(DecodeBase) :
+    class GANGBAN_V1(DecodeBase) :
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
-            Struct1 = StructureRUNAWAY.GangBan.from_buffer(Reader)
+            Struct1 = StructureRUNAWAY.GangBan_V1.from_buffer(Reader)
 
             StructureObject = self.Common
-            StructureObject.origin = array.array("i", [i for i in Struct1.origin])
             StructureObject.size = array.array("i", [i for i in Struct1.size])
             StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
 
-            Volume = StructureObject.size[0] * StructureObject.size[1] * StructureObject.size[2]
+            Volume = Struct1.size[0] * Struct1.size[1] * Struct1.size[2]
             StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
             StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
 
-            O_X, O_Y, O_Z = StructureObject.origin[0], StructureObject.origin[1], StructureObject.origin[2]
-            StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
+            O_X, O_Y, O_Z = Struct1.origin[0], Struct1.origin[1], Struct1.origin[2]
+            StructX, StructY, StructZ = Struct1.size[0], Struct1.size[1], Struct1.size[2]
             Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
             def RegisterBlock(id_index:int, data_or_state:int) -> int :
                 Hash = (id_index << 16) + data_or_state
@@ -486,14 +491,13 @@ class Decoder :
                 StructureObject.block_palette[value["index"]] = value
                 del value["index"]
 
-    class RunAway(DecodeBase) :
+    class GANGBAN_V2(DecodeBase) :
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
-            Struct1 = StructureRUNAWAY.RunAway.from_buffer(Reader)
+            Struct1 = StructureRUNAWAY.GangBan_V2.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
 
             StructureObject = self.Common
-            StructureObject.origin = array.array("i", [i for i in PosStart])
             StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
             StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
 
@@ -501,7 +505,54 @@ class Decoder :
             StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
             StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
 
-            O_X, O_Y, O_Z = StructureObject.origin[0], StructureObject.origin[1], StructureObject.origin[2]
+            O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
+            StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
+            Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
+            def RegisterBlock(id_index:int, data_or_state:int) -> int :
+                Hash = (id_index << 16) + data_or_state
+                if Hash not in Blocks : 
+                    id = TransforNamespaceID(Struct1.block_palette[id_index])
+                    BlockStates = DatavalueTransforBlockStates(id, data_or_state)
+                    Blocks[Hash] = {"name": id, "states": BlockStates, "index": len(Blocks)+1 }
+                return Hash
+
+            for chunk in Struct1.chunks :
+                o_x, o_y, o_z = chunk["grids"]["x"]-O_X, O_Y, chunk["grids"]["z"]-O_Z
+                for block in chunk["data"] :
+                    BlockHash = RegisterBlock(block[0], block[1])
+                    block_index = Blocks[BlockHash]["index"]
+                    posx, posy, posz = block[2] + o_x, block[3] - o_y, block[4] + o_z
+                    Index = posx * StructY * StructZ + posy * StructZ + posz
+                    StructureObject.block_index[Index] = block_index
+
+                    if block[-1].__class__ is not str : continue
+                    if block[5] != "nbt" : continue
+                    NbtName = GetNbtID( Blocks[BlockHash]["name"] )
+                    if not NbtName : continue
+                    StructureObject.block_nbt[Index] = nbt.read_from_snbt_file( io.StringIO(block[6]) ).get_tag()
+                    StructureObject.block_nbt[Index]["id"] = nbt.TAG_String(NbtName)
+
+            MaxIndex = max(block["index"] for block in Blocks.values())
+            super(TypeCheckList, StructureObject.block_palette).extend(None for i in range(MaxIndex))
+            for value in Blocks.values() : 
+                StructureObject.block_palette[value["index"]] = value
+                del value["index"]
+
+    class RUNAWAY(DecodeBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.RunAway.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
+            StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
+
+            Volume = StructureObject.size[0] * StructureObject.size[1] * StructureObject.size[2]
+            StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
+            StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
+
+            O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
             StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
             Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
             def RegisterBlock(id:str, data_or_state:int) -> int :
@@ -525,14 +576,13 @@ class Decoder :
                 StructureObject.block_palette[value["index"]] = value
                 del value["index"]
 
-    class FuHong(DecodeBase) :
+    class FUHONG(DecodeBase) :
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.FuHong.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
 
             StructureObject = self.Common
-            StructureObject.origin = array.array("i", [i for i in PosStart])
             StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
             StructureObject.block_palette.append({"name":"minecraft:air", "states":{}})
 
@@ -540,7 +590,7 @@ class Decoder :
             StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
             StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
 
-            O_X, O_Y, O_Z = StructureObject.origin[0], StructureObject.origin[1], StructureObject.origin[2]
+            O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
             StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
             Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
             def RegisterBlock(id:str, data_or_state:int) -> int :
@@ -564,6 +614,44 @@ class Decoder :
                 StructureObject.block_palette[value["index"]] = value
                 del value["index"]
 
+    class QINGXU(DecodeBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.QingXu.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.size = array.array("i", [j-i+1 for i,j in zip(PosStart, PosEnd)])
+
+            Volume = StructureObject.size[0] * StructureObject.size[1] * StructureObject.size[2]
+            StructureObject.block_index = array.array("i", b"\x00\x00\x00\x00" * Volume)
+            StructureObject.water_log = array.array("i", b"\xff\xff\xff\xff" * Volume)
+
+            O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
+            StructX, StructY, StructZ = StructureObject.size[0], StructureObject.size[1], StructureObject.size[2]
+            Blocks:Dict[int, Dict[Literal['name', 'states', 'index'], Union[str, dict, int]]] = {}
+            def RegisterBlock(id:str, data_or_state:int) -> int :
+                Hash = f"{id}:{data_or_state}"
+                if Hash not in Blocks : 
+                    id = TransforNamespaceID(id)
+                    BlockStates = DatavalueTransforBlockStates(id, data_or_state)
+                    Blocks[Hash] = {"name": id, "states": BlockStates, "index": len(Blocks) }
+                return Hash
+
+            for block in Struct1.blocks :
+                BlockHash = RegisterBlock(block["Name"], block.get("aux", 0))
+                block_index = Blocks[BlockHash]["index"]
+                print(block["Name"], block_index)
+                posx, posy, posz = block["x"] - O_X, block["y"] - O_Y, block["z"] - O_Z
+                Index = posx * StructY * StructZ + posy * StructZ + posz
+                StructureObject.block_index[Index] = block_index
+
+            MaxIndex = max(block["index"] for block in Blocks.values()) + 1
+            super(TypeCheckList, StructureObject.block_palette).extend(None for i in range(MaxIndex))
+            for value in Blocks.values() : 
+                StructureObject.block_palette[value["index"]] = value
+                del value["index"]
+
 
 class Encoder :
     """
@@ -575,7 +663,7 @@ class Encoder :
     * 可用类 MCSTRUCTURE: 生成mcstructure文件的编码器
     * 可用类 SCHEMATIC: 生成schematic文件的编码器
     * 可用类 MIANYANG: 生成绵阳结构文件的编码器
-    * 可用类 GangBan: 生成钢板结构文件的编码器
+    * 可用类 GANGBAN_V1: 生成钢板结构文件的编码器
     * 可用类 RunAway: 生成跑路官方结构文件的编码器
     """
 
@@ -662,7 +750,7 @@ class Encoder :
     class SCHEMATIC(EncodeBase) :
 
         def encode(self, Writer:Union[str, io.RawIOBase]):
-            self = self.Common
+            IgnoreAir, self = self.IgnoreAir, self.Common
             SCHMATIC = StructureSCHEMATIC.Schematic()
             for i in range(3) : 
                 SCHMATIC.size[i] = self.size[i]
@@ -677,6 +765,7 @@ class Encoder :
             for (posx, posy, posz), id_index in zip(PosIter, self.block_index) :
                 BlockID = self.block_palette[id_index]["name"]
                 if BlockID not in StructureSCHEMATIC.Block_to_RuntimeID : continue
+                Index = posy * StructZ * StructX + posz * StructX + posx
 
                 BlockState = self.block_palette[id_index]["states"]
                 if id_index not in RuntimeIDCache :
@@ -684,7 +773,6 @@ class Encoder :
                     Data = BlockStatesTransforDatavalue(BlockID, BlockState)
                     RuntimeIDCache[id_index] = (NumberID, Data)
 
-                Index = posy * StructZ * StructX + posz * StructX + posx
                 SCHMATIC.block_index[Index] = RuntimeIDCache[id_index][0]
                 SCHMATIC.block_data[Index] = RuntimeIDCache[id_index][1]
 
@@ -751,11 +839,11 @@ class Encoder :
             Struct1.block_palette.extend(i["name"] for i in self.block_palette)
             Struct1.save_as(Writer)
  
-    class GangBan(EncodeBase) :
+    class GANGBAN_V1(EncodeBase) :
 
         def encode(self, Writer):
             IgnoreAir, self = self.IgnoreAir, self.Common
-            Struct1 = StructureRUNAWAY.GangBan()
+            Struct1 = StructureRUNAWAY.GangBan_V1()
 
             Struct1.size = self.size
             Struct1.origin = self.origin
@@ -790,7 +878,64 @@ class Encoder :
             Struct1.block_palette.extend(i["name"] for i in self.block_palette)
             Struct1.save_as(Writer)
 
-    class RunAway(EncodeBase) :
+    class GANGBAN_V2(EncodeBase) :
+
+        def encode(self, Writer:Union[str, io.TextIOBase]):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.GangBan_V2()
+
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = enumerate( zip(self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) )) )
+
+            Chunks:Dict[Tuple[int,int], dict] = {}
+            for index, (id_index, (posx, posy, posz)) in Generator :
+                BlockID = self.block_palette[id_index]["name"]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+                BlockState = self.block_palette[id_index]["states"]
+                Data = BlockStatesTransforDatavalue(BlockID, BlockState)
+
+                realX, realY, realZ = o_x + posx, o_y + posy, o_z + posz
+                chunk_pos = (realX//16*16, realZ//16*16)
+                if chunk_pos not in Chunks : Chunks[chunk_pos] = {
+                    "id":len(Chunks), "grids":{"x":chunk_pos[0], "z":chunk_pos[1],
+                    "x1":chunk_pos[0]+16, "z1":chunk_pos[1]+16}, "data":[]}
+                
+                chunk_block = [id_index, Data, realX-chunk_pos[0], realY, realZ-chunk_pos[1]]
+                Chunks[chunk_pos]["data"].append(chunk_block)
+
+                if index not in self.block_nbt : continue
+
+                node = nbt.NBT_Builder()
+                BlockData = node.compound(
+                    name = node.string(BlockID),
+                    states = node.compound(**{
+                        i:( node.byte(j) if 
+                           isinstance(j, (bool, ctypes.c_byte)) 
+                           else node.int(j)
+                        ) for i,j in BlockState.items()
+                    }),
+                    val = node.short(Data),
+                    version = node.int(17959425),
+                ).build()
+
+                NBTObj = self.block_nbt[index]
+                BlockSNbtIO1, BlockSNbtIO2 = io.StringIO(), io.StringIO()
+                nbt.write_to_snbt_file(BlockSNbtIO1, NBTObj, format=False)
+                nbt.write_to_snbt_file(BlockSNbtIO2, BlockData, format=False)
+                Copy1 = chunk_block.copy()
+                Copy1.append("nbt2")
+                Copy1.append(BlockSNbtIO2.getvalue()[3:])
+
+                Chunks[chunk_pos]["data"].append(Copy1)
+                chunk_block.append("nbt")
+                chunk_block.append(BlockSNbtIO1.getvalue()[3:])
+
+            Struct1.chunks.extend(Chunks.values())
+            Struct1.block_palette.extend(i["name"] for i in self.block_palette)
+            Struct1.save_as(Writer)
+
+    class RUNAWAY(EncodeBase) :
 
         def encode(self, Writer):
             IgnoreAir, self = self.IgnoreAir, self.Common
@@ -810,7 +955,7 @@ class Encoder :
 
             Struct1.save_as(Writer)
 
-    class FuHong(EncodeBase) :
+    class FUHONG(EncodeBase) :
 
         def encode(self, Writer):
             IgnoreAir, self = self.IgnoreAir, self.Common
@@ -826,6 +971,26 @@ class Encoder :
                 BlockState = self.block_palette[id_index]["states"]
                 Data = BlockStatesTransforDatavalue(BlockID, BlockState)
                 block = {"name":BlockID, "aux":Data, "x":[o_x + posx], "y":[o_y + posy], "z":[o_z + posz]}
+                Struct1.blocks.append(block)
+
+            Struct1.save_as(Writer)
+
+    class QINGXU(EncodeBase) :
+
+        def encode(self, Writer):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.QingXu()
+
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = enumerate( zip(self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) )) )
+
+            for index, (id_index, (posx, posy, posz)) in Generator :
+                BlockID = self.block_palette[id_index]["name"]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+                BlockState = self.block_palette[id_index]["states"]
+                #Data = BlockStatesTransforDatavalue(BlockID, BlockState)
+                block = {"Name":BlockID, "x":o_x + posx, "y":o_y + posy, "z":o_z + posz}
                 Struct1.blocks.append(block)
 
             Struct1.save_as(Writer)

@@ -27,14 +27,12 @@ class RANGE(TypedDict) :
 class PALETTE(TypedDict) :
     list: List[str]
 
-
-
-
-class GangBan :
+class GangBan_V1 :
     """
     由 钢板 开发的结构文件对象
     -----------------------
     * 以 .json 为后缀的json格式文件
+    * List[BLOCK, ..., RANGE, PALETTE]]
     -----------------------
     * 可用属性 size : 结构大小
     * 可用属性 origin : 结构保存起始位置
@@ -128,3 +126,129 @@ class GangBan :
 
 
 
+class INFO1(TypedDict) :
+    name: str
+    xcha: int
+    ycha: int
+    zcha: int
+    real_task_block: int
+
+class CHUNK(TypedDict) :
+    id: int
+    grids: Dict[Literal["x","x1","z","z1"], int]
+    data: List[Tuple[int,int,int,int,int,Literal["nbt", "nbt2"],str]]
+
+class GangBan_V2 :
+    """
+    由 钢板 开发的结构文件对象
+    -----------------------
+    * 以 .json 为后缀的json格式文件
+    * List[Union[INFO1, PALETTE, CHUNK]]
+    -----------------------
+    * 可用属性 name : 结构名称
+    * 可用属性 chunks : 区块储存列表
+    * 可用属性 block_palette : 方块ID映射列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+
+
+    def __init__(self) :
+        self.name: str = ""
+        self.chunks: List[CHUNK] = TypeCheckList().setChecker(dict)
+        self.block_palette: List[str] = TypeCheckList().setChecker(str)
+
+    def __setattr__(self, name, value) :
+        if not hasattr(self, name) : super().__setattr__(name, value)
+        elif isinstance(value, type(getattr(self, name))) : super().__setattr__(name, value)
+        else : raise Exception("无法修改 %s 属性" % name)
+
+    def __delattr__(self, name) :
+        raise Exception("无法删除任何属性")
+
+
+    def error_check(self) :
+        block_count = 0
+        if len(self.size) != 3 : raise Exception("结构长宽高列表长度不为3")
+
+        for chunk in self.chunks :
+            if not isinstance(chunk.get("id", None), int) : raise Exception("区块数据缺少或存在错误的 id 参数")
+            if not isinstance(chunk.get("grids", None), dict) : raise Exception("区块数据缺少或存在错误的 p 参数")
+            if not isinstance(chunk["grids"].get("x", None), int) : raise Exception("区块范围缺少或存在错误的 x 数据")
+            if not isinstance(chunk["grids"].get("z", None), int) : raise Exception("区块范围缺少或存在错误的 z 数据")
+            if not isinstance(chunk["grids"].get("x1", None), int) : raise Exception("区块范围缺少或存在错误的 x1 数据")
+            if not isinstance(chunk["grids"].get("z1", None), int) : raise Exception("区块范围缺少或存在错误的 z1 数据")
+            if not isinstance(chunk.get("data", None), list) : raise Exception("区块数据缺少或存在错误的 id 参数")
+            block_count += len(chunk["data"])
+            for block in chunk["data"] :
+                pos_str = "(%s, %s)" % (chunk["grids"]['x'], chunk["grids"]['z'])
+                if len(block) < 5 : raise Exception(f"方块数据缺少关键参数{pos_str}")
+                if any(not isinstance(block[i], int) for i in range(5)) : raise Exception(f"方块数据存在非法参数{pos_str}")
+                nbtdata = block[5:]
+                if not nbtdata : continue
+                if len(nbtdata) < 2 : raise Exception(f"方块nbt数据不完整{pos_str}")
+                if nbtdata[0] not in {"nbt", "nbt2"} : raise Exception(f"方块nbt数据存在非法参数{pos_str}")
+                if not isinstance(nbtdata[1], str) : raise Exception(f"方块nbt数据存在非法参数{pos_str}")
+
+        return block_count
+
+    def get_volume(self) :
+        origin_min, origin_max, = [0, 0, 0], [0, 0, 0]
+
+        def pos_iter() :
+            for chunk in self.chunks :
+                o_x, o_z = chunk["grids"]["x"], chunk["grids"]["z"]
+                for block in chunk["data"] :
+                    yield (o_x+block[2], block[3], o_z+block[4])
+        for i in range(3) : origin_min[i] = min(j[i] for j in pos_iter())
+        for i in range(3) : origin_max[i] = max(j[i] for j in pos_iter())
+
+        return origin_min, origin_max
+
+
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+        if isinstance(buffer,str) : _file = open(buffer, "rb")
+        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
+        else : _file = buffer
+        Json1:List[Union[BLOCK, RANGE, PALETTE]] = json.load(fp=_file)
+
+        area:INFO1 = Json1[0]
+        palette:PALETTE = Json1[1]
+
+        StructureObject = cls()
+        StructureObject.name = area["name"]
+        StructureObject.block_palette.extend(palette)
+        super(TypeCheckList, StructureObject.chunks).extend(Json1[2:])
+
+        return StructureObject
+
+    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
+        block_count = self.error_check()
+
+        Json1:List[Union[CHUNK, INFO1, PALETTE]] = [
+            {"name":self.name, 
+             "xcha":self.chunks[-1]["grids"]["x"] + self.chunks[-1]["data"][-1][2] + 1, 
+             "zcha":1 + self.chunks[-1]["data"][-1][3], 
+             "ycha":self.chunks[-1]["grids"]["z"] + self.chunks[-1]["data"][-1][4] + 1, 
+             "real_task_block":block_count},
+            list(self.block_palette), *self.chunks ]
+
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "w+", encoding="utf-8")
+        else : _file = buffer
+
+        if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
+        json.dump(Json1, _file, separators=(',', ':'))
+
+
+
+class AREA_SIZE(TypedDict) :
+    ep: Tuple[int, int, int]
+
+AREA_ENTITY = Tuple[int, int, int, str, str]
+
+AREA_BLOCK = Tuple[int, int, int, int, int]

@@ -6,7 +6,7 @@ from math import floor
 
 class BLOCK_TYPE(TypedDict): 
     name: str
-    states: Dict[str, Union[ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long]]
+    states: Dict[str, Union[ctypes.c_byte, ctypes.c_int]]
 
 SupportEncoder = Union[Encoder.BDX, Encoder.MCSTRUCTURE, Encoder.SCHEMATIC]
 SupportDecoder = Union[Decoder.BDX, Decoder.MCSTRUCTURE, Decoder.SCHEMATIC]

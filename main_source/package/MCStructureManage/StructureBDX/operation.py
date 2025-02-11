@@ -21,7 +21,7 @@ PlaceBlockWithNBTData 会涉及到nbt的修改\n
 
 import ctypes,io
 from .. import nbt
-from typing import TypedDict
+from typing import TypedDict,Dict,Union
 
 class ChestDataType(TypedDict): 
     name: str
@@ -31,15 +31,49 @@ class ChestDataType(TypedDict):
 
 
 
-class Int_Meta(type) :
+class Signed_Int_Meta(type) :
     
     def __init__(self, *arg, **karg) :
         super().__init__(*arg, **karg)
         self._memory = {}
     
-    def __call__(self, v:int) :
-        if v not in self._memory : self._memory[v] = super().__call__(v)
+    def __call__(self, v:Union[bytes, int]) :
+        if v not in self._memory : 
+            value = int.from_bytes(v, 'big', signed=True) if type(v) is bytes else v
+            self._memory[v] = super().__call__(value)
         return self._memory[v]
+
+class Unsigned_Int_Meta(type) :
+    
+    def __init__(self, *arg, **karg) :
+        super().__init__(*arg, **karg)
+        self._memory = {}
+    
+    def __call__(self, v:Union[bytes, int]) :
+        if v not in self._memory : 
+            value = int.from_bytes(v, 'big', signed=False) if type(v) is bytes else v
+            self._memory[v] = super().__call__(value)
+        return self._memory[v]
+
+class Two_Int_Meta(type) :
+    
+    def __init__(self, *arg, **karg) :
+        super().__init__(*arg, **karg)
+        self._memory = {}
+    
+    def __call__(self, v1:Union[bytes, int], v2:int=None) :
+        if v2 is None :
+            if v1 not in self._memory : 
+                value1 = int.from_bytes(v1[0:2], 'big', signed=False)
+                value2 = int.from_bytes(v1[2:4], 'big', signed=False)
+                self._memory[v1] = super().__call__(value1, value2)
+            return self._memory[v1]
+        else : 
+            t1 = (v1, v2)
+            if t1 not in self._memory : 
+                self._memory[t1] = super().__call__(v1, v2)
+            return self._memory[t1]
+        
 
 class OperationBase :
 
@@ -102,22 +136,18 @@ class CreateConstantString(OperationBase) :
 
     operation_code = 0x01
 
-    def __init__(self,string:str) -> None:
+    def __init__(self, string:str) -> None:
         self.string = string
 
     @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :
+    def from_bytes(cls, bytes_io:io.BytesIO) :
         a = match_string_bytes(bytes_io).decode("utf-8", errors="ignore")
         return cls(a)
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.string.encode("utf-8"),
-            b'\0'
-        ])
+        return b'\x01%s\x00' % self.string.encode("utf-8")
     
-class PlaceBlockWithBlockStates1(OperationBase) :
+class PlaceBlockWithBlockStates1(OperationBase, metaclass=Two_Int_Meta) :
     """
     在画笔所在位置放置一个方块。\n
     同时指定欲放置方块的 方块状态 在方块池中的 ID 为 blockStatesConstantStringID\n
@@ -134,24 +164,22 @@ class PlaceBlockWithBlockStates1(OperationBase) :
 
     operation_code = 0x05
 
-    def __init__(self,blockConstantStringID:int,blockStatesConstantStringID:int) -> None:
+    def __init__(self, blockConstantStringID:int, blockStatesConstantStringID:int) -> None:
         self.blockConstantStringID = ctypes.c_uint16(blockConstantStringID).value
         self.blockStatesConstantStringID = ctypes.c_uint16(blockStatesConstantStringID).value
-
-    @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :
-        blockConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
-        blockStatesConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
-        return cls(blockConstantStringID,blockStatesConstantStringID)
-
-    def to_bytes(self) -> bytes :
-        return b''.join([
+        self.__bytes_cache = b'%s%s%s' % ( 
             self.operation_code.to_bytes(1,'big',signed=False),
             self.blockConstantStringID.to_bytes(2,'big',signed=False),
-            self.blockStatesConstantStringID.to_bytes(2,'big',signed=False),
-        ])
+            self.blockStatesConstantStringID.to_bytes(2,'big',signed=False) )
 
-class AddInt16ZValue0(OperationBase) :
+    @classmethod
+    def from_bytes(cls, bytes_io:io.BytesIO) :
+        return cls(bytes_io.read(4))
+
+    def to_bytes(self) -> bytes :
+        return self.__bytes_cache
+
+class AddInt16ZValue0(OperationBase, metaclass=Unsigned_Int_Meta) :
     """
     将画笔的 Z 坐标增加 value\n
     ---------------------------------\n
@@ -164,21 +192,20 @@ class AddInt16ZValue0(OperationBase) :
 
     operation_code = 0x06
 
-    def __init__(self,value:int) -> None:
+    def __init__(self, value:int) -> None:
         self.value = ctypes.c_uint16(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(2,'big',signed=False) )
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(2),'big',signed=False)
-        return cls(value)
+        return cls(bytes_io.read(2))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(2,'big',signed=False)
-        ])
+        return self.__bytes_cache
 
-class PlaceBlock(OperationBase) :
+class PlaceBlock(OperationBase, metaclass=Two_Int_Meta) :
     """
     在画笔所在位置放置一个方块。\n
     该方块在方块池中的 ID 为 blockConstantStringID\n
@@ -194,22 +221,20 @@ class PlaceBlock(OperationBase) :
 
     operation_code = 0x07
 
-    def __init__(self,blockConstantStringID:int,blockData:int) -> None:
+    def __init__(self, blockConstantStringID:int, blockData:int) -> None:
         self.blockConstantStringID = ctypes.c_uint16(blockConstantStringID).value
         self.blockData = ctypes.c_uint16(blockData).value
-
-    @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :
-        blockConstantStringID = int.from_bytes(bytes_io.read(2),'big',signed=False)
-        blockData = int.from_bytes(bytes_io.read(2),'big',signed=False)
-        return cls(blockConstantStringID,blockData)
-
-    def to_bytes(self) -> bytes :
-        return b''.join([
+        self.__bytes_cache = b'%s%s%s' % ( 
             self.operation_code.to_bytes(1,'big',signed=False),
             self.blockConstantStringID.to_bytes(2,'big',signed=False),
-            self.blockData.to_bytes(2,'big',signed=False)
-        ])
+            self.blockData.to_bytes(2,'big',signed=False) )
+
+    @classmethod
+    def from_bytes(cls, bytes_io:io.BytesIO) :
+        return cls(bytes_io.read(4))
+
+    def to_bytes(self) -> bytes :
+        return self.__bytes_cache
 
 class AddZValue0(OperationBase) :
     """
@@ -226,11 +251,11 @@ class AddZValue0(OperationBase) :
         pass
 
     @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :
+    def from_bytes(cls, bytes_io:io.BytesIO) :
         return memory_list[4]
 
     def to_bytes(self) -> bytes :
-        return self.operation_code.to_bytes(1,'big',signed=False)
+        return b"\x08"
 
 class NOP(OperationBase) :
     """
@@ -251,12 +276,10 @@ class NOP(OperationBase) :
         return cls()
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False)
-        ])
+        return b'\x09'
 
 
-class AddInt32ZValue0(OperationBase, metaclass=Int_Meta) :
+class AddInt32ZValue0(OperationBase, metaclass=Unsigned_Int_Meta) :
     """
     将画笔的 Z 坐标增加 value\n
     ---------------------------------\n
@@ -271,17 +294,16 @@ class AddInt32ZValue0(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_uint32(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(4,'big',signed=False) )
 
     @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(4),'big',signed=False)
-        return cls(value)
+    def from_bytes(cls, bytes_io:io.BytesIO) :
+        return cls(bytes_io.read(4))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(4,'big',signed=False)
-        ])
+        return self.__bytes_cache
 
 class PlaceBlockWithBlockStates2(OperationBase) :
     """
@@ -334,7 +356,7 @@ class AddXValue(OperationBase) :
         pass
 
     @classmethod
-    def from_bytes(cls,bytes_io:io.BytesIO) :
+    def from_bytes(cls, bytes_io:io.BytesIO) :
         return memory_list[0]
 
     def to_bytes(self) -> bytes :
@@ -451,7 +473,7 @@ class SubtractZValue(OperationBase) :
         return b"\x13"
 
 
-class AddInt16XValue(OperationBase, metaclass=Int_Meta) :
+class AddInt16XValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 x 坐标增加 value\n
     ---------------------------------\n
@@ -466,6 +488,9 @@ class AddInt16XValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int16(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(2,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -474,16 +499,12 @@ class AddInt16XValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(2),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(2))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(2,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
-class AddInt32XValue(OperationBase, metaclass=Int_Meta) :
+class AddInt32XValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 x 坐标增加 value\n
     ---------------------------------\n
@@ -498,6 +519,9 @@ class AddInt32XValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int32(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(4,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -506,16 +530,12 @@ class AddInt32XValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(4),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(4))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(4,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
-class AddInt16YValue(OperationBase, metaclass=Int_Meta) :
+class AddInt16YValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 Y 坐标增加 value\n
     ---------------------------------\n
@@ -530,6 +550,9 @@ class AddInt16YValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int16(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(2,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -538,16 +561,12 @@ class AddInt16YValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(2),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(2))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(2,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
-class AddInt32YValue(OperationBase, metaclass=Int_Meta) :
+class AddInt32YValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 Y 坐标增加 value\n
     ---------------------------------\n
@@ -562,6 +581,9 @@ class AddInt32YValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int32(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(4,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -570,16 +592,12 @@ class AddInt32YValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(4),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(4))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(4,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
-class AddInt16ZValue(OperationBase, metaclass=Int_Meta) :
+class AddInt16ZValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 Z 坐标增加 value\n
     ---------------------------------\n
@@ -594,6 +612,9 @@ class AddInt16ZValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int16(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(2,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -602,16 +623,12 @@ class AddInt16ZValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(2),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(2))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(2,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
-class AddInt32ZValue(OperationBase, metaclass=Int_Meta) :
+class AddInt32ZValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 Z 坐标增加 value\n
     ---------------------------------\n
@@ -626,6 +643,9 @@ class AddInt32ZValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int32(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(4,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -634,14 +654,10 @@ class AddInt32ZValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(4),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(4))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(4,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
 
 class SetCommandBlockData(OperationBase) :
@@ -783,7 +799,7 @@ class PlaceBlockWithCommandBlockData(OperationBase) :
         ])
 
 
-class AddInt8XValue(OperationBase, metaclass=Int_Meta) :
+class AddInt8XValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 x 坐标增加 value\n
     ---------------------------------\n
@@ -798,6 +814,9 @@ class AddInt8XValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int8(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(1,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -806,16 +825,12 @@ class AddInt8XValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(1),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(1))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(1,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
-class AddInt8YValue(OperationBase, metaclass=Int_Meta) :
+class AddInt8YValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 y 坐标增加 value\n
     ---------------------------------\n
@@ -830,6 +845,9 @@ class AddInt8YValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int8(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(1,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -838,16 +856,12 @@ class AddInt8YValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(1),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(1))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(1,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
-class AddInt8ZValue(OperationBase, metaclass=Int_Meta) :
+class AddInt8ZValue(OperationBase, metaclass=Signed_Int_Meta) :
     """
     将画笔的 z 坐标增加 value\n
     ---------------------------------\n
@@ -862,6 +876,9 @@ class AddInt8ZValue(OperationBase, metaclass=Int_Meta) :
 
     def __init__(self,value:int) -> None:
         self.value = ctypes.c_int8(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(1,'big',signed=True) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -870,17 +887,13 @@ class AddInt8ZValue(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        value = int.from_bytes(bytes_io.read(1),'big',signed=True)
-        return cls(value)
+        return cls(bytes_io.read(1))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(1,'big',signed=True)
-        ])
+        return self.__bytes_cache
 
 
-class UseRuntimeIDPool(OperationBase, metaclass=Int_Meta) :
+class UseRuntimeIDPool(OperationBase, metaclass=Unsigned_Int_Meta) :
     """
     使用预设的 运行时ID方块池\n
     poolId(预设ID) 是 PhoenixBuilder 内的值。\n
@@ -896,8 +909,11 @@ class UseRuntimeIDPool(OperationBase, metaclass=Int_Meta) :
 
     operation_code = 0x1f
 
-    def __init__(self,pool:int) -> None:
-        self.pool = ctypes.c_uint8(pool).value
+    def __init__(self,value:int) -> None:
+        self.value = ctypes.c_uint8(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(1,'big',signed=False) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -906,16 +922,12 @@ class UseRuntimeIDPool(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        pool = int.from_bytes(bytes_io.read(1),'big',signed=False)
-        return cls(pool)
+        return cls(bytes_io.read(1))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.pool.to_bytes(1,'big',signed=False)
-        ])
+        return self.__bytes_cache
 
-class PlaceRuntimeBlock(OperationBase, metaclass=Int_Meta) :
+class PlaceRuntimeBlock(OperationBase, metaclass=Unsigned_Int_Meta) :
     """
     使用特定的 运行时ID 放置方块\n
     ---------------------------------\n
@@ -928,8 +940,11 @@ class PlaceRuntimeBlock(OperationBase, metaclass=Int_Meta) :
 
     operation_code = 0x20
 
-    def __init__(self,runtimeId:int) -> None:
-        self.runtimeId = ctypes.c_uint16(runtimeId).value
+    def __init__(self,value:int) -> None:
+        self.value = ctypes.c_uint16(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(2,'big',signed=False) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -938,16 +953,12 @@ class PlaceRuntimeBlock(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        runtimeId = int.from_bytes(bytes_io.read(2),'big',signed=False)
-        return cls(runtimeId)
+        return cls(bytes_io.read(2))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.runtimeId.to_bytes(2,'big',signed=False)
-        ])
+        return self.__bytes_cache
 
-class PlaceBlockWithRuntimeId(OperationBase, metaclass=Int_Meta) :
+class PlaceBlockWithRuntimeId(OperationBase, metaclass=Unsigned_Int_Meta) :
     """
     使用特定的 运行时ID 放置方块\n
     ---------------------------------\n
@@ -960,8 +971,11 @@ class PlaceBlockWithRuntimeId(OperationBase, metaclass=Int_Meta) :
 
     operation_code = 0x21
 
-    def __init__(self,runtimeId:int) -> None:
-        self.runtimeId = ctypes.c_uint32(runtimeId).value
+    def __init__(self,value:int) -> None:
+        self.value = ctypes.c_uint32(value).value
+        self.__bytes_cache = b'%s%s' % ( 
+            self.operation_code.to_bytes(1,'big',signed=False),
+            self.value.to_bytes(4,'big',signed=False) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -970,14 +984,10 @@ class PlaceBlockWithRuntimeId(OperationBase, metaclass=Int_Meta) :
 
     @classmethod
     def from_bytes(cls,bytes_io:io.BytesIO) :
-        runtimeId = int.from_bytes(bytes_io.read(4),'big',signed=False)
-        return cls(runtimeId)
+        return cls(bytes_io.read(4))
 
     def to_bytes(self) -> bytes :
-        return b''.join([
-            self.operation_code.to_bytes(1,'big',signed=False),
-            self.runtimeId.to_bytes(4,'big',signed=False)
-        ])
+        return self.__bytes_cache
 
 
 

@@ -47,7 +47,8 @@ RuntimeID_to_Block = ["air", "stone", "grass", "dirt", "cobblestone", "planks", 
 	"green_glazed_terracotta", "red_glazed_terracotta", "black_glazed_terracotta", "concrete", "concrete_powder",
 	"air", "air", "structure_block"]
 for index, id in enumerate(RuntimeID_to_Block) : RuntimeID_to_Block[index] = f"minecraft:{id}"
-Block_to_RuntimeID = {id:index for index, id in enumerate(RuntimeID_to_Block)}
+Block_to_RuntimeID = {id:index for index, id in enumerate(RuntimeID_to_Block) if id != "minecraft:air"}
+Block_to_RuntimeID["minecraft:air"] = 0
 
 
 
