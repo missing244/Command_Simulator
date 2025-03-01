@@ -1,4 +1,4 @@
-from . import nbt,TypeCheckList,Encoder,Decoder
+from . import nbt,TypeCheckList,Codecs
 from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
 import os, json, re, array, ctypes, itertools, functools
@@ -6,10 +6,9 @@ from math import floor
 
 class BLOCK_TYPE(TypedDict): 
     name: str
-    states: Dict[str, Union[ctypes.c_byte, ctypes.c_int]]
+    states: Dict[str, Union[str, bool, int, ctypes.c_byte, ctypes.c_long]]
 
-SupportEncoder = Union[Encoder.BDX, Encoder.MCSTRUCTURE, Encoder.SCHEMATIC]
-SupportDecoder = Union[Decoder.BDX, Decoder.MCSTRUCTURE, Decoder.SCHEMATIC]
+SupportCodecs = Union[Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC]
 
 
 
@@ -22,9 +21,9 @@ class CommonStructure :
     -----------------------
     * 可用属性 size : 结构长宽高(x, y, z)
     * 可用属性 origin : 结构保存时的位置
-    * 可用属性 block_index : 方块索引列表（数量与结构体积相同, -1代表跳过）
-    * 可用属性 water_log : 方块是否含水，不含水为-1，含水为1（数量与结构体积相同）
-    * 可用属性 block_palette : 方块对象列表
+    * 可用属性 block_index : 方块索引列表（-1代表跳过）
+    * 可用属性 contain_index : 方块是否含有其他方块，方块索引列表（例如含水，-1代表跳过）
+    * 可用属性 block_palette : 方块对象列表（索引指向该列表内的方块）
     * 可用属性 entity_nbt : 实体对象列表
     * 可用属性 block_nbt : 以方块索引字符串数字和nbt对象组成的字典
     -----------------------
@@ -37,7 +36,7 @@ class CommonStructure :
         self.size: array.array = array.array("i", [0,0,0])
         self.origin: array.array = array.array("i", [0,0,0])
         self.block_index: array.array[int] = array.array("i")
-        self.water_log: array.array[int] = array.array("i")
+        self.contain_index: array.array[int] = array.array("i")
         self.block_palette: List[BLOCK_TYPE] = TypeCheckList().setChecker(dict)
         self.entity_nbt: List[nbt.TAG_Compound] = TypeCheckList().setChecker(nbt.TAG_Compound)
         self.block_nbt: Dict[int, nbt.TAG_Compound] = {}
@@ -56,12 +55,12 @@ class CommonStructure :
 
 
     @classmethod
-    def from_buffer(cls, Decoder:SupportDecoder, Reader:Union[str, bytes, IOBase]) :
+    def from_buffer(cls, Decoder:SupportCodecs, Reader:Union[str, bytes, IOBase]) :
         Common = cls()
         Decoder(Common).decode(Reader)
         return Common
 
-    def save_as(self, Encoder:SupportEncoder, Writer:Union[str, IOBase], IgnoreAir:bool=True) :
+    def save_as(self, Encoder:SupportCodecs, Writer:Union[str, IOBase], IgnoreAir:bool=True) :
         """
         * 使用json格式输出时，Writer一定为字符串缓冲区或带有编码的文件缓冲区
         * IgnoreAir参数，不在mcstructure和schematic文件中生效

@@ -215,7 +215,7 @@ class GangBan_V2 :
         Json1:List[Union[BLOCK, RANGE, PALETTE]] = json.load(fp=_file)
 
         area:INFO1 = Json1[0]
-        palette:PALETTE = Json1[1]
+        palette:List[str] = Json1[1]
 
         StructureObject = cls()
         StructureObject.name = area["name"]
@@ -248,7 +248,122 @@ class GangBan_V2 :
 
 class AREA_SIZE(TypedDict) :
     ep: Tuple[int, int, int]
+    
+class CONTANIER(TypedDict) :
+    ns: str
+    aux: int
+    num: int
+    slot: int
+
+class CB_DATA(TypedDict) :
+    auto: bool
+    condition: bool
+    cmd: str
+    name: str
+    delay: int
 
 AREA_ENTITY = Tuple[int, int, int, str, str]
 
-AREA_BLOCK = Tuple[int, int, int, int, int]
+AREA_BLOCK = Tuple[int, int, int, int, int, Union[List[CONTANIER], CB_DATA]]
+
+class GangBan_V3 :
+    """
+    由 钢板 开发的结构文件对象
+    -----------------------
+    * 以 .json 为后缀的json格式文件
+    * List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, List[str]]]
+    -----------------------
+    * 可用属性 size : 结构大小
+    * 可用属性 blocks : 区块储存列表
+    * 可用属性 entities : 区块储存列表
+    * 可用属性 block_palette : 方块ID映射列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+
+
+    def __init__(self) :
+        self.size: array.array = array.array("i", [0, 0, 0])
+        self.blocks: List[AREA_BLOCK] = TypeCheckList().setChecker(list)
+        self.entities: List[AREA_ENTITY] = TypeCheckList().setChecker(list)
+        self.block_palette: List[str] = TypeCheckList().setChecker(str)
+
+    def __setattr__(self, name, value) :
+        if not hasattr(self, name) : super().__setattr__(name, value)
+        elif isinstance(value, type(getattr(self, name))) : super().__setattr__(name, value)
+        else : raise Exception("无法修改 %s 属性" % name)
+
+    def __delattr__(self, name) :
+        raise Exception("无法删除任何属性")
+
+
+    def error_check(self) :
+        block_count = 0
+        if len(self.size) != 3 : raise Exception("结构长宽高列表长度不为3")
+
+        for entity in self.entities :
+            if len(entity) < 5 : raise Exception("实体参数不完整")
+            if any(not isinstance(i, int) for i in entity[0:3]) : raise Exception(f"实体坐标参数存在非法数据")
+            if not isinstance(entity[3], str) : raise Exception(f"实体名字参数存在非法数据")
+            if not isinstance(entity[4], str) : raise Exception(f"实体id参数存在非法数据")
+
+        for block in self.blocks :
+            data_len = len(block)
+            if data_len < 5 : raise Exception("方块参数不完整")
+            if any(not isinstance(block[i], int) for i in range(5)) : raise Exception("方块数据存在非法参数")
+            if data_len > 5 and isinstance(block[5], list) :
+                for item in block[5] :
+                    if not isinstance(item.get("ns", None), (str, type(None))) : raise Exception(f"物品id参数存在非法数据")
+                    if not isinstance(item.get("aux", None), (int, type(None))) : raise Exception(f"物品aux参数存在非法数据")
+                    if not isinstance(item.get("num", None), (int, type(None))) : raise Exception(f"物品num参数存在非法数据")
+                    if not isinstance(item.get("slot", None), (int, type(None))) : raise Exception(f"物品slot参数存在非法数据")
+            if data_len > 5 and isinstance(block[5], dict) :
+                if not isinstance(block[5].get("auto", None), bool) : raise Exception(f"命令方块auto参数存在非法数据")
+                if not isinstance(block[5].get("condition", None), bool) : raise Exception(f"命令方块condition参数存在非法数据")
+                if not isinstance(block[5].get("cmd", None), str) : raise Exception(f"命令方块cmd参数存在非法数据")
+                if not isinstance(block[5].get("name", None), str) : raise Exception(f"命令方块name参数存在非法数据")
+                if not isinstance(block[5].get("delay", None), int) : raise Exception(f"命令方块delay参数存在非法数据")
+
+        return block_count
+
+
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+        if isinstance(buffer,str) : _file = open(buffer, "rb")
+        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
+        else : _file = buffer
+        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, PALETTE]] = json.load(fp=_file)
+
+        palette:PALETTE = Json1.pop()
+        area:AREA_SIZE = Json1.pop()
+
+        StructureObject = cls()
+        StructureObject.size = array.array("i", area["ep"])
+        StructureObject.block_palette.extend(palette)
+        B_APPEND = super(TypeCheckList, StructureObject.block).append
+        E_APPEND = super(TypeCheckList, StructureObject.entities).append
+        for data in Json1 :
+            if type(data[3]) is str : E_APPEND(data)
+            else : B_APPEND(data)
+
+        return StructureObject
+
+    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
+        self.error_check()
+
+        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, PALETTE]] = [
+            *self.entities,
+            *self.blocks,
+            {"ep": list(self.size)},
+            list(self.block_palette) ]
+
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "w+", encoding="utf-8")
+        else : _file = buffer
+
+        if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
+        json.dump(Json1, _file, separators=(',', ':'))
+

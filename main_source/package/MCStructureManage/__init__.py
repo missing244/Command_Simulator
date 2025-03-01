@@ -8,8 +8,7 @@
     ---------------------------------
     * 可用对象 CommonStructure: 通用结构对象
     ---------------------------------
-    * 可用编码器类 Encoder: 通用结构对象save_as方法使用的编码器类
-    * 可用解码器类 Decoder: 通用结构对象from_buffer方法使用的解码器类
+    * 可用编解码器类 Codecs: 通用结构对象from_buffer/save_as方法使用的编码器类
 """
 
 
@@ -57,5 +56,5 @@ class TypeCheckList(list) :
 
 from . import StructureBDX, StructureMCS
 from . import StructureRUNAWAY, StructureSCHEMATIC
-from .codec import Encoder, Decoder
+from .codec import Codecs
 from .structure import CommonStructure

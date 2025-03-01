@@ -143,7 +143,9 @@ class Json_Parser :
 
 
 
-JSON_PARSER = Json_Parser()
+
+
 def json_tokenizer(token_list:list, s:str, pos:int) :
+    JSON_PARSER = Json_Parser()
     JSON_PARSER.parser(token_list, s, pos)
 

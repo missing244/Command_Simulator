@@ -75,7 +75,10 @@ class camera :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index,entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
-        if token_list[index]["token"].group() == "clear" : return functools.partial(cls.clear, entity_get=entity_func)
+        if token_list[index]["token"].group() == "clear" : 
+            return functools.partial(cls.clear, entity_get=entity_func)
+        elif token_list[index]["token"].group() == "remove_target" : 
+            return functools.partial(cls.remove_target, entity_get=entity_func)
         elif token_list[index]["token"].group() == "fade" : 
             index += 1
             if index >= token_list.__len__() : return functools.partial(cls.fade_default, entity_get=entity_func)
@@ -142,6 +145,13 @@ class camera :
         entity_list = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         return Response.Response_Template("将以下玩家的摄像头状态清除 ：\n$players", 1, len(entity_list)).substitute(
+            players=", ".join( (ID_tracker(i) for i in entity_list) )
+        )
+
+    def remove_target(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        return Response.Response_Template("将以下玩家取消聚焦模式 ：\n$players", 1, len(entity_list)).substitute(
             players=", ".join( (ID_tracker(i) for i in entity_list) )
         )
 

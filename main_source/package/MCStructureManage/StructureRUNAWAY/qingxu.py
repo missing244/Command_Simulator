@@ -5,15 +5,11 @@ from io import FileIO, BytesIO, StringIO, TextIOBase
 
 class FormatError(Exception) : pass
 
-class FILE_FORMAT(TypedDict) :
-    Block_ID: str
-    Size: int
-
 class BLOCK(TypedDict) :
     Name: str
-    x: int
-    y: int
-    z: int
+    X: int
+    Y: int
+    Z: int
 
 
 class QingXu :
@@ -21,10 +17,9 @@ class QingXu :
     由 情绪 开发的结构文件对象
     -----------------------
     * 以 .json 为后缀的json格式文件
-    * 格式：{ "Block-1": "{\\"Name\\":\\"grass\\",\\"x\\":0,\\"y\\":0,\\"z\\":0}", "Size": 1}
+    * 格式：{ "0": "{\"0\":\"{\\\"Name\\\":\\\"grass\\\",\\\"X\\\":0,\\\"Y\\\":0,\\\"Z\\\":0}\"", "totalBlocks": 1}
     -----------------------
     * 可用属性 chunks : 区块储存列表
-    * 可用属性 block_palette : 方块ID映射列表
     -----------------------
     * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
     * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
@@ -32,7 +27,7 @@ class QingXu :
     
 
     def __init__(self) :
-        self.blocks: List[BLOCK] = TypeCheckList().setChecker(dict)
+        self.chunks: List[List[BLOCK]] = TypeCheckList().setChecker(list)
 
     def __setattr__(self, name, value) :
         if not hasattr(self, name) : super().__setattr__(name, value)
@@ -44,17 +39,20 @@ class QingXu :
 
 
     def error_check(self) :
-        for block in self.blocks :
-            if not isinstance(block.get("Name", None), str) : raise Exception("区块数据缺少或存在错误 Name 参数")
-            if not isinstance(block.get("x", None), int) : raise Exception("区块数据缺少或存在错误 x 参数")
-            if not isinstance(block.get("y", None), int) : raise Exception("区块数据缺少或存在错误 y 参数")
-            if not isinstance(block.get("z", None), int) : raise Exception("区块数据缺少或存在错误 z 参数")
+        for chunk in self.chunks :
+            for block in chunk :
+                if not isinstance(block, dict) : raise Exception("方块数据不为dict参数")
+                if not isinstance(block.get("Name", None), str) : raise Exception("方块数据缺少或存在错误 Name 参数")
+                if not isinstance(block.get("X", None), int) : raise Exception("方块数据缺少或存在错误 X 参数")
+                if not isinstance(block.get("Y", None), int) : raise Exception("方块数据缺少或存在错误 Y 参数")
+                if not isinstance(block.get("Z", None), int) : raise Exception("方块数据缺少或存在错误 Z 参数")
 
     def get_volume(self) :
-        origin_min, origin_max, str1 = [0, 0, 0], [0, 0, 0], ["x", "y", "z"]
+        origin_min, origin_max, str1 = [0, 0, 0], [0, 0, 0], ["X", "Y", "Z"]
 
-        for i in range(3) : origin_min[i] = min(j[str1[i]] for j in self.blocks)
-        for i in range(3) : origin_max[i] = max(j[str1[i]] for j in self.blocks)
+        for chunk in self.chunks :
+            for i in range(3) : origin_min[i] = min(j[str1[i]] for j in chunk)
+            for i in range(3) : origin_max[i] = max(j[str1[i]] for j in chunk)
 
         return origin_min, origin_max
 
@@ -64,22 +62,33 @@ class QingXu :
         if isinstance(buffer, str) : _file = open(buffer, "rb")
         elif isinstance(buffer, bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:FILE_FORMAT = json.load(fp=_file)
+        Json1 = json.load(fp=_file)
         
-        if "Size" not in Json1 : raise FormatError("文件缺少Size参数")
+        if "totalBlocks" not in Json1 : raise FormatError("文件缺少totalBlocks参数")
 
         StructureObject = cls()
         Append = super(TypeCheckList, StructureObject.blocks).append
-        for i in range(1, Json1["Size"]+1, 1) :
-            a = Json1.get(f"Block-{i}", None)
-            if a : Append( json.loads(a) )
+        for i in range(Json1["totalBlocks"]) :
+            chunk = Json1.get(f"{i}", None)
+            if not chunk : continue
+            for j in range(chunk["totalPoints"]) : 
+                block = Json1.get(f"{j}", None)
+                if not block : continue
+                Append( json.loads(block) )
 
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, StringIO]) :
         self.error_check()
-        Json1:FILE_FORMAT = {"Size":len(self.blocks)}
-        for i,j in enumerate(self.blocks, start=1) : Json1[f"Block-{i}"] = json.dumps(j, separators=(',', ':'))
+        Json1 = {"totalBlocks":len(self.chunks)}
+        for i, chunk in enumerate(self.chunks) : 
+            minX, maxX = min(i["X"] for i in chunk), max(i["X"] for i in chunk)
+            minY, maxY = min(i["Y"] for i in chunk), max(i["Y"] for i in chunk)
+            minZ, maxZ = min(i["Z"] for i in chunk), max(i["Z"] for i in chunk)
+            Cache = {"totalPoints": len(chunk), "centerX":(minX+maxX)//2, 
+                "centerY":(minY+maxY)//2, "centerZ":(minZ+maxZ)//2}
+            for j, block in enumerate(chunk) : Cache[f"{j}"] = json.dumps(block, separators=(',', ':'))
+            Json1[f"{i}"] = json.dumps(Cache, separators=(',', ':'))
 
         if isinstance(buffer, str) : 
             base_path = os.path.realpath(os.path.join(buffer, os.pardir))

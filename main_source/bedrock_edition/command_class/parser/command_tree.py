@@ -133,6 +133,31 @@ Command_Title = [
     )
 ]
 
+#Obrit摄像机设置部分
+Obrit_Camera_Setting = [
+    BaseMatch.Char("Obrit_Setting","entity_offset").add_leaves(
+        BaseMatch.Float("X_Offset").add_leaves(
+            BaseMatch.Float("Y_Offset").add_leaves( 
+                BaseMatch.Float("Z_Offset").add_leaves( BaseMatch.END_NODE )
+            )
+        )
+    ),
+    BaseMatch.Char("Obrit_Setting","view_offset").add_leaves(
+        BaseMatch.Float("X_Offset").add_leaves( 
+            BaseMatch.Float("Y_Offset").add_leaves( 
+                BaseMatch.Char("Obrit_Setting","entity_offset").add_leaves(
+                    BaseMatch.Float("X_Offset").add_leaves(
+                        BaseMatch.Float("Y_Offset").add_leaves( 
+                            BaseMatch.Float("Z_Offset").add_leaves( BaseMatch.END_NODE )
+                        )
+                    )
+                ),  
+                BaseMatch.END_NODE
+            )
+        )
+    )
+]
+
 #后面打✓的是完整测试过的
 #加V的是检查过版本的
 Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Command_Start","/").add_leaves(
@@ -176,9 +201,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # camera ✓ V ps: 1.20.10.23加入了facing,不过在1.20.20.22以前属于实验玩法
     BaseMatch.Char("Command","camera").set_version(1,20,30,"min").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Char("Argument","clear").add_leaves( 
-                BaseMatch.END_NODE 
-            ),
+            BaseMatch.Char("Argument","clear").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.Char("Argument","fade").add_leaves( 
                 BaseMatch.Char("Color","color").add_leaves( 
                     BaseMatch.Int("Color_Red").add_leaves( 
@@ -205,13 +228,18 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 ),
                 BaseMatch.END_NODE
             ),
+            BaseMatch.Char("Argument","remove_target").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.Char("Argument","set").add_leaves(
                 BaseMatch.AnyString("Camera_Type").add_leaves(
-                    BaseMatch.END_NODE,
                     BaseMatch.Char("Type_Argument","default").add_leaves( BaseMatch.END_NODE ),
                     BaseMatch.Char("Type_Argument","ease").add_leaves(
                         BaseMatch.Float("Camera_Ease_Time").add_leaves(
-                            BaseMatch.AnyString("Camera_Type").add_leaves(
+                            BaseMatch.Enum("Ease_Type", "linear", "spring", "in_quad", "out_quad", "in_out_quad", 
+                            "in_cubic", "out_cubic", "in_out_cubic", "in_quart", "out_quart", "in_out_quart", 
+                            "in_quint", "out_quint", "in_out_quint", "in_sine", "out_sine", "in_out_sine", "in_expo",
+                            "out_expo", "in_out_expo", "in_circ", "out_circ", "in_out_circ", "in_bounce", "out_bounce",
+                            "in_out_bounce", "in_back", "out_back", "in_out_back", "in_elastic", "out_elastic",
+                            "in_out_elastic").add_leaves(
                                 BaseMatch.END_NODE,
                                 BaseMatch.Char("Camera_Type_Argument","default").add_leaves( BaseMatch.END_NODE ),
                                 BaseMatch.Char("Camera_Type_Argument","facing").add_leaves(
@@ -253,13 +281,13 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                         )    
                     ),
                     BaseMatch.Char("Type_Argument","rot").add_leaves(
-                        *SpecialMatch.Rotation_Tree( BaseMatch.END_NODE )
-                    ),
-                    BaseMatch.Char("Type_Argument", "view_offset").add_leaves(
-                        BaseMatch.Float("viewX").add_leaves(
-                            BaseMatch.Float("viewY").add_leaves( BaseMatch.END_NODE )
+                        *SpecialMatch.Rotation_Tree( 
+                            *Obrit_Camera_Setting,
+                            BaseMatch.END_NODE
                         )
-                    )
+                    ),
+                    *Obrit_Camera_Setting,
+                    BaseMatch.END_NODE,
                 )
             )
         )

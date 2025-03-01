@@ -125,7 +125,7 @@ class BDX_File :
                 a = bdx_code.read(1)
                 if not a or a == b"\x58" : break
                 b = OPERATION_BYTECODES[a].from_bytes(bdx_code)
-                BDX_Object.const_str.append(b.string) if type(b) is StrType else SuperAppend(b)
+                BDX_Object.const_str.append(b.string) if b.__class__ is StrType else SuperAppend(b)
         except Exception as e :
             #print(len(bdx_code.getvalue()),bdx_code.tell(),bdx_code.getvalue()[bdx_code.tell()-1:])
             #traceback.print_exc()

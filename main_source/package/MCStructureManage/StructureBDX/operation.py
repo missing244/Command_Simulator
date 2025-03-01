@@ -39,7 +39,7 @@ class Signed_Int_Meta(type) :
     
     def __call__(self, v:Union[bytes, int]) :
         if v not in self._memory : 
-            value = int.from_bytes(v, 'big', signed=True) if type(v) is bytes else v
+            value = int.from_bytes(v, 'big', signed=True) if v.__class__ is bytes else v
             self._memory[v] = super().__call__(value)
         return self._memory[v]
 
@@ -51,7 +51,7 @@ class Unsigned_Int_Meta(type) :
     
     def __call__(self, v:Union[bytes, int]) :
         if v not in self._memory : 
-            value = int.from_bytes(v, 'big', signed=False) if type(v) is bytes else v
+            value = int.from_bytes(v, 'big', signed=False) if v.__class__ is bytes else v
             self._memory[v] = super().__call__(value)
         return self._memory[v]
 

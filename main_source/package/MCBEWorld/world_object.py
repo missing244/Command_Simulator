@@ -50,13 +50,11 @@ class MinecraftLevelDB(leveldb.LevelDB) :
 
 
     def Chunk_Pos(self, dimension:DimensionType) :
-        operation_bytes = (43).to_bytes(1, "little", signed=False)
-        if dimension == "overworld" : TestBytes = operation_bytes
-        elif dimension == "nether" : TestBytes = b"".join((b"\x01\x00\x00\x00", operation_bytes))
-        elif dimension == "the_end" : TestBytes = b"".join((b"\x02\x00\x00\x00", operation_bytes))
+        operation_bytes = 47
+        TestIndex = 8 if dimension == "overworld" else 12
 
         for key in self.keys() :
-            if key[8:] != TestBytes : continue
+            if len(key[TestIndex:1000]) != 2 or key[TestIndex] != operation_bytes : continue
             PosX = int.from_bytes(key[0:4], "little", signed=True)
             PosZ = int.from_bytes(key[4:8], "little", signed=True)
             yield (PosX, PosZ)
@@ -211,8 +209,8 @@ class NeteaseWorld(BedrockWorld) :
                 WRITE_FILE.write(READ_FILE.read())
             else :
                 CycleIter = itertools.cycle(SECRET_KEY)
-                FileByte = READ_FILE.read()
-                array1 = array.array("B", (i^j for i,j in zip(CycleIter, FileByte)) )
+                array1 = array.array("B", READ_FILE.read() )
+                for i,j in enumerate(array1) : array1[i] = j ^ next(CycleIter)
                 array1.tofile(WRITE_FILE)
             
             READ_FILE.close()
@@ -232,16 +230,19 @@ class NeteaseWorld(BedrockWorld) :
             source_dir = os.path.join(self.world_path, "db")
             for file_name in os.listdir(source_dir) :
                 if not is_file(os.path.join(source_dir, file_name)) : continue
-                READ_FILE =  open(os.path.join(source_dir, file_name), "rb")
-                FILE_BYTES = READ_FILE.read()
-                READ_FILE.close()
+                CycleIter = itertools.cycle(self.encrypt_key)
 
+                READ_FILE =  open(os.path.join(source_dir, file_name), "rb")
+                array1 = array.array("B", READ_FILE.read() )
+                for i,j in enumerate(array1) : array1[i] = j ^ next(CycleIter)
+                
                 WRITE_FILE = open(os.path.join(source_dir, file_name), "wb")
                 WRITE_FILE.write(Encrypt_Header)
-                CycleIter = itertools.cycle(self.encrypt_key)
-                array1 = array.array("B", (i^j for i,j in zip(CycleIter, FILE_BYTES)) )
                 array1.tofile(WRITE_FILE)
+
+                READ_FILE.close()
                 WRITE_FILE.close()
+
 
 
 
@@ -260,3 +261,4 @@ def GetWorldEdtion(path:str) :
         byte1 = _file.read(4)
         if byte1 == Encrypt_Header : return NeteaseWorld
         else : return BedrockWorld
+

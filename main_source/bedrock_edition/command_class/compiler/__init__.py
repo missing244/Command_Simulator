@@ -183,8 +183,8 @@ def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Matc
         if command_name == "execute" : return func.__compiler__(_game, token_list, version)
         else : return func.__compiler__(_game, token_list)
     except Exception as e :
-        if hasattr(e,"pos") : s = "%s\n错误位于字符%s至%s" % (e.args[0], e.pos[0], e.pos[1])
-        else : s = e.args[0]
+        if hasattr(e, "pos") : s = "%s\n错误位于字符%s至%s" % (e.args[0], e.pos[0], e.pos[1])
+        else : s = e.__class__.__name__ + ": " + e.args[0]
         if not isinstance(e, CommandParser.BaseMatch.Command_Match_Exception) : traceback.print_exc()
-        return (s,e)
+        return (s, e)
     

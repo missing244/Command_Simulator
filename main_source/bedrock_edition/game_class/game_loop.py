@@ -353,7 +353,7 @@ def terminal_running(self:RunTime.minecraft_thread) :
 
     if len(feedback_list) == 0 :
         for command,function in command_function : 
-            try : feedback = function(context, self) ; feedback.set_command
+            try : feedback = function(context, self)
             except Exception as e : print(command, function) ; raise e
             else : feedback_list.append( feedback.set_command(command) )
 
