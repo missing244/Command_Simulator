@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>可视化模型</title>
+        <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1.0" />
+	</head>
+
+    <body>
+        <canvas id="threejs" style="width: 100%;"></canvas>
+    </body>
+
+    <script type="module">
+		import * as THREE from "./js/three.module.js";
+		import {OrbitControls} from "./js/OrbitControls.js";
+		import {print, BlockChunk} from "./js/MinecraftRender/render.js";
+
+		const canvas = document.querySelector( '#threejs' )
+		canvas.style.height = window.innerHeight.toString() + "px"
+		const renderer = new THREE.WebGLRenderer( { antialias: true, canvas} )
+		renderer.setPixelRatio(window.devicePixelRatio)
+		renderer.setSize( canvas.innerWidth, canvas.innerHeight )
+
+		const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+		const controls = new OrbitControls(camera, canvas);
+		controls.target = new THREE.Vector3(4.5, 0.5, 0.5);
+		controls.minDistance = 1;
+		camera.position.x = 10;
+		camera.position.y = 5;
+		camera.position.z = 10;
+		camera.lookAt(controls.target);
+
+		const scene = new THREE.Scene();
+		scene.background = new THREE.Color( 'lightblue' );
+
+		const axesHelper = new THREE.AxesHelper(200);
+		scene.add(axesHelper);
+		
+		const light = new THREE.AmbientLight(0xfaffff); // soft white light
+		scene.add(light);
+
+		function resizeRendererToDisplaySize(renderer) {
+			const canvas = renderer.domElement;
+			const width = canvas.clientWidth;
+			const height = canvas.clientHeight;
+			const needResize = canvas.width !== width || canvas.height !== height;
+			if ( needResize ) renderer.setSize( width, height, false );
+			return needResize;
+		}
+
+		let renderRequested = false;
+		function render() {
+			renderRequested = undefined;
+			if ( resizeRendererToDisplaySize(renderer) ) {
+				const canvas = renderer.domElement;
+				camera.aspect = canvas.clientWidth / canvas.clientHeight;
+				camera.updateProjectionMatrix();
+			}
+			controls.update();
+			renderer.render( scene, camera );
+		}
+
+		render();
+		function requestRenderIfNotRequested() {
+			if ( ! renderRequested ) {
+				renderRequested = true;
+				requestAnimationFrame(render);
+			}
+		}
+
+		controls.addEventListener( 'change', requestRenderIfNotRequested )
+
+        setTimeout( () => {
+			const BlockMap = [ 
+				{name:"minecraft:air", states:{}},
+				{name:"minecraft:jigsaw", states:{}},
+				{name:"minecraft:jukebox", states:{}},
+				{name:"minecraft:jungle_button", states:{}},
+				{name:"minecraft:jungle_door|down", states:{}},
+				{name:"minecraft:jungle_door|up", states:{}},
+				{name:"minecraft:jungle_double_slab", states:{}},
+				{name:"minecraft:jungle_fence", states:{}},
+				{name:"minecraft:jungle_fence_gate", states:{}},
+				{name:"minecraft:jungle_hanging_sign", states:{}},
+				{name:"minecraft:jungle_leaves", states:{}},
+				{name:"minecraft:jungle_log", states:{}},
+				{name:"minecraft:jungle_planks", states:{}},
+				{name:"minecraft:jungle_pressure_plate", states:{}},
+				{name:"minecraft:jungle_sapling", states:{}},
+				{name:"minecraft:jungle_slab", states:{}},
+				{name:"minecraft:jungle_stairs", states:{}},
+				{name:"minecraft:jungle_trapdoor", states:{}},
+				{name:"minecraft:jungle_wood", states:{}},
+				{name:"minecraft:jungle_standing_sign", states:{}},
+				{name:"minecraft:jungle_wall_sign", states:{}},
+			]
+            const Structure = new BlockChunk({
+				cellSizeX:50, cellSizeY:30, cellSizeZ:50, 
+				tileSize:16, blockMap:BlockMap})
+
+			for (let x = 0; x < BlockMap.length-1; x++) {
+				for (let y = 0; y < 1; y++) {
+					for (let z = 0; z < 1; z++) {
+						Structure.setVoxel(x, y, z, x+1)
+					}
+				}
+			}
+            const MeshList = Structure.generateMeshList()
+            MeshList.forEach(element => {scene.add(element)})
+			render()
+        }, 500)
+
+	</script>
+
+</html>
+

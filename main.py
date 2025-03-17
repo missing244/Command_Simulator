@@ -17,7 +17,7 @@ import main_source.main_window.update_change as update_change
 import main_source.main_window.constant as app_constants
 import main_source.main_window.function as app_function
 import main_source.main_window.tk_frame as app_tk_frame
-import main_source.package.file_operation as file_IO
+import package.file_operation as file_IO
 
 #模拟世界模块加载
 import main_source.bedrock_edition as Minecraft_BE
@@ -29,7 +29,7 @@ if True : #启用软件前的加载项目
     os.makedirs(os.path.join("functionality","example","example_bp","functions"),exist_ok=True)
     manifest_path = os.path.join("functionality","example","example_bp","manifest.json")
     if not(os.path.exists(manifest_path) and os.path.isfile(manifest_path)) : 
-        file_IO.write_a_file(os.path.join("functionality","example","example_bp","manifest.json"),app_constants.manifest_json)
+        file_IO.write_a_file(os.path.join("functionality","example","example_bp","manifest.json"), app_constants.manifest_json)
     del manifest_path
 
     def http_server_create(server_class=http.server.HTTPServer, handler_class=http.server.SimpleHTTPRequestHandler):
@@ -47,11 +47,11 @@ if True : #启用软件前的加载项目
                     if query_components["page"][0] == "index" :
                         path1 = os.path.join("expand_pack", pack_dir_name, "index.html")
                         if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                        send_bytes = file_IO.read_a_file(path1,"readbyte")
+                        send_bytes = file_IO.read_a_file(path1, "readbyte")
                     elif query_components["page"][0] == "help" :
                         path1 = os.path.join("expand_pack", pack_dir_name, "help.html")
                         if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                        send_bytes = file_IO.read_a_file(path1,"readbyte")
+                        send_bytes = file_IO.read_a_file(path1, "readbyte")
 
                     self.send_response(200)
                     self.send_header('Content-type', 'texthtml')
@@ -70,7 +70,7 @@ if True : #启用软件前的加载项目
                     default=Minecraft_BE.DataSave.encoding).encode('utf-8')))
 
         server_address = ('', 32323)
-        http_Resquest = functools.partial(http_Resquest, directory="html_output")
+        http_Resquest = functools.partial(http_Resquest, directory="local_server")
         httpd = server_class(server_address, http_Resquest)
         httpd.serve_forever()
     threading.Thread(target=http_server_create).start()
@@ -249,7 +249,8 @@ class control_windows :
         self.display_frame["policy_frame"].input_box4.delete("0.0","end")
         self.display_frame["policy_frame"].policy_title.config(text = a[mode])
         self.display_frame["policy_frame"].notes.config(text = "")
-        if mode == "use" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","use.txt"))
+
+        if mode == "use" : text1 = file_IO.read_a_file(os.path.join("main_source", "app_policy", "use.txt"))
         elif mode == "privacy" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","privacy.txt"))
         elif mode == "about" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","about_app.txt"))
         elif mode == "open" : 
