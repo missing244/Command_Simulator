@@ -30,10 +30,10 @@ def BlockState_Compiler(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tu
     block_state_token : List[str] = []
     if token_list[index]["type"] != "Start_BlockState_Argument" : return ({}, index)
     index += 1 ; block_state_token.append("{")
-
+    
     while 1 :
         if token_list[index]["type"] in ("BlockState","Value","Next_BlockState_Argument") : 
-            block_state_token.append( token_list[index]["token"].group() )
+            block_state_token.append( token_list[index]["token"] )
         elif token_list[index]["type"] == "Equal" : 
             block_state_token.append(":")
         elif token_list[index]["type"] == "End_BlockState_Argument" : 
@@ -50,8 +50,8 @@ def BlockState_Compiler(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tu
     return (index, input_block_state)
 
 def ItemComponent_Compiler(_game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, index:int) -> Tuple[int,dict] :
-    json_str_list = [i["token"].group() for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
-    json_str_list.append(token_list[index + len(json_str_list)]["token"].group())
+    json_str_list = [i["token"] for i in itertools.takewhile(lambda x : x["type"] != "All_Json_End", token_list[index:])]
+    json_str_list.append(token_list[index + len(json_str_list)]["token"])
     index = index + len(json_str_list)
     item_nbt = json.loads("".join(json_str_list))
     key_list = set(("minecraft:keep_on_death", "minecraft:can_destroy", "minecraft:can_place_on", "minecraft:item_lock"))
@@ -100,8 +100,8 @@ def Msg_Compiler(_game:RunTime.minecraft_thread, msg_temp:str, msg_temp_start:in
             if hasattr(token_1[1], "pos") : 
                 token_1[1].pos = tuple([i+re_obj.start()+msg_temp_start for i in token_1[1].pos])
             raise token_1[1]
-        msg_temp = replace_str(msg_temp, re_obj.start()+token_1[0]["token"].start(), 
-            re_obj.start()+token_1[-2]["token"].end(), "%s")
+        msg_temp = replace_str(msg_temp, re_obj.start()+token_1[0]["start"], 
+            re_obj.start() + token_1[-2]["end"], "%s")
         search_entity_list.append( Selector.Selector_Compiler(_game, token_1, 0)[1] )
     search_entity_list.reverse()
     return (msg_temp, search_entity_list)
@@ -167,7 +167,7 @@ Command_to_Compiler = {
 def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], _game:RunTime.minecraft_thread, 
                   version:Tuple[int]) -> Union[functools.partial,Tuple[str,Exception],None] :
     if token_list[0]["type"] != "Command" : return None
-    command_name = token_list[0]["token"].group()
+    command_name = token_list[0]["token"]
     if command_name not in Command_to_Compiler : return None
 
     if isinstance(Command_to_Compiler[command_name], type) : func = Command_to_Compiler[command_name]

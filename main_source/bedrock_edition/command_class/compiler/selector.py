@@ -296,32 +296,32 @@ def set_insert_extand_Data(saves:dict, key:str, value, types:Union[list,None]=No
         elif not isinstance(saves[key], (dict,list)) : saves[key] = value
 
 def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, token_list:COMMAND_TOKEN, index:int) -> int :
-    selector_argument = token_list[index]["token"].group()
+    selector_argument = token_list[index]["token"]
 
     if selector_argument in ("x","y","z") :
         key = "pos_%s" % selector_argument ; index += 2
         if token_list[index]["type"] == "Value" : 
-            selector_save[key] = token_list[index]["token"].group()
-        elif token_list[index]["type"] == "Relative_Value" and len(token_list[index]["token"].group()) > 1 : 
-            selector_save[key] = token_list[index]["token"].group()
+            selector_save[key] = token_list[index]["token"]
+        elif token_list[index]["type"] == "Relative_Value" and len(token_list[index]["token"]) > 1 : 
+            selector_save[key] = token_list[index]["token"]
 
     if selector_argument in ("dx","dy","dz","rxm","rx","rym","ry") :
-        index += 2 ; selector_save[selector_argument] = token_list[index]["token"].group()
+        index += 2 ; selector_save[selector_argument] = token_list[index]["token"]
 
     elif selector_argument in ("lm","l") :
-        index += 2 ; selector_save[selector_argument] = int(token_list[index]["token"].group())
+        index += 2 ; selector_save[selector_argument] = int(token_list[index]["token"])
         if selector_save[selector_argument] < 0 : 
-            raise CompileError("等级参数不能为负数",pos=(token_list[index-2]["token"].start(),token_list[index]["token"].end()))
+            raise CompileError("等级参数不能为负数",pos=(token_list[index-2]["start"],token_list[index]["end"]))
     
     elif selector_argument in ("rm","r") :
-        index += 2 ; selector_save[selector_argument] = np.float32(token_list[index]["token"].group())
+        index += 2 ; selector_save[selector_argument] = np.float32(token_list[index]["token"])
         if selector_save[selector_argument] < 0 : 
-            raise CompileError("距离参数不能为负数",pos=(token_list[index-2]["token"].start(),token_list[index]["token"].end()))
+            raise CompileError("距离参数不能为负数",pos=(token_list[index-2]["start"],token_list[index]["end"]))
 
     elif selector_argument == "c" :
-        index += 2 ; selector_save["limit"] = int(token_list[index]["token"].group())
+        index += 2 ; selector_save["limit"] = int(token_list[index]["token"])
         if selector_save["limit"] == 0 :
-            raise CompileError("数量参数不能为0",pos=(token_list[index-2]["token"].start(),token_list[index]["token"].end()))
+            raise CompileError("数量参数不能为0",pos=(token_list[index-2]["start"],token_list[index]["end"]))
         elif selector_save["limit"] < 0 : selector_save["sort"] = "farnest"
 
     elif selector_argument == "scores" :
@@ -331,18 +331,18 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
             if token_list[index]["type"] == "Next_Score_Argument" : continue
 
             board_condition = {"board":"", "min":-2147483648, "max":2147483647}
-            board_condition["board"] = Quotation_String_transfor_2(token_list[index]["token"].group())
+            board_condition["board"] = Quotation_String_transfor_2(token_list[index]["token"])
 
             index += 2 ; unless_mode = False
             if token_list[index]["type"] == "Not" : unless_mode = True ; index += 1
             if token_list[index]["type"] == "Range_Min" : 
-                board_condition["min"] = int(token_list[index]["token"].group()) ; index += 1
+                board_condition["min"] = int(token_list[index]["token"]) ; index += 1
 
             if token_list[index]["type"] != "Range_Sign" : board_condition["max"] = board_condition["min"]
             else :
                 index += 1
                 if token_list[index]["type"] == "Range_Max" : 
-                    board_condition["max"] = int(token_list[index]["token"].group()) ; index += 1
+                    board_condition["max"] = int(token_list[index]["token"]) ; index += 1
             
             if unless_mode : set_insert_extand_Data(selector_save, "scores_unless", board_condition, list)
             else : set_insert_extand_Data(selector_save, "scores_if", board_condition, list)
@@ -351,9 +351,9 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
         index += 2
         while token_list[index]["type"] != "End_Permission_Argument" :
             index += 1
-            permission = token_list[index]["token"].group()
+            permission = token_list[index]["token"]
             if "permission_test" not in selector_save : selector_save["permission_test"] = {}
-            selector_save["permission_test"][permission] = token_list[index+2]["token"].group()
+            selector_save["permission_test"][permission] = token_list[index+2]["token"]
             index += 3
 
     elif selector_argument == "hasitem" :
@@ -369,45 +369,45 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
                 index += 1
                 if token_list[index]["type"] == "Next_Item_Argument" : continue
 
-                if token_list[index]["type"] == "Item_Argument" and token_list[index]["token"].group() == "item" :
+                if token_list[index]["type"] == "Item_Argument" and token_list[index]["token"] == "item" :
                     index += 2
-                    item_name = minecraft_ID_transfor(token_list[index]["token"].group())
+                    item_name = minecraft_ID_transfor(token_list[index]["token"])
                     if item_name not in game_tread.minecraft_ident.items : raise CompileError("不存在的物品ID：%s" % item_name, 
-                        pos=(token_list[index]["token"].start(),token_list[index]["token"].end()))
+                        pos=(token_list[index]["start"],token_list[index]["end"]))
                     hasitem_condition["item"] = item_name
-                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"].group() == "data" :
+                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"] == "data" :
                     index += 2
-                    data_value = int(token_list[index]["token"].group())
+                    data_value = int(token_list[index]["token"])
                     hasitem_condition["data"] = data_value
-                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"].group() == "quantity" :
+                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"] == "quantity" :
                     index += 2 ; unless_mode = False ; quantity = [1,2147483647]
                     if token_list[index]["type"] == "Not" : unless_mode = True ; index += 1
                     if token_list[index]["type"] == "Range_Min" : 
-                        quantity[0] = int(token_list[index]["token"].group()) ; index += 1
+                        quantity[0] = int(token_list[index]["token"]) ; index += 1
 
                     if token_list[index]["type"] != "Range_Sign" : quantity[1] = quantity[0]
                     else :
                         index += 1
                         if token_list[index]["type"] == "Range_Max" : 
-                            quantity[1] = int(token_list[index]["token"].group()) ; index += 1
+                            quantity[1] = int(token_list[index]["token"]) ; index += 1
                     
                     if unless_mode : hasitem_condition["quantity_unless"] = quantity
                     else : hasitem_condition["quantity_if"] = quantity
-                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"].group() == "location" :
+                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"] == "location" :
                     has_location = True ; index += 2
                     hasitem_condition["location"].clear()
-                    hasitem_condition["location"].append(token_list[index]["token"].group())
-                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"].group() == "slot" :
+                    hasitem_condition["location"].append(token_list[index]["token"])
+                elif token_list[index]["type"] == "Item_Argument" and token_list[index]["token"] == "slot" :
                     has_slot = True ; index += 2 ; unless_mode = False ; slot = [1,2147483647]
                     if token_list[index]["type"] == "Not" : unless_mode = True ; index += 1
                     if token_list[index]["type"] == "Range_Min" : 
-                        slot[0] = int(token_list[index]["token"].group()) ; index += 1
+                        slot[0] = int(token_list[index]["token"]) ; index += 1
 
                     if token_list[index]["type"] != "Range_Sign" : slot[1] = slot[0]
                     else :
                         index += 1
                         if token_list[index]["type"] == "Range_Max" : 
-                            slot[1] = int(token_list[index]["token"].group()) ; index += 1
+                            slot[1] = int(token_list[index]["token"]) ; index += 1
                     if unless_mode : hasitem_condition["slot_unless"] = slot
                     else : hasitem_condition["slot_if"] = slot
 
@@ -430,11 +430,11 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
             set_insert_extand_Data(selector_save, mode, "", list)
             index -= 1
         else : 
-            str1 = Quotation_String_transfor_2( token_list[index]["token"].group())
+            str1 = Quotation_String_transfor_2( token_list[index]["token"])
             if selector_argument == "type" : 
                 str1 = minecraft_ID_transfor(str1)
                 if str1 not in game_tread.minecraft_ident.entities : 
-                    raise CompileError("不存在的实体ID：%s" % str1,pos=(token_list[index]["token"].start(),token_list[index]["token"].end()))
+                    raise CompileError("不存在的实体ID：%s" % str1,pos=(token_list[index]["start"],token_list[index]["end"]))
             set_insert_extand_Data(selector_save, mode, str1, list)
 
     elif selector_argument == "has_property" :
@@ -446,32 +446,32 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
                 index += 2
                 condition_json = {"condition":"has_property", "name":"", "not":False}
                 if token_list[index]["type"] == "Not" : condition_json["not"] = True ; index += 1
-                condition_json["name"] = name = token_list[index]["token"].group() ; index += 1
+                condition_json["name"] = name = token_list[index]["token"] ; index += 1
                 if not any( (name in data["description"].get("properties", {}) \
                     for entity,data in game_tread.minecraft_ident.entities.items()) ) :
-                    raise CompileError("不存在的实体属性：%s" % name, pos=(token_list[index-1]["token"].start(),token_list[index-1]["token"].end()))
+                    raise CompileError("不存在的实体属性：%s" % name, pos=(token_list[index-1]["start"],token_list[index-1]["end"]))
                 set_insert_extand_Data(selector_save, "has_property", condition_json, list)
             elif token_list[index]["type"] == "Property" : 
                 condition_json = {"condition":"property_test", "name":"", "value":None, "min":None, "max":None, "not":False}
-                condition_json["name"] = name = token_list[index]["token"].group() ; index += 2
+                condition_json["name"] = name = token_list[index]["token"] ; index += 2
                 if not any( (name in data["description"].get("properties", {}) \
                     for entity,data in game_tread.minecraft_ident.entities.items()) ) :
-                    raise CompileError("不存在的实体属性：%s" % name, pos=(token_list[index-2]["token"].start(),token_list[index-2]["token"].end()))
+                    raise CompileError("不存在的实体属性：%s" % name, pos=(token_list[index-2]["start"],token_list[index-2]["end"]))
                 if token_list[index]["type"] == "Bool" :
-                    condition_json["value"] = ("false","true").index(token_list[index]["token"].group()).__bool__() ; index += 1
+                    condition_json["value"] = ("false","true").index(token_list[index]["token"]).__bool__() ; index += 1
                 elif token_list[index]["type"] == "Float" :
-                    condition_json["value"] = float(token_list[index]["token"].group()) ; index += 1
+                    condition_json["value"] = float(token_list[index]["token"]) ; index += 1
                 elif token_list[index]["type"] == "String" :
-                    condition_json["value"] = Quotation_String_transfor_2(token_list[index]["token"].group()) ; index += 1
+                    condition_json["value"] = Quotation_String_transfor_2(token_list[index]["token"]) ; index += 1
                 else :
                     if token_list[index]["type"] == "Not" : condition_json["not"] = True ; index += 1
                     if token_list[index]["type"] == "Range_Min" : 
-                        condition_json["min"] = int(token_list[index]["token"].group()) ; index += 1
+                        condition_json["min"] = int(token_list[index]["token"]) ; index += 1
                     if token_list[index]["type"] != "Range_Sign" : condition_json["max"] = condition_json["min"]
                     else :
                         index += 1
                         if token_list[index]["type"] == "Range_Max" : 
-                            condition_json["max"] = int(token_list[index]["token"].group()) ; index += 1
+                            condition_json["max"] = int(token_list[index]["token"]) ; index += 1
 
                 set_insert_extand_Data(selector_save, "has_property", condition_json, list)
 
@@ -480,7 +480,7 @@ def Selector_Save_Set(game_tread:RunTime.minecraft_thread, selector_save:dict, t
 def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TOKEN, index:int, / ,
                       is_player:bool=False, is_npc:bool=False, is_single=False) -> Tuple[int, functools.partial] : 
 
-    start_index_save = token_list[index]["token"].start()
+    start_index_save = token_list[index]["start"]
     selector_argument_all = ("x", "y", "z", "c", "dx", "dy", "dz", "rx", "ry", "rxm", "rym", "l", "lm", "r", "rm", "scores",
                              "hasitem", "haspermission", "has_property", "tag", "name", "family", "type", "m")
     selector_argument_single = ("x","y","z","c","dx","dy","dz","rx","ry","rxm","rym","l","lm","r","rm","scores","hasitem",
@@ -498,10 +498,10 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
     """
 
     if token_list[index]["type"] == "Player_Name" :
-        player_name = Quotation_String_transfor_2(token_list[index]["token"].group())
+        player_name = Quotation_String_transfor_2(token_list[index]["token"])
         return (index+1, functools.partial(RunTime_Selector_Name, name=player_name))
 
-    Selector_Var = token_list[index]["token"].group()
+    Selector_Var = token_list[index]["token"]
     if Selector_Var == "@p" : selector_func = RunTime_Selector_Player ; is_player = True
     elif Selector_Var == "@a" : selector_func = RunTime_Selector_All_Player ; is_player = True
     elif Selector_Var == "@r" : selector_func = RunTime_Selector_Random
@@ -513,7 +513,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
     if (index+1) < token_list.__len__() and token_list[index+1]["type"] == "Start_Selector_Argument" :
         has_selector_arg_test = True
         iter1 = itertools.takewhile(lambda x: x["type"] != "End_Selector_Argument", token_list[index+2:])
-        list1 = [ abs(hash(i["token"].group())) for i in iter1 ] ; check_sum = sum(list1)
+        list1 = [ abs(hash(i["token"])) for i in iter1 ] ; check_sum = sum(list1)
         if check_sum in SELECTOR_VAR_MEMEROY : 
             selector_save = SELECTOR_VAR_MEMEROY[check_sum]
             has_selector_arg_test = False
@@ -526,7 +526,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
         if token_list[index]["type"] == "Next_Selector_Argument" : continue
         if token_list[index]["type"] == "Selector_Argument" : 
             selector_argument_token = token_list[index]["token"]
-            selector_argument = selector_argument_token.group()
+            selector_argument = selector_argument_token
             selector_argument_count[selector_argument] += 1
             if any( (selector_argument_count[i] > 1 for i in selector_argument_single) ) :
                 raise CompileError("重复的选择器 %s 参数" % selector_argument, 
@@ -534,7 +534,7 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
             index = Selector_Save_Set(game_tread, selector_save, token_list, index)
     if has_selector_arg_test : SELECTOR_VAR_MEMEROY[check_sum] = selector_save
 
-    end_index_save = token_list[index]["token"].end()
+    end_index_save = token_list[index]["end"]
     if is_single and (("limit" in selector_save and selector_save["limit"] > 1) or ("limit" not in selector_save and Selector_Var in "@a@e")) : 
         raise CompileError("选择器无法选择多个实体", pos=(start_index_save, end_index_save))
     if is_player and Selector_Var != "@s" and (("type_if" in selector_save and selector_save["type_if"][0] != "minecraft:player") or (

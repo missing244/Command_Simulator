@@ -34,7 +34,7 @@ class generate_command_block_html :
         return self
 
     def generate_html(self,file_name:str) :
-        file1 = open(os.path.join("html_output",file_name),"w+",encoding="utf-8")
+        file1 = open(os.path.join("local_server",file_name),"w+",encoding="utf-8")
         file1.write(Template(self.example_html).substitute(cb_list = json.dumps(self.cb_list_for_js, separators=(',', ':'))))
         file1.close()
         setTimeOut(1.5, lambda: webbrowser.open("http://localhost:32323/%s" % file_name))
@@ -134,7 +134,7 @@ class generate_all_command_load_html :
         return self
 
     def generate_html(self, world1:str, file_name:str) :
-        file1 = open(os.path.join("html_output",file_name),"w+",encoding="utf-8")
+        file1 = open(os.path.join("local_server",file_name),"w+",encoding="utf-8")
         file1.write(
             Template(self.example_html).substitute(
                 worldname = world1,
@@ -261,7 +261,7 @@ class generate_command_respones_html :
 
 
     def generate_html(self, world1:str, file_name:str) :
-        file1 = open(os.path.join("html_output",file_name),"w+",encoding="utf-8")
+        file1 = open(os.path.join("local_server",file_name),"w+",encoding="utf-8")
         file1.write(Template(self.example_html).substitute(
             worldname = world1,
             all_command_respones="\n".join(self.html_detials_list),

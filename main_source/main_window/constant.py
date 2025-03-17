@@ -9,7 +9,7 @@ PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius els
 Context = jnius.autoclass('android.content.Context') if jnius else None
 
 First_Load_Build_Dir = (
-    "log", "save_world", "expand_pack", 
+    "save_world", "expand_pack", 
     os.path.join("functionality","command"), 
     os.path.join("functionality","structure_output"),
     os.path.join("functionality","example")

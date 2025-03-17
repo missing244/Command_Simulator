@@ -5,7 +5,7 @@ from typing import Dict,Union,List,Tuple,Literal,Callable
 import re
 
 
-COMMAND_TOKEN = List[Dict[Literal["type","token"],Union[str,re.Match]]]
+COMMAND_TOKEN = List[CommandParser.ParserSystem.Token]
 COMMAND_CONTEXT = Dict[
     Literal["executer", "dimension", "pos", "rotate", "version"],
     Union[BaseNbtClass.entity_nbt, Literal["overworld","nether","the_end"], List[float], List[float], List[int]]

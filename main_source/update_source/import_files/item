@@ -499,6 +499,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:blue_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:blue_glazed_terracotta": {
     "damage_max": null,
     "can_enchant": []
@@ -659,6 +663,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:brown_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:brown_glazed_terracotta": {
     "damage_max": null,
     "can_enchant": []
@@ -723,7 +731,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:bush": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:cactus": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cactus_flower": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2042,6 +2058,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:firefly_bush": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:firework_rocket": {
     "damage_max": null,
     "can_enchant": []
@@ -2896,6 +2916,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:leaf_litter": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:leather": {
     "damage_max": null,
     "can_enchant": []
@@ -3222,8 +3246,12 @@
     "can_enchant": []
   },
   "minecraft:mace": {
-    "damage_max": null,
-    "can_enchant": []
+    "damage_max": 500,
+    "can_enchant": [
+      "wind_burst",
+      "density",
+      "breach"
+    ]
   },
   "minecraft:magenta_bundle": {
     "damage_max": null,
@@ -4803,6 +4831,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:short_dry_grass": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:short_grass": {
     "damage_max": null,
     "can_enchant": []
@@ -5329,6 +5361,10 @@
     "can_enchant": []
   },
   "minecraft:tadpole_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:tall_dry_grass": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5881,6 +5917,10 @@
     "can_enchant": []
   },
   "minecraft:wild_armor_trim_smithing_template": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:wildflowers": {
     "damage_max": null,
     "can_enchant": []
   },

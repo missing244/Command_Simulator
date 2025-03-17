@@ -1,8 +1,8 @@
 import re,os,itertools
 from . import HtmlGenerate,Command_Tokenizer_Compiler
 from .. import MathFunction,Constants,RunTime,FileOperation,np,BlockComponent
-import main_source.package.python_nbt as python_nbt
-import main_source.package.MCStructureManage.StructureBDX as python_bdx
+import package.python_nbt as python_nbt
+import package.MCStructureManage.StructureBDX as python_bdx
 from typing import Dict,List,Tuple
 
 

@@ -1,6 +1,5 @@
 import zipfile,tarfile,os,re,json,traceback
-import main_source.package.python_numpy as np
-import main_source.package.file_operation as FileOperation
+import package.file_operation as FileOperation
 from typing import List,Dict,Union,Literal
 source_unzip_dir = os.path.join("main_source", "update_source")
 path_split = os.path.join("a","")[1]
@@ -26,7 +25,7 @@ class bedrock_id_info :
         "wooden_axe":59,"stone_axe":131,"iron_axe":250,"diamond_axe":1561,"golden_axe":32,"netherite_axe":2031,
         "wooden_pickaxe":59,"stone_pickaxe":131,"iron_pickaxe":250,"diamond_pickaxe":1561,"golden_pickaxe":32,"netherite_pickaxe":2031,
         "wooden_shovel":59,"stone_shovel":131,"iron_shovel":250,"diamond_shovel":1561,"golden_shovel":32,"netherite_shovel":2031,
-        "wooden_hoe":59,"stone_hoe":131,"iron_hoe":250,"diamond_hoe":1561,"golden_hoe":32,"netherite_hoe":2031
+        "wooden_hoe":59,"stone_hoe":131,"iron_hoe":250,"diamond_hoe":1561,"golden_hoe":32,"netherite_hoe":2031,"mace":500
     }
     
     enchant_item = {
@@ -123,7 +122,8 @@ class bedrock_id_info :
             "iron_axe","diamond_axe","golden_axe","netherite_axe","wooden_pickaxe","stone_pickaxe","iron_pickaxe","diamond_pickaxe",
             "golden_pickaxe","netherite_pickaxe","wooden_shovel","stone_shovel","iron_shovel","diamond_shovel","golden_shovel",
             "netherite_shovel","wooden_hoe","stone_hoe","iron_hoe","diamond_hoe","golden_hoe","netherite_hoe","bow","crossbow",
-            "fishing_rod","carrot_on_a_stick","warped_fungus_on_a_stick","shears","flint_and_steel","shield","trident"]}
+            "fishing_rod","carrot_on_a_stick","warped_fungus_on_a_stick","shears","flint_and_steel","shield","trident"],
+        "wind_burst":["mace"], "density":["mace"], "breach":["mace"]}
     
     enchant_max_value = {
         "aqua_affinity":1,"bane_of_arthropods":5,"blast_protection":4,"channeling":1,"binding":1,"vanishing":1,"depth_strider":3,

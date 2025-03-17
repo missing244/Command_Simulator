@@ -7,7 +7,7 @@ from . import BaseMatch
 from typing import Dict,Union,List,Tuple
 import re
 
-__all__ = ["BE_String","BE_Quotation_String","Relative_Offset_Float","Local_Offset_Float"]
+__all__ = ["BE_String", "BE_Quotation_String", "Relative_Offset_Float", "Local_Offset_Float"]
 
 class Illegal_Match(BaseMatch.Command_Match_Exception) : pass
 
@@ -80,7 +80,7 @@ class BE_String(BaseMatch.Match_Base) :
         _match = self.re_match.match(s,pos=s_pointer)
         if (not _match.group()) or (self.re_test.search(_match.group())) : 
             raise Illegal_Match(">>%s<< 并不是有效字符串" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str]: 
         if self.auto_complete is None : return {"string":""}
@@ -111,7 +111,7 @@ class BE_Quotation_String(BaseMatch.Match_Base) :
         _match = self.re_match.match(s,s_pointer)
         if not _match : raise Illegal_Match(">>%s<< 并不是有效的引号字符串" % s[s_pointer:len_s], pos=(s_pointer,len_s), word=s[s_pointer:len_s])
 
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         if self.auto_complete is None : return {'"string"':""}
@@ -139,7 +139,7 @@ class Relative_Offset_Float(BaseMatch.Match_Base) :
         if _match.group().__len__() > 1 : 
             if not self.re_test.search(_match.group()[1:]) :
                 raise Illegal_Match(">>%s<< 并不是有效的浮点数" % _match.group()[1:], pos=(_match.start()+1,_match.end()), word=_match.group()[1:])
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         if len(self.argument_dimension) : return {"~":self.argument_dimension[0]}
@@ -167,7 +167,7 @@ class Local_Offset_Float(BaseMatch.Match_Base) :
         if _match.group().__len__() > 1 : 
             if not self.re_test.search(_match.group()[1:]) :
                 raise Illegal_Match(">>%s<< 并不是有效的浮点数" % _match.group()[1:], pos=(_match.start()+1,_match.end()), word=_match.group()[1:])
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         if len(self.argument_dimension) : return {"^":self.argument_dimension[0]}

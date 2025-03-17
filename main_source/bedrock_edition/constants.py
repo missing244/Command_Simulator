@@ -1,4 +1,4 @@
-import itertools,json,os
+import itertools,json,os,traceback
 from . import FileOperation,np
 
 DIMENSION_INFO = {
@@ -31,23 +31,21 @@ EFFECT_TEMPLATE = {"Id":"","Amplifier":np.int16(-1),"Duration":np.int32(-1)}
 WRITTEN_BOOK_TEMPLATE = {'author':"",'title':"",'pages':[]}
 
 
-try : 
-    TRANSLATE_ID = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"translate")))
-    GAME_DATA = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"game_data")))
-    BLOCK_STATE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"block_state")))
-    BLOCK_LOOT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"block_loot")))
-    IDENTIFIER_TRANSFORM = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"identifier_transfor")))
-    DEFAULT_BLOCK_MAP = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"default_map")))
-    DEFAULT_CHUNK_DATA = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"default_chunk")))
+TRANSLATE_ID = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"translate")))
+GAME_DATA = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"game_data")))
+BLOCK_STATE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"block_state")))
+BLOCK_LOOT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"block_loot")))
+IDENTIFIER_TRANSFORM = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"identifier_transfor")))
+DEFAULT_BLOCK_MAP = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"default_map")))
+DEFAULT_CHUNK_DATA = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"default_chunk")))
 
-    BIOME = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"biome")))
-    STRUCTURE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"structure")))
-    DAMAGE_CAUSE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"damageCause")))
-    EFFECT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"effect")))
-    ENCHANT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"enchant")))
-    ENTITY_SLOT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"entitySlot")))
-    GAMERULE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"gamerule")))
-except : pass
+BIOME = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"biome")))
+STRUCTURE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"structure")))
+DAMAGE_CAUSE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"damageCause")))
+EFFECT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"effect")))
+ENCHANT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"enchant")))
+ENTITY_SLOT = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"entitySlot")))
+GAMERULE = json.loads(FileOperation.read_a_file(os.path.join(static_file_path,"gamerule")))
 
 
 

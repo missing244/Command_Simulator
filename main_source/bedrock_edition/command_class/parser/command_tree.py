@@ -2,8 +2,8 @@ from . import BaseMatch,SpecialMatch,JsonPaser
 
 #1.16.0的replaceitem没有destroy和keep模式，这里是Old_Item_Handling后面的
 Command_Replaceitem = BaseMatch.AnyString("Item_Type").add_leaves(
-        BaseMatch.Int("Amount").add_leaves(
-            BaseMatch.Int("Data").add_leaves(
+        BaseMatch.Int("Amount", min_value=0, max_value=64).add_leaves(
+            BaseMatch.Int("Data", min_value=0, max_value=32767).add_leaves(
                 JsonPaser.Json_Tree( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             ),
@@ -16,7 +16,7 @@ Command_Replaceitem = BaseMatch.AnyString("Item_Type").add_leaves(
 Command_Structure = BaseMatch.Enum("Include_Entities","true","false").add_leaves(
     BaseMatch.Enum("Include_Blocks","true","false").add_leaves(
         BaseMatch.Enum("Waterlogged","true","false").add_leaves(
-            BaseMatch.Float("Integrity").add_leaves(
+            BaseMatch.Float("Integrity", min_value=0, max_value=100).add_leaves(
                 SpecialMatch.BE_Quotation_String("Seed").add_leaves( BaseMatch.END_NODE ),
                 SpecialMatch.BE_String("Seed").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
@@ -125,9 +125,9 @@ Command_Teleport_Rotation = [
 Command_Title = [
     BaseMatch.Enum("Model","clear","reset").add_leaves(BaseMatch.END_NODE),
     BaseMatch.Char("Model","times").add_leaves(
-        BaseMatch.Int("Fade_In").add_leaves(
-            BaseMatch.Int("Fade_Out").add_leaves(
-                BaseMatch.Int("Fade_Out").add_leaves(BaseMatch.END_NODE)
+        BaseMatch.Int("Fade_In", min_value=0).add_leaves(
+            BaseMatch.Int("Fade_Out", min_value=0).add_leaves(
+                BaseMatch.Int("Fade_Out", min_value=0).add_leaves(BaseMatch.END_NODE)
             )
         )
     )
@@ -136,19 +136,19 @@ Command_Title = [
 #Obrit摄像机设置部分
 Obrit_Camera_Setting = [
     BaseMatch.Char("Obrit_Setting","entity_offset").add_leaves(
-        BaseMatch.Float("X_Offset").add_leaves(
-            BaseMatch.Float("Y_Offset").add_leaves( 
-                BaseMatch.Float("Z_Offset").add_leaves( BaseMatch.END_NODE )
+        BaseMatch.Float("X_Offset", min_value=-64, max_value=64).add_leaves(
+            BaseMatch.Float("Y_Offset", min_value=-64, max_value=64).add_leaves( 
+                BaseMatch.Float("Z_Offset", min_value=-64, max_value=64).add_leaves( BaseMatch.END_NODE )
             )
         )
     ),
     BaseMatch.Char("Obrit_Setting","view_offset").add_leaves(
-        BaseMatch.Float("X_Offset").add_leaves( 
-            BaseMatch.Float("Y_Offset").add_leaves( 
+        BaseMatch.Float("X_Offset", min_value=-100, max_value=100).add_leaves( 
+            BaseMatch.Float("Y_Offset", min_value=-100, max_value=100).add_leaves( 
                 BaseMatch.Char("Obrit_Setting","entity_offset").add_leaves(
-                    BaseMatch.Float("X_Offset").add_leaves(
-                        BaseMatch.Float("Y_Offset").add_leaves( 
-                            BaseMatch.Float("Z_Offset").add_leaves( BaseMatch.END_NODE )
+                    BaseMatch.Float("X_Offset", min_value=-64, max_value=64).add_leaves(
+                        BaseMatch.Float("Y_Offset", min_value=-64, max_value=64).add_leaves( 
+                            BaseMatch.Float("Z_Offset", min_value=-64, max_value=64).add_leaves( BaseMatch.END_NODE )
                         )
                     )
                 ),  
@@ -176,9 +176,9 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Char("Argument","clear").add_leaves(BaseMatch.END_NODE),
             BaseMatch.Char("Argument","set").add_leaves(
-                BaseMatch.Float("X_Angle").add_leaves(
-                    BaseMatch.Float("Y_Angle").add_leaves(
-                        BaseMatch.Float("MaxDistance").add_leaves(
+                BaseMatch.Float("X_Angle", min_value=10, max_value=90).add_leaves(
+                    BaseMatch.Float("Y_Angle", min_value=10, max_value=90).add_leaves(
+                        BaseMatch.Float("MaxDistance", min_value=1, max_value=16).add_leaves(
                             BaseMatch.Enum("TargetMode", "angle", "distance").add_leaves(
                                 *SpecialMatch.String_Tree("PresetID", BaseMatch.END_NODE),
                                 BaseMatch.END_NODE
@@ -204,20 +204,20 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.Char("Argument","clear").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.Char("Argument","fade").add_leaves( 
                 BaseMatch.Char("Color","color").add_leaves( 
-                    BaseMatch.Int("Color_Red").add_leaves( 
-                        BaseMatch.Int("Color_Green").add_leaves( 
-                            BaseMatch.Int("Color_Blue").add_leaves( BaseMatch.END_NODE )
+                    BaseMatch.Int("Color_Red", min_value=0, max_value=255).add_leaves( 
+                        BaseMatch.Int("Color_Green", min_value=0, max_value=255).add_leaves( 
+                            BaseMatch.Int("Color_Blue", min_value=0, max_value=255).add_leaves( BaseMatch.END_NODE )
                         )
                     )
                 ),
                 BaseMatch.Char("Time","time").add_leaves(
-                    BaseMatch.Float("Fade_In").add_leaves(
-                        BaseMatch.Float("Hold").add_leaves(
-                            BaseMatch.Float("Fade_Out").add_leaves(
+                    BaseMatch.Float("Fade_In", min_value=0, max_value=10).add_leaves(
+                        BaseMatch.Float("Hold", min_value=0, max_value=10).add_leaves(
+                            BaseMatch.Float("Fade_Out", min_value=0, max_value=10).add_leaves(
                                 BaseMatch.Char("Color","color").add_leaves(
-                                    BaseMatch.Int("Color_Red").add_leaves( 
-                                        BaseMatch.Int("Color_Green").add_leaves( 
-                                            BaseMatch.Int("Color_Blue").add_leaves( BaseMatch.END_NODE )
+                                    BaseMatch.Int("Color_Red", min_value=0, max_value=255).add_leaves( 
+                                        BaseMatch.Int("Color_Green", min_value=0, max_value=255).add_leaves( 
+                                            BaseMatch.Int("Color_Blue", min_value=0, max_value=255).add_leaves( BaseMatch.END_NODE )
                                         )
                                     )
                                 ),
@@ -289,14 +289,26 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     *Obrit_Camera_Setting,
                     BaseMatch.END_NODE,
                 )
-            )
+            ),
+            BaseMatch.Char("Argument","target_entity").add_leaves( 
+                *SpecialMatch.BE_Selector_Tree(
+                    BaseMatch.Char("Argument", "target_center_offset").add_leaves(
+                        BaseMatch.Float("X_Offset", min_value=-64, max_value=64).add_leaves(
+                            BaseMatch.Float("Y_Offset", min_value=-64, max_value=64).add_leaves( 
+                                BaseMatch.Float("Z_Offset", min_value=-64, max_value=64).add_leaves( BaseMatch.END_NODE )
+                            )
+                        )
+                    ),
+                    BaseMatch.END_NODE
+                )
+            ),
         )
     ),
     # camerashake ✓ V
     BaseMatch.Char("Command","camerashake").add_leaves( 
         BaseMatch.Char("Argument","add").add_leaves( 
             *SpecialMatch.BE_Selector_Tree(
-                BaseMatch.Float("Intensity").add_leaves(
+                BaseMatch.Float("Intensity", min_value=0, max_value=4).add_leaves(
                     BaseMatch.Float("Time").add_leaves(
                         BaseMatch.Enum("Camerashake_Type","positional","rotational").add_leaves(BaseMatch.END_NODE),
                         BaseMatch.END_NODE
@@ -315,8 +327,8 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","clear").add_leaves( 
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.AnyString("Item_ID").add_leaves(
-                BaseMatch.Int("Data").add_leaves(
-                    BaseMatch.Int("Max_Count").add_leaves(BaseMatch.END_NODE),
+                BaseMatch.Int("Data", min_value=-1, max_value=32767).add_leaves(
+                    BaseMatch.Int("Max_Count", min_value=0).add_leaves(BaseMatch.END_NODE),
                     BaseMatch.END_NODE
                 ),
                 BaseMatch.END_NODE
@@ -354,7 +366,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                         BaseMatch.Enum("Clone_Mode","force","move","normal").add_leaves(
                             BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
-                                BaseMatch.Int("Block_Data").add_leaves( BaseMatch.END_NODE )
+                                BaseMatch.Int("Block_Data", min_value=-1, max_value=32767).add_leaves( BaseMatch.END_NODE )
                             ),
                             BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
@@ -370,7 +382,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # damage ✓ V
     BaseMatch.Char("Command","damage").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Int("Amount").add_leaves(
+            BaseMatch.Int("Amount", min_value=0).add_leaves(
                 BaseMatch.Enum("Damager_Type","suicide").set_version(1,20,70,"max").add_leaves(
                     BaseMatch.Char("Value","entity").add_leaves(
                         *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
@@ -418,15 +430,15 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 BaseMatch.END_NODE
             ),
             BaseMatch.AnyString("Effect_Type").add_leaves(
-                BaseMatch.Int("Seconds").add_leaves(
-                    BaseMatch.Int("Amplifier").add_leaves(
+                BaseMatch.Int("Seconds", min_value=0, max_value=1000000).add_leaves(
+                    BaseMatch.Int("Amplifier", min_value=0, max_value=255).add_leaves(
                         BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.END_NODE
                 ),
                 BaseMatch.Enum("Seconds", "infinite").set_version(1,21,40,"min").add_leaves(
-                    BaseMatch.Int("Amplifier").add_leaves(
+                    BaseMatch.Int("Amplifier", min_value=0, max_value=255).add_leaves(
                         BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     ),
@@ -501,7 +513,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     BaseMatch.Int("Block_Data").add_leaves(
                         BaseMatch.Char("Fill_Mode","replace").add_leaves(
                             BaseMatch.AnyString("Block_ID").add_leaves(
-                                BaseMatch.Int("Block_Data").add_leaves(BaseMatch.END_NODE),
+                                BaseMatch.Int("Block_Data", min_value=-1, max_value=32767).add_leaves(BaseMatch.END_NODE),
                                 BaseMatch.END_NODE
                             ),
                             BaseMatch.END_NODE
@@ -568,8 +580,8 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","give").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.AnyString("Item_Type").add_leaves(
-                BaseMatch.Int("Amount_Int").add_leaves(
-                    BaseMatch.Int("Data_Int").add_leaves(
+                BaseMatch.Int("Amount_Int", min_value=1, max_value=32767).add_leaves(
+                    BaseMatch.Int("Data_Int", min_value=0, max_value=32767).add_leaves(
                         JsonPaser.Json_Tree( BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     ),
@@ -706,8 +718,8 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","music").add_leaves(
         BaseMatch.Enum("Argument","play","queue").add_leaves(
             BaseMatch.AnyString("Track_Name").add_leaves(
-                BaseMatch.Float("Volume").add_leaves(
-                    BaseMatch.Float("Fade_Seconds").add_leaves(
+                BaseMatch.Float("Volume", min_value=0, max_value=1).add_leaves(
+                    BaseMatch.Float("Fade_Seconds", min_value=0, max_value=10).add_leaves(
                         BaseMatch.Enum("Repeat_Mode","play_once","loop").add_leaves( BaseMatch.END_NODE ),
                         BaseMatch.END_NODE
                     ),
@@ -717,11 +729,11 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             )
         ),
         BaseMatch.Char("Argument","stop").add_leaves(
-            BaseMatch.Float("Fade_Seconds").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.Float("Fade_Seconds", min_value=0, max_value=10).add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         ),
         BaseMatch.Char("Command","volume").add_leaves(
-            BaseMatch.Float("Volume").add_leaves( BaseMatch.END_NODE )
+            BaseMatch.Float("Volume", min_value=0, max_value=1).add_leaves( BaseMatch.END_NODE )
         )
     ),
     # particle ✓ V
@@ -754,9 +766,9 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.AnyString("Sound_Type").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
                 *SpecialMatch.Pos_Tree(
-                    BaseMatch.Float("Volume").add_leaves(
-                        BaseMatch.Float("Pitch").add_leaves(
-                            BaseMatch.Float("Minimum_Volume").add_leaves( BaseMatch.END_NODE ),
+                    BaseMatch.Float("Volume", min_value=0).add_leaves(
+                        BaseMatch.Float("Pitch", min_value=0, max_value=2).add_leaves(
+                            BaseMatch.Float("Minimum_Volume", min_value=0, max_value=1).add_leaves( BaseMatch.END_NODE ),
                             BaseMatch.END_NODE
                         ),
                         BaseMatch.END_NODE
@@ -785,7 +797,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.Char("PlaceType", "jigsaw").add_leaves(
             *SpecialMatch.String_Tree("JigsawPool",
                 *SpecialMatch.String_Tree("JigsawTarget",
-                    BaseMatch.Int("MaxDepth").add_leaves(
+                    BaseMatch.Int("MaxDepth", min_value=1, max_value=7).add_leaves(
                         *SpecialMatch.Pos_Tree(
                             BaseMatch.Enum("KeepJigsaw", "true", "false").add_leaves(BaseMatch.END_NODE),
                             BaseMatch.END_NODE
@@ -893,7 +905,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 ),
                 BaseMatch.Char("Argument","circle").add_leaves(
                     *SpecialMatch.Pos_Tree(
-                        BaseMatch.Int("Radius").add_leaves(
+                        BaseMatch.Int("Radius", min_value=1, max_value=4).add_leaves(
                             BaseMatch.AnyString("Function",terminator=" ").add_leaves( BaseMatch.END_NODE )
                         )
                     )
@@ -919,11 +931,11 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.Char("Argument","delay").set_version(1,21,50,"min").add_leaves(
             BaseMatch.Char("Argument","add").add_leaves(
                 BaseMatch.AnyString("Name_Filepath",terminator=" ").add_leaves( 
-                    BaseMatch.Int("Time").add_leaves(
+                    BaseMatch.Int("Time", min_value=0).add_leaves(
                         BaseMatch.Enum("Modify_Type", "replace", "append").add_leaves(BaseMatch.END_NODE),
                         BaseMatch.END_NODE
                     ),
-                    BaseMatch.Int("Time","d","D","s","S","t","T").add_leaves(
+                    BaseMatch.Int("Time","d","D","s","S","t","T", min_value=0).add_leaves(
                         BaseMatch.Enum("Modify_Type", "replace", "append").add_leaves(BaseMatch.END_NODE),
                         BaseMatch.END_NODE
                     )
@@ -1038,7 +1050,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","setblock").add_leaves(
         *SpecialMatch.Pos_Tree(
             BaseMatch.AnyString("Block_ID").add_leaves(
-                BaseMatch.Int("Block_Data").set_version(1,19,70,"max").add_leaves(
+                BaseMatch.Int("Block_Data", min_value=0, max_value=32767).set_version(1,19,70,"max").add_leaves(
                     BaseMatch.Enum("Setblock_Mode","replace","keep","destroy").add_leaves( BaseMatch.END_NODE ),
                     BaseMatch.END_NODE 
                 ),
@@ -1062,7 +1074,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # spreadplayers ✓ V
     BaseMatch.Char("Command","spreadplayers").add_leaves(
         *SpecialMatch.Rotation_Tree(
-            BaseMatch.Float("Spread_Distance").add_leaves(
+            BaseMatch.Float("Spread_Distance", min_value=0.00000001).add_leaves(
                 BaseMatch.Float("Max_Range").add_leaves(
                     *SpecialMatch.BE_Selector_Tree( 
                         BaseMatch.Float("Max_Height").add_leaves( BaseMatch.END_NODE ),
@@ -1105,7 +1117,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     BaseMatch.Enum("Rotation","0_degrees","90_degrees","180_degrees","270_degrees").add_leaves(
                         BaseMatch.Enum("Mirror","none","x","z","xz").add_leaves(
                             BaseMatch.Enum("Animation_Mode","block_by_block","layer_by_layer").add_leaves(
-                                BaseMatch.Float("Animation_Seconds").add_leaves(
+                                BaseMatch.Float("Animation_Seconds", min_value=0).add_leaves(
                                     Command_Structure,
                                     BaseMatch.END_NODE
                                 ),
@@ -1199,7 +1211,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         *SpecialMatch.Pos_Tree(
             BaseMatch.AnyString("Block_ID").add_leaves(
                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
-                BaseMatch.Int("Block_Data").set_version(1,19,70,"max").add_leaves( BaseMatch.END_NODE ),
+                BaseMatch.Int("Block_Data", min_value=-1, max_value=32767).set_version(1,19,70,"max").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             )
         )    
@@ -1229,7 +1241,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             ),
             BaseMatch.Char("Model","circle").add_leaves(
                 *SpecialMatch.Pos_Tree(
-                    BaseMatch.Int("Radius").add_leaves(
+                    BaseMatch.Int("Radius", min_value=1, max_value=4).add_leaves(
                         *SpecialMatch.String_Tree("Tickingarea_Name",
                             BaseMatch.Enum("Preload","true","false").add_leaves(BaseMatch.END_NODE),
                             BaseMatch.END_NODE
@@ -1323,7 +1335,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # weather ✓ V
     BaseMatch.Char("Command","weather").add_leaves(
         BaseMatch.Enum("Argument","clear","rain","thunder").add_leaves(
-            BaseMatch.Int("Duration").add_leaves(
+            BaseMatch.Int("Duration", min_value=1).add_leaves(
                 BaseMatch.END_NODE
             ),
             BaseMatch.END_NODE

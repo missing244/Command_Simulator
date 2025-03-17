@@ -1,11 +1,11 @@
 import os,inspect,json,time,threading,re,base64,zlib,traceback,subprocess,sys
-import main_source.package.file_operation as FileOperation
+import package.file_operation as FileOperation
 from typing import List,Literal,Union
 from tkinter import ttk ; import tkinter ; import tkinter.messagebox
-import main_source.package.connent_API as connent_API
+import package.connent_API as connent_API
 
 import main_source.main_window.constant as app_constant
-import main_source.package.tk_tool as tk_tool
+import package.tk_tool as tk_tool
 
 class user_manager :
 
@@ -478,7 +478,6 @@ def check_leveldb_c_extension(platform:Literal["windows","android"], log:initial
                 log.write_log("正在安装 %s 模块" % iii, 4)
                 m1 = subprocess.getstatusoutput("pip3 install " + iii)
                 if not m1[0] : continue
-                FileOperation.write_a_file(os.path.join("log","install_extension.txt"), m1[1])
                 log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
                 log.write_log(m1[1])
                 return None
@@ -498,11 +497,10 @@ def check_brotli_c_extension(platform:Literal["windows","android"], log:initiali
     except : 
         log.write_log("brotli库验证失败，正在安装...", 2)
         if platform == "windows" :
-            for iii in ['pycparser', "cffi", "brotlipy"] :
+            for iii in ["Brotli"] :
                 log.write_log("正在安装 %s 模块" % iii, 4)
                 m1 = subprocess.getstatusoutput("pip3 install " + iii)
                 if not m1[0] : continue
-                FileOperation.write_a_file(os.path.join("log","install_extension.txt"), m1[1])
                 log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
                 log.write_log(m1[1])
                 return None

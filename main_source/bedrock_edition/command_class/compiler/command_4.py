@@ -11,7 +11,7 @@ class hud :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
-        mode = token_list[index]["token"].group()
+        mode = token_list[index]["token"]
         return functools.partial(cls.run, entity_get=entity_func, mode=mode)
 
     def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, mode:Literal["hide","reset"], hud_element:str="all") :
@@ -27,12 +27,12 @@ class scriptevent :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        message_id = token_list[1]["token"].group()
+        message_id = token_list[1]["token"]
         if ":" not in message_id : raise CompileError("需要提供自定义命名空间", 
-            pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+            pos=(token_list[1]["start"], token_list[1]["end"]))
         if "minecraft:" in message_id[0:10] : raise CompileError("需要提供非minecraft的自定义命名空间", 
-            pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
-        message = token_list[2]["token"].group()
+            pos=(token_list[1]["start"], token_list[1]["end"]))
+        message = token_list[2]["token"]
         return functools.partial(cls.run, message_id=message_id, message=message)
 
     def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, message_id:str, message:str) :
@@ -43,22 +43,8 @@ class aimassist :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
-        if token_list[index]["token"].group() == "clear" : return functools.partial(cls.clear, entity_get=entity_func)
-        elif token_list[index]["token"].group() == "set" :
-            index += 1 ; x_angle = float(token_list[index]["token"].group())
-            if not(10 <= x_angle <= 90) : raise CompileError("垂直朝向角需在10和90之间", 
-                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-            if index+1 >= len(token_list) : return functools.partial(cls.set, entity_get=entity_func)
-
-            index += 1 ; y_angle = float(token_list[index]["token"].group())
-            if not(10 <= y_angle <= 90) : raise CompileError("水平朝向角需在10和90之间", 
-                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-            if index+1 >= len(token_list) : return functools.partial(cls.set, entity_get=entity_func)
-
-            index += 1 ; distance = float(token_list[index]["token"].group())
-            if not(1 <= distance <= 16) : raise CompileError("交互距离需在1和16之间", 
-                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-            return functools.partial(cls.set, entity_get=entity_func)
+        if token_list[index]["token"] == "clear" : return functools.partial(cls.clear, entity_get=entity_func)
+        elif token_list[index]["token"] == "set" : return functools.partial(cls.set, entity_get=entity_func)
 
     def clear(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
         entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
@@ -83,31 +69,25 @@ class place :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index = 1
-        if token_list[index]["token"].group() == "jigsaw" : 
-            index += 3 ; MaxDepth = int(token_list[index]["token"].group())
-            if not(1 <= MaxDepth <= 7) : raise CompileError("最大深度需在1和7之间", 
-                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-            if index + 1 >= len(token_list) : return functools.partial(cls.jigsaw, pos=["~", "~", "~"])
-
-            index += 1 ; location = [token_list[i]["token"].group() for i in range(index, index+3, 1)]
+        if token_list[index]["token"] == "jigsaw" : 
+            index += 4
+            if index >= len(token_list) : location = ["~", "~", "~"]
+            else : location = [token_list[i]["token"] for i in range(index, index+3, 1)] 
             return functools.partial(cls.jigsaw, pos=location)
-        elif token_list[index]["token"].group() == "structure" :
+        elif token_list[index]["token"] == "structure" :
             index += 2
-            if index >= len(token_list) : return functools.partial(cls.structure, pos=["~", "~", "~"])
-            
-            location = [token_list[i]["token"].group() for i in range(index, index+3, 1)]
+            if index >= len(token_list) : location = ["~", "~", "~"]
+            else : location = [token_list[i]["token"] for i in range(index, index+3, 1)] 
             return functools.partial(cls.structure, pos=location)
-        elif token_list[index]["token"].group() == "feature" :
+        elif token_list[index]["token"] == "feature" :
             index += 2
-            if index >= len(token_list) : return functools.partial(cls.feature, pos=["~", "~", "~"])
-            
-            location = [token_list[i]["token"].group() for i in range(index, index+3, 1)]
+            if index >= len(token_list) : location = ["~", "~", "~"]
+            else : location = [token_list[i]["token"] for i in range(index, index+3, 1)] 
             return functools.partial(cls.feature, pos=location)
-        elif token_list[index]["token"].group() == "featurerule" :
+        elif token_list[index]["token"] == "featurerule" :
             index += 2
-            if index >= len(token_list) : return functools.partial(cls.featurerule, pos=["~", "~", "~"])
-            
-            location = [token_list[i]["token"].group() for i in range(index, index+3, 1)]
+            if index >= len(token_list) : location = ["~", "~", "~"]
+            else : location = [token_list[i]["token"] for i in range(index, index+3, 1)] 
             return functools.partial(cls.featurerule, pos=location)
 
     def jigsaw(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, pos:List[str]) :

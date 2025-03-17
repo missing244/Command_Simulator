@@ -1,6 +1,6 @@
 from . import np
 import math
-from typing import List,Literal
+from typing import List,Literal,Union
 
 
 def vector_add(v1:List[float], v2:List[float]) :
@@ -103,8 +103,9 @@ def rotation_angle(pos1:List[float], pos2:List[float]):
     ry = ry / math.pi * 180 * (-1 if v1[0] > 0 else 1)
     return (ry,rx)
     
-def mc_rotate_compute(rotate_start:float, rotate_offset:str, mode:Literal["rx","ry"]="ry", can_outside_limit:bool=False) -> np.float32 :
-    if rotate_offset[0] != "~" : rotate_value = np.float32(rotate_offset)
+def mc_rotate_compute(rotate_start:float, rotate_offset:Union[str, float],
+    mode:Literal["rx","ry"]="ry", can_outside_limit:bool=False) -> np.float32 :
+    if rotate_offset.__class__ is str and rotate_offset[0] != "~" : rotate_value = np.float32(rotate_offset)
     if len(rotate_offset) == 1 : rotate_value = np.float32(rotate_start)
     else : rotate_value = rotate_start + float(rotate_offset[1:])
 
@@ -120,10 +121,11 @@ def mc_rotate_compute(rotate_start:float, rotate_offset:str, mode:Literal["rx","
             else : return np.float32(rotate_value)
         else : return np.float32(rotate_value)
 
-def mc_pos_compute(origin:List[float], pos_offset:List[str], rotate:List[float]):
+def mc_pos_compute(origin:List[float], pos_offset:List[Union[str,float,int]], rotate:List[float]):
     pos_result = list(origin)
 
-    if pos_offset[0][0] == pos_offset[1][0] == pos_offset[2][0] == "^" :
+    if all(i.__class__ is str for i in pos_offset) and pos_offset[0][0] == \
+    pos_offset[1][0] == pos_offset[2][0] == "^" :
         base1 = mc_rotation_base_vector(rotate[0],rotate[1])
         for i in range(3) :
             number1 = np.float32(pos_offset[i][1:]) if len(pos_offset[i][1:]) else 0
@@ -132,13 +134,14 @@ def mc_pos_compute(origin:List[float], pos_offset:List[str], rotate:List[float])
             pos_result[2] += number1 * base1[i][2]
         return pos_result
     else :
-        for i in range(3) :
-            if pos_offset[i][0] == "~" and len(pos_offset[i][1:]) == 0 : continue
-            elif pos_offset[i][0] == "~" : pos_result[i] += np.float32(pos_offset[i][1:])
-            elif "."  in pos_offset[i] : pos_result[i] = np.float32(pos_offset[i])
-            elif i == 1 :  pos_result[i] = np.float32(pos_offset[i])
-            else : pos_result[i] = np.float32(pos_offset[i]) + 0.5
-        return [max(min(float(i),30000000.0), -30000000.0) for i in pos_result]
+        for i, pos_value in enumerate(pos_offset) :
+            if pos_value.__class__ is str :
+                if pos_value == "~" : continue
+                elif pos_value[0] == "~" : pos_result[i] += np.float32(pos_value[1:])
+            elif pos_value.__class__ is float : pos_result[i] = np.float32(pos_value)
+            else : pos_result[i] = np.float32(pos_value) + 0.5
+        for i,j in enumerate(pos_result) : pos_result[i] = max(min(float(j),30000000.0), -30000000.0)
+        return pos_result
 
 
 def version_compare(version1:List[int], version2:List[int]) :

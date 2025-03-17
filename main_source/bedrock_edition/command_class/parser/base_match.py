@@ -18,6 +18,7 @@ class Command_Match_Exception(Exception) :
         for i in kargs : self.__setattr__(i,kargs[i])
 
 class Not_Match(Command_Match_Exception) : pass
+class SyntaxError(Command_Match_Exception) : pass
 class To_Many_Args(Command_Match_Exception) : pass
 
 
@@ -93,13 +94,17 @@ class End_Node(Match_Base) :
     """
     
     def __init__(self) -> None :
-        super().__init__("END")
+        super().__init__("Command_End")
         self.re_match = re.compile(".{0,}")
+    
+    def add_leaves(self, *obj):
+        return None
 
     def _match_string(self, s:str, s_pointer:int): 
         _match = self.re_match.match(s, pos=s_pointer)
         if _match and _match.group().__len__() > 0 : 
             raise To_Many_Args(">>%s<< 多余的参数" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
+        return {"type":self.token_type, "token":"", "start":_match.start(), "end":_match.end()} 
 
     def _auto_complete(self) -> Dict[str,str] : return {"\n" : "行结束"}
 
@@ -135,7 +140,7 @@ class Enum(Match_Base) :
         _match = self.re_match.match(s,pos=s_pointer)
         if not self.re_test.search(_match.group()) : 
             raise Not_Match(">>%s<< 并不是有效字符" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str]: 
         a = {}
@@ -172,7 +177,7 @@ class Char(Match_Base) :
         _match = self.re_match.match(s,pos=s_pointer)
         if not self.re_test.search(_match.group()) : 
             raise Not_Match(">>%s<< 并不是有效字符" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         a = {}
@@ -210,7 +215,9 @@ class KeyWord(Match_Base) :
         a = [self.re_test[index].search(item.group()) for index,item in enumerate(_match)]
         if not any(a) : raise Not_Match(">>%s<< 并不是有效的字符" % _match[0].group(), 
             pos=(_match[0].start(),_match[0].end()), word=_match[0].group())
-        return {"type":self.token_type, "token":next( (_match[index] for index,item in enumerate(a) if item) )}
+
+        _match = next( (_match[index] for index,item in enumerate(a) if item) )
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         a = {}
@@ -233,7 +240,8 @@ class Int(Match_Base) :
     >>> Int("Count",   "L","D")
     """
 
-    def __init__(self, token_type:str, *unit_word:str, terminator:str=TERMINATOR_RE) -> None :
+    def __init__(self, token_type:str, *unit_word:str, min_value=-2147483648, 
+                 max_value=2147483647, terminator:str=TERMINATOR_RE) -> None :
         if not isinstance(terminator,str) : raise TypeError("terminator 提供字符串以外的参数")
         for i in unit_word :
             if not isinstance(i,str) : raise TypeError("unit_word 提供字符串以外的参数")
@@ -241,6 +249,7 @@ class Int(Match_Base) :
         self.re_match = re.compile("[-+]?[^%s]{0,}" % terminator)
         self.re_test  = re.compile("^(-+)?[0-9]{1,}$")
         self.unit_word = unit_word
+        self.support_range = (min_value, max_value)
         self.unit_word_test  = re.compile("(%s)$" % "|".join([string_to_rematch(i) for i in unit_word])) if unit_word else None
 
     def _match_string(self,s:str,s_pointer:int) : 
@@ -250,10 +259,12 @@ class Int(Match_Base) :
             if not b : raise Not_Match(">>%s<< 并不具有有效的整数单位" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
             a = self.re_test.search(_match.group()[0:b.start()])
         else : a = self.re_test.search(_match.group())
-        if not a or not(-2147483648 <= int(a.group()) <= 2147483647) : 
-            raise Not_Match(">>%s<< 并不是有效的整数" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
-        return {"type":self.token_type, "token":_match}
-
+        if a and (self.support_range[0] <= int(a.group()) <= self.support_range[1]) : 
+            return {"type":self.token_type, "token":int(a.group()), "start":_match.start(), "end":_match.end()}
+        elif a is None : raise Not_Match(">>%s<< 并不是有效的数值" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
+        else : raise Not_Match(">>%s<< 并不处于有效的范围()" % (_match.group(), self.support_range[0],
+            self.support_range[1]), pos=(_match.start(),_match.end()), word=_match.group())
+        
     def _auto_complete(self) -> Dict[str,str]:
         aaaa = ""
         if len(self.argument_dimension) : aaaa = self.argument_dimension[0]
@@ -273,13 +284,14 @@ class Float(Match_Base) :
     >>> Float("Time",     "L","D")
     """
     
-    def __init__(self, token_type:str, *unit_word:str, terminator:str=TERMINATOR_RE) -> None :
+    def __init__(self, token_type:str, *unit_word:str, min_value=-1e20, 
+                 max_value=1e20, terminator:str=TERMINATOR_RE) -> None :
         if not isinstance(terminator,str) : raise TypeError("terminator 提供字符串以外的参数")
-        for i in unit_word :
-            if not isinstance(i,str) : raise TypeError("unit_word 提供字符串以外的参数")
+        if any(not isinstance(i,str) for i in unit_word) : raise TypeError("unit_word 提供字符串以外的参数")
         super().__init__(token_type)
         self.re_match = re.compile("[-+]?[^%s]{0,}" % terminator)
         self.re_test  = re.compile("^[-+]?([0-9]{0,}\\.[0-9]{1,}|[0-9]{1,}\\.[0-9]{0,}|[0-9]{1,})$") 
+        self.support_range = (min_value, max_value)
         self.unit_word = unit_word
         self.unit_word_test  = re.compile("(%s)$" % "|".join([string_to_rematch(i) for i in unit_word])) if unit_word else None
 
@@ -290,8 +302,12 @@ class Float(Match_Base) :
             if not b : raise Not_Match(">>%s<< 并不具有有效的整数单位" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
             a = self.re_test.search(_match.group()[0:b.start()])
         else : a = self.re_test.search(_match.group())
-        if not a : raise Not_Match(">>%s<< 并不是有效的浮点数" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
-        return {"type":self.token_type, "token":_match}
+        if a and (self.support_range[0] <= float(a.group()) <= self.support_range[1]) : 
+            return {"type":self.token_type, "token":float(a.group()) if "." in a.group() else int(a.group()), 
+                    "start":_match.start(), "end":_match.end()}
+        elif a is None : raise Not_Match(">>%s<< 并不是有效的数值" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
+        else : raise Not_Match(">>%s<< 并不处于有效的范围()" % (_match.group(), self.support_range[0],
+            self.support_range[1]), pos=(_match.start(),_match.end()), word=_match.group())
 
     def _auto_complete(self) -> Dict[str,str] : 
         aaaa = ""
@@ -323,7 +339,7 @@ class AnyString(Match_Base) :
     def _match_string(self, s:str, s_pointer:int): 
         _match = self.re_match.match(s, pos=s_pointer)
         if len(_match.group()) == 0 : raise Not_Match(">>%s<< 需要参数" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         return self.atuo_complete
@@ -347,7 +363,7 @@ class AnyMsg(Match_Base) :
 
     def _match_string(self, s:str, s_pointer:int): 
         _match = self.re_match.match(s, pos=s_pointer)
-        return {"type":self.token_type, "token":_match}
+        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         return {}

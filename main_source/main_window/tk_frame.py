@@ -6,10 +6,10 @@ import tkinter.ttk as ttk
 import main_source.main_window.function as app_function
 import main_source.main_window.constant as app_constant
 
-import main_source.package.tk_tool as tk_tool
-import main_source.package.MCBEIcon as MCBEIcon
-import main_source.package.file_operation as FileOperation
-import main_source.package.connent_API as connent_API
+import package.tk_tool as tk_tool
+import package.MCBEIcon as MCBEIcon
+import package.file_operation as FileOperation
+import package.connent_API as connent_API
 
 import main_source.bedrock_edition as Minecraft_BE
 
@@ -716,8 +716,9 @@ class Creat_World(tkinter.Frame) :
                 json.dumps(chunk_data, ensure_ascii=False, default=Minecraft_BE.DataSave.encoding))
         except :
             FileOperation.delete_all_file(os.path.join("save_world",rand_text))
-            self.main_win.set_error_log("创建世界错误\n日志 create_world.txt 已保存", 
-                traceback.format_exc(), "create_world.txt")
+            self.main_win.set_error_log(
+                "创建世界错误\n日志 create_world.txt 已保存", 
+                traceback.format_exc())
             return None
 
         os.makedirs(os.path.join("save_world",rand_text,"behavior_packs"),exist_ok=True)
@@ -1022,9 +1023,7 @@ class Choose_Expand(tkinter.Frame) :
                     msg_laber.config(text=msg_laber.cget("text") + "正在安装 %s ...\n" % iii)
                     m1 = subprocess.getstatusoutput("pip3 install " + iii)
                     if not m1[0] : continue
-                    self.main_win.set_error_log(
-                        "模块 %s 安装失败\n日志 install_pack.txt 已保存" % iii, 
-                        m1[1], "install_pack.txt")
+                    self.main_win.set_error_log("模块 %s 安装失败\n日志 install_pack.txt 已保存" % iii, m1[1])
                     return None
 
             msg_laber.config(text=msg_laber.cget("text") + ("%s 安装成功" % name1))
@@ -1067,7 +1066,7 @@ class Choose_Expand(tkinter.Frame) :
         def _expand_error(err) : # 与Python解析拓展包有关错误
             self.main_win.set_error_log(
                 "%s\n拓展包加载出错，日志已保存" % name1, 
-                traceback.format_exc(), "enable_expand.txt"
+                traceback.format_exc()
             )
 
         dir_name = self.expand_pack_list[uid]["dir_name"]
@@ -1347,7 +1346,6 @@ class Log_Display(tkinter.Frame) :
 
     def set_log(self, error_msg:str, log:str, save_path:str=None) :
         self.last_frame_name = self.main_win.now_display_frame
-        if save_path : FileOperation.write_a_file(os.path.join("log", save_path), log)
         self.input_box4.insert("end", error_msg+"\n")
         self.input_box4.insert("end", log)
         self.input_box4.insert("end", "\n\n\n")

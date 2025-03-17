@@ -57,7 +57,7 @@ def Terminal_Compiler(_game:RunTime.minecraft_thread, s:str) -> Union[None, Exce
     token_list = terminal_command_parser.parser(s, _game.game_version)
     if isinstance(token_list, tuple) : return token_list[1]
     token_list.pop(0)
-    Command = token_list[0]["token"].group()
+    Command = token_list[0]["token"]
     if Command not in Terminal_Command : return None
     return Terminal_Command[Command](_game, s, token_list)
 
@@ -67,9 +67,9 @@ def command_reload(_game:RunTime.minecraft_thread, command:str, token_list:List[
     if index >= len(token_list) : return functools.partial(reload_doing)
 
     index += 1
-    if index >= len(token_list) : return functools.partial(reload_doing, cb_view=token_list[-1]["token"].group())
+    if index >= len(token_list) : return functools.partial(reload_doing, cb_view=token_list[-1]["token"])
 
-    return functools.partial(reload_doing, cb_view=token_list[-2]["token"].group(), structure=token_list[-1]["token"].group())
+    return functools.partial(reload_doing, cb_view=token_list[-2]["token"], structure=token_list[-1]["token"])
 
 def reload_doing(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, cb_view:Literal["true","false"] = "false",
                  structure:Literal["none","bdx","mcstructure"]="none") :
@@ -103,16 +103,16 @@ def reload_doing(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, cb_vie
 
 
 def command_set(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) :
-    if token_list[1]["token"].group() == "command_version" : 
-        if any([int(token_list[1+i]["token"].group()) < 0 for i in range(1,4,1)]) :
-            return CommandCompiler.CompileError("版本号不能为负数", pos=(token_list[2]["token"].start(),token_list[4]["token"].end()))
-        return functools.partial(set_version, version=[int(token_list[1+i]["token"].group()) for i in range(1,4,1)])
-    elif token_list[1]["token"].group() == "test_time" : 
-        if int(token_list[2]["token"].group()) < 0 : 
-            return CommandCompiler.CompileError("测试时间不能为负数", pos=(token_list[2]["token"].start(),token_list[2]["token"].end()))
-        return functools.partial(set_testTime, time=int(token_list[2]["token"].group()))
-    elif token_list[1]["token"].group() == "response_web" : 
-        return functools.partial(set_openResponseWeb, bool1=bool(("false","true").index(token_list[2]["token"].group())))
+    if token_list[1]["token"] == "command_version" : 
+        if any([int(token_list[1+i]["token"]) < 0 for i in range(1,4,1)]) :
+            return CommandCompiler.CompileError("版本号不能为负数", pos=(token_list[2]["start"], token_list[4]["end"]))
+        return functools.partial(set_version, version=[int(token_list[1+i]["token"]) for i in range(1,4,1)])
+    elif token_list[1]["token"] == "test_time" : 
+        if int(token_list[2]["token"]) < 0 : 
+            return CommandCompiler.CompileError("测试时间不能为负数", pos=(token_list[2]["start"], token_list[2]["end"]))
+        return functools.partial(set_testTime, time=int(token_list[2]["token"]))
+    elif token_list[1]["token"] == "response_web" : 
+        return functools.partial(set_openResponseWeb, bool1=bool(("false","true").index(token_list[2]["token"])))
 
 def set_version(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, version:tuple) :
     _game.game_version = tuple(version)
@@ -129,21 +129,21 @@ def set_openResponseWeb(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread,
 
 
 def command_command(_game:RunTime.minecraft_thread, command:str, token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]]) -> functools.partial :
-    if token_list[1]["token"].group() == "loop" :
+    if token_list[1]["token"] == "loop" :
         command_object = CommandCompiler.Start_Compile(token_list[2:], _game, _game.game_version)
         if isinstance(command_object, tuple) : return command_object[1]
-        return functools.partial(command_loop, command=command[token_list[2]["token"].start():], command_obj=command_object)
-    elif token_list[1]["token"].group() == "delay" : 
-        if int(token_list[2]["token"].group()) < 0 : 
-            return CommandCompiler.CompileError("延时时间不能为负数", pos=(token_list[2]["token"].start(),token_list[2]["token"].end()))
+        return functools.partial(command_loop, command=command[token_list[2]["start"]:], command_obj=command_object)
+    elif token_list[1]["token"] == "delay" : 
+        if int(token_list[2]["token"]) < 0 : 
+            return CommandCompiler.CompileError("延时时间不能为负数", pos=(token_list[2]["start"],token_list[2]["end"]))
         command_object = CommandCompiler.Start_Compile(token_list[3:], _game, _game.game_version)
         if isinstance(command_object, tuple) : return command_object[1]
-        return functools.partial(command_delay, time=int(token_list[2]["token"].group()),
-        command=command[token_list[3]["token"].start():], command_obj=command_object)
-    elif token_list[1]["token"].group() == "end" : 
+        return functools.partial(command_delay, time=int(token_list[2]["token"]),
+        command=command[token_list[3]["start"]:], command_obj=command_object)
+    elif token_list[1]["token"] == "end" : 
         command_object = CommandCompiler.Start_Compile(token_list[2:], _game, _game.game_version)
         if isinstance(command_object, tuple) : return command_object[1]
-        return functools.partial(command_end, command=command[token_list[2]["token"].start():], command_obj=command_object)
+        return functools.partial(command_end, command=command[token_list[2]["start"]:], command_obj=command_object)
 
 def command_loop(context:COMMAND_CONTEXT, _game:RunTime.minecraft_thread, command:str, command_obj:Callable) :
     _game.runtime_variable.command_will_loop.append( (command, command_obj) )

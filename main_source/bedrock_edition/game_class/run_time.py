@@ -103,7 +103,7 @@ class minecraft_thread :
             self.minecraft_scoreboard = json.loads(FileOperation.read_a_file(os.path.join('save_world',word_name,'scoreboard')),object_hook=DataSave.decoding)
             self.minecraft_chunk = json.loads(FileOperation.read_a_file(os.path.join('save_world',word_name,'chunk_data')),object_hook=DataSave.decoding)
         except :
-            return Exception("启动世界失败\n日志join_world.txt已保存", traceback.format_exc(), "join_world.txt")
+            return Exception("启动世界失败", traceback.format_exc())
 
         os.makedirs(os.path.join("save_world", self.world_name, "resource_packs"),exist_ok=True)
         os.makedirs(os.path.join("save_world", self.world_name, "behavior_packs"),exist_ok=True)
@@ -116,9 +116,7 @@ class minecraft_thread :
         if ("verification_challenge" not in self.world_infomation) or (not self.world_infomation['verification_challenge']) :  
             self.visualization_object = ExpandPackAPI.visualization(self)
             a = JoinWorld.join_game_load(self)
-            if a : 
-                result = Exception("加入世界成功, 有文件加载失败\n日志join_world.txt已保存\n游戏版本：%s.%s.%s" % self.game_version, 
-                "\n".join(a), "join_world.txt")
+            if a :  result = Exception("加入世界成功, 有文件加载失败\n游戏版本：%s.%s.%s" % self.game_version, "\n".join(a))
             else : result = "加入世界成功\n游戏版本：%s.%s.%s" % self.game_version
         else : 
             self.verification_challenge_object = None
@@ -171,4 +169,4 @@ class minecraft_thread :
 
             self.minecraft_chunk.____save_and_write_db_file____(self.world_name)
         except : 
-            return Exception("世界保存出错\n日志save_world.txt已保存", traceback.format_exc(), "save_world.txt")
+            return Exception("世界保存出错\n日志save_world.txt已保存", traceback.format_exc())

@@ -5,9 +5,16 @@ Command_Parser用于检查每个同级树分支中满足哪个匹配分支，然
 
 from . import BaseMatch,SpecialMatch,JsonPaser
 
-from typing import Dict,Union,List,Tuple,Literal
+from typing import Dict,Union,List,Tuple,Literal,TypedDict
 import re,traceback,itertools
 escape_space = re.compile("[ ]{0,}")
+
+class Token(TypedDict) :
+    type: str
+    token: Union[str, int, float]
+    start: int 
+    end: int
+
 
 class Command_Parser :
     """
@@ -54,7 +61,8 @@ class Command_Parser :
             if a is None : del _str1[i]
         return _str1
 
-    def _parser(self, command_str:str, version:Tuple[int, int, int]) -> List[Dict[Literal["type","token"], Union[str, re.Match]]] :
+    def _parser(self, command_str:str, version:Tuple[int, int, int]) -> List[Token] :
+        CommandFlag = {"Command_Start", "Command_End", "Json_Start"}
         command_str_pointer = 0
         current_leaves = self.Tree
         separator_re_match = re.compile("[%s]{%s,%s}" % (
@@ -63,47 +71,36 @@ class Command_Parser :
             "" if self.separator_count is None else self.separator_count ))
         self.Token_list = Token_list = []
 
-        while 1 :
-            if not current_leaves.tree_leaves : break
-
+        while current_leaves.tree_leaves :
             is_not_successs = True
-            for i in current_leaves.tree_leaves :
-                if not self._version_compare(version, i) : continue
+            for node in current_leaves.tree_leaves :
+                if not self._version_compare(version, node) : continue
 
-                if i.__class__ is JsonPaser.Json_Start :
-                    try : a = i._match_string(command_str,command_str_pointer)
+                try : a = node._match_string(command_str, command_str_pointer)
+                except : continue
+                else : Token_list.append(a) if a["type"] not in CommandFlag else None
+
+                if node.__class__ is JsonPaser.Json_Start : 
+                    try : JsonPaser.json_tokenizer(Token_list, command_str, command_str_pointer)
                     except : continue
-                    JsonPaser.json_tokenizer(Token_list, command_str, command_str_pointer)
-                    is_not_successs = False
-                    current_leaves = i
-                    command_str_pointer = Token_list[-1]["token"].end()
-                else :
-                    try : a = i._match_string(command_str,command_str_pointer)
-                    except : continue
-                    is_not_successs = False
-                    current_leaves = i
-                    if isinstance(current_leaves, BaseMatch.End_Node) : break
-                    command_str_pointer = a["token"].end()
-                    if a["type"] != "Command_Start" : Token_list.append(a)
+                    finally : command_str_pointer = Token_list[-1]["end"]
+                else : command_str_pointer = a["end"]
+
+                is_not_successs = False
+                current_leaves = node
                 break
 
             if is_not_successs : 
-                _m_ = self.no_match_error1.match(command_str,command_str_pointer)
-                if _m_ is None : _m_ = self.no_match_error2.match(command_str,command_str_pointer)
-                raise BaseMatch.Not_Match(">>%s<< 非期望的参数" % _m_.group(), 
+                _m_ = self.no_match_error1.match(command_str, command_str_pointer)
+                if _m_ is None : _m_ = self.no_match_error2.match(command_str, command_str_pointer)
+                raise BaseMatch.SyntaxError(">>%s<< 非期望的参数" % _m_.group(), 
                     pos=(_m_.start(),_m_.end()), word=_m_.group(), current=current_leaves)
-            
-            if current_leaves.__class__ is BaseMatch.End_Node : break
+
             command_str_pointer = separator_re_match.match(command_str, command_str_pointer).end()
 
         return Token_list
 
-    def parser(self, command_str:str, version:Tuple[int, int, int]) -> Union[List[Dict], Tuple[str, BaseMatch.Command_Match_Exception]] :
-        """
-        return {"type":str, "token":re.Match}
-        or
-        return Tuple[ Error_str, Dict ]
-        """
+    def parser(self, command_str:str, version:Tuple[int, int, int]) -> Union[List[Token], Tuple[str, BaseMatch.Command_Match_Exception]] :
         command_str = command_str[escape_space.match(command_str).end():]
         try : a = self._parser(command_str, version)
         except Exception as e : 

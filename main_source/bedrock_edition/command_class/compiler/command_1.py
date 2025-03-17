@@ -13,10 +13,10 @@ class ability :
         index,entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
         if index >= token_list.__len__() : return functools.partial(cls.query_all, entity_get=entity_func)
         
-        ability_id = token_list[index]["token"].group() ; index += 1
+        ability_id = token_list[index]["token"] ; index += 1
         if index >= token_list.__len__() : return functools.partial(cls.query, entity_get=entity_func, ability_id=ability_id)
         
-        value = token_list[index]["token"].group()
+        value = token_list[index]["token"]
         return functools.partial(cls.set, entity_get=entity_func, ability_id=ability_id, set_value=value)
 
     def query_all(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
@@ -54,7 +54,7 @@ class alwaysday :
         index = 1
         if index >= token_list.__len__() : return functools.partial(cls.query)
         
-        value = token_list[index]["token"].group()
+        value = token_list[index]["token"]
         return functools.partial(cls.set, set_value=value)
 
     def query(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread) :
@@ -75,71 +75,57 @@ class camera :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index,entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
-        if token_list[index]["token"].group() == "clear" : 
+        if token_list[index]["token"] == "clear" : 
             return functools.partial(cls.clear, entity_get=entity_func)
-        elif token_list[index]["token"].group() == "remove_target" : 
+        elif token_list[index]["token"] == "remove_target" : 
             return functools.partial(cls.remove_target, entity_get=entity_func)
-        elif token_list[index]["token"].group() == "fade" : 
+        elif token_list[index]["token"] == "fade" : 
             index += 1
             if index >= token_list.__len__() : return functools.partial(cls.fade_default, entity_get=entity_func)
-            elif token_list[index]["token"].group() == "color" : 
-                rgb_color= []
-                for i in range(1,4,1) :
-                    color_re = token_list[index+i]["token"]
-                    if not (0 <= int(color_re.group()) <= 255) : raise CompileError("rgb颜色含有非法参数", pos=(color_re.start(),color_re.end()))
-                    rgb_color.append(color_re.group())
+            elif token_list[index]["token"] == "color" : 
+                rgb_color= [token_list[index+i]["token"] for i in range(1,4,1)]
                 return functools.partial(cls.fade_color, entity_get=entity_func, rgb=rgb_color)
-            elif token_list[index]["token"].group() == "time" : 
-                fade_time= []
-                for i in range(1,4,1) :
-                    color_re = token_list[index+i]["token"]
-                    if not (0 <= float(color_re.group()) <= 10) : raise CompileError("淡入淡出时间含有非法参数", pos=(color_re.start(),color_re.end()))
-                    fade_time.append(color_re.group())
-                index += 4
+            elif token_list[index]["token"] == "time" : 
+                fade_time= [token_list[index+i]["token"] for i in range(1,4,1)] ; index += 4
                 if index >= token_list.__len__() : return functools.partial(cls.fade_time, entity_get=entity_func, time=fade_time)
-                rgb_color= []
-                for i in range(1,4,1) :
-                    color_re = token_list[index+i]["token"]
-                    if not (0 <= float(color_re.group()) <= 255) : raise CompileError("rgb颜色含有非法参数", pos=(color_re.start(),color_re.end()))
-                    rgb_color.append(color_re.group())
+                rgb_color= [token_list[index+i]["token"] for i in range(1,4,1)]
                 return functools.partial(cls.fade_time_color, entity_get=entity_func, time=fade_time, rgb=rgb_color)
-        elif token_list[index]["token"].group() == "set" : 
-            index += 2 ; perset_name = token_list[index-1]["token"].group()
+        elif token_list[index]["token"] == "set" : 
+            index += 2 ; perset_name = token_list[index-1]["token"]
             if perset_name not in Constants.GAME_DATA["camera_perset"] :
-                raise CompileError("无法在相机预设ID内寻找到 %s" % perset_name, pos=(token_list[index-1]["token"].start(),token_list[index-1]["token"].end()))
-            if index >= token_list.__len__() or token_list[index]["token"].group() == "default" : 
+                raise CompileError("无法在相机预设ID内寻找到 %s" % perset_name, pos=(token_list[index-1]["start"],token_list[index-1]["end"]))
+            
+            if index >= token_list.__len__() or token_list[index]["token"] == "default" : 
                 return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
-            elif token_list[index]["token"].group() == "ease" :
+            elif token_list[index]["token"] == "ease" :
                 index += 3
-                if index >= token_list.__len__() or token_list[index]["token"].group() == "default" :
+                if index >= token_list.__len__() or token_list[index]["token"] == "default" :
                     return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
-                elif token_list[index]["token"].group() == "facing" and token_list[index+1]["type"] in ("Selector","Player_Name") :
+                elif token_list[index]["token"] == "facing" and token_list[index+1]["type"] in ("Selector","Player_Name") :
                     _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
                     return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
-                elif token_list[index]["token"].group() == "pos" :
+                elif token_list[index]["token"] == "pos" :
                     if (index+4) >= token_list.__len__() : 
                         return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
-                    elif token_list[index+4]["token"].group() == "facing" and token_list[index+5]["type"] in ("Selector","Player_Name") :
+                    elif token_list[index+4]["token"] == "facing" and token_list[index+5]["type"] in ("Selector","Player_Name") :
                         _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+5, is_single=True)
                         return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
                     else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
                 else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
-            elif token_list[index]["token"].group() == "facing" and token_list[index+1]["type"] in ("Selector","Player_Name") :
+            elif token_list[index]["token"] == "facing" and token_list[index+1]["type"] in ("Selector","Player_Name") :
                 _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
                 return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
-            elif token_list[index]["token"].group() == "pos" :
+            elif token_list[index]["token"] == "pos" :
                 if (index+4) >= token_list.__len__() : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
-                elif token_list[index+4]["token"].group() == "facing" and token_list[index+5]["type"] in ("Selector","Player_Name") :
+                elif token_list[index+4]["token"] == "facing" and token_list[index+5]["type"] in ("Selector","Player_Name") :
                     _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+5, is_single=True)
                     return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name, facing_entity_get=facing_entity_func)
                 else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
-            elif token_list[index]["token"].group() == "view_offset" :
-                for i in range(1,3,1) :
-                    view_offset = token_list[index+i]["token"]
-                    if not (-100 <= int(view_offset.group()) <= 100) : 
-                        raise CompileError("视点偏量应该在-100~100之间", pos=(view_offset.start(),view_offset.end()))
-                return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
             else : return functools.partial(cls.set_camera, entity_get=entity_func, camera_id=perset_name)
+        elif token_list[index]["token"] == "target_entity" :
+            _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
+            return functools.partial(cls.set_focus_camera, entity_get=entity_func, focus_entity_get=facing_entity_func)
+
 
     def clear(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
         entity_list = entity_get(execute_var, game)
@@ -187,11 +173,21 @@ class camera :
         entity_list = entity_get(execute_var, game)
         if isinstance(entity_list, Response.Response_Template) : return entity_list
         if isinstance(facing_entity_get, functools.partial) :
-            facing_entity_list = entity_get(execute_var, game)
+            facing_entity_list = facing_entity_get(execute_var, game)
             if isinstance(facing_entity_list, Response.Response_Template) : return facing_entity_list
 
         return Response.Response_Template("将以下玩家的摄像头设置为$id：\n$players", 1, len(entity_list)).substitute(
             players=", ".join( (ID_tracker(i) for i in entity_list) ), id=camera_id
+        )
+
+    def set_focus_camera(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, focus_entity_get:Callable=None) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        facing_entity_list = focus_entity_get(execute_var, game)
+        if isinstance(facing_entity_list, Response.Response_Template) : return facing_entity_list
+
+        return Response.Response_Template("将以下玩家的自由摄像头设置为聚焦相机：\n$players", 1, len(entity_list)).substitute(
+            players=", ".join( (ID_tracker(i) for i in entity_list) )
         )
 
 
@@ -199,14 +195,12 @@ class camerashake :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        if token_list[1]["token"].group() == "stop" :
+        if token_list[1]["token"] == "stop" :
             if 2 >= token_list.__len__() : return cls.stop
             index,entity_func = Selector.Selector_Compiler(_game, token_list, 2, is_player=True)
             return functools.partial(cls.stop, entity_get=entity_func)
         else :
             index,entity_func = Selector.Selector_Compiler(_game, token_list, 2, is_player=True)
-            if index < token_list.__len__() and not(0 <= float(token_list[index]["token"].group()) <= 4) :
-                raise CompileError("摄像头摇晃幅度参数超过0 ~ 4的范围", pos=(token_list[index]["token"].start(),token_list[index]["token"].end()))
             return functools.partial(cls.add, entity_get=entity_func)
 
     def stop(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable=None) :
@@ -259,24 +253,19 @@ class clear :
         index,entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
         if index >= len(token_list) : return functools.partial(cls.clear_specific, entity_get=entity_func)
         
-        item_name = ID_transfor(token_list[index]["token"].group())
+        item_name = ID_transfor(token_list[index]["token"])
         if item_name not in _game.minecraft_ident.items:
-            raise CompileError("不存在的物品ID：%s" % item_name,pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+            raise CompileError("不存在的物品ID：%s" % item_name,pos=(token_list[index]["start"], token_list[index]["end"]))
         else : index += 1
         if index >= len(token_list) : return functools.partial(cls.clear_specific, entity_get=entity_func, name=item_name)
 
         #Item data value
-        item_damage = int(token_list[index]["token"].group())
-        if not(-1 <= item_damage <= 32767):    #Invalid number
-            raise CompileError("%s 不是一个有效的数据值" % item_damage, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-        else : index += 1
+        item_damage = token_list[index]["token"] ; index += 1
         if index >= len(token_list) : return functools.partial(cls.clear_specific, entity_get=entity_func, 
             name=item_name, data=item_damage)
 
         #The amount of the item which needs to clear
-        item_max_clear = int(token_list[index]["token"].group())
-        if not(0 <= item_max_clear <= 2147483647): 
-            raise CompileError("%s 不是一个有效的最大数量" % item_max_clear, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+        item_max_clear = token_list[index]["token"]
         return functools.partial(cls.clear_specific, entity_get=entity_func, name=item_name, data=item_damage, max_count=item_max_clear)
 
     def clear_specific(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable=None, name:str=None, data:int=-1, max_count:int=2147483647) :
@@ -334,30 +323,27 @@ class clone :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
 
-        poses = [ token_list[i]["token"].group() for i in range(1,10,1) ]
+        poses = [ token_list[i]["token"] for i in range(1,10,1) ]
         if 10 >= len(token_list) : 
             return functools.partial(cls.non_fliter, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9])
 
-        mask_mode = token_list[10]["token"].group()
+        mask_mode = token_list[10]["token"]
         if mask_mode != "filtered" and 11 >= len(token_list) : 
             return functools.partial(cls.non_fliter, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
             mask_mode=mask_mode)
         elif mask_mode != "filtered" : 
             return functools.partial(cls.non_fliter, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
-            mask_mode=mask_mode, clone_mode = token_list[11]["token"].group())
+            mask_mode=mask_mode, clone_mode = token_list[11]["token"])
         else : 
-            block_id = ID_transfor( token_list[12]["token"].group() )
+            block_id = ID_transfor( token_list[12]["token"] )
             if block_id not in _game.minecraft_ident.blocks:
-                raise CompileError("不存在的方块ID：%s" % block_id,pos=(token_list[12]["token"].start(), token_list[12]["token"].end()))
+                raise CompileError("不存在的方块ID：%s" % block_id,pos=(token_list[12]["start"], token_list[12]["end"]))
 
             if 13 >= len(token_list) : block_state = {}
-            elif token_list[13]["type"] == "Block_Data" : 
-                block_state = int(token_list[13]["token"].group())
-                if not(-1 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
-                pos=(token_list[13]["token"].start(), token_list[13]["token"].end()))
+            elif token_list[13]["type"] == "Block_Data" : block_state = token_list[13]["token"]
             else : _,block_state = BlockState_Compiler( block_id, token_list, 13 )
             return functools.partial(cls.fliter, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], 
-            clone_mode = token_list[11]["token"].group(), block_id=block_id, block_state={} if block_state == -1 else block_state)
+            clone_mode = token_list[11]["token"], block_id=block_id, block_state={} if block_state == -1 else block_state)
 
     def error_test(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, start_pos1, end_pos1, start_pos2, end_pos2) :
         height_test = Constants.DIMENSION_INFO[execute_var["dimension"]]["height"]
@@ -473,13 +459,12 @@ class damage :
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_hurt = Selector.Selector_Compiler(_game, token_list, 1)
         
-        amount = int(token_list[index]["token"].group()); index += 1
-        if amount < 0 : raise CompileError("伤害数值应该为正整数", pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        amount = token_list[index]["token"]; index += 1
         if index >= len(token_list) : return functools.partial(cls.doing_damage, entity_hurt=entity_hurt, amount=amount)
 
-        cause = token_list[index]["token"].group(); index += 1
+        cause = token_list[index]["token"]; index += 1
         if cause != "suicide" and cause not in Constants.DAMAGE_CAUSE :
-            raise CompileError("不存在的伤害类型：%s" % cause, pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+            raise CompileError("不存在的伤害类型：%s" % cause, pos=(token_list[index-1]["start"], token_list[index-1]["end"]))
         if index >= len(token_list) : return functools.partial(cls.doing_damage, entity_hurt=entity_hurt, amount=amount, damage_type=cause)
 
         _, entity_causer = Selector.Selector_Compiler(_game, token_list, index + 1, is_single=True) # Skip reading the word 'entity', so index+1
@@ -513,7 +498,7 @@ class daylock :
         index = 1
         if index >= token_list.__len__() : return cls.query
         
-        value = token_list[index]["token"].group()
+        value = token_list[index]["token"]
         return functools.partial(cls.set, set_value=value)
 
     def query(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread) :
@@ -532,20 +517,20 @@ class dialogue:
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        open_or_change = token_list[1]["token"].group()
+        open_or_change = token_list[1]["token"]
         index, entity_npc = Selector.Selector_Compiler(_game, token_list, 2, is_npc=True, is_single=True)
 
         if open_or_change == "open":
             index, entity_player = Selector.Selector_Compiler(_game, token_list, index, is_player=True)
             if index >= len(token_list) : return functools.partial(cls.open, entity_npc=entity_npc, entity_player=entity_player)
 
-            scene_name = token_list[index]["token"].group()
+            scene_name = token_list[index]["token"]
             if scene_name not in _game.minecraft_ident.dialogues :
-                raise CompileError("不存在的场景ID：%s" % scene_name, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+                raise CompileError("不存在的场景ID：%s" % scene_name, pos=(token_list[index]["start"], token_list[index]["end"]))
             return functools.partial(cls.open, entity_npc=entity_npc, entity_player=entity_player)
 
         elif open_or_change == "change":
-            scene_name = token_list[index]["token"].group() ; index += 1
+            scene_name = token_list[index]["token"] ; index += 1
             if index >= len(token_list) : return functools.partial(cls.change, entity_npc=entity_npc)
 
             _, entity_player = Selector.Selector_Compiler(_game, token_list, index, is_player=True)
@@ -581,7 +566,7 @@ class difficulty :
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         difficulty_data = cls.DIFFICULTY
         token = token_list[1]["token"]
-        difficulty = difficulty_data.index(token.group()) // 3   #The var 'difficulty' is the numeric id of difficulty
+        difficulty = difficulty_data.index(token) // 3   #The var 'difficulty' is the numeric id of difficulty
         difficulty_name = difficulty_data[0::3][difficulty]     #Get the column 0 and get the full name of difficulty
         return functools.partial(cls.set, difficulty=difficulty, difficulty_name=difficulty_name)
 
@@ -597,26 +582,22 @@ class effect :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_get = Selector.Selector_Compiler(_game, token_list, 1)
-        effect_id = token_list[index]["token"].group() ; index += 1
+        effect_id = token_list[index]["token"] ; index += 1
         if effect_id == "clear" : 
             if index >= len(token_list) : return functools.partial(cls.clear, entity_get=entity_get)
-            clear_effect_id = token_list[index]["token"].group() ; index += 1
+            clear_effect_id = token_list[index]["token"] ; index += 1
             return functools.partial(cls.clear, entity_get=entity_get, effect_id=clear_effect_id)
 
         if effect_id not in Constants.EFFECT :
-            raise CompileError("不存在的药水效果：%s" % effect_id, pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+            raise CompileError("不存在的药水效果：%s" % effect_id, pos=(token_list[index-1]["start"], token_list[index-1]["end"]))
         if index >= len(token_list) : return functools.partial(cls.give, entity_get=entity_get, effect_id=effect_id)
-
-        if token_list[index]["token"].group() != "infinite" :
-            times = int(token_list[index]["token"].group()) ; index += 1
-            if not(0 <= times <= 1000000) : raise CompileError("药水效果时长应该在 0~1000000 内", pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
-        else : times = -1 ; index += 1
+        
+        times = token_list[index]["token"] ; index += 1
+        if times == "infinite" : times = -1
         if index >= len(token_list) and times != 0 : return functools.partial(cls.give, entity_get=entity_get, effect_id=effect_id, times=times)
         elif index >= len(token_list) : return functools.partial(cls.clear, entity_get=entity_get, effect_id=effect_id)
 
-        amplifier = int(token_list[index]["token"].group()) ; index += 1
-        if not(0 <= amplifier <= 255) :
-            raise CompileError("药水效果等级应该在 0~255 内", pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        amplifier = token_list[index]["token"] ; index += 1
         return functools.partial(cls.give, entity_get=entity_get, effect_id=effect_id, times=times, amplifier=amplifier)
 
     def clear(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, effect_id:str=None) :
@@ -674,24 +655,23 @@ class enchant :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_get = Selector.Selector_Compiler(_game, token_list, 1)
+        enchant_id = token_list[index]["token"]
         if token_list[index]["type"] == "Enchant_Type" : 
-            enchant_id = token_list[index]["token"].group()
             if enchant_id not in Constants.ENCHANT :
-                raise CompileError("不存在的附魔ID：%s" % enchant_id, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+                raise CompileError("不存在的附魔ID：%s" % enchant_id, pos=(token_list[index]["start"], token_list[index]["end"]))
             enchant_index = Constants.GAME_DATA['number_enchant_id'].index(enchant_id)
         else : 
-            enchant_index = int(token_list[index]["token"].group())
             if not(0 <= enchant_index < Constants.GAME_DATA['number_enchant_id'].__len__()) :
-                raise CompileError("不存在的附魔ID：%s" % enchant_index, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+                raise CompileError("不存在的附魔ID：%s" % enchant_index, pos=(token_list[index]["start"], token_list[index]["end"]))
             enchant_id = Constants.GAME_DATA['number_enchant_id'][enchant_index]
         index += 1
         enchant_max = Constants.ENCHANT[enchant_id]["max_level"]
         if index >= len(token_list) : return functools.partial(cls.enchant_item, entity_get=entity_get,
             enchant_id=enchant_id, enchant_index=enchant_index, enchant_max=enchant_max)
 
-        enchant_level = int(token_list[index]["token"].group())
+        enchant_level = token_list[index]["token"]
         if not(1 <= enchant_level <= enchant_max) :
-            raise CompileError("附魔等级应该在 1~%s 内" % enchant_max, pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+            raise CompileError("附魔等级应该在 1~%s 内" % enchant_max, pos=(token_list[index]["start"], token_list[index]["end"]))
         return functools.partial(cls.enchant_item, entity_get=entity_get, 
             enchant_id=enchant_id, enchant_index=enchant_index, enchant_max=enchant_max, enchant_level=enchant_level)
 
@@ -735,7 +715,7 @@ class event :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_get = Selector.Selector_Compiler(_game, token_list, 2)
-        event_id = token_list[index]["token"].group()
+        event_id = token_list[index]["token"]
         return functools.partial(cls.run_event, entity_get=entity_get, event_id=event_id)
 
     def run_event(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, event_id:str) :
@@ -763,40 +743,36 @@ class fill_1_0_0 :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
 
-        poses = [ token_list[i]["token"].group() for i in range(1,7,1) ]
-        block_id = ID_transfor(token_list[7]["token"].group())
+        poses = [ token_list[i]["token"] for i in range(1,7,1) ]
+        block_id = ID_transfor(token_list[7]["token"])
         if block_id not in _game.minecraft_ident.blocks :
-            raise CompileError("不存在的方块ID：%s" % block_id, pos=(token_list[7]["token"].start(), token_list[7]["token"].end()))
+            raise CompileError("不存在的方块ID：%s" % block_id, pos=(token_list[7]["start"], token_list[7]["end"]))
         if 8 >= len(token_list) : return functools.partial(cls.fill_block, start1=poses[0:3], end1=poses[3:6],
             block_id=block_id)
 
         index = 8
+        block_state = token_list[index]["token"]
         if token_list[index]["type"] == "Block_Data" : 
-            block_state = int(token_list[index]["token"].group())
-            if not(0 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
-            pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
             if block_state == -1 : block_state = {}
             index += 1
         else : index, block_state = BlockState_Compiler( block_id, token_list, index )
         if index >= len(token_list) : return functools.partial(cls.fill_block, start1=poses[0:3], end1=poses[3:6],
             block_id=block_id, block_state=block_state)
 
-        fill_mode = token_list[index]["token"].group() ; index += 1
+        fill_mode = token_list[index]["token"] ; index += 1
         if fill_mode != "replace" : return functools.partial(cls.fill_block, start1=poses[0:3], end1=poses[3:6],
             block_id=block_id, block_state=block_state, fill_mode=fill_mode)
         elif fill_mode == "replace" and index >= len(token_list) : return functools.partial(cls.fill_block,  
             start1=poses[0:3], end1=poses[3:6], block_id=block_id, block_state=block_state)
         elif fill_mode == "replace" : 
-            test_block_id = ID_transfor(token_list[index]["token"].group()) ; index += 1
+            test_block_id = ID_transfor(token_list[index]["token"]) ; index += 1
             if test_block_id not in _game.minecraft_ident.blocks :
-                raise CompileError("不存在的方块ID：%s" % test_block_id, pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+                raise CompileError("不存在的方块ID：%s" % test_block_id, pos=(token_list[index-1]["start"], token_list[index-1]["end"]))
             if index >= len(token_list) : return functools.partial(cls.fill_block, start1=poses[0:3], 
                 end1=poses[3:6], block_id=block_id, block_state=block_state, test_block=test_block_id)
 
+            test_block_state = token_list[index]["token"]
             if token_list[index]["type"] == "Block_Data" : 
-                test_block_state = int(token_list[index]["token"].group())
-                if not(-1 <= test_block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % test_block_state,
-                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
                 if test_block_state == -1 : test_block_state = {}
                 index += 1
             else : index, block_state = BlockState_Compiler( block_id, token_list, index )
@@ -874,10 +850,10 @@ class fill_1_19_80 :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
 
-        poses = [ token_list[i]["token"].group() for i in range(1,7,1) ]
-        block_id = ID_transfor(token_list[7]["token"].group())
+        poses = [ token_list[i]["token"] for i in range(1,7,1) ]
+        block_id = ID_transfor(token_list[7]["token"])
         if block_id not in _game.minecraft_ident.blocks :
-            raise CompileError("不存在的方块ID：%s" % block_id, pos=(token_list[7]["token"].start(), token_list[7]["token"].end()))
+            raise CompileError("不存在的方块ID：%s" % block_id, pos=(token_list[7]["start"], token_list[7]["end"]))
         if 8 >= len(token_list) : return functools.partial(cls.fill_block, start1=poses[0:3], end1=poses[3:6],
             block_id=block_id)
 
@@ -888,15 +864,15 @@ class fill_1_19_80 :
         if index >= len(token_list) : return functools.partial(cls.fill_block, start1=poses[0:3], end1=poses[3:6],
             block_id=block_id, block_state=block_state)
 
-        fill_mode = token_list[index]["token"].group() ; index += 1
+        fill_mode = token_list[index]["token"] ; index += 1
         if fill_mode != "replace" : return functools.partial(cls.fill_block, start1=poses[0:3], end1=poses[3:6],
             block_id=block_id, block_state=block_state, fill_mode=fill_mode)
         elif fill_mode == "replace" and index >= len(token_list) : return functools.partial(cls.fill_block, 
             start1=poses[0:3], end1=poses[3:6], block_id=block_id, block_state=block_state)
         elif fill_mode == "replace" : 
-            test_block_id = ID_transfor(token_list[index]["token"].group()) ; index += 1
+            test_block_id = ID_transfor(token_list[index]["token"]) ; index += 1
             if test_block_id not in _game.minecraft_ident.blocks :
-                raise CompileError("不存在的方块ID：%s" % test_block_id, pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+                raise CompileError("不存在的方块ID：%s" % test_block_id, pos=(token_list[index-1]["start"], token_list[index-1]["end"]))
             if index >= len(token_list) : return functools.partial(cls.fill_block, start1=poses[0:3], 
                 end1=poses[3:6], block_id=block_id, block_state=block_state, test_block=test_block_id)
 
@@ -912,15 +888,15 @@ class fog :
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
-        mode = token_list[index]["token"].group() ; index += 1
+        mode = token_list[index]["token"] ; index += 1
         if mode == "push" : 
-            fog_id = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+            fog_id = Quotation_String_transfor_1(token_list[index]["token"]) ; index += 1
             if fog_id not in _game.minecraft_ident.fogs : raise CompileError("不存在的迷雾ID：%s" % fog_id, 
-                pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
-            user_id = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+                pos=(token_list[index-1]["start"], token_list[index-1]["end"]))
+            user_id = Quotation_String_transfor_1(token_list[index]["token"]) ; index += 1
             return functools.partial(cls.push, entity_get=entity_func, fog_id=fog_id, user_id=user_id)
         else : 
-            user_id = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+            user_id = Quotation_String_transfor_1(token_list[index]["token"]) ; index += 1
             return functools.partial(cls.pop, entity_get=entity_func, user_id=user_id)
     
     def push(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, fog_id:str, user_id:str) :
@@ -957,7 +933,7 @@ class gamemode :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        mode = Constants.GAME_DATA["gamemode_type"].index( token_list[1]["token"].group() ) // 3
+        mode = Constants.GAME_DATA["gamemode_type"].index( token_list[1]["token"] ) // 3
         if 2 >= len(token_list) : return functools.partial(cls.set_gamemode, gamemode_value=mode)
 
         _, player_get = Selector.Selector_Compiler(_game, token_list, 2, is_player=True)
@@ -985,23 +961,23 @@ class gamerule :
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
         if 1 >= len(token_list) : return cls.read_all_rule
 
-        gamerule_name = token_list[1]["token"].group().lower()
+        gamerule_name = token_list[1]["token"].lower()
         if gamerule_name not in Constants.GAMERULE : raise CompileError("不存在的游戏规则：%s" % gamerule_name, 
-            pos=(token_list[1]["token"].start(), token_list[1]["token"].end()))
+            pos=(token_list[1]["start"], token_list[1]["end"]))
         if 2 >= len(token_list) : return functools.partial(cls.set_gamerule, gamerule_name=gamerule_name)
 
         if gamerule_name in cls.int_gamerule and token_list[2]["type"] != "Int_Value" :
             raise CompileError("游戏规则%s不是布尔值类型" % gamerule_name, 
-            pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+            pos=(token_list[2]["start"], token_list[2]["end"]))
 
-        if token_list[2]["type"] == "Int_Value" : value = int(token_list[2]["token"].group())
-        else : value = bool(("false","true").index(token_list[2]["token"].group()))
+        if token_list[2]["type"] == "Int_Value" : value = int(token_list[2]["token"])
+        else : value = bool(("false","true").index(token_list[2]["token"]))
         if gamerule_name in cls.int_gamerule :
             if value < 0 : raise CompileError("游戏规则%s不能为负数" % gamerule_name, 
-            pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+            pos=(token_list[2]["start"], token_list[2]["end"]))
             if (cls.int_gamerule[gamerule_name] is not None) and value > cls.int_gamerule[gamerule_name] : 
                 raise CompileError("游戏规则%s不能超过%s" % (gamerule_name, cls.int_gamerule[gamerule_name]), 
-                pos=(token_list[2]["token"].start(), token_list[2]["token"].end()))
+                pos=(token_list[2]["start"], token_list[2]["end"]))
         return functools.partial(cls.set_gamerule, gamerule_name=gamerule_name, value=value)
     
     def read_all_rule(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread) :
@@ -1029,21 +1005,17 @@ class give :
         lst_len = token_list.__len__()
         
         index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
-        item_name = ID_transfor(token_list[index]["token"].group()) ; index += 1
+        item_name = ID_transfor(token_list[index]["token"]) ; index += 1
         if item_name not in _game.minecraft_ident.items: raise CompileError("不存在的物品ID: %s" % item_name,
-            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+            pos=(token_list[index-1]["start"], token_list[index-1]["end"]))
         if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name)
 
         #Count
-        item_count = int(token_list[index]["token"].group()) ; index += 1
-        if not(1 <= item_count <= 32767): raise CompileError("%s 不是一个有效的数量" % item_count,
-            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        item_count = token_list[index]["token"] ; index += 1
         if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, count=item_count)
 
         #Data
-        item_data = int(token_list[index]["token"].group()) ; index += 1
-        if not(0 <= item_data <= 32767): raise CompileError("%s不是一个有效的数据值" % item_data,
-            pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+        item_data = token_list[index]["token"] ; index += 1
         if index >= lst_len : return functools.partial(cls.give_item, entity_get=entity_func, item_id=item_name, data=item_data, count=item_count)
 
         #Nbt

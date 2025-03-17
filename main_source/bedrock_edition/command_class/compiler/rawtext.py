@@ -35,7 +35,7 @@ def Rawtext_Analysis(_game:RunTime.minecraft_thread, version:List[int], rawtext_
             if not isinstance(text_json["scores"]["name"], str) : raise CompileError("rawtext json的 scores.name 需要提供字符串")
             token_list = Parser.parser(text_json["scores"]["name"], version)
             if isinstance(token_list, tuple) : raise CompileError("选择器" + token_list[0])
-            if token_list[0]["token"].group()[0] == "@" :
+            if token_list[0]["token"][0] == "@" :
                 _,entity_func = Selector.Selector_Compiler(_game, token_list, 0, is_player=True)
                 text_json["scores"]["name"] = entity_func
 

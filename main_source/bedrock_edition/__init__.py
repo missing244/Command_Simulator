@@ -1,5 +1,5 @@
-import main_source.package.file_operation as FileOperation
-import main_source.package.python_numpy as np
+import package.file_operation as FileOperation
+from  . import python_numpy as np
 
 from . import data_save as DataSave
 from . import constants as Constants

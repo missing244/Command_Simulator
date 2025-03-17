@@ -69,24 +69,24 @@ class execute_1_19 :
         index = 1 ; subcommand_list:List[functools.partial] = [functools.partial(head_generate)]
         while 1 :
             index, entity_func = Selector.Selector_Compiler(_game, token_list, index)
-            pos1 = [token_list[i]["token"].group() for i in range(index, index+3, 1)] ; index += 3
+            pos1 = [token_list[i]["token"] for i in range(index, index+3, 1)] ; index += 3
             subcommand_list.append( functools.partial(as_at_pos, entity_get=entity_func, pos=pos1) )
-            if token_list[index]["token"].group() == "execute" : index += 1 ; continue
-            elif token_list[index]["token"].group() == "detect" : 
-                pos2 = [token_list[i]["token"].group() for i in range(index+1, index+4, 1)] ; index += 4
-                block_id = ID_transfor(token_list[index]["token"].group()) ; index += 1
+            if token_list[index]["token"] == "execute" : index += 1 ; continue
+            elif token_list[index]["token"] == "detect" : 
+                pos2 = [token_list[i]["token"] for i in range(index+1, index+4, 1)] ; index += 4
+                block_id = ID_transfor(token_list[index]["token"]) ; index += 1
                 if block_id not in _game.minecraft_ident.blocks : raise CompileError("不存在的方块ID：%s" % block_id, 
-                    pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
-                block_state = int(token_list[index]["token"].group()) ; index += 1
+                    pos=(token_list[index]["start"], token_list[index]["end"]))
+                block_state = int(token_list[index]["token"]) ; index += 1
 
                 if not(-1 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
-                pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+                pos=(token_list[index]["start"], token_list[index]["end"]))
                 if block_state == -1 : block_state = {}
 
                 if "test_func" not in subcommand_list[-1].keywords : subcommand_list[-1].keywords["test_func"] = []
                 test_func = functools.partial(if_block, pos=pos2, block_id=block_id, block_state=block_state)
                 subcommand_list[-1].keywords["test_func"].append(test_func)
-                if token_list[index]["token"].group() == "execute" : index += 1 ; continue
+                if token_list[index]["token"] == "execute" : index += 1 ; continue
             func = Start_Compile(token_list[index:], _game, Version)
             if isinstance(func, tuple) : raise func[1]
             else : break
@@ -341,79 +341,79 @@ class execute_1_19_50 :
         subcommand_list:List[functools.partial] = [functools.partial(head_generate)] 
         index = 1 ; func:Callable = None
         while 1 :
-            if token_list[index]["token"].group() == "as" :
+            if token_list[index]["token"] == "as" :
                 index, entity_func = Selector.Selector_Compiler(_game, token_list, index+1)
                 subcommand_list.append( functools.partial(subcommand_as, entity_get=entity_func) )
-            elif token_list[index]["token"].group() == "at" :
+            elif token_list[index]["token"] == "at" :
                 index, entity_func = Selector.Selector_Compiler(_game, token_list, index+1)
                 subcommand_list.append( functools.partial(subcommand_at, entity_get=entity_func) )
-            elif token_list[index]["token"].group() == "facing" :
-                if token_list[index+1]["token"].group() == "entity" :
+            elif token_list[index]["token"] == "facing" :
+                if token_list[index+1]["token"] == "entity" :
                     index, entity_func = Selector.Selector_Compiler(_game, token_list, index+2, is_single=True)
-                    anchor_1 = token_list[index]["token"].group() ; index += 1
+                    anchor_1 = token_list[index]["token"] ; index += 1
                     subcommand_list.append( functools.partial(subcommand_facing_entity, entity_get=entity_func, anchor=anchor_1) )
                 else :
-                    pos = [token_list[index+i]["token"].group() for i in range(1,4)] ; index += 4
+                    pos = [token_list[index+i]["token"] for i in range(1,4)] ; index += 4
                     cls.add_func(subcommand_list[-1], functools.partial(subcommand_facing_pos, pos=pos))
-            elif token_list[index]["token"].group() == "positioned" :
-                if token_list[index+1]["token"].group() == "as" :
+            elif token_list[index]["token"] == "positioned" :
+                if token_list[index+1]["token"] == "as" :
                     index, entity_func = Selector.Selector_Compiler(_game, token_list, index+2)
                     subcommand_list.append( functools.partial(subcommand_positioned_entity, entity_get=entity_func) )
                 else :
-                    pos = [token_list[index+i]["token"].group() for i in range(1,4)] ; index += 4
+                    pos = [token_list[index+i]["token"] for i in range(1,4)] ; index += 4
                     cls.add_func(subcommand_list[-1], functools.partial(subcommand_positioned_pos, pos=pos))
-            elif token_list[index]["token"].group() == "rotated" :
-                if token_list[index+1]["token"].group() == "as" :
+            elif token_list[index]["token"] == "rotated" :
+                if token_list[index+1]["token"] == "as" :
                     index, entity_func = Selector.Selector_Compiler(_game, token_list, index+2)
                     subcommand_list.append( functools.partial(subcommand_rotated_entity, entity_get=entity_func) )
                 else :
-                    rotate = [token_list[index+i]["token"].group() for i in range(1,3)] ; index += 3
+                    rotate = [token_list[index+i]["token"] for i in range(1,3)] ; index += 3
                     cls.add_func(subcommand_list[-1], functools.partial(subcommand_rotated_pos, rotate=rotate))
-            elif token_list[index]["token"].group() == "align" :
-                axes = token_list[index+1]["token"].group() ; index += 2
+            elif token_list[index]["token"] == "align" :
+                axes = token_list[index+1]["token"] ; index += 2
                 cls.add_func(subcommand_list[-1], functools.partial(subcommand_align, x="x" in axes, y="y" in axes, z="z" in axes))
-            elif token_list[index]["token"].group() == "anchored" :
-                anchor = token_list[index+1]["token"].group() ; index += 2
+            elif token_list[index]["token"] == "anchored" :
+                anchor = token_list[index+1]["token"] ; index += 2
                 for obj in reversed(subcommand_list) :
                     if not(obj.func is subcommand_at or obj.func is subcommand_positioned_entity) : continue
                     cls.add_func(obj, functools.partial(subcommand_anchored, type=anchor)) ; break
-            elif token_list[index]["token"].group() == "in" :
-                dimension = token_list[index+1]["token"].group() ; index += 2
+            elif token_list[index]["token"] == "in" :
+                dimension = token_list[index+1]["token"] ; index += 2
                 cls.add_func(subcommand_list[-1], functools.partial(subcommand_in, dimension=dimension))
-            elif token_list[index]["token"].group() in ("if", "unless") :
-                unless_mode = token_list[index]["token"].group() == "unless" ; index += 1
-                if token_list[index]["token"].group() == "block" :
-                    pos = [token_list[i]["token"].group() for i in range(index+1, index+4, 1)] ; index += 4
-                    block_id = ID_transfor(token_list[index]["token"].group()) ; index += 1
+            elif token_list[index]["token"] in ("if", "unless") :
+                unless_mode = token_list[index]["token"] == "unless" ; index += 1
+                if token_list[index]["token"] == "block" :
+                    pos = [token_list[i]["token"] for i in range(index+1, index+4, 1)] ; index += 4
+                    block_id = ID_transfor(token_list[index]["token"]) ; index += 1
                     if block_id not in _game.minecraft_ident.blocks : raise CompileError("不存在的方块ID：%s" % block_id, 
-                        pos=(token_list[index]["token"].start(), token_list[index]["token"].end()))
+                        pos=(token_list[index]["start"], token_list[index]["end"]))
                     if index >= len(token_list) or token_list[index]["type"] == "Sub_Command" : block_state = {}
                     elif token_list[index]["type"] == "Block_Data" : 
-                        block_state = int(token_list[index]["token"].group()) ; index += 1
+                        block_state = int(token_list[index]["token"]) ; index += 1
                         if not(-1 <= block_state <= 32767) : raise CompileError("%s 不是一个有效的数据值" % block_state,
-                        pos=(token_list[index-1]["token"].start(), token_list[index-1]["token"].end()))
+                        pos=(token_list[index-1]["start"], token_list[index-1]["end"]))
                         if block_state == -1 : block_state = {}
                     else : index,block_state = BlockState_Compiler( block_id, token_list, index )
                     cls.add_func(subcommand_list[-1], functools.partial(subcommand_test_block, unless=unless_mode, pos=pos, block_id=block_id, block_state=block_state))
                     if index >= len(token_list) : break
-                elif token_list[index]["token"].group() == "blocks" :
-                    poses = [ token_list[i]["token"].group() for i in range(index+1,index+10,1) ] ; index += 10
-                    mask_mode = token_list[index]["token"].group() ; index += 1
+                elif token_list[index]["token"] == "blocks" :
+                    poses = [ token_list[i]["token"] for i in range(index+1,index+10,1) ] ; index += 10
+                    mask_mode = token_list[index]["token"] ; index += 1
                     cls.add_func(subcommand_list[-1], functools.partial(subcommand_test_blocks, unless=unless_mode, start1=poses[0:3], end1=poses[3:6], start2=poses[6:9], mask_mode=mask_mode))
                     if index >= len(token_list) : break
-                elif token_list[index]["token"].group() == "entity" :
+                elif token_list[index]["token"] == "entity" :
                     index, entity_func = Selector.Selector_Compiler(_game, token_list, index+1)
                     cls.add_func(subcommand_list[-1], functools.partial(subcommand_test_entity, unless=unless_mode, entity_get=entity_func))
                     if index >= len(token_list) : break
-                elif token_list[index]["token"].group() == "score" :
-                    if token_list[index+1]["type"] in "Player_Name" : index, entity_func_1 = index+2, token_list[index+1]["token"].group()
+                elif token_list[index]["token"] == "score" :
+                    if token_list[index+1]["type"] in "Player_Name" : index, entity_func_1 = index+2, token_list[index+1]["token"]
                     else : index, entity_func_1 = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
-                    scoreboard_name_1 = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
-                    operation_mode = token_list[index]["token"].group() ; index += 1
+                    scoreboard_name_1 = Quotation_String_transfor_1(token_list[index]["token"]) ; index += 1
+                    operation_mode = token_list[index]["token"] ; index += 1
                     if operation_mode != "matches" :
-                        if token_list[index]["type"] == "Player_Name" : entity_func_2 = token_list[index]["token"].group() ; index += 1
+                        if token_list[index]["type"] == "Player_Name" : entity_func_2 = token_list[index]["token"] ; index += 1
                         else : index, entity_func_2 = Selector.Selector_Compiler(_game, token_list, index, is_single=True)
-                        scoreboard_name_2 = Quotation_String_transfor_1(token_list[index]["token"].group()) ; index += 1
+                        scoreboard_name_2 = Quotation_String_transfor_1(token_list[index]["token"]) ; index += 1
                         cls.add_func(subcommand_list[-1], functools.partial(subcommand_test_score_compare, unless=unless_mode, entity_get1=entity_func_1, 
                         scb1=scoreboard_name_1, mode=operation_mode, entity_get2=entity_func_2, scb2=scoreboard_name_2))
                         if index >= len(token_list) : break
@@ -422,18 +422,18 @@ class execute_1_19_50 :
                         if token_list[index]["type"] == "Not" : range_not = True ; index += 1
                         else : range_not = False
                         if token_list[index]["type"] == "Range_Min" : 
-                            range_value[0] = int(token_list[index]["token"].group()) ; index += 1
+                            range_value[0] = int(token_list[index]["token"]) ; index += 1
                         if token_list[index]["type"] != "Range_Sign" : range_value[1] = range_value[0]
                         else :
                             index += 1
                             if index >= len(token_list) : break
                             elif token_list[index]["type"] == "Range_Max" : 
-                                range_value[1] = int(token_list[index]["token"].group()) ; index += 1
+                                range_value[1] = int(token_list[index]["token"]) ; index += 1
                         cls.add_func(subcommand_list[-1], functools.partial(subcommand_test_score_match, unless=unless_mode, 
                         entity_get1=entity_func_1, scb1=scoreboard_name_1, range_not=range_not, value1=range_value[0], value2=range_value[1]))
                         if index >= len(token_list) : break
-            elif token_list[index]["token"].group() == "run" :
-                if token_list[index+1]["token"].group() == "execute" : index += 2 ; continue
+            elif token_list[index]["token"] == "run" :
+                if token_list[index+1]["token"] == "execute" : index += 2 ; continue
                 func = Start_Compile(token_list[index+1:], _game, Version)
                 if isinstance(func, tuple) : raise func[1]
                 else : break
@@ -476,7 +476,7 @@ class function :
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) : 
-        mcfunc = token_list[1]["token"].group()
+        mcfunc = token_list[1]["token"]
         return functools.partial(cls.run, mcfunc=mcfunc)
 
     def run(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, mcfunc:str) :
