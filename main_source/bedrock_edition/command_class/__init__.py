@@ -1,6 +1,6 @@
-from .. import BaseNbtClass,Constants
 from .. import RunTime
-from . import parser as CommandParser
+from .. import BaseNbtClass,Constants
+from package import MCCommandParser as CommandParser
 from typing import Dict,Union,List,Tuple,Literal,Callable
 import re
 

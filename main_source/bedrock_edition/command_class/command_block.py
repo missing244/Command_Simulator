@@ -248,7 +248,7 @@ class command_block_compile_system :
                         auto = node.byte(cb_data["auto"]),
                         conditionalMode = node.byte(cb_data["block_state"]["conditional_bit"]),
                         TickDelay = node.int(cb_data["delay"]),
-                        TrackOutput = node.int(1),
+                        TrackOutput = node.byte(1),
                         Version = node.int(GameVersion),
                     )
                 )

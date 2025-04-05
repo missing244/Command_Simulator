@@ -26,14 +26,14 @@ def ID_transfor(s:str) -> str :
 def BlockState_Compiler(block_id:str, token_list:COMMAND_TOKEN, index:int) -> Tuple[int,dict] :
     block_id = ID_transfor(block_id)
     block_id_state = {} if (block_id not in Constants.BLOCK_STATE) else Constants.BLOCK_STATE[block_id]
-    block_id_state : Dict[Literal["default","support_value"], Union[Dict,Dict]]
+    block_id_state : Dict[Literal["default", "support_value"], Union[Dict,Dict]]
     block_state_token : List[str] = []
     if token_list[index]["type"] != "Start_BlockState_Argument" : return ({}, index)
     index += 1 ; block_state_token.append("{")
     
     while 1 :
         if token_list[index]["type"] in ("BlockState","Value","Next_BlockState_Argument") : 
-            block_state_token.append( token_list[index]["token"] )
+            block_state_token.append( str(token_list[index]["token"]) )
         elif token_list[index]["type"] == "Equal" : 
             block_state_token.append(":")
         elif token_list[index]["type"] == "End_BlockState_Argument" : 
