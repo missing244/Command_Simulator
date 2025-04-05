@@ -1,7 +1,7 @@
-import os,array,json
+import os,itertools,json
 from .. import nbt
 from ..__private import TypeCheckList
-from typing import Union,List,TypedDict,Dict,Tuple,Optional
+from typing import Union,List,TypedDict
 from io import FileIO, BytesIO, StringIO, TextIOBase
 
 class FormatError(Exception) : pass
@@ -13,7 +13,7 @@ class BLOCK(TypedDict) :
     Z: int
 
 
-class QingXu :
+class QingXu_V1 :
     """
     由 情绪 开发的结构文件对象
     -----------------------
@@ -51,9 +51,8 @@ class QingXu :
     def get_volume(self) :
         origin_min, origin_max, str1 = [0, 0, 0], [0, 0, 0], ["X", "Y", "Z"]
 
-        for chunk in self.chunks :
-            for i in range(3) : origin_min[i] = min(j[str1[i]] for j in chunk)
-            for i in range(3) : origin_max[i] = max(j[str1[i]] for j in chunk)
+        for i in range(3) : origin_min[i] = min(block[str1[i]] for block in itertools.chain(*self.chunks))
+        for i in range(3) : origin_max[i] = max(block[str1[i]] for block in itertools.chain(*self.chunks))
 
         return origin_min, origin_max
 
@@ -68,14 +67,14 @@ class QingXu :
         if "totalBlocks" not in Json1 : raise FormatError("文件缺少totalBlocks参数")
 
         StructureObject = cls()
-        Append = super(TypeCheckList, StructureObject.blocks).append
         for i in range(Json1["totalBlocks"]) :
-            chunk = Json1.get(f"{i}", None)
+            chunk = json.loads(Json1.get(f"{i}", '{"totalPoints":0}'))
             if not chunk : continue
+            StructureObject.chunks.append( [] )
             for j in range(chunk["totalPoints"]) : 
-                block = Json1.get(f"{j}", None)
+                block = chunk.get(f"{j}", None)
                 if not block : continue
-                Append( json.loads(block) )
+                StructureObject.chunks[-1].append(json.loads(block))
 
         return StructureObject
 

@@ -11,13 +11,37 @@
     ---------------------------------
     * 可用编解码器 Codecs: 通用结构对象from_buffer/save_as方法使用的编码器类
     ---------------------------------
-    * 可用函数 getStructureType: 分析json结构文件属于以上哪个结构类
+    * 可用函数 getStructureType: 分析结构文件属于以上哪个结构类
 """
 
 from .. import python_nbt as nbt
 
 from . import StructureBDX, StructureMCS
 from . import StructureRUNAWAY, StructureSCHEMATIC
-from .block import Block
+from .block import (Block, GetNbtID, GenerateCommandBlockNBT, 
+    GenerateContainerNBT,)
 from .codec import Codecs
 from .structure import CommonStructure
+
+def getStructureType(IO_Byte_Path) :
+    import io, traceback
+    from typing import Union
+    IO_Byte_Path: Union[str, bytes, io.BufferedIOBase]
+
+    if isinstance(IO_Byte_Path, str) : _file = open(IO_Byte_Path, "rb")
+    elif isinstance(IO_Byte_Path, bytes) : _file = io.BytesIO(IO_Byte_Path)
+    elif isinstance(IO_Byte_Path, io.BufferedIOBase) : _file = IO_Byte_Path
+    else : raise RuntimeError(f"{IO_Byte_Path} is not Readable Object")
+
+    Test = [StructureBDX.BDX_File, StructureMCS.Mcstructure, StructureSCHEMATIC.Schematic, 
+            StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, StructureRUNAWAY.MianYang, 
+            StructureRUNAWAY.GangBan_V1, StructureRUNAWAY.GangBan_V2, StructureRUNAWAY.GangBan_V3,
+            StructureRUNAWAY.FuHong_V1, StructureRUNAWAY.FuHong_V2, StructureRUNAWAY.QingXu_V1]
+    for class_obj in Test :
+        _file.seek(0)
+        try : bool1 = class_obj.is_this_file(_file)
+        except : traceback.print_exc() ; continue
+
+        if bool1 : return class_obj
+
+

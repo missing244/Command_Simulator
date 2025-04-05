@@ -181,7 +181,6 @@ class GangBan_V2 :
 
     def error_check(self) :
         block_count = 0
-        if len(self.size) != 3 : raise Exception("结构长宽高列表长度不为3")
 
         for chunk in self.chunks :
             if not isinstance(chunk.get("id", None), int) : raise Exception("区块数据缺少或存在错误的 id 参数")
@@ -296,7 +295,7 @@ class GangBan_V3 :
     -----------------------
     * 可用属性 size : 结构大小
     * 可用属性 blocks : 区块储存列表
-    * 可用属性 entities : 区块储存列表
+    * 可用属性 entities : 实体储存列表
     * 可用属性 block_palette : 方块ID映射列表
     -----------------------
     * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
@@ -325,7 +324,7 @@ class GangBan_V3 :
 
         for entity in self.entities :
             if len(entity) < 5 : raise Exception("实体参数不完整")
-            if any(not isinstance(i, int) for i in entity[0:3]) : raise Exception(f"实体坐标参数存在非法数据")
+            if any(not isinstance(i, (int,float)) for i in entity[0:3]) : raise Exception(f"实体坐标参数存在非法数据")
             if not isinstance(entity[3], str) : raise Exception(f"实体名字参数存在非法数据")
             if not isinstance(entity[4], str) : raise Exception(f"实体id参数存在非法数据")
 
@@ -360,9 +359,9 @@ class GangBan_V3 :
         area:AREA_SIZE = Json1.pop()
 
         StructureObject = cls()
-        StructureObject.size = array.array("i", area["ep"])
+        StructureObject.size = array.array("i", (i+1 for i in area["ep"]))
         StructureObject.block_palette.extend(palette)
-        B_APPEND = super(TypeCheckList, StructureObject.block).append
+        B_APPEND = super(TypeCheckList, StructureObject.blocks).append
         E_APPEND = super(TypeCheckList, StructureObject.entities).append
         for data in Json1 :
             if type(data[3]) is str : E_APPEND(data)
@@ -376,7 +375,7 @@ class GangBan_V3 :
         Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, PALETTE]] = [
             *self.entities,
             *self.blocks,
-            {"ep": list(self.size)},
+            {"ep": [i-1 for i in self.size]},
             list(self.block_palette) ]
 
         if isinstance(buffer, str) : 
@@ -394,7 +393,7 @@ class GangBan_V3 :
         try : Json1 = json.load(fp=bytes_io)
         except : return False
         if isinstance(Json1, list) and len(Json1) >= 2 and isinstance(Json1[-1], list) and \
-            (isinstance(Json1[-2], dict) and "ep" in Json1[-1]) : return True
+            (isinstance(Json1[-2], dict) and "ep" in Json1[-2]) : return True
         return False
 
 

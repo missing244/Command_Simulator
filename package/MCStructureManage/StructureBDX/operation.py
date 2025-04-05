@@ -900,7 +900,7 @@ class UseRuntimeIDPool(OperationBase, metaclass=Unsigned_Int_Meta) :
     网易MC( 1.17.0 @ 2.0.5 )下的 poolId 被我们定为 117。 \n
     每一个 运行时ID 都对应着一个方块，而且包含其 方块数据值(附加值)\n
     ---------------------------------\n
-    实例化参数 pool: 整数\n
+    实例化参数 runtimeId: 整数\n
     ---------------------------------\n
     实例化方法 to_bytes: 将对象转为字节数组\n
     ---------------------------------\n
@@ -910,10 +910,10 @@ class UseRuntimeIDPool(OperationBase, metaclass=Unsigned_Int_Meta) :
     operation_code = 0x1f
 
     def __init__(self,value:int) -> None:
-        self.value = ctypes.c_uint8(value).value
+        self.runtimeId = ctypes.c_uint8(value).value
         self.__bytes_cache = b'%s%s' % ( 
             self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(1,'big',signed=False) )
+            self.runtimeId.to_bytes(1,'big',signed=False) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -941,10 +941,10 @@ class PlaceRuntimeBlock(OperationBase, metaclass=Unsigned_Int_Meta) :
     operation_code = 0x20
 
     def __init__(self,value:int) -> None:
-        self.value = ctypes.c_uint16(value).value
+        self.runtimeId = ctypes.c_uint16(value).value
         self.__bytes_cache = b'%s%s' % ( 
             self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(2,'big',signed=False) )
+            self.runtimeId.to_bytes(2,'big',signed=False) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)
@@ -972,10 +972,10 @@ class PlaceBlockWithRuntimeId(OperationBase, metaclass=Unsigned_Int_Meta) :
     operation_code = 0x21
 
     def __init__(self,value:int) -> None:
-        self.value = ctypes.c_uint32(value).value
+        self.runtimeId = ctypes.c_uint32(value).value
         self.__bytes_cache = b'%s%s' % ( 
             self.operation_code.to_bytes(1,'big',signed=False),
-            self.value.to_bytes(4,'big',signed=False) )
+            self.runtimeId.to_bytes(4,'big',signed=False) )
 
     def __setattr__(self, name:str, value) :
         if hasattr(self, name) : raise Exception("无法修改 %s 属性" % name)

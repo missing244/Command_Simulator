@@ -14,6 +14,7 @@ class TypeCheckList(list) :
 
     def setChecker(self, types:tuple) :
         if not isinstance(types, tuple) : types = (types, )
+        self.Checker = types
         return self
 
     def append(self, value) :
@@ -117,9 +118,10 @@ class BiList :
         self.__class__(self.__forward)
 
     def append(self, value:Any) :
-        if value in self.__backward : return None
+        if value in self.__backward : return self.__backward[value]
         self.__backward[value] = len(self.__forward)
         self.__forward.append(value)
+        return self.__backward[value]
 
     def insert(self, index:int, value:Any) :
         if value in self.__backward : return None
@@ -147,6 +149,5 @@ class BiList :
     
     def index(self, value:Any, start:int=0, stop:int=2**63-1) :
         return self.__forward.index(value, start, stop)
-
 
 

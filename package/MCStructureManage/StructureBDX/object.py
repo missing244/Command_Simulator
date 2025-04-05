@@ -72,15 +72,14 @@ class BDX_File :
 
     def get_volume(self) :
         origin_min, origin_max, current_pos = [0, 0, 0], [0, 0, 0], [0, 0, 0]
-        value, pos_index = 0, 0
+        Oper = {0x06:2, 0x0c:2, 0x18:2, 0x19:2, 0x1e:2, 0x12:2, 0x13:2, 0x10:1, 0x11:1, 0x16:1, 0x17:1, 0x1d:1,
+            0x0e:0, 0x0f:0, 0x14:0, 0x15:0, 0x1c:0}
+        pos_index = 0
 
         for code in self.operation_list :
-            oper_code = code.operation_code
-            if oper_code in {0x06, 0x0c, 0x18, 0x19, 0x1e, 0x12, 0x13} : value = code.value ; pos_index = 2
-            elif oper_code in {0x10, 0x11, 0x16, 0x17, 0x1d} : value = code.value ; pos_index = 1
-            elif oper_code in {0x0e, 0x0f, 0x14, 0x15, 0x1c} : value = code.value ; pos_index = 0
-            else : continue
-            current_pos[pos_index] += value
+            if code.operation_code not in Oper : continue
+            pos_index = Oper[code.operation_code]
+            current_pos[pos_index] += code.value
             if current_pos[pos_index] < origin_min[pos_index] : origin_min[pos_index] = current_pos[pos_index]
             elif current_pos[pos_index] > origin_max[pos_index] : origin_max[pos_index] = current_pos[pos_index]
 
@@ -117,15 +116,14 @@ class BDX_File :
 
         BDX_Object = cls()
         BDX_Object.author = match_string_bytes(bdx_code).decode("utf-8", errors="ignore")
+        MList = BDX_Object.operation_list
+        SuperAppend = super(MList.__class__, MList).append
         try :
-            StrType = OperationCode.CreateConstantString
-            MList = BDX_Object.operation_list
-            SuperAppend = super(MList.__class__, MList).append
             while 1 : 
                 a = bdx_code.read(1)
                 if not a or a == b"\x58" : break
                 b = OPERATION_BYTECODES[a].from_bytes(bdx_code)
-                BDX_Object.const_str.append(b.string) if b.__class__ is StrType else SuperAppend(b)
+                BDX_Object.const_str.append(b.string) if a == b"\x01" else SuperAppend(b)
         except Exception as e :
             #print(len(bdx_code.getvalue()),bdx_code.tell(),bdx_code.getvalue()[bdx_code.tell()-1:])
             #traceback.print_exc()

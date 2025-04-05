@@ -175,6 +175,7 @@ class FuHong_V2 :
             if not isinstance(chunk.get("startZ", None), int) : raise Exception("方块数据存在错误的 aux 参数")
             for block in chunk["block"] :
                 if not (isinstance(block.get("en", None), str) or isinstance(block.get("n", None), str)) : 
+                    print(block)
                     raise Exception("方块坐标数据存在非法的 en 或 n 参数")
                 if not isinstance(block.get("x", None), list) : raise Exception("方块坐标数据存在非法的 x 参数")
                 if not isinstance(block.get("y", None), list) : raise Exception("方块坐标数据存在非法的 y 参数")

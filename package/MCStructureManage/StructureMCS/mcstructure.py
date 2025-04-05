@@ -104,12 +104,9 @@ class Mcstructure :
         StructureBlockPalette = StructureNBT['structure']['palette']['default']['block_palette'] = nbt.TAG_List(type=nbt.TAG_Compound)
         StructureBlockNBT = StructureNBT['structure']['palette']['default']['block_position_data'] = nbt.TAG_Compound()
 
-        for entity in self.entity_nbt : StructureEntity.append(entity)
-        for block in self.block_palette :
-            if "version" not in block : block["version"] = nbt.TAG_Int(17959425)
-            StructureBlockPalette.append(block)
-        for index, block_nbt in self.block_nbt.items() :
-            StructureBlockNBT[str(index)] = block_nbt
+        StructureEntity.extend(self.entity_nbt)
+        StructureBlockPalette.extend(self.block_palette)
+        for index, block_nbt in self.block_nbt.items() : StructureBlockNBT[str(index)] = block_nbt
 
         if isinstance(buffer, str) : 
             base_path = os.path.realpath(os.path.join(buffer, os.pardir))

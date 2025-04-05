@@ -113,7 +113,7 @@ class Kbdx :
 
     def __init__(self) :
         self.blocks: List[Tuple[int, int, int, int]] = TypeCheckList().setChecker(tuple)
-        self.block_palette: List[str] = TypeCheckList(["air"]).setChecker(str)
+        self.block_palette: Dict[int, str] = {}
         self.block_nbt: List[dict] = TypeCheckList().setChecker(dict)
 
     def __setattr__(self, name, value) :
@@ -141,6 +141,9 @@ class Kbdx :
             if not isinstance(block[2], int) : raise Exception("方块数据存在错误的 z 参数")
             if not isinstance(block[3], int) : raise Exception("方块数据存在错误的 index 参数")
             if block[3] < 1 : raise Exception("方块数据的 index 参数必须大于0")
+        for i,j in self.block_palette.items() :
+            if not isinstance(i, int) : raise Exception("方块调色板存在非法键名")
+            if not isinstance(j, str) : raise Exception("方块调色板存在非法数值")
 
 
     @classmethod
@@ -153,7 +156,7 @@ class Kbdx :
         block_count = int.from_bytes(_file.read(4), "little", signed=False)
         S1 = struct.Struct(f'<iiiQ')
 
-        blocks = TypeCheckList(["air"] * block_count).setChecker(tuple)
+        blocks = TypeCheckList([None] * block_count).setChecker(tuple)
         setmethod = super(TypeCheckList, blocks).__setitem__
         setmethod( slice(0, block_count, 1), S1.iter_unpack( _file.read(20 * block_count)) )
         StructureObject.blocks = blocks
@@ -162,7 +165,6 @@ class Kbdx :
         StructureObject.block_nbt = TypeCheckList(save_data.get('BlockEntityData', [])).setChecker(dict)
         del save_data['BlockEntityData']
 
-        StructureObject.block_palette = TypeCheckList([None] * (max(save_data.values()) + 1)).setChecker(str)
         for i,j in save_data.items() : StructureObject.block_palette[j] = i
 
         return StructureObject
@@ -175,14 +177,15 @@ class Kbdx :
             os.makedirs(base_path, exist_ok=True)
             _file = open(buffer, "wb")
         else : _file = buffer
-
+        
+        _file.write( len(self.blocks).to_bytes(4, byteorder="little") )
         S1 = struct.Struct(f'<iiiQ')
-        for i in self.blocks : buffer.write( S1.pack(*i) )
+        for i in self.blocks : _file.write( S1.pack(*i) )
 
         Json1 = {'BlockEntityData': list(self.block_nbt)}
-        for i,j in enumerate(self.block_palette[1:], start=1) : Json1[j] = f'{i}'
+        for i,j in self.block_palette.items() : Json1[j] = i
 
-        buffer.write( json.dumps(Json1, separators=(',', ':')).encode("utf-8") )
+        _file.write( json.dumps(Json1, separators=(',', ':')).encode("utf-8") )
 
 
     @classmethod

@@ -783,6 +783,7 @@
     "minecraft:carpet": {
         "default": {"color": "white"},
         "support_value": {"color": ["white","orange","magenta","light_blue","yellow","lime","pink","gray","silver","cyan","purple","blue","brown","green","red","black"]},
+        "runaway_blockstate_key": ["color"],
         "0b0": {"color": "white"},
         "0b1": {"color": "orange"},
         "0b10": {"color": "magenta"},
@@ -803,6 +804,7 @@
     "minecraft:concrete": {
         "default": {"color": "white"},
         "support_value": {"color": ["white","orange","magenta","light_blue","yellow","lime","pink","gray","silver","cyan","purple","blue","brown","green","red","black"]},
+        "runaway_blockstate_key": ["color"],
         "0b0": {"color": "white"},
         "0b1": {"color": "orange"},
         "0b10": {"color": "magenta"},
@@ -823,6 +825,7 @@
     "minecraft:concrete_powder": {
         "default": {"color": "white"},
         "support_value": {"color": ["white","orange","magenta","light_blue","yellow","lime","pink","gray","silver","cyan","purple","blue","brown","green","red","black"]},
+        "runaway_blockstate_key": ["color"],
         "0b0": {"color": "white"},
         "0b1": {"color": "orange"},
         "0b10": {"color": "magenta"},
@@ -843,6 +846,7 @@
     "minecraft:stained_glass": {
         "default": {"color": "white"},
         "support_value": {"color": ["white","orange","magenta","light_blue","yellow","lime","pink","gray","silver","cyan","purple","blue","brown","green","red","black"]},
+        "runaway_blockstate_key": ["color"],
         "0b0": {"color": "white"},
         "0b1": {"color": "orange"},
         "0b10": {"color": "magenta"},
@@ -883,6 +887,7 @@
     "minecraft:wool": {
         "default": {"color": "white"},
         "support_value": {"color": ["white","orange","magenta","light_blue","yellow","lime","pink","gray","silver","cyan","purple","blue","brown","green","red","black"]},
+        "runaway_blockstate_key": ["color"],
         "0b0": {"color": "white"},
         "0b1": {"color": "orange"},
         "0b10": {"color": "magenta"},
@@ -903,6 +908,7 @@
     "minecraft:shulker_box": {
         "default": {"color": "white"},
         "support_value": {"color": ["white","orange","magenta","light_blue","yellow","lime","pink","gray","silver","cyan","purple","blue","brown","green","red","black"]},
+        "runaway_blockstate_key": ["color"],
         "0b0": {"color": "white"},
         "0b1": {"color": "orange"},
         "0b10": {"color": "magenta"},
@@ -2697,6 +2703,7 @@
     "minecraft:log": {
         "default": {"old_log_type": "jungle","pillar_axis": "y"},
         "support_value": {"old_log_type": ["oak","spruce","birch","jungle"],"pillar_axis": ["y","x","z"]},
+        "runaway_blockstate_key": ["old_log_type"],
         "0b0": {"old_log_type": "oak","pillar_axis": "y"},
         "0b1": {"old_log_type": "spruce","pillar_axis": "y"},
         "0b10": {"old_log_type": "birch","pillar_axis": "y"},
@@ -2713,6 +2720,7 @@
     "minecraft:log2": {
         "default": {"new_log_type": "acacia","pillar_axis": "y"},
         "support_value": {"new_log_type": ["acacia","dark_oak"],"pillar_axis": ["y","x","z"]},
+        "runaway_blockstate_key": ["new_log_type"],
         "0b0": {"new_log_type": "acacia","pillar_axis": "y"},
         "0b1": {"new_log_type": "dark_oak","pillar_axis": "y"},
         "0b10": {"new_log_type": "acacia","pillar_axis": "x"},
@@ -4686,6 +4694,7 @@
     "minecraft:stone": {
         "default": {"stone_type": "stone"},
         "support_value": {"stone_type": ["stone","granite","granite_smooth","diorite","diorite_smooth","andesite","andesite_smooth"]},
+        "runaway_blockstate_key": ["stone_type"],
         "0b0": {"stone_type": "stone"},
         "0b1": {"stone_type": "granite"},
         "0b10": {"stone_type": "granite_smooth"},
