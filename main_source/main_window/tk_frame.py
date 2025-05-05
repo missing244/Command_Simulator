@@ -7,7 +7,6 @@ import main_source.main_window.function as app_function
 import main_source.main_window.constant as app_constant
 
 import package.tk_tool as tk_tool
-import package.MCBEIcon as MCBEIcon
 import package.file_operation as FileOperation
 import package.connent_API as connent_API
 
@@ -77,9 +76,9 @@ class Bottom_Bar(tkinter.Canvas) :
         canvas_width = int(self.cget("width")) ; canvas_height = int(self.cget("height"))
         text_id_0 = self.create_text(20, 20, text="游戏", font=tk_tool.get_default_font(14, weight="bold"), fill="#00ff00")
         self.coords(text_id_0, int(canvas_width*0.13), canvas_height//2)
-        text_id_1 = self.create_text(20, 20, text="拓展", font=tk_tool.get_default_font(14, weight="bold"), fill="white")
+        text_id_1 = self.create_text(20, 20, text="模拟", font=tk_tool.get_default_font(14, weight="bold"), fill="white")
         self.coords(text_id_1, int(canvas_width*0.315), canvas_height//2)
-        text_id_2 = self.create_text(20, 20, text="窗口", font=tk_tool.get_default_font(14, weight="bold"), fill="white")
+        text_id_2 = self.create_text(20, 20, text="拓展", font=tk_tool.get_default_font(14, weight="bold"), fill="white")
         self.coords(text_id_2, int(canvas_width*0.5), canvas_height//2)
         text_id_3 = self.create_text(20, 20, text="设置", font=tk_tool.get_default_font(14, weight="bold"), fill="white")
         self.coords(text_id_3, int(canvas_width*0.685), canvas_height//2)
@@ -92,9 +91,9 @@ class Bottom_Bar(tkinter.Canvas) :
         for text_id_1 in self.menu_list :
             x1,y1,x2,y2 = self.bbox(text_id_1)
             if not(x1 <= e.x <= x2 and y1 <= e.y <= y2) : continue
-            if text_id_1 == self.menu_list[0] : self.main_win.game_ready_or_run()
-            elif text_id_1 == self.menu_list[1] : self.main_win.set_display_frame('choose_expand')
-            elif text_id_1 == self.menu_list[2] : self.main_win.set_display_frame('expand_pack')
+            if text_id_1 == self.menu_list[0] : self.main_win.set_display_frame('welcome_screen')
+            elif text_id_1 == self.menu_list[1] : self.main_win.game_ready_or_run()
+            elif text_id_1 == self.menu_list[2] : self.main_win.set_display_frame('choose_expand')
             elif text_id_1 == self.menu_list[3] : self.main_win.set_display_frame('setting_frame')
             elif text_id_1 == self.menu_list[4] : self.Menu.post(e.x_root, e.y_root-self.Menu.winfo_reqheight())
             if text_id_1 == self.menu_list[4] : continue
@@ -140,68 +139,86 @@ class Bottom_Bar_Menu(tkinter.Menu) :
 
 class Global_Right_Click_Menu(tk_tool.tk_Menu) :
 
+    def __init__(self, master, **karg) -> None:
+        super().__init__(master, tearoff=False, font=tk_tool.get_default_font(10), **karg)
+
+
+class Welcome_Screen(tkinter.Frame) :
+
     def __init__(self, main_win, **karg) -> None:
-        super().__init__(main_win.window,  tearoff=False, font=tk_tool.get_default_font(10), **karg)
-        small_win_width, small_win_height = int(self.master.winfo_width()*0.95), int(self.master.winfo_height()*0.43)
-        self.add_command(label="复制特殊字符",command=lambda : Special_Char(main_win, small_win_width, small_win_height).mainloop())
-        self.add_command(label="批量复制字符",command=lambda : Unicode_char(main_win, small_win_width, small_win_height).mainloop())
-        self.add_command(label="查询游戏内ID",command=lambda : Find_Minecraft_ID(main_win, small_win_width, small_win_height).mainloop())
-        self.add_command(label="复制文件命令",command=lambda : Copy_File_Command(main_win, small_win_width, small_win_height).mainloop())
+        super().__init__(main_win.window, **karg)
+        self.main_win = main_win
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(6)).pack()
+        tkinter.Label(self, text="命令模拟器", fg='black', font=tk_tool.get_default_font(25), width=15, height=1).pack()
+        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(8)).pack()
+        
+        tkinter.Button(self,text='开始命令模拟',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+            command=self.main_win.game_ready_or_run).pack(side="top")
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+        tkinter.Button(self,text='查询游戏内ID',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+            command=lambda:self.main_win.set_display_frame("find_minecraft_ID")).pack(side="top")
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+        tkinter.Button(self,text='复制特殊字符',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+            command=lambda:self.main_win.set_display_frame("special_char")).pack(side="top")
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+        tkinter.Button(self,text='批量复制字符',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+            command=lambda:self.main_win.set_display_frame("unicode_char")).pack(side="top")
+        if self.main_win.platform == "android" or app_constant.debug_testing :
+            tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+            tkinter.Button(self,text='复制文件命令',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+            command=lambda:self.main_win.set_display_frame("copy_file_command")).pack(side="top")
+        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(11)).pack()
 
+        frame_m4 = tkinter.Frame(self)
+        tkinter.Button(frame_m4,text='使用须知',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
+        command=lambda:webbrowser.open("http://localhost:32323/tutorial/Instructions.html")).pack(side='left')
+        tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
+        tkinter.Button(frame_m4,text='常见问题',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
+        command=lambda:webbrowser.open("https://commandsimulator.great-site.net/tool/Question/")).pack(side='left')
+        frame_m4.pack()
+        tkinter.Label(self, text="新用户一定要阅读 使用须知\n安卓用户一定要阅读 常见问题", font=tk_tool.get_default_font(10), height=2, fg="red").pack()
 
+class Special_Char(tkinter.Frame) :
 
-class Special_Char(tkinter.Toplevel) :
-
-    def __init__(self, main_win, small_win_width, small_win_height, **karg) -> None:
+    def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
         self.main_win = main_win
         self.display_id = 0
         self.mode_id = "ByteCode"
-        self.image_list = [
-            ( MCBEIcon.tk_Image(i) if self.main_win.platform == "windows" else MCBEIcon.tk_Image(i).zoom(4,4)
-            ) for i in MCBEIcon.icon_list
-        ]
+        self.image_list:List[tkinter.PhotoImage] = []
 
-        small_win_width, small_win_height = int(self.master.winfo_width()*0.95), int(self.master.winfo_height()*0.43)
-        self.resizable(False, False)
-        self.geometry('%sx%s+%s+%s'%(small_win_width,small_win_height,self.master.winfo_x(),self.master.winfo_y()))
-        self.transient(self.master)
-        self.title('特殊字符')
-
-        frame_icon = tkinter.Frame(self)
-        self.image_group = Frame_list = [tkinter.Frame(frame_icon) for i in range((len(MCBEIcon.icon_list)//4) + 1)]
-        tkinter.Button(frame_icon,width=1,height=5,text="←",bg="#c8bfe7",command=lambda : self.change_page(-1)).pack(side=tkinter.LEFT)
-        tkinter.Button(frame_icon,width=1,height=5,text="→",bg="#c8bfe7",command=lambda : self.change_page(1)).pack(side=tkinter.RIGHT)
+        icon_zip_file = zipfile.ZipFile(os.path.join("main_source","app_source","icon.zip"), "r")
+        icon_list = icon_zip_file.namelist()
+        
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(6)).pack()
+        frame_icon = tk_tool.ScrollableFrame(self)
+        frame_icon.canvas.config(width=self.main_win.window.winfo_reqwidth()*92//100, 
+            height=self.main_win.window.winfo_reqheight()*70//100)
+        for index, photo_name in enumerate(icon_list) :
+            photo = tkinter.PhotoImage(master=frame_icon, data=icon_zip_file.open(photo_name).read())
+            if self.main_win.platform == "android" : photo = photo.zoom(4, 4)
+            label = tkinter.Label(frame_icon.scrollable_frame, image=photo)
+            label.file_name=photo_name.replace(".gif", "").lower()
+            label.grid(row=index//4, column=index%4)
+            label.bind('<Button-1>', lambda event : self.mode_effect(event))
+            self.image_list.append(photo)
+            if self.main_win.platform == "android" : self.image_list[-1].zoom(4, 4)
         frame_icon.pack()
 
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+        self.label1 = tkinter.Label(self,width=25,height=1,text="点击上方图标即可直接复制",font=tk_tool.get_default_font(9))
+        self.label1.pack(side=tkinter.TOP)
         frame_button = tkinter.Frame(self)
-        self.buttom1 = tkinter.Button(frame_button,width=10,height=1,text="复制源字符",bg="#b4f0c8",font=tk_tool.get_default_font(9),
+        self.buttom1 = tkinter.Button(frame_button,width=11,height=1,text="复制源字符",bg="#b4f0c8",font=tk_tool.get_default_font(9),
             command=lambda : self.mode_change("ByteCode"), state=tkinter.DISABLED)
         self.buttom1.pack(side=tkinter.LEFT)
-        self.buttom2 = tkinter.Button(frame_button,width=10,height=1,text="复制Unicode",bg="#b4f0c8",font=tk_tool.get_default_font(9),
+        self.buttom2 = tkinter.Button(frame_button,width=11,height=1,text="复制Unicode",bg="#b4f0c8",font=tk_tool.get_default_font(9),
             command=lambda : self.mode_change("Unicode"))
         self.buttom2.pack(side=tkinter.LEFT)
-        self.page = tkinter.Label(frame_button,width=6,height=1,text="第%s页"%(self.display_id+1,),font=tk_tool.get_default_font(9))
-        self.page.pack(side=tkinter.LEFT)
-        frame_button.pack(side=tkinter.BOTTOM)
-        self.label1 = tkinter.Label(self,width=25,height=1,text="点击上方图标即可直接复制",font=tk_tool.get_default_font(9))
-        self.label1.pack(side=tkinter.BOTTOM)
-
-        for i,j in enumerate(self.image_list) : 
-            label = tkinter.Label(Frame_list[i//4],image=j)
-            label.word_id = MCBEIcon.icon_list[i]
-            label.bind('<Button-1>',lambda event : self.mode_effect(event))
-            label.pack(side=tkinter.LEFT)
-        Frame_list[0].pack(); Frame_list[1].pack(); Frame_list[2].pack(); Frame_list[3].pack()
-    
-    def change_page(self, value:int) : 
-        self.display_id += value
-        if self.display_id * 4 > len(self.image_group) : self.display_id = 0
-        if self.display_id < 0 : self.display_id = len(self.image_group) // 4
-        for i in range(len(self.image_group)) :
-            if (self.display_id * 4) <= i < ((self.display_id + 1) * 4) : self.image_group[i].pack()
-            else : self.image_group[i].pack_forget()
-        self.page.config(text="第%s页"%(self.display_id+1,))
+        frame_button.pack(side=tkinter.TOP)
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Button(self,height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
+            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
 
     def mode_change(self, mode:Literal["ByteCode", "Unicode"]) : 
         self.mode_id = mode
@@ -210,8 +227,8 @@ class Special_Char(tkinter.Toplevel) :
         if self.mode_id == "Unicode" : self.buttom2.config(state=tkinter.DISABLED)
         else : self.buttom2.config(state=tkinter.NORMAL)
 
-    def mode_effect(self, event : tkinter.Event) :
-        word_id = event.widget.word_id.replace(".gif","")
+    def mode_effect(self, event:tkinter.Event) :
+        word_id = event.widget.file_name
         if self.mode_id == "ByteCode" :
             tk_tool.copy_to_clipboard(chr(int(word_id, 16)))
             self.label1.config(text="元字符%s已存入剪切板" % word_id)
@@ -219,53 +236,63 @@ class Special_Char(tkinter.Toplevel) :
             tk_tool.copy_to_clipboard("\\u" + word_id)
             self.label1.config(text="Unicode字符%s已存入剪切板" % word_id)
 
-class Unicode_char(tkinter.Toplevel) :
+class Unicode_Char(tkinter.Frame) :
 
-    def __init__(self, main_win, small_win_width, small_win_height, **karg) -> None:
+    def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
         self.main_win = main_win
         self.test_str1 = re.compile("^\\\\u[a-fA-F0-9]{4}$")
         self.test_str2 = re.compile("^\\\\u[a-fA-F0-9]{4}~\\\\u[a-fA-F0-9]{4}$")
 
-        small_win_width, small_win_height = int(self.master.winfo_width()*0.95), int(self.master.winfo_height()*0.43)
-        self.resizable(False, False)
-        self.geometry('%sx%s+%s+%s'%(small_win_width,small_win_height,self.master.winfo_x(),self.master.winfo_y()))
-        self.transient(self.master)
-        self.title('批量复制')
-            
         tkinter.Label(self, text="",fg='black',font=tk_tool.get_default_font(6), width=15, height=1).pack()
-            
-        frame_copy_str = tkinter.Frame(self)
-        self.Unicode_collect = tkinter.Text(frame_copy_str, show=None, height=4, width=30, font=tk_tool.get_default_font(10))
+        self.Unicode_collect = tkinter.Text(self, height=6, width=28, font=tk_tool.get_default_font(10))
         self.Unicode_collect.bind("<FocusIn>",lambda a : main_win.set_focus_input(a))
+        self.Unicode_collect.bind("<<Modified>>",lambda a : self.get_str(True))
         self.Unicode_collect.pack()
-        self.Unicode_collect.tag_config("red",background='red')
-        tkinter.Label(frame_copy_str, text="",fg='black',font=tk_tool.get_default_font(6), width=15, height=1).pack()
+        self.Unicode_collect.tag_config("red", background='red')
+        tkinter.Label(self, text="",fg='black',font=tk_tool.get_default_font(6), width=15, height=1).pack()
 
-        frame_m3 = tkinter.Frame(frame_copy_str)
-        tkinter.Button(frame_m3,text='批量复制',font=tk_tool.get_default_font(10),bg='aquamarine',width=8,height=1,command=self.get_str).pack(side='left')
+        frame_m3 = tkinter.Frame(self)
+        tkinter.Button(frame_m3,text='批量复制',font=tk_tool.get_default_font(10),bg='aquamarine',width=10,height=1,command=self.get_str).pack(side='left')
         tkinter.Label(frame_m3, text="    ", fg='black',font=tk_tool.get_default_font(6), height=1).pack(side='left')
-        tkinter.Button(frame_m3,text='退出窗口',font=tk_tool.get_default_font(10),bg='aquamarine',width=8,height=1,command=self.destroy).pack(side='left')
+        tkinter.Button(frame_m3,text='查询字符',font=tk_tool.get_default_font(10),bg='aquamarine',width=10,height=1,
+            command=lambda:webbrowser.open("https://commandsimulator.great-site.net/tool/Unicode/page_1.html")).pack(side='left')
         frame_m3.pack()
 
-        tkinter.Label(frame_copy_str, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
-        self.label1 = tkinter.Label(frame_copy_str, text="请使用\\uXXXX或\n\\uXXXX~\\uXXXX格式填写\nXXXX为4位16进制，可多行",fg='black',
-                                    font=tk_tool.get_default_font(10), width=22, height=3)
+        tkinter.Label(self, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+        self.label1 = tkinter.Label(self, text="请使用\\uXXXX或\n\\uXXXX~\\uXXXX格式填写\nXXXX为4位16进制，可多行",fg='black',
+            font=tk_tool.get_default_font(10), width=22, height=3)
         self.label1.pack()
-        label2 = tkinter.Label(frame_copy_str, text="点击查询更多字符",fg='blue',font=tk_tool.get_default_font(10), width=22, height=1)
-        label2.pack()
-        label2.bind("<Button-1>",lambda e: webbrowser.open("https://missing254.github.io/cs-tool/tool/Unicode/page_1.html"))
-        frame_copy_str.pack()
 
-    def get_str(self) : 
-        self.Unicode_collect.tag_remove("red","0.0",tkinter.END)
+        tkinter.Label(self, text="",fg='black',font=tk_tool.get_default_font(6), width=15, height=1).pack()
+        self.Unicode_Render = tk_tool.tk_Scrollbar_Text(self, True, False, height=6, width=26, font=tk_tool.get_default_font(10))
+        self.Unicode_Render.input_box.insert("0.0", "预览窗口，等待输入...")
+        self.Unicode_Render.input_box.config(state="disabled")
+        self.Unicode_Render.pack()
+
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Button(self,height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
+            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
+
+    def check_syntax(self) :
+        self.Unicode_collect.edit_modified(False)
+        self.Unicode_collect.tag_remove("red", "0.0", tkinter.END)
         text1 = self.Unicode_collect.get("0.0",tkinter.END)[:-1].split("\n")
         list1 = [bool(self.test_str1.search(i) or self.test_str2.search(i)) for i in text1]
         if (False in list1) : 
-            i = list1.index(False) ; self.label1.config(text = "第%s行格式错误"%(i+1,)) 
+            i = list1.index(False)
+            self.Unicode_Render.input_box.config(state="normal")
+            self.Unicode_Render.input_box.delete("0.0", "end")
+            self.Unicode_Render.input_box.insert("0.0", "第%s行格式错误"%(i+1,))
+            self.Unicode_Render.input_box.config(state="disabled")
             self.Unicode_collect.see("%s.%s"%(i+1,len(text1[i])))
             self.Unicode_collect.tag_add("red","%s.0"%(i+1,),"%s.%s"%(i+1,len(text1[i])))
             return False
+        return True
+
+    def get_str(self, only_check=False) : 
+        text1 = self.Unicode_collect.get("0.0",tkinter.END)[:-1].split("\n")
+        if not self.check_syntax() : return None
 
         copy_text_list = []
         for i in text1 :
@@ -274,20 +301,26 @@ class Unicode_char(tkinter.Toplevel) :
                 text2 = i.split("~")
                 start1,end1 = int("0x" + text2[0].replace("\\u",""),16) , int("0x" + text2[1].replace("\\u",""),16)
                 while start1 <= end1 : copy_text_list.append(chr(start1)) ; start1 += 1
-        tk_tool.copy_to_clipboard("".join(copy_text_list))
-        self.label1.config(text = "Unicode字符已全部存入剪切板")
+        
+        self.Unicode_Render.input_box.config(state="normal")
+        self.Unicode_Render.input_box.delete("0.0", "end")
+        if only_check :
+            self.Unicode_Render.input_box.insert("0.0", "".join(copy_text_list))
+        else : 
+            tk_tool.copy_to_clipboard("".join(copy_text_list))
+            self.Unicode_Render.input_box.insert("0.0", "Unicode字符已全部存入剪切板")
+        self.Unicode_Render.input_box.config(state="disabled")
 
-class Find_Minecraft_ID(tkinter.Toplevel) :
+class Find_Minecraft_ID(tkinter.Frame) :
 
     class search_id_object :
         
         def __init__(self) -> None:
-            try : self.MC_ID = json.load(fp=open(os.path.join('main_source','update_source','import_files', 'translate'),"r",encoding="utf-8"))
+            try : self.MC_ID = json.load(fp=open(os.path.join('main_source','update_source','import_files','translate'),"r",encoding="utf-8"))
             except : self.MC_ID = {} ; traceback.print_exc()
         
-        def search_str(self, condition_str:str, is_regx=False) :
+        def search_str(self, condition_str:str, is_regx=False, search_setting:Dict[str,bool]={}) :
             if condition_str.replace(" ","") == "" : return []
-            self.search_list = result_list = []
             if not is_regx : condition_str = "".join( [("\\u" + hex(ord(i)).replace("0x","0000")[-4:]) for i in condition_str] )
             
             try: 
@@ -295,81 +328,104 @@ class Find_Minecraft_ID(tkinter.Toplevel) :
             except : return None
             compile_re = re.compile(condition_str)
 
-            for i in self.MC_ID :
-                result_list += [
-                    ("%s%s" % (i,self.MC_ID[i][j]),j) for j in self.MC_ID[i] if compile_re.search("%s%s" % (i,self.MC_ID[i][j]))
-                ]
+            result_list = []
+            self.search_result = {}
+            for key1, value1 in self.MC_ID.items() :
+                if not search_setting.get("全部", False) and not search_setting.get(key1[1:][:-1], False) : continue
+                result_list += [ "%s%s" % (key1, chinese)
+                    for english, chinese in value1.items()
+                    if compile_re.search(chinese) ]
+                self.search_result.update({"%s%s" % (key1, chinese):english for english, chinese in value1.items()
+                    if compile_re.search(chinese)})
 
             return result_list
     
-    def __init__(self, main_win, small_win_width, small_win_height, **karg) -> None:
+    def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
         self.main_win = main_win
         self.search_translate_id = self.search_id_object()
+        self.search_object = ['全部', '物品', '方块', '实体', '群系', '伤害', '药效', '附魔', '槽位', '迷雾', '规则', '结构', '掉落', '声音']
 
-        small_win_width, small_win_height = int(self.master.winfo_width()*0.95), int(self.master.winfo_height()*0.43)
-        self.resizable(False, False)
-        self.geometry('%sx%s+%s+%s'%(small_win_width,small_win_height,self.master.winfo_x(),self.master.winfo_y()))
-        self.transient(self.master)
-        self.title('查找游戏ID')
+        self.search_setting:Dict[str, tkinter.BooleanVar] = {}
+        for item in self.search_object : self.search_setting[item] = tkinter.BooleanVar(self, False)
+        self.search_setting['全部'].set(True)
 
         tkinter.Label(self, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
         frame_m10 = tkinter.Frame(self)
-        search_collect = tkinter.Entry(frame_m10, show=None, width=18, font=tk_tool.get_default_font(11))
-        search_collect.event_add("<<update-status>>","<KeyRelease>", "<ButtonRelease-1>")
-        search_collect.bind("<<update-status>>", lambda a : self.search(search_collect.get))
+        self.search_collect = search_collect = tkinter.Entry(frame_m10, width=18, font=tk_tool.get_default_font(11))
+        search_collect.event_add("<<update-status>>", "<KeyRelease>", "<ButtonRelease-1>")
+        search_collect.bind("<<update-status>>", lambda a : self.search())
         search_collect.bind("<FocusIn>",lambda a : main_win.set_focus_input(a))
         search_collect.pack(side='left')
-        self.use_regx = tkinter.BooleanVar(self,False)
-        tkinter.Checkbutton(frame_m10,text='正则',font=tk_tool.get_default_font(10),variable=self.use_regx,onvalue=True,offvalue=False,
-                            height=1,command=lambda : self.search(search_collect.get)).pack(side='left')
+        self.use_regx = tkinter.BooleanVar(self, False)
+        tkinter.Checkbutton(frame_m10,text='正则',font=tk_tool.get_default_font(10),variable=self.use_regx,
+            onvalue=True,offvalue=False, height=1,command=self.search).pack(side='left')
         frame_m10.pack()
         tkinter.Label(self, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
 
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
         sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
-        self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,height=7,width=26,
-            yscrollcommand=sco1.set,xscrollcommand=sco2.set)
-        self.search_result.grid()
+        self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
+            height=16,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+        self.search_result.grid(row=0,column=0)
         sco1.config(command=self.search_result.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
         sco2.config(command=self.search_result.xview)
-        sco2.grid(sticky=tkinter.E+tkinter.W)
+        sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
         self.search_result.bind("<Double-Button-1>",lambda e : self.copy())
+        tkinter.Button(frame_m10,height=1,text="S",font=tk_tool.get_default_font(6),bg="aqua",
+            command=lambda:self.setting()).grid(row=1,column=1)
         frame_m10.pack()
         tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(1), width=15, height=1).pack()
-        self.label1 = tkinter.Label(self, text="双击项目以复制",fg='black',font=tk_tool.get_default_font(10), width=22, height=1)
+
+        self.label1 = tkinter.Label(self, text="双击项目复制，点击浅蓝色按钮设置",fg='black',font=tk_tool.get_default_font(10), width=27, height=1)
         self.label1.pack()
 
-        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(1), width=15, height=1).pack()
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
+        tkinter.Button(self,height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
+            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
 
-    def search(self, search:Callable) :
-        self.search_result.delete(0,tkinter.END)
-        list1 = self.search_translate_id.search_str(search(), self.use_regx.get())
+    def setting(self) :
+        toplevel = tkinter.Toplevel(self.main_win.window)
+        toplevel.resizable(False, False)
+        toplevel.transient(self.master)
+        toplevel.grab_set()
+        toplevel.title('Setting')
+        for index, item in enumerate(self.search_object) : 
+            tkinter.Checkbutton(toplevel, text=item,font=tk_tool.get_default_font(10), variable=self.search_setting[item],
+            onvalue=True,offvalue=False, height=1,command=self.search).grid(row=index//4, column=index%4)
+        display_x = self.master.winfo_x() + (self.master.winfo_width() - toplevel.winfo_reqwidth()) // (
+            6 if self.main_win.platform == "android" else 3)
+        display_y = self.master.winfo_y() + (self.master.winfo_height() - toplevel.winfo_reqheight()) // 2
+        print(self.master.winfo_x(), self.master.winfo_y())
+        toplevel.geometry("+%s+%s" % (display_x, display_y))
+
+    def search(self) :
+        dict1 = {i:j.get() for i,j in self.search_setting.items()}
+        if dict1["全部"] and list(dict1.values()).count(True) > 1 : 
+            self.search_setting["全部"].set(False)
+            dict1["全部"] = False
+        list1 = self.search_translate_id.search_str(self.search_collect.get(), self.use_regx.get(), dict1)
         if list1 is None : self.label1.config(text = "正则表达式格式错误") ; return None
-        self.search_result.insert(tkinter.END,*[i[0] for i in list1])
+        self.search_result.delete(0, tkinter.END)
+        self.search_result.insert(tkinter.END, *list1)
         if len(list1) : self.label1.config(text = "搜索成功")
 
     def copy(self) :
         if len(self.search_result.curselection()) == 0 : self.label1.config(text = "没有选择需要复制的ID") ; return
-        for chinese,english in enumerate(self.search_translate_id.search_list) :
-            if chinese == self.search_result.curselection()[0] : break
-        tk_tool.copy_to_clipboard(english[1])
+        select_item = self.search_result.get(self.search_result.curselection()[0])
+        tk_tool.copy_to_clipboard(self.search_translate_id.search_result[select_item])
         self.label1.config(text = "ID 复制完成")
 
-class Copy_File_Command(tkinter.Toplevel) :
+class Copy_File_Command(tkinter.Frame) :
 
-    def __init__(self, main_win, small_win_width, small_win_height, **karg) -> None:
+    def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
         self.main_win = main_win
         self.read_file_data = self.read_saves()
 
-        self.resizable(False, False)
-        self.geometry('%sx%s+%s+%s'%(small_win_width,small_win_height,self.master.winfo_x(),self.master.winfo_y()))
-        self.transient(self.master)
-        self.title('命令复制')
-
+        tkinter.Label(self, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
         self.open_frame = open_frame = tkinter.Frame(self)
         tkinter.Label(open_frame, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
         frame_m10 = tkinter.Frame(open_frame)
@@ -384,9 +440,12 @@ class Copy_File_Command(tkinter.Toplevel) :
         sco2.grid(sticky=tkinter.E+tkinter.W)
         search_result.bind("<Double-Button-1>",lambda e : self.open_file())
         frame_m10.pack()
-        self.label1 = tkinter.Label(open_frame, text="双击项目打开文件\n点击文本框复制，绿色为复制成功", fg='black',
-            font=tk_tool.get_default_font(10), width=26, height=2)
+        self.label1 = tkinter.Label(open_frame, fg='black',font=tk_tool.get_default_font(10), width=26, height=6,
+            text="双击项目打开文件\n点击文本框复制，绿色为复制成功\n\n该功能适用于安卓小窗模式\n请将mc函数或文本文件放入\nfunctionality/command文件夹下")
         self.label1.pack()
+        tkinter.Label(open_frame,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
+        tkinter.Button(open_frame,height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
+            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
         open_frame.pack()
 
         self.copy_frame = copy_frame = tkinter.Frame(self)
@@ -428,24 +487,29 @@ class Copy_File_Command(tkinter.Toplevel) :
         self.counter1 = tkinter.Label(frame_m10, text="",fg='black',font=tk_tool.get_default_font(10), width=15, height=1)
         self.counter1.pack(side=tkinter.LEFT)
         frame_m10.pack()
-        self.protocol("WM_DELETE_WINDOW", lambda : self.save_saves(self.read_file_data))
 
         path1 = os.path.join("functionality","command","")
         for i in [i for i in FileOperation.file_in_path(path1) if self.check_name(i)] : 
             if i[0] == "dir" : continue
             search_result.insert(tkinter.END, i.replace(path1,"",1))
+        
+        self.bind("<Unmap>", lambda e: self.save_saves())
 
+    
     def read_saves(self) -> dict :
-        save_path = os.path.join("functionality","command","saves.pick")
+        save_path = os.path.join("functionality", "command", "saves.pick")
         if not os.path.exists(save_path) or not os.path.isfile(save_path) : return {}
         else : 
             with open(save_path, 'rb') as f : a = pickle.load(f)
             return a
                 
-    def save_saves(self, data1:dict) :
+    def save_saves(self) :
+        if not hasattr(self, "save_hash") : self.save_hash = -1
+        hash1 = json.dumps(self.read_file_data).__hash__()
         save_path = os.path.join("functionality","command","saves.pick")
-        with open(save_path, 'wb') as f: pickle.dump(data1,f)
-        self.destroy()
+        if hash1 == self.save_hash : return None
+        with open(save_path, 'wb') as f: pickle.dump(self.read_file_data, f)
+        self.save_hash = hash1
 
     def open_file(self) :
         if len(self.search_result.curselection()) == 0 : self.label1.config(text = "你没有选择需要打开的文件") ; return None
@@ -465,8 +529,6 @@ class Copy_File_Command(tkinter.Toplevel) :
         try : open(file_name,"r",encoding="utf-8").close()
         except : return False
         else : return True
-
-
 
     def find_command(self, set_value = None , add_value = None) :
         try :
@@ -498,31 +560,21 @@ class Game_Ready(tkinter.Frame) :
         a1.pack()
 
         c1 = tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)) ; c1.pack()
-
-        frame_m3 = tkinter.Frame(self)
-        tkinter.Button(frame_m3,text='生成',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.create_world).pack(side='left')
-        tkinter.Label(frame_m3, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-        tkinter.Button(frame_m3,text='删除',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.delete_world).pack(side='left')
-        tkinter.Label(frame_m3, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-        tkinter.Button(frame_m3,text='进入',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.join_world).pack(side='left')
-        frame_m3.pack()
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
-        self.list_select = tkinter.Listbox(self,font=tk_tool.get_default_font(13), selectmode=tkinter.SINGLE, height=13, width=22)
+        self.list_select = tkinter.Listbox(self,font=tk_tool.get_default_font(13), selectmode=tkinter.SINGLE, height=16, width=22)
         self.list_select.bind("<Double-ButtonRelease-1>", lambda e : self.join_world())
         self.list_select.pack()
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
 
-        frame_m4 = tkinter.Frame(self)
-        tkinter.Button(frame_m4,text='使用须知',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
-        command=lambda : webbrowser.open("http://localhost:32323/tutorial/Instructions.html")).pack(side='left')
-        tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-        tkinter.Button(frame_m4,text='常见问题',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
-        command=lambda : webbrowser.open("https://commandsimulator.great-site.net/tool/Question/")).pack(side='left')
-        frame_m4.pack()
-        c2 = tkinter.Label(self, text="新用户一定要阅读 使用须知\n安卓用户一定要阅读 常见问题", font=tk_tool.get_default_font(10), height=2, fg="red")
-        c2.pack()
+        frame_m3 = tkinter.Frame(self)
+        tkinter.Button(frame_m3,text='新建',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.create_world).pack(side='left')
+        tkinter.Label(frame_m3, text="   ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
+        tkinter.Button(frame_m3,text='删除',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.delete_world).pack(side='left')
+        tkinter.Label(frame_m3, text="   ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
+        tkinter.Button(frame_m3,text='进入',font=tk_tool.get_default_font(11),bg='aquamarine',width=5,height=1,command=self.join_world).pack(side='left')
+        frame_m3.pack()
 
-        main_win.add_can_change_hight_component([self.list_select, a1,c1,frame_m3,c1,c1,frame_m4,c2])
+        main_win.add_can_change_hight_component([self.list_select, a1,c1,c1,c1,frame_m3])
         self.flash_world()
 
     def create_world(self):
@@ -909,10 +961,10 @@ class Choose_Expand(tkinter.Frame) :
         self.expand_pack_list = {}
         self.is_installing = False #正在安装拓展包
 
-        a1 = tkinter.Label(self,text="拓展包安装",bg='#82aaff',fg='black',font=tk_tool.get_default_font(20),width=15,height=1)
+        a1 = tkinter.Label(self,text="拓展包管理",bg='#82aaff',fg='black',font=tk_tool.get_default_font(20),width=15,height=1)
         a1.pack()
-
-        c1 = tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1) ; c1.pack()
+        c1 = tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)) ; c1.pack()
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
 
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
@@ -938,7 +990,7 @@ class Choose_Expand(tkinter.Frame) :
         frame_m6.pack()
         
         threading.Thread(target=self.flash_expand_pack_list).start()
-        main_win.add_can_change_hight_component([self.expand_select, a1,c1,c1,frame_m6])
+        main_win.add_can_change_hight_component([self.expand_select, a1,c1,c1,c1,frame_m6])
         #self.add_can_change_hight_component([self.expand_select,a1,8,frame_m5,8,10,frame_m6])
 
 
@@ -1074,7 +1126,7 @@ class Choose_Expand(tkinter.Frame) :
         save_path2 = os.path.join("expand_pack", dir_name)
         if not app_constant.debug_testing :
             try : 
-                with zipfile.ZipFile(save_path1,"r") as zip_file1 : zip_file1.extractall(save_path2)
+                with zipfile.ZipFile(save_path1, "r") as zip_file1 : zip_file1.extractall(save_path2)
             except Exception as err: _expand_error(err) ; return
 
         def reload_module(base_module:types.ModuleType) :
@@ -1112,20 +1164,8 @@ class Choose_Expand(tkinter.Frame) :
             if uid in expand_pack_open_list : del expand_pack_open_list[uid]
         else :
             self.main_win.display_frame["expand_pack"] = expand_pack_open_list[uid]["frame"]
-            class event :
-                x = self.main_win.button_bar.bbox(self.main_win.button_bar.menu_list[2])[0]
-                y = self.main_win.button_bar.bbox(self.main_win.button_bar.menu_list[2])[1]
-            self.main_win.button_bar.update_menu_text(event())
-
-class Expand_Pack_Example(tkinter.Frame) :
-
-    def __init__(self, main_win, **karg) -> None:
-        super().__init__(main_win.window, **karg)
-        self.main_win = main_win
-
-        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=6).pack()
-        tkinter.Label(self, text="该界面为拓展包的\n功能界面", bg='#6b6b6b', fg='white', font=tk_tool.get_default_font(12),
-            width=20, height=4).pack()
+            self.main_win.set_display_frame("expand_pack")
+            for i in self.main_win.button_bar.menu_list[0:4] : self.main_win.button_bar.itemconfig(i, fill="white")
 
 
 class Setting(tkinter.Frame) :
@@ -1311,7 +1351,6 @@ class Policy(tkinter.Frame) :
         #self.add_can_change_hight_component([self.input_box4,a1,frame_m3,a2])
 
 
-
 class Log_Display(tkinter.Frame) :
     
     def __init__(self, main_win, **karg) -> None:
@@ -1358,7 +1397,6 @@ class Log_Display(tkinter.Frame) :
     
     def copy_clipboard(self) :
         tk_tool.copy_to_clipboard(self.input_box4.get("0.0", "end")[:-1])
-
 
 
 

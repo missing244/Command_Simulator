@@ -118,7 +118,7 @@ class Text_Bind_Events :
             for index,item in enumerate(self.menu_list) : item.unpost()
         
         def post(self, x:int, y:int) :
-            c1 = self.main_win.get_display_expand_pack_record()
+            c1 = self.main_win.get_display_expand_pack()
             c11 = c1 is not None and hasattr(c1['module'], "Paste_event")
 
             all_width = [i.winfo_reqwidth()-20 for i in self.menu_list]
@@ -163,7 +163,7 @@ class Text_Bind_Events :
                 else : self.other_menu.post(x1, y1 - focus_input.winfo_reqheight() - 30)
 
         def post(self, x:int, y:int) :
-            c1 = self.main_win.get_display_expand_pack_record()
+            c1 = self.main_win.get_display_expand_pack()
             c11 = c1 is not None and hasattr(c1['module'], "Paste_event")
 
             all_width = [i.winfo_reqwidth()-20 for i in self.menu_list]
@@ -269,14 +269,14 @@ def mode_using(main_win, focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry]
 
     if mode == "select_all" : focus_input.event_generate("<<SelectAll>>")
     elif mode == "cut" : 
-        c1 = main_win.get_display_expand_pack_record()
+        c1 = main_win.get_display_expand_pack()
         if c1 is not None and hasattr(c1['module'], "Copy_event") :
             if isinstance(focus_input, tkinter.Text) : c1['module'].Copy_event(focus_input)
         else :
             focus_input.event_generate("<<Cut>>")
             focus_input.event_generate("<ButtonRelease>")
     elif mode == "copy" : 
-        c1 = main_win.get_display_expand_pack_record()
+        c1 = main_win.get_display_expand_pack()
         if c1 is not None and hasattr(c1['module'], "Copy_event") :
             if isinstance(focus_input, tkinter.Text) : c1['module'].Copy_event(focus_input)
         else : focus_input.event_generate("<<Copy>>")
@@ -297,7 +297,7 @@ def mode_using(main_win, focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry]
         try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
         except : pass
 
-        c1 = main_win.get_display_expand_pack_record()
+        c1 = main_win.get_display_expand_pack()
         if c1 is not None and hasattr(c1['module'], "Paste_event") :
             if isinstance(focus_input, tkinter.Text) : c1['module'].Paste_event(focus_input)
 
@@ -540,7 +540,6 @@ def Tutorial_Start_1(main_win) :
             if value.winfo_exists() : value.destroy()
 
     Exit_Button.destroy()
-    main_win.bind_events()
     main_win.button_bar.pack(side="bottom")
     main_win.set_display_frame("setting_frame")
 
@@ -558,23 +557,6 @@ def Tutorial_Start_2(main_win) :
     play_captions(main_win, StrVar_1, "欢迎来到新手须知\n本教程可以让你熟悉\n必要的操作技巧与方法")
     sleep_time(main_win, 3)
 
-    #技巧1
-    def event1(e:tkinter.Event) : 
-        nonlocal wait_bool_1
-        wait_bool_1 = False
-        main_win.display_frame["right_click_menu"].post(
-            e.x_root, e.y_root-main_win.display_frame["right_click_menu"].winfo_reqheight())
-    wait_bool_1 = True
-    StrVar_1.set("")
-    play_captions(main_win, StrVar_1, "技巧一   右键菜单\n\n长按屏幕唤起右键菜单\n你可以尝试唤起右键菜单")
-    TK.bind("<Button-3>", event1)
-    while bool_test(main_win, wait_bool_1) : time.sleep(0.1)
-    sleep_time(main_win, 0.3)
-
-    StrVar_1.set("")
-    play_captions(main_win, StrVar_1, "你已成功打开右键菜单\n\n右键菜单中有许多辅助功能\n可在帮助文档-使用须知中\n查看具体使用方法")
-    sleep_time(main_win, 4)
-
     #技巧2
     StrVar_1.set("")
     play_captions(main_win, StrVar_1, "命令模拟器使用TK搭建\n许多文字操作无法直接与\n安卓输入法中的功能进行兼容\n\n")
@@ -582,7 +564,7 @@ def Tutorial_Start_2(main_win) :
     sleep_time(main_win, 6)
 
     StrVar_1.set("")
-    play_captions(main_win, StrVar_1, "技巧二   文本操作菜单1\n\n在文本框中缓慢拖动选中文字\n松手后唤起文本操作菜单1\n\n你可以尝试唤起文本操作菜单1")
+    play_captions(main_win, StrVar_1, "技巧一   文本操作菜单1\n\n在文本框中缓慢拖动选中文字\n松手后唤起文本操作菜单1\n\n你可以尝试唤起文本操作菜单1")
     Text_1 = tkinter.Text(TK, width=18, height=6, font=tk_tool.get_default_font(14))
     event_class = Text_Bind_Events(main_win, Text_1)
     Text_1.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
@@ -601,7 +583,7 @@ def Tutorial_Start_2(main_win) :
 
     #技巧3
     StrVar_1.set("")
-    play_captions(main_win, StrVar_1, "技巧三   文本操作菜单2\n\n在文本框中光标位置缓慢点击\n即可唤起文本操作菜单2\n\n你可以尝试唤起文本操作菜单2")
+    play_captions(main_win, StrVar_1, "技巧二   文本操作菜单2\n\n在文本框中光标位置缓慢点击\n即可唤起文本操作菜单2\n\n你可以尝试唤起文本操作菜单2")
     Text_2 = tkinter.Text(TK, width=18, height=6, font=tk_tool.get_default_font(14))
     event_class = Text_Bind_Events(main_win, Text_2)
     Text_2.bind("<ButtonRelease-1>", event_class.left_click_release_event, add="+")
@@ -635,7 +617,7 @@ def Tutorial_Start_2(main_win) :
         [self.itemconfig(text_id_2, fill="white") for text_id_2 in self.menu_list if (
         test_pass and text_id_1 != text_id_2 and text_id_2 != self.menu_list[-1])]
     StrVar_1.set("")
-    play_captions(main_win, StrVar_1, "技巧四   底栏菜单\n\n底栏菜单位于界面底部\n\n你可以尝试唤起底栏菜单")
+    play_captions(main_win, StrVar_1, "技巧三   底栏菜单\n\n底栏菜单位于界面底部\n\n你可以尝试唤起底栏菜单")
     Button_Bar.pack(side="bottom")
     Button_Bar.bind("<ButtonRelease-1>", update_menu_text)
     while bool_test(main_win, not click_menu) : time.sleep(0.1)

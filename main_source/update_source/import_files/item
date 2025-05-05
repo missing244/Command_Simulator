@@ -419,6 +419,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:black_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:black_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -504,6 +508,10 @@
     "can_enchant": []
   },
   "minecraft:blue_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:blue_harness": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -668,6 +676,10 @@
     "can_enchant": []
   },
   "minecraft:brown_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:brown_harness": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1382,6 +1394,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:cyan_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:cyan_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -1831,6 +1847,10 @@
     "can_enchant": []
   },
   "minecraft:dragon_head": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dried_ghast": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2428,6 +2448,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:gray_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:gray_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -2476,6 +2500,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:green_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:green_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -2517,6 +2545,10 @@
     "can_enchant": []
   },
   "minecraft:hanging_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:happy_ghast_spawn_egg": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3091,6 +3123,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:light_blue_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:light_blue_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -3132,6 +3168,10 @@
     "can_enchant": []
   },
   "minecraft:light_gray_dye": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:light_gray_harness": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3196,6 +3236,10 @@
     "can_enchant": []
   },
   "minecraft:lime_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:lime_harness": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3278,6 +3322,10 @@
     "can_enchant": []
   },
   "minecraft:magenta_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:magenta_harness": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3889,6 +3937,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:orange_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:orange_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -4126,6 +4178,10 @@
     "can_enchant": []
   },
   "minecraft:pink_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pink_harness": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4421,6 +4477,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:purple_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:purple_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -4570,6 +4630,10 @@
     "can_enchant": []
   },
   "minecraft:red_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:red_harness": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5892,6 +5956,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:white_harness": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:white_shulker_box": {
     "damage_max": null,
     "can_enchant": []
@@ -6057,6 +6125,10 @@
     "can_enchant": []
   },
   "minecraft:yellow_glazed_terracotta": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:yellow_harness": {
     "damage_max": null,
     "can_enchant": []
   },

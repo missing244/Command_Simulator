@@ -123,9 +123,13 @@ class item_nbt :
     def __create__(self, Identifier:str, Count=1, Damage=0, nbt:dict={}):
         if len(Identifier) == 0 or Identifier == "minecraft:air" : return None
         
-        if Identifier in Constants.IDENTIFIER_TRANSFORM['item']['id_transfor'] : 
-            self.Identifier = Constants.IDENTIFIER_TRANSFORM['item']['id_transfor'][Identifier]['item_id']
-            Damage = Constants.IDENTIFIER_TRANSFORM['block']['id_transfor'][Identifier]['item_data']['value']
+        if Identifier in Constants.IDENTIFIER_TRANSFORM['block']['id_transfor'] : 
+            self.Identifier = Constants.IDENTIFIER_TRANSFORM['block']['id_transfor'][Identifier]['block_id']
+            State = Constants.IDENTIFIER_TRANSFORM['block']['id_transfor'][Identifier]['block_data']
+            Damage = 0
+            for key, value in Constants.BLOCK_STATE[self.Identifier].items() :
+                if key in {"default", "support_value"} : continue
+                if value == State : Damage = int(key, 2)
         else : self.Identifier = "minecraft:%s" % Identifier if ":" not in Identifier else Identifier
 
         self.Count = np.int8(Count)
