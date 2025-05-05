@@ -79,7 +79,7 @@ class QingXu_V1 :
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        self.error_check()
+        #self.error_check()
         Json1 = {"totalBlocks":len(self.chunks)}
         for i, chunk in enumerate(self.chunks) : 
             minX, maxX = min(i["X"] for i in chunk), max(i["X"] for i in chunk)

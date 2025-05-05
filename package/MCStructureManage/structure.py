@@ -1,4 +1,4 @@
-from . import nbt, Block
+from . import nbt, Block, getStructureType
 from .__private import TypeCheckList, BiList
 from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
@@ -26,13 +26,13 @@ class CommonStructure :
     * 可用属性 entity_nbt : 实体对象列表
     * 可用属性 block_nbt : 以方块索引字符串数字和nbt对象组成的字典
     -----------------------
-    * 反序列化方法 from_buffer : 指定解码器，并且通过路径、字节数字 或 流式缓冲区 生成对象
+    * 反序列化方法 from_buffer : 手/自动指定解码器，并且通过路径、字节数字 或 流式缓冲区 生成对象
     * 序列化方法 save_as : 指定编码器，并且通过路径 或 流式缓冲区 保存对象数据
     -----------------------
     * 可用方法 get_block : 传入非负整数坐标，返回方块对象
     * 可用方法 set_block : 传入非负整数坐标和方块，修改方块
     -----------------------
-    * Coder注意事项1 : 部分属性均不可直接修改，请调用对象方法进行修改，以免数据不正确
+    * Coder注意事项1 : 部分属性均不可直接修改，请调用对象方法进行修改，以避免数据不正确
     """
 
 
@@ -47,7 +47,6 @@ class CommonStructure :
         self.block_nbt: Dict[int, nbt.TAG_Compound] = {}                                        #修改元素✔，赋值✘
 
         #以下私有属性为自动更新变量，只做读取使用
-        self.__S_xy = size[1] * size[2]
         self.__volume = size[0] * size[1] * size[2]
 
     def __setattr__(self, name, value) :
@@ -60,12 +59,34 @@ class CommonStructure :
 
 
     @classmethod
-    def from_buffer(cls, Decoder, Reader:Union[str, bytes, IOBase]) :
+    def from_buffer(cls, Reader:Union[str, bytes, IOBase], Decoder=None) :
+        from . import Codecs
+        from . import StructureBDX, StructureMCS
+        from . import StructureRUNAWAY, StructureSCHEMATIC
+        SupportType = {
+            StructureBDX.BDX_File: Codecs.BDX, StructureMCS.Mcstructure: Codecs.MCSTRUCTURE, 
+            StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, StructureRUNAWAY.RunAway: Codecs.RUNAWAY,
+            StructureRUNAWAY.Kbdx: Codecs.KBDX, StructureRUNAWAY.MianYang_V1: Codecs.MIANYANG_V1, 
+            StructureRUNAWAY.MianYang_V2: Codecs.MIANYANG_V2, 
+            StructureRUNAWAY.GangBan_V1: Codecs.GANGBAN_V1, StructureRUNAWAY.GangBan_V2: Codecs.GANGBAN_V2,
+            StructureRUNAWAY.GangBan_V3: Codecs.GANGBAN_V3, StructureRUNAWAY.FuHong_V1: Codecs.FUHONG_V1, 
+            StructureRUNAWAY.FuHong_V2: Codecs.FUHONG_V2, StructureRUNAWAY.FuHong_V3: Codecs.FUHONG_V3, 
+            StructureRUNAWAY.FuHong_V4: Codecs.FUHONG_V4, 
+            StructureRUNAWAY.QingXu_V1: Codecs.QingXu_V1
+        }
+
+        if Decoder is not None and not isinstance(Decoder, Codecs.CodecsBase) : 
+            raise TypeError(f"{Decoder}是不受支持的解码器")
+        elif Decoder is None : 
+            TypeObj = getStructureType(Reader)
+            if TypeObj not in SupportType : raise TypeError(f"{Reader}是不支持解析的文件或数据")
+
         Common = cls()
+        Decoder = SupportType[TypeObj] if Decoder is None else Decoder
         Decoder(Common).decode(Reader)
         return Common
 
-    def save_as(self, Encoder, Writer:Union[str, IOBase], IgnoreAir:bool=True) :
+    def save_as(self, Writer:Union[str, IOBase], Encoder, IgnoreAir:bool=True) :
         """
         * 使用json格式输出时，Writer一定为字符串缓冲区或带有编码的文件缓冲区
         * IgnoreAir参数，不在mcstructure和schematic文件中生效
@@ -74,21 +95,21 @@ class CommonStructure :
 
 
     def get_block(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, Block] :
-        index = pos_x * self.__S_xy + pos_y * self.size[2] + pos_z
+        index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
         return self.block_palette[self.block_index[index]] if (index < self.__volume) else None
 
     def set_block(self, pos_x:int, pos_y:int, pos_z:int, block:Union[int, Block]) :
-        index = pos_x * self.__S_xy + pos_y * self.size[2] + pos_z
+        index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
         if block.__class__ is int : self.block_index[index] = block 
         else : self.block_index[index] = self.block_palette.append(block)
     
     def get_blockNBT(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, nbt.TAG_Compound] :
-        index = pos_x * self.__S_xy + pos_y * self.size[2] + pos_z
+        index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
         return self.block_nbt.get(index, None)
 
-    def set_blockNBT(self, pos_x:int, pos_y:int, pos_z:int, nbt:nbt.TAG_Compound) :
-        index = pos_x * self.__S_xy + pos_y * self.size[2] + pos_z
-        self.block_nbt[index] = nbt
-    
+    def set_blockNBT(self, pos_x:int, pos_y:int, pos_z:int, nbt:Union[None, nbt.TAG_Compound]) :
+        index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
+        if nbt : self.block_nbt[index] = nbt
+        elif index in self.block_nbt : del self.block_nbt[index]
 
 

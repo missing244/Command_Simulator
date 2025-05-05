@@ -8,9 +8,9 @@ RuntimeID_to_Block = ["air", "stone", "grass", "dirt", "cobblestone", "planks", 
     "bedrock", "flowing_water", "water", "flowing_lava", "lava", "sand", "gravel", "gold_ore",
 	"iron_ore", "coal_ore", "log", "leaves", "sponge", "glass", "lapis_ore", "lapis_block", 
     "dispenser", "sandstone", "noteblock", "bed", "golden_rail", "detector_rail", "sticky_piston",
-	"cobweb", "tallgrass", "deadbush", "piston", "piston_head", "wool", "piston_extension",
-	"dandelion", "poppy", "brown_mushroom", "red_mushroom", "gold_block", "iron_block", "double_stone_slab",
-	"stone_slab", "brick_block", "tnt", "bookshelf", "mossy_cobblestone", "obsidian", "torch",
+	"web", "tallgrass", "deadbush", "piston", "piston_arm_collision", "wool", "air",
+	"dandelion", "poppy", "brown_mushroom", "red_mushroom", "gold_block", "iron_block", "stone_double_slab",
+	"smooth_stone_slab", "brick_block", "tnt", "bookshelf", "mossy_cobblestone", "obsidian", "torch",
 	"fire", "monster_spawner", "oak_stairs", "chest", "redstone_wire", "diamond_ore", "diamond_block",
 	"crafting_table", "wheat", "farmland", "furnace", "lit_furnace", "standing_sign", "wooden_door",
 	"ladder","rail", "stone_stairs", "wall_sign", "lever", "stone_pressure_plate", "iron_door",
@@ -122,7 +122,7 @@ class Schematic :
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, BytesIO]) :
-        self.error_check()
+        #self.error_check()
 
         node = nbt.NBT_Builder()
         NBT = node.compound(

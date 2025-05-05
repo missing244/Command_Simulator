@@ -73,7 +73,7 @@ class RunAway :
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        self.error_check()
+        #self.error_check()
 
         Json1:List[BLOCK1] = list(self.blocks)
 
@@ -170,7 +170,7 @@ class Kbdx :
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        self.error_check()
+        #self.error_check()
 
         if isinstance(buffer, str) : 
             base_path = os.path.realpath(os.path.join(buffer, os.pardir))

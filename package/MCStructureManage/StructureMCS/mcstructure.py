@@ -87,7 +87,7 @@ class Mcstructure :
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, BytesIO]) :
-        self.error_check()
+        #self.error_check()
 
         StructureNBT = nbt.TAG_Compound()
         StructureNBT['format_version'] = nbt.TAG_Int(1)
@@ -104,8 +104,8 @@ class Mcstructure :
         StructureBlockPalette = StructureNBT['structure']['palette']['default']['block_palette'] = nbt.TAG_List(type=nbt.TAG_Compound)
         StructureBlockNBT = StructureNBT['structure']['palette']['default']['block_position_data'] = nbt.TAG_Compound()
 
-        StructureEntity.extend(self.entity_nbt)
-        StructureBlockPalette.extend(self.block_palette)
+        if self.entity_nbt : StructureEntity.extend(self.entity_nbt)
+        if self.block_palette : StructureBlockPalette.extend(self.block_palette)
         for index, block_nbt in self.block_nbt.items() : StructureBlockNBT[str(index)] = block_nbt
 
         if isinstance(buffer, str) : 

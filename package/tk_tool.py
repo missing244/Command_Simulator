@@ -146,6 +146,7 @@ class tk_TellBox(tkinter.Canvas) :
         self.rooty = int(parent_window.winfo_y() + parent_window.winfo_height()/2 + parent_window.winfo_height()/10) - parent_window.winfo_y()
 
 
+
 def copy_to_clipboard(text:str) :
     entry1 = tkinter.Entry()
     entry1.insert(tkinter.END, text)
@@ -186,3 +187,30 @@ def get_default_font(size:int,**karg) :
     import tkinter.font
     a = tkinter.font.nametofont("TkDefaultFont").actual()['family']
     return tkinter.font.Font(family=a,size=size,**karg)
+
+
+
+class ScrollableFrame(tkinter.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+
+        # 创建Canvas和滚动条
+        self.canvas = tkinter.Canvas(self)
+        self.scrollbar = tkinter.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tkinter.Frame(self.canvas)
+        
+        # 配置Canvas
+        self.scrollable_frame.bind("<Configure>",
+            lambda e: self.canvas.configure( scrollregion=self.canvas.bbox("all")))
+        
+        # 将Frame放入Canvas
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="n")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        
+        # 布局
+        self.canvas.grid(row=0, column=0)
+        self.scrollbar.grid(row=0, column=1, sticky="ns")
+        
+        # 绑定鼠标滚轮事件
+        _on_mousewheel = lambda e: self.canvas.yview_scroll(int(-1*(e.delta/120)), "units")
+        self.canvas.bind_all("<MouseWheel>", _on_mousewheel)

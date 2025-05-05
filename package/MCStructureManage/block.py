@@ -15,22 +15,22 @@ SpecialStates = {"direction":{"south":0, "west":1, "north":2, "east":3},
 def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str, Union[bool, int, str]]]:
     BlockID = f"minecraft:{id}" if id.find("minecraft:") else id
 
-    if BlockID not in BlockState : return (BlockID, {})
-    elif BlockID in BlockState and value.__class__ is int :
+    if BlockID in BlockState and value.__class__ is int :
         NewBlockID = BlockID
         NewBlockState = BlockState[BlockID].get(bin(value), BlockState[BlockID]["default"])
         return (NewBlockID, dict( sorted(NewBlockState.items()) ))
-    elif BlockID in BlockState :
-        NewBlockID = BlockID
-        NewBlockState = BlockState[BlockID]["default"]
     elif BlockID in OldBlockData["block"] : 
         NewBlockID = OldBlockData["block"][BlockID]["block_id"]
         NewBlockState = OldBlockData["block"][BlockID]["block_data"]
+    elif BlockID in BlockState :
+        NewBlockID = BlockID
+        NewBlockState = BlockState[BlockID]["default"]
     else : return (BlockID, {})
 
     NewBlockState = dict( sorted(NewBlockState.items()) )
     if value.__class__ is str : value = StringTransforBlockStates(value)
     elif value.__class__ is dict : value = value.copy()
+    else : value = {}
 
     cardinal_direction = value.get("minecraft:cardinal_direction", None)
     if cardinal_direction in SpecialStates["direction"] :
@@ -40,7 +40,7 @@ def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str
             value["direction"] = SpecialStates["direction"][cardinal_direction]
         del value["minecraft:cardinal_direction"]
     NewBlockState.update( (i,j) for i,j in value.items() if (i in NewBlockState)
-        and (j in BlockState[BlockID]["support_value"][i]) )
+        and (j in BlockState[NewBlockID]["support_value"][i]) )
     return (NewBlockID, NewBlockState)
 
 def TransforDatavalue(block:"Block") -> Tuple[int, int] :
@@ -130,8 +130,10 @@ ContainerNBT_ID = {"minecraft:chest": "Chest", "minecraft:trapped_chest": "Chest
 def GetNbtID(id:str) :
     id = f"minecraft:{id}" if id.find("minecraft:") else id
     if id in ContainerNBT_ID : return ContainerNBT_ID[id]
+    elif id.endswith("command_block") : return "CommandBlock"
     elif id.endswith("hanging_sign") : return "HangingSign"
     elif id.endswith("_sign") : return "Sign"
+
 
 
 class BlockMeta(type) :
@@ -166,6 +168,9 @@ class Block(metaclass=BlockMeta) :
     def __str__(self):
         return f'<Block name="{self.name}" states={self.states}>'
     
+    def __repr__(self):
+        return f'<Block name="{self.name}" states={self.states}>'
+    
     def __delattr__(self, name):
         raise Exception("无法删除任何属性")
     
@@ -188,6 +193,8 @@ class Block(metaclass=BlockMeta) :
         self.states = MappingProxyType(BlockState)
         self.dataValue = TransforDatavalue(self)
         self.runawayID = TransforRunawayBlock(self)
+        self.blockString = "%s[%s]" % (BlockID, json.dumps(BlockState, separators=(',', '='))[1:][:-1])
+        
         self.__hash = (self.name, *self.states.items()).__hash__()
 
 
@@ -211,7 +218,9 @@ class Block(metaclass=BlockMeta) :
             val=node.short(self.dataValue[1]), version=node.int(17959425)).build()
 
 
-def GenerateCommandBlockNBT() -> nbt.TAG_Compound :
+
+def GenerateCommandBlockNBT(id:str) -> nbt.TAG_Compound :
+    if not id.endswith("command_block") : return None
     node = nbt.NBT_Builder()
     return node.compound(
         id = node.string("CommandBlock"),
@@ -225,7 +234,7 @@ def GenerateCommandBlockNBT() -> nbt.TAG_Compound :
         Version = node.int(19)
     ).build()
 
-def GenerateContainerNBT(id:str, pos:Tuple[int, int, int]) -> Union[None, nbt.TAG_Compound] :
+def GenerateContainerNBT(id:str) -> Union[None, nbt.TAG_Compound] :
     id = f"minecraft:{id}" if id.find("minecraft:") else id
     id = ContainerNBT_ID.get(id, None)
     if not id : return None
@@ -235,10 +244,32 @@ def GenerateContainerNBT(id:str, pos:Tuple[int, int, int]) -> Union[None, nbt.TA
         IsIgnoreShuffle = node.byte(0),
         IsOpened = node.byte(0),
         isMovable = node.byte(1),
-        x = node.int(pos[0]),
-        y = node.int(pos[1]),
-        z = node.int(pos[2]),
         id = node.string(id),
         Items = node.list() 
     ).build()
 
+def GenerateSignNBT(id:str) -> nbt.TAG_Compound : 
+    block_nbt_id = GetNbtID(id)
+    if block_nbt_id != "HangingSign" and block_nbt_id != "Sign" : return None
+    node = nbt.NBT_Builder()
+    return node.compound(
+        IsWaxed = node.byte(0),
+        isMovable = node.byte(1),
+        id = node.string(block_nbt_id),
+        BackText = node.compound(
+            FilteredText = node.string(""),
+            HideGlowOutline = node.byte(0),
+            IgnoreLighting = node.byte(0),
+            PersistFormatting = node.byte(1),
+            SignTextColor = node.int(-16777216),
+            Text = node.string(""),
+            TextOwner = node.string("") ),
+        FrontText = node.compound(
+            FilteredText = node.string(""),
+            HideGlowOutline = node.byte(0),
+            IgnoreLighting = node.byte(0),
+            PersistFormatting = node.byte(1),
+            SignTextColor = node.int(-16777216),
+            Text = node.string(""),
+            TextOwner = node.string("") )
+    ).build()

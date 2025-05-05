@@ -109,7 +109,7 @@ class GangBan_V1 :
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        self.error_check()
+        #self.error_check()
 
         Json1:List[Union[BLOCK, RANGE, PALETTE]] = list(self.blocks)
         Json1.append({"start":list(self.origin), "end":list(self.size)})
@@ -370,7 +370,7 @@ class GangBan_V3 :
         return StructureObject
 
     def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        self.error_check()
+        #self.error_check()
 
         Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, PALETTE]] = [
             *self.entities,
