@@ -30,6 +30,7 @@ def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str
     NewBlockState = dict( sorted(NewBlockState.items()) )
     if value.__class__ is str : value = StringTransforBlockStates(value)
     elif value.__class__ is dict : value = value.copy()
+    elif value.__class__ is MappingProxyType : value = value
     else : value = {}
 
     cardinal_direction = value.get("minecraft:cardinal_direction", None)

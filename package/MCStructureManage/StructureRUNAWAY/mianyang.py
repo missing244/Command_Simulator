@@ -1,7 +1,7 @@
 import os,zlib,json
 from .. import nbt
 from ..__private import TypeCheckList
-from typing import Union,List,TypedDict,Dict,Tuple,Optional
+from typing import Union,List,TypedDict,Dict,Tuple,Optional,Literal
 from io import FileIO, BytesIO, StringIO, TextIOBase, BufferedIOBase
 
 class CHUNK(TypedDict) :
@@ -109,9 +109,10 @@ class MianYang_V1 :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(fp=bytes_io)
-        except : return False
+    def is_this_file(cls,data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+
         if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
             and ("namespaces" in Json1)and ("totalBlocks" in Json1) : return True
         return False
@@ -153,6 +154,80 @@ class MianYang_V2(MianYang_V1) :
         if isinstance(buffer, str) : _file = open(buffer, "rb")
         elif isinstance(buffer, bytes) : _file = BytesIO(buffer)
         else : _file = buffer
+        Json1:FILE_FORMAT = json.load(fp=_file)
+        
+        if "chunkedBlocks" not in Json1 : raise FormatError("文件缺少chunkedBlocks参数")
+        if "namespaces" not in Json1 : raise FormatError("文件缺少namespaces参数")
+        if "entities" not in Json1 : raise FormatError("文件缺少namespaces参数")
+
+        StructureObject = cls()
+        StructureObject.chunks.extend(Json1["chunkedBlocks"])
+        StructureObject.block_palette.extend(Json1["namespaces"])
+        StructureObject.entities.extend(Json1["entities"])
+
+        return StructureObject
+
+    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
+        block_count = self.error_check()
+        Json1:FILE_FORMAT = {"chunkedBlocks":list(self.chunks), 
+            "namespaces":list(self.block_palette), "totB":block_count, "entities":list(self.entities)}
+
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "w+", encoding="utf-8")
+        else : _file = buffer
+        
+        if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
+        json.dump(Json1, fp=_file, separators=(',', ':'))
+
+
+    @classmethod
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+
+        if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
+            and ("namespaces" in Json1) and ("totB" in Json1): return True
+        return False
+
+class MianYang_V3(MianYang_V1) :
+    """
+    由 绵阳 开发的结构文件对象
+    -----------------------
+    * 以 .json 为后缀的json格式文件
+    * 区块中每个方块数据含义：[方块索引，方块数据值，x，y，z，JsonStr?]
+    -----------------------
+    * 可用属性 chunks : 区块储存列表
+    * 可用属性 entities : 实体储存列表
+    * 可用属性 block_palette : 方块ID映射列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+    
+
+    def __init__(self) :
+        super().__init__()
+        self.entities: List[Tuple[int, int, int, str, str]] = TypeCheckList().setChecker(list)
+
+
+    def error_check(self) : 
+        for entity in self.entities : 
+            if not isinstance(entity[0], (int, float)) : raise Exception(f"实体({entity})存在错误方块参数")
+            if not isinstance(entity[1], (int, float)) : raise Exception(f"实体({entity})存在错误方块参数")
+            if not isinstance(entity[2], (int, float)) : raise Exception(f"实体({entity})存在错误方块参数")
+            if not isinstance(entity[3], str) : raise Exception(f"实体({entity})存在错误方块参数")
+            if not isinstance(entity[4], str) : raise Exception(f"实体({entity})存在错误方块参数")
+        return super().error_check()
+
+
+
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) -> "MianYang_V3" :
+        if isinstance(buffer, str) : _file = open(buffer, "rb")
+        elif isinstance(buffer, bytes) : _file = BytesIO(buffer)
+        else : _file = buffer
         Json1:FILE_FORMAT = json.load(fp=BytesIO( zlib.decompress(_file.read()) ))
         
         if "chunkedBlocks" not in Json1 : raise FormatError("文件缺少chunkedBlocks参数")
@@ -183,8 +258,10 @@ class MianYang_V2(MianYang_V1) :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(fp=BytesIO( zlib.decompress(bytes_io.read()) ) )
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "bytes" : return False
+        
+        try : Json1 = json.load(fp=BytesIO( zlib.decompress(data.read()) ) )
         except : return False
         if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
             and ("namespaces" in Json1) and ("totB" in Json1): return True

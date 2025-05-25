@@ -18,7 +18,7 @@ from .. import python_nbt as nbt
 
 
 def getStructureType(IO_Byte_Path) :
-    import io, traceback
+    import io, traceback, json
     from typing import Union
     from . import StructureBDX, StructureMCS
     from . import StructureRUNAWAY, StructureSCHEMATIC
@@ -29,18 +29,30 @@ def getStructureType(IO_Byte_Path) :
     elif isinstance(IO_Byte_Path, io.IOBase) : _file = IO_Byte_Path
     else : raise ValueError(f"{IO_Byte_Path} is not Readable Object")
 
+    data, data_type = _file, "bytes"
+    try : data = json.load(fp=_file)
+    except : _file.seek(0)
+    else : data_type = "json"
+
     Test = [StructureBDX.BDX_File, StructureMCS.Mcstructure, StructureSCHEMATIC.Schematic, 
-            StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, StructureRUNAWAY.MianYang_V1, 
-            StructureRUNAWAY.MianYang_V2, 
+            StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, 
+            StructureRUNAWAY.MianYang_V1, StructureRUNAWAY.MianYang_V2, StructureRUNAWAY.MianYang_V3, 
             StructureRUNAWAY.GangBan_V1, StructureRUNAWAY.GangBan_V2, StructureRUNAWAY.GangBan_V3,
+            StructureRUNAWAY.GangBan_V4, StructureRUNAWAY.GangBan_V5, StructureRUNAWAY.GangBan_V6,
+            StructureRUNAWAY.GangBan_V7,
             StructureRUNAWAY.FuHong_V1, StructureRUNAWAY.FuHong_V2, StructureRUNAWAY.FuHong_V3,
-            StructureRUNAWAY.FuHong_V4, StructureRUNAWAY.QingXu_V1]
+            StructureRUNAWAY.FuHong_V4, 
+            StructureRUNAWAY.QingXu_V1]
+
     for class_obj in Test :
-        _file.seek(0)
-        try : bool1 = class_obj.is_this_file(_file)
+        if data_type == "bytes" : data.seek(0)
+        try : bool1 = class_obj.is_this_file(data, data_type)
         except : traceback.print_exc() ; continue
 
-        if bool1 : return class_obj
+        if bool1 : 
+            if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
+            return class_obj
+    if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
 
 
 from . import StructureBDX, StructureMCS

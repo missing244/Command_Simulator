@@ -52,9 +52,13 @@ class Codecs :
     * 可用类 SCHEMATIC: 解析/生成 schematic 文件的编解码器
     * 可用类 MIANYANG_V1: 解析/生成 绵阳 json结构文件的编解码器
     * 可用类 MIANYANG_V2: 解析/生成 绵阳 json结构文件的编解码器
+    * 可用类 MIANYANG_V3: 解析/生成 绵阳 json结构文件的编解码器
     * 可用类 GANGBAN_V1: 解析/生成 钢板 json结构文件的编解码器
     * 可用类 GANGBAN_V2: 解析/生成 钢板 json结构文件的编解码器
     * 可用类 GANGBAN_V3: 解析/生成 钢板 json结构文件的编解码器
+    * 可用类 GANGBAN_V4: 解析/生成 钢板 json结构文件的编解码器
+    * 可用类 GANGBAN_V5: 解析/生成 钢板 json结构文件的编解码器
+    * 可用类 GANGBAN_V6: 解析/生成 钢板 json结构文件的编解码器
     * 可用类 RunAway: 解析/生成 跑路官方 json结构文件的编解码器
     * 可用类 KBDX: 解析/生成 Kbdx 结构文件的编解码器
     * 可用类 FUHONG_V1: 解析/生成 FUHONG json结构文件的编解码器
@@ -129,6 +133,9 @@ class Codecs :
                     StructureObject.set_block(x, y, z, Block(CommandBlockID[Oper.mode], block.states) )
 
             def Operation_0x1b(Oper: StructureBDX.OperationCode.PlaceBlockWithCommandBlockData, x:int, y:int, z:int) :
+                block = Block(ConstStr[Oper.blockConstantStringID], Oper.blockData)
+                StructureObject.set_block(x, y, z, block)
+
                 block = StructureObject.get_block(x, y, z)
                 if not block.name.endswith("command_block") : return None
 
@@ -261,9 +268,9 @@ class Codecs :
                 range(self.size[0]), range(self.size[1]), range(self.size[2]) )) )
 
             for Block in self.block_palette :
-                append_function(CreateConstantString(Block["name"]))
-                state_str = json.dumps(Block["states"], separators=(',', '='))
-                state_str = f"[${ state_str[1:len(state_str)-1] }]"
+                append_function(CreateConstantString(Block.name))
+                state_str = json.dumps(dict(Block.states), separators=(',', '='))
+                state_str = f"[{ state_str[1:len(state_str)-1] }]"
                 append_function(CreateConstantString(state_str))
             
             s_posx, s_posy, s_posz = 0, 0, 0
@@ -281,14 +288,10 @@ class Codecs :
                     append_function(AddZValue() if pos_sub == 1 else AddInt32ZValue(pos_sub))
                     s_posz = pos_z
                 
-                if IgnoreAir and self.block_palette[block_index]["name"] == "minecraft:air" : continue
-                if index in self.block_nbt : append_function(PlaceBlockWithNBTData(
-                    blockConstantStringID = 2*block_index,
-                    blockStatesConstantStringID = 2*block_index+1,
-                    nbt = self.block_nbt[index] ))
-                else : append_function(PlaceBlockWithBlockStates(
-                    blockConstantStringID = 2*block_index,
-                    blockStatesConstantStringID = 2*block_index+1))
+                if IgnoreAir and self.block_palette[block_index].name == "minecraft:air" : continue
+                if index in self.block_nbt : append_function(
+                    PlaceBlockWithNBTData(2*block_index, 2*block_index+1, self.block_nbt[index]) )
+                else : append_function( PlaceBlockWithBlockStates(2*block_index, 2*block_index+1) )
 
             BDX.save_as(Writer)
 
@@ -301,7 +304,7 @@ class Codecs :
             StructureObject.size = MCS.size
             StructureObject.origin = MCS.origin
             StructureObject.block_index = MCS.block_index
-            StructureObject.contain_index = MCS.contain_index
+            StructureObject.contain_index = {i:j for i,j in enumerate(MCS.contain_index) if j >= 0}
             StructureObject.entity_nbt = MCS.entity_nbt
             StructureObject.block_nbt = MCS.block_nbt
 
@@ -319,10 +322,12 @@ class Codecs :
             MCS.size = self.size
             MCS.origin = self.origin
             MCS.block_index = self.block_index
-            MCS.contain_index = self.contain_index
+            MCS.contain_index = array.array("i", b"\xff\xff\xff\xff" * len(self.block_index))
             MCS.block_palette = TypeCheckList(i.to_nbt() for i in self.block_palette)
             MCS.entity_nbt = self.entity_nbt
             MCS.block_nbt = self.block_nbt.copy()
+
+            for i,j in self.contain_index.items() : MCS.contain_index[i] = j
 
             for key, value in MCS.block_nbt.items() :
                 MCS.block_nbt[key] = nbt.TAG_Compound({"block_entity_data":value})
@@ -374,8 +379,8 @@ class Codecs :
             StructureObject.__init__( [j-i+1 for i,j in zip(PosStart, PosEnd)] )
             StructureObject.block_palette.append( Block("minecraft:air") )
 
-            CommandMatch = re.compile('(?<=Command:").*(?=",CustomName)')
-            CustomNameMatch = re.compile('(?<=CustomName:").*(?=",ExecuteOnFirstTick)')
+            CommandMatch = re.compile('(?<=Command:").*(?=",CustomName)', re.DOTALL)
+            CustomNameMatch = re.compile('(?<=CustomName:").*(?=",ExecuteOnFirstTick)', re.DOTALL)
             AutoMatch = re.compile('(?<=auto:)-?[0-9]+(?=b)')
             TickDelayMatch = re.compile('(?<=TickDelay:)-?[0-9]+(?=,)')
             VersionMatch = re.compile('(?<=Version:)-?[0-9]+(?=,)')
@@ -473,8 +478,8 @@ class Codecs :
             StructureObject.__init__( [j-i+1 for i,j in zip(PosStart, PosEnd)] )
             StructureObject.block_palette.append( Block("minecraft:air") )
 
-            CommandMatch = re.compile('(?<=Command:").*(?=",CustomName)')
-            CustomNameMatch = re.compile('(?<=CustomName:").*(?=",ExecuteOnFirstTick)')
+            CommandMatch = re.compile('(?<=Command:").*(?=",CustomName)', re.DOTALL)
+            CustomNameMatch = re.compile('(?<=CustomName:").*(?=",ExecuteOnFirstTick)', re.DOTALL)
             AutoMatch = re.compile('(?<=auto:)-?[0-9]+(?=b)')
             TickDelayMatch = re.compile('(?<=TickDelay:)-?[0-9]+(?=,)')
             VersionMatch = re.compile('(?<=Version:)-?[0-9]+(?=,)')
@@ -519,6 +524,123 @@ class Codecs :
         def encode(self, Writer:Union[str, io.TextIOBase]):
             IgnoreAir, self = self.IgnoreAir, self.Common
             Struct1 = StructureRUNAWAY.MianYang_V2()
+            nbtstr = '{Command:"%s",CustomName:"%s",ExecuteOnFirstTick:0b,LPCommandMode:%s,' + \
+                'LPCondionalMode:%sb,LPRedstoneMode:%sb,LastExecution:0l,LastOutput:"",' + \
+                'LastOutputParams:[],SuccessCount:0,TickDelay:%s,TrackOutput:1b,' + \
+                'Version:%s,auto:%sb,conditionMet:%sb,powered:0b}'
+            LPCommandMode = {"minecraft:repeating_command_block":1, 
+                "minecraft:chain_command_block":2, "minecraft:command_block":0}
+
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
+
+            Chunks:Dict[Tuple[int,int], dict] = {}
+            for index, block_index, (posx, posy, posz) in Generator :
+                block:Block = self.block_palette[ block_index ]
+                BlockID, BlockState, dataValue = block.name, block.states, block.dataValue[1]
+                if IgnoreAir and block.name == "minecraft:air" : continue
+
+                realX, realY, realZ = o_x + posx, o_y + posy, o_z + posz
+                chunk_pos = (realX//16*16, realZ//16*16)
+                if chunk_pos not in Chunks : Chunks[chunk_pos] = {
+                    "startX":chunk_pos[0], "startZ":chunk_pos[1], "blocks":[]}
+                
+                chunk_block = [block_index, dataValue, realX-chunk_pos[0], realY, realZ-chunk_pos[1]]
+                Chunks[chunk_pos]["blocks"].append(chunk_block)
+
+                if index not in self.block_nbt : continue
+
+                BlockData = block.to_nbt()
+                NBTObj = self.block_nbt[index]
+                BlockSNbtIO = io.StringIO()
+                nbt.write_to_snbt_file(BlockSNbtIO, BlockData)
+                if block.name in LPCommandMode : 
+                    chunk_block.append(json.dumps({
+                        "blockNBT":urllib.parse.quote(BlockSNbtIO.getvalue()),
+                        "blockCompleteNBT":urllib.parse.quote(nbtstr % (
+                            NBTObj["Command"].value, NBTObj["CustomName"].value, LPCommandMode[BlockID],
+                            int(BlockState["conditional_bit"]), int(not NBTObj["auto"].value),
+                            NBTObj["TickDelay"].value, NBTObj["Version"].value, NBTObj["auto"].value, 
+                            int(BlockState["conditional_bit"]) ))
+                    }))
+                else : 
+                    SNbtIO = io.StringIO()
+                    nbt.write_to_snbt_file(SNbtIO, NBTObj)
+                    chunk_block.append(json.dumps({
+                        "blockNBT":urllib.parse.quote(BlockSNbtIO.getvalue()),
+                        "blockCompleteNBT":urllib.parse.quote(SNbtIO.getvalue())
+                    }))
+
+            for entity in self.entity_nbt :
+                Struct1.entities.append([
+                    entity["Pos"][0].value - self.origin[0],
+                    entity["Pos"][1].value - self.origin[1],
+                    entity["Pos"][2].value - self.origin[2],
+                    entity.get("CustomName", nbt.TAG_String()).value,
+                    entity["identifier"].value,
+                ])
+
+            Struct1.chunks.extend(Chunks.values())
+            Struct1.block_palette.extend(i.name for i in self.block_palette)
+            Struct1.save_as(Writer)
+ 
+    class MIANYANG_V3(CodecsBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.MianYang_V3.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.__init__( [j-i+1 for i,j in zip(PosStart, PosEnd)] )
+            StructureObject.block_palette.append( Block("minecraft:air") )
+
+            CommandMatch = re.compile('(?<=Command:").*(?=",CustomName)', re.DOTALL)
+            CustomNameMatch = re.compile('(?<=CustomName:").*(?=",ExecuteOnFirstTick)', re.DOTALL)
+            AutoMatch = re.compile('(?<=auto:)-?[0-9]+(?=b)')
+            TickDelayMatch = re.compile('(?<=TickDelay:)-?[0-9]+(?=,)')
+            VersionMatch = re.compile('(?<=Version:)-?[0-9]+(?=,)')
+
+            for chunk in Struct1.chunks :
+                o_x, o_z = chunk["startX"]-PosStart[0], chunk["startZ"]-PosStart[2]
+                for block in chunk["blocks"] :
+                    posx, posy, posz = o_x + block[2], block[3] - PosStart[1], o_z + block[4]
+                    block_obj = Block(Struct1.block_palette[block[0]], block[1])
+                    StructureObject.set_block(posx, posy, posz, block_obj)
+
+                    if block[-1].__class__ is not str : continue
+                    try : BlockJsonData = json.loads(block[-1])
+                    except : continue
+                    nbtstr = urllib.parse.unquote(BlockJsonData['blockCompleteNBT'])
+
+                    if block_obj.name.endswith("command_block") : 
+                        node = nbt.NBT_Builder()
+                        CommandBlockNbt = node.compound(
+                            id = node.string("CommandBlock"),
+                            Command = node.string(CommandMatch.search(nbtstr).group()),
+                            CustomName = node.string(CustomNameMatch.search(nbtstr).group()),
+                            ExecuteOnFirstTick = node.byte(1),
+                            auto = node.byte(int( AutoMatch.search(nbtstr).group() )),
+                            TickDelay = node.int(int( TickDelayMatch.search(nbtstr).group() )),
+                            conditionalMode = node.byte(block_obj.states["conditional_bit"]),
+                            TrackOutput = node.byte(1),
+                            Version = node.int(int( VersionMatch.search(nbtstr).group() )),
+                        ).build()
+                        StructureObject.set_blockNBT(posx, posy, posz, CommandBlockNbt)
+                    else :
+                        try : nbtObj = nbt.read_from_snbt_file( io.StringIO(nbtstr) ).get_tag()
+                        except : continue
+                        if "Items" not in nbtObj : continue
+                        StructureObject.set_blockNBT(posx, posy, posz, nbtObj)
+
+
+            for entity in Struct1.entities :
+                posx, posy, posz = entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]
+                StructureObject.entity_nbt.append( GenerateEntity( entity[4], (posx, posy, posz), entity[3]) )
+
+        def encode(self, Writer:Union[str, io.TextIOBase]):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.MianYang_V3()
             nbtstr = '{Command:"%s",CustomName:"%s",ExecuteOnFirstTick:0b,LPCommandMode:%s,' + \
                 'LPCondionalMode:%sb,LPRedstoneMode:%sb,LastExecution:0l,LastOutput:"",' + \
                 'LastOutputParams:[],SuccessCount:0,TickDelay:%s,TrackOutput:1b,' + \
@@ -658,6 +780,71 @@ class Codecs :
 
             O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
 
+            for block in Struct1.blocks :
+                block_obj = Block(Struct1.block_palette[block["id"]], block.get("aux", 0))
+                posx, posy, posz = block["p"][0] - O_X, block["p"][1] - O_Y, block["p"][2] - O_Z
+                StructureObject.set_block(posx, posy, posz, block_obj)
+
+                if "cmds" not in block : continue
+                node = nbt.NBT_Builder()
+                BlockData = node.compound(
+                    id = node.string("CommandBlock"),
+                    Command = node.string(block["cmds"]["cmd"]),
+                    CustomName = node.string(block["cmds"]["name"]),
+                    ExecuteOnFirstTick = node.byte(1),
+                    auto = node.byte(block["cmds"]["on"]),
+                    TickDelay = node.int(block["cmds"]["tick"]),
+                    TrackOutput = node.byte(block["cmds"]["should"]),
+                    conditionalMode = node.byte(block_obj.states["conditional_bit"]),
+                    Version = node.int(38 if ExecuteTest.match(block["cmds"]["cmd"]) else 19),
+                ).build()
+                StructureObject.set_blockNBT(posx, posy, posz, BlockData)
+
+        def encode(self, Writer:Union[str, io.TextIOBase]):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.GangBan_V2()
+
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
+            CommandBlockGangBan = {"minecraft:repeating_command_block":"Repeating", 
+                "minecraft:chain_command_block":"Chain", "minecraft:command_block":"Tick"}
+
+            for index, block_index, (posx, posy, posz) in Generator :
+                block:Block = self.block_palette[block_index]
+                BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+                
+                block = {"id":block_index, "aux":DataValue, "p":[o_x + posx, o_y + posy, o_z + posz]}
+                Struct1.blocks.append(block)
+                
+                if index not in self.block_nbt : continue
+                if BlockID not in CommandBlockGangBan : continue
+                block["cmds"] = {
+                    "mode":CommandBlockGangBan[BlockID],
+                    "condition":bool(BlockState["conditional_bit"]),
+                    "cmd":self.block_nbt[index]["Command"].value,
+                    "name":self.block_nbt[index]["CustomName"].value,
+                    "tick":self.block_nbt[index]["TickDelay"].value,
+                    "should":bool(self.block_nbt[index]["TrackOutput"]),
+                    "on":bool(self.block_nbt[index]["auto"])
+                }
+
+            Struct1.block_palette.extend(i.name for i in self.block_palette)
+            Struct1.save_as(Writer)
+
+    class GANGBAN_V3(CodecsBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.GangBan_V3.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.__init__( [j-i+1 for i,j in zip(PosStart, PosEnd)] )
+            StructureObject.block_palette.append( Block("minecraft:air") )
+
+            O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
+
             for chunk in Struct1.chunks :
                 o_x, o_y, o_z = chunk["grids"]["x"]-O_X, O_Y, chunk["grids"]["z"]-O_Z
                 for block in chunk["data"] :
@@ -676,7 +863,88 @@ class Codecs :
 
         def encode(self, Writer:Union[str, io.TextIOBase]):
             IgnoreAir, self = self.IgnoreAir, self.Common
-            Struct1 = StructureRUNAWAY.GangBan_V2()
+            Struct1 = StructureRUNAWAY.GangBan_V3()
+
+            o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
+            Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
+
+            Chunks:Dict[Tuple[int,int], dict] = {}
+            for index, block_index, (posx, posy, posz) in Generator :
+                block:Block = self.block_palette[block_index]
+                BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+
+                realX, realY, realZ = o_x + posx, o_y + posy, o_z + posz
+                chunk_pos = (realX//16*16, realZ//16*16)
+                if chunk_pos not in Chunks : Chunks[chunk_pos] = {
+                    "id":len(Chunks), "grids":{"x":chunk_pos[0], "z":chunk_pos[1],
+                    "x1":chunk_pos[0]+16, "z1":chunk_pos[1]+16}, "data":[]}
+                
+                chunk_block = [block_index, DataValue, realX-chunk_pos[0], realY, realZ-chunk_pos[1]]
+                Chunks[chunk_pos]["data"].append(chunk_block)
+
+                if index not in self.block_nbt : continue
+
+                node = nbt.NBT_Builder()
+                BlockData = node.compound(
+                    name = node.string(BlockID),
+                    states = node.compound(**{
+                        i:( node.byte(j) if isinstance(j, bool) else node.int(j)
+                        ) for i,j in BlockState.items()
+                    }),
+                    val = node.short(DataValue),
+                    version = node.int(17959425),
+                ).build()
+
+                NBTObj = self.block_nbt[index]
+                BlockSNbtIO1, BlockSNbtIO2 = io.StringIO(), io.StringIO()
+                nbt.write_to_snbt_file(BlockSNbtIO1, NBTObj, format=False)
+                nbt.write_to_snbt_file(BlockSNbtIO2, BlockData, format=False)
+                Copy1 = chunk_block.copy()
+                Copy1.append("nbt2")
+                Copy1.append(BlockSNbtIO2.getvalue()[3:])
+
+                Chunks[chunk_pos]["data"].append(Copy1)
+                chunk_block.append("nbt")
+                NBTstr = BlockSNbtIO1.getvalue()
+                chunk_block.append(NBTstr[3:] if NBTstr[0:3] == '"":' else NBTstr)
+
+            Struct1.chunks.extend(Chunks.values())
+            Struct1.block_palette.update((i, j.name) for i,j in enumerate(self.block_palette))
+            Struct1.save_as(Writer)
+
+    class GANGBAN_V4(CodecsBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.GangBan_V4.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.__init__( [j-i+1 for i,j in zip(PosStart, PosEnd)] )
+            StructureObject.block_palette.append( Block("minecraft:air") )
+
+            O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
+
+            for chunk in Struct1.chunks :
+                o_x, o_y, o_z = chunk["grids"]["x"]-O_X, O_Y, chunk["grids"]["z"]-O_Z
+                for block in chunk["data"] :
+                    block_obj = Block(Struct1.block_palette[block[0]], block[1])
+                    posx, posy, posz = block[2] + o_x, block[3] - o_y, block[4] + o_z
+                    StructureObject.set_block(posx, posy, posz, block_obj)
+
+                    if block[-1].__class__ is not str : continue
+                    if block[5] != "nbt" : continue
+
+                    NbtName = GetNbtID(block_obj.name)
+                    if not NbtName : continue
+                    SNBT = nbt.read_from_snbt_file( io.StringIO(block[6]) ).get_tag()
+                    SNBT["id"] = nbt.TAG_String(NbtName)
+                    StructureObject.set_blockNBT( posx, posy, posz, SNBT )
+
+        def encode(self, Writer:Union[str, io.TextIOBase]):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.GangBan_V4()
 
             o_x, o_y, o_z = self.origin[0], self.origin[1], self.origin[2]
             Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
@@ -727,10 +995,10 @@ class Codecs :
             Struct1.block_palette.extend(i.name for i in self.block_palette)
             Struct1.save_as(Writer)
 
-    class GANGBAN_V3(CodecsBase) :
+    class GANGBAN_V5(CodecsBase) :
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
-            Struct1 = StructureRUNAWAY.GangBan_V3.from_buffer(Reader)
+            Struct1 = StructureRUNAWAY.GangBan_V5.from_buffer(Reader)
 
             StructureObject = self.Common
             StructureObject.__init__( Struct1.size )
@@ -781,7 +1049,7 @@ class Codecs :
 
         def encode(self, Writer):
             IgnoreAir, self = self.IgnoreAir, self.Common
-            Struct1 = StructureRUNAWAY.GangBan_V3()
+            Struct1 = StructureRUNAWAY.GangBan_V5()
             Struct1.size = self.size
 
             Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
@@ -800,6 +1068,7 @@ class Codecs :
                 Struct1.entities.append(data_list)
 
             pos_cache = [0, 0, 0]
+            APPEND = super(TypeCheckList, Struct1.blocks).append
             for index, block_index, (posx, posy, posz) in Generator :
                 block:Block = self.block_palette[block_index]
                 BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
@@ -809,7 +1078,7 @@ class Codecs :
                 if BlockID in CommandBlockGangBan :
                     data_list[3], data_list[4] = DataValue, CommandBlockGangBan[BlockID]
                 else : data_list[3], data_list[4] = block_index, DataValue
-                Struct1.blocks.append(data_list)
+                APPEND(data_list)
                 pos_cache[0], pos_cache[1], pos_cache[2] = posx, posy, posz
 
                 if index not in self.block_nbt : continue
@@ -826,6 +1095,206 @@ class Codecs :
                         "cmd":NBT_Object["Command"].value,
                         "name":NBT_Object["CustomName"].value,
                         "delay":NBT_Object["TickDelay"].value})
+
+            Struct1.block_palette.extend(i.name for i in self.block_palette)
+            Struct1.save_as(Writer)
+
+    class GANGBAN_V6(CodecsBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.GangBan_V6.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.__init__( [j-i+1 for i,j in zip(PosStart, PosEnd)] )
+            StructureObject.block_palette.append( Block("minecraft:air") )
+
+            pos_cache = [0, 0, 0]
+            O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
+            TranslateReverse = {j:i for i,j in Translate["Item"].items()}
+            CommandBlockGangBan = ["minecraft:command_block", "minecraft:repeating_command_block", 
+                "minecraft:chain_command_block"]
+            for block in Struct1.blocks :
+                for i in range(3) : pos_cache[i] += block[i]
+                posx, posy, posz = pos_cache[0] - O_X, pos_cache[1] - O_Y, pos_cache[2] - O_Z
+                if block[-1].__class__ is dict and "cmd" in block[-1] :
+                    node = nbt.NBT_Builder()
+                    BlockData = node.compound(
+                        id = node.string("CommandBlock"),
+                        Command = node.string(block[-1]["cmd"]),
+                        CustomName = node.string(block[-1]["name"]),
+                        ExecuteOnFirstTick = node.byte(1),
+                        auto = node.byte(block[-1]["auto"]),
+                        TickDelay = node.int(block[-1]["delay"]),
+                        TrackOutput = node.byte(1),
+                        conditionalMode = node.byte(block[-1]["condition"]),
+                        Version = node.int(38 if ExecuteTest.match(block[-1]["cmd"]) else 19),
+                    ).build()
+                    StructureObject.set_block(posx, posy, posz, Block(CommandBlockGangBan[block[4]], block[3]))
+                    StructureObject.set_blockNBT(posx, posy, posz, BlockData)
+                else : 
+                    StructureObject.set_block(posx, posy, posz, Block(Struct1.block_palette[block[3]], block[4]))
+                    if block[-1].__class__ is list :
+                        Contanier = GenerateContainerNBT( Struct1.block_palette[block[3]] )
+                        if Contanier is None : continue
+                        for item in block[-1] :
+                            if None in set(item.values()) : continue
+                            itemID = item["ns"] if item["ns"].startswith("minecraft:") else "minecraft:" + item["ns"]
+                            Contanier["Items"].append(nbt.TAG_Compound({
+                                "Name": nbt.TAG_String(itemID),
+                                "Count": nbt.TAG_Byte(item["num"]),
+                                "Damage": nbt.TAG_Short(item["aux"]),
+                                "Slot": nbt.TAG_Byte(item["slot"]),
+                                "Block": Block(itemID, 0).to_nbt()
+                            }))
+                        StructureObject.set_blockNBT(posx, posy, posz, Contanier)
+
+            for entity in Struct1.entities :
+                entityNBT = GenerateEntity(entity[4], (entity[0], entity[1], entity[2]))
+                entityNBT["Item"]["Name"] = nbt.TAG_String("minecraft:" + TranslateReverse.get(entity[3], "stone"))
+                StructureObject.entity_nbt.append(entityNBT)
+
+        def encode(self, Writer):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.GangBan_V6()
+
+            Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
+            CommandBlockGangBan = {"minecraft:repeating_command_block":2, 
+                "minecraft:chain_command_block":1, "minecraft:command_block":0}
+
+            for entity in self.entity_nbt :
+                data_list = [entity["Pos"][0].value, entity["Pos"][1].value, entity["Pos"][2].value, None, None]
+                if entity["identifier"].value == "minecraft:item" :
+                    ItemName = entity["Item"]["Name"].value.replace("minecraft:", "", 1)
+                    data_list[3], data_list[4] = Translate["Item"].get(ItemName, "石头"), "minecraft:item"
+                else : 
+                    EntityName = entity["identifier"].value.replace("minecraft:", "", 1)
+                    data_list[3], data_list[4] = Translate["Entity"].get(EntityName, ""), entity["identifier"].value
+                Struct1.entities.append(data_list)
+
+            pos_cache = [0, 0, 0]
+            APPEND = super(TypeCheckList, Struct1.blocks).append
+            for index, block_index, (posx, posy, posz) in Generator :
+                block:Block = self.block_palette[block_index]
+                BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+                
+                data_list = [posx-pos_cache[0], posy-pos_cache[1], posz-pos_cache[2], None, None]
+                if BlockID in CommandBlockGangBan :
+                    data_list[3], data_list[4] = DataValue, CommandBlockGangBan[BlockID]
+                else : data_list[3], data_list[4] = block_index, DataValue
+                APPEND(data_list)
+                pos_cache[0], pos_cache[1], pos_cache[2] = posx, posy, posz
+
+                if index not in self.block_nbt : continue
+                NBT_Object = self.block_nbt[index]
+                if "Items" in NBT_Object :
+                    data_list.append([])
+                    for Item in NBT_Object["Items"] :
+                        data_list[-1].append({"ns":Item["Name"].value,
+                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":Item["Slot"].value})
+                elif BlockID.endswith("command_block") :
+                    data_list.append({
+                        "auto":bool(NBT_Object["auto"].value),
+                        "condition":bool(BlockState["conditional_bit"]),
+                        "cmd":NBT_Object["Command"].value,
+                        "name":NBT_Object["CustomName"].value,
+                        "delay":NBT_Object["TickDelay"].value})
+
+            Struct1.block_palette.extend(i.name for i in self.block_palette)
+            Struct1.save_as(Writer)
+
+    class GANGBAN_V7(CodecsBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.GangBan_V7.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.__init__( Struct1.size )
+            StructureObject.block_palette.append( Block("minecraft:air") )
+
+            CommandBlockGangBan = ["minecraft:command_block", "minecraft:repeating_command_block", 
+                "minecraft:chain_command_block"]
+            Pointer, blocklen, blockdata = 0, len(Struct1.blocks), Struct1.blocks
+            while Pointer < blocklen :
+                datatype, blockindex, datavar = blockdata[Pointer], blockdata[Pointer+4], blockdata[Pointer+5]
+                posx, posy, posz = blockdata[Pointer+1], blockdata[Pointer+2], blockdata[Pointer+3]
+                if datatype != 1 : StructureObject.set_block(posx, posy, posz, Block(Struct1.block_palette[blockindex], datavar))
+                Pointer += 6
+                if datatype == 3 : continue
+
+                blocknbt =  blockdata[Pointer]
+                Pointer += 1
+                if datatype == 1 :
+                    node = nbt.NBT_Builder()
+                    BlockData = node.compound(
+                        id = node.string("CommandBlock"),
+                        Command = node.string(blocknbt["cmd"]),
+                        CustomName = node.string(blocknbt["name"]),
+                        ExecuteOnFirstTick = node.byte(1),
+                        auto = node.byte(blocknbt["auto"]),
+                        TickDelay = node.int(blocknbt["delay"]),
+                        TrackOutput = node.byte(1),
+                        conditionalMode = node.byte(blocknbt["condition"]),
+                        Version = node.int(38 if ExecuteTest.match(blocknbt["cmd"]) else 19),
+                    ).build()
+                    StructureObject.set_block(posx, posy, posz, Block(CommandBlockGangBan[datavar], blockindex))
+                    StructureObject.set_blockNBT(posx, posy, posz, BlockData)
+                elif datatype == 4 : 
+                    Contanier = GenerateContainerNBT( Struct1.block_palette[blockindex] )
+                    if Contanier is None : continue
+                    for item in blocknbt :
+                        if None in set(item.values()) : continue
+                        itemID = item["ns"] if item["ns"].startswith("minecraft:") else "minecraft:" + item["ns"]
+                        Contanier["Items"].append(nbt.TAG_Compound({
+                            "Name": nbt.TAG_String(itemID),
+                            "Count": nbt.TAG_Byte(item["num"]),
+                            "Damage": nbt.TAG_Short(item["aux"]),
+                            "Slot": nbt.TAG_Byte(item["slot"]),
+                            "Block": Block(itemID, 0).to_nbt()
+                        }))
+                    StructureObject.set_blockNBT(posx, posy, posz, Contanier)
+
+        def encode(self, Writer):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.GangBan_V7()
+
+            Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
+            CommandBlockGangBan = {"minecraft:repeating_command_block":2, 
+                "minecraft:chain_command_block":1, "minecraft:command_block":0}
+
+            data_list = [0, 0, 0, 0, 0, 0]
+            EXTEND = super(TypeCheckList, Struct1.blocks).extend
+            for index, block_index, (posx, posy, posz) in Generator :
+                block:Block = self.block_palette[block_index]
+                BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
+                if IgnoreAir and BlockID == "minecraft:air" : continue
+
+                data_list[1], data_list[2], data_list[3] = posx, posy, posz
+                if BlockID in CommandBlockGangBan :
+                    data_list[4], data_list[5] = DataValue, CommandBlockGangBan[BlockID]
+                else : data_list[4], data_list[5] = block_index, DataValue
+
+                if index not in self.block_nbt : continue
+                NBT_Object = self.block_nbt[index]
+                if "Items" in NBT_Object :
+                    data_list[0] = 4
+                    data_list.append([])
+                    for Item in NBT_Object["Items"] :
+                        data_list[-1].append({"ns":Item["Name"].value,
+                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":Item["Slot"].value})
+                elif BlockID.endswith("command_block") :
+                    data_list[0] = 1
+                    data_list.append({
+                        "auto":bool(NBT_Object["auto"].value),
+                        "condition":bool(BlockState["conditional_bit"]),
+                        "cmd":NBT_Object["Command"].value,
+                        "name":NBT_Object["CustomName"].value,
+                        "delay":NBT_Object["TickDelay"].value})
+                else : data_list[0] = 3
+                EXTEND(data_list)
 
             Struct1.block_palette.extend(i.name for i in self.block_palette)
             Struct1.save_as(Writer)
@@ -1302,7 +1771,7 @@ class Codecs :
             Struct1.block_palette.extend(i.name for i in self.block_palette)
             Struct1.save_as(Writer)
 
-    class QingXu_V1(CodecsBase) :
+    class QINGXU_V1(CodecsBase) :
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.QingXu_V1.from_buffer(Reader)

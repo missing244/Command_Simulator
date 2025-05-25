@@ -1,7 +1,7 @@
 import os,array,ctypes
 from .. import nbt
 from ..__private import TypeCheckList
-from typing import Union,List,TypedDict,Dict
+from typing import Union,List,TypedDict,Dict,Literal
 from io import FileIO, BytesIO
 
 RuntimeID_to_Block = ["air", "stone", "grass", "dirt", "cobblestone", "planks", "sapling",
@@ -116,8 +116,8 @@ class Schematic :
         StructureObject.offset[2] = NBT.get("WEOffsetZ", 0)
         StructureObject.block_index = array.array("B", NBT['Blocks'].value.tobytes())
         StructureObject.block_data = array.array("B", NBT['Data'].value.tobytes())
-        StructureObject.entity_nbt = TypeCheckList(NBT['Entities']).setChecker(nbt.TAG_Compound)
-        StructureObject.block_nbt = TypeCheckList(NBT['TileEntities']).setChecker(nbt.TAG_Compound)
+        StructureObject.entity_nbt = TypeCheckList(NBT.get('Entities', [])).setChecker(nbt.TAG_Compound)
+        StructureObject.block_nbt = TypeCheckList(NBT.get('TileEntities', [])).setChecker(nbt.TAG_Compound)
 
         return StructureObject
 
@@ -151,8 +151,10 @@ class Schematic :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : NBT = nbt.read_from_nbt_file(bytes_io, byteorder="big", zip_mode="gzip").get_tag()
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "bytes" : return False
+
+        try : NBT = nbt.read_from_nbt_file(data, byteorder="big", zip_mode="gzip").get_tag()
         except : return False
 
         if "Width" in NBT and "Height" in NBT and 'Length' in NBT and \

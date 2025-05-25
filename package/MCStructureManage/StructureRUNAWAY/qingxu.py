@@ -1,7 +1,7 @@
 import os,itertools,json
 from .. import nbt
 from ..__private import TypeCheckList
-from typing import Union,List,TypedDict
+from typing import Union,List,TypedDict,Literal
 from io import FileIO, BytesIO, StringIO, TextIOBase
 
 class FormatError(Exception) : pass
@@ -101,9 +101,10 @@ class QingXu_V1 :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(fp=bytes_io)
-        except : return False
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+
         if isinstance(Json1, dict) and "totalBlocks" in Json1 and \
             isinstance(Json1.get("0", None), str) : return True
         return False

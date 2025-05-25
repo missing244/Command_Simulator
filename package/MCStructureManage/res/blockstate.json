@@ -5815,7 +5815,82 @@
     "minecraft:resin_clump": {
         "default": {"multi_face_direction_bits": 0},
         "support_value": {"multi_face_direction_bits": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63]}
-    }
+    },
 
+    "minecraft:pale_oak_stairs": {
+        "default": {"weirdo_direction": 0,"upside_down_bit": false},
+        "support_value": {"weirdo_direction": [0,1,2,3],"upside_down_bit": [false,true]}
+    },
+    "minecraft:pale_oak_button":{
+        "default": {"button_pressed_bit":false,"facing_direction":0},
+        "support_value": {"button_pressed_bit":[false,true],"facing_direction":[0,1,2,3,4,5]}
+    },
+    "minecraft:pale_oak_door": {
+        "default": {"direction": 0,"open_bit": false,"upper_block_bit": false,"door_hinge_bit": false},
+        "support_value": {"direction": [0,1,2,3],"open_bit": [false,true],"upper_block_bit": [false,true],"door_hinge_bit": [false,true]}
+    },
+    "minecraft:pale_oak_fence_gate": {
+        "default": {"direction": 0,"open_bit": false,"in_wall_bit": false},
+        "support_value": {"direction": [0,1,2,3],"open_bit": [false,true],"in_wall_bit": [false,true]}
+    },
+    "minecraft:pale_oak_pressure_plate": {
+        "default": {"redstone_signal": 0},
+        "support_value": {"redstone_signal": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]}
+    },
+    "minecraft:pale_oak_wall_sign": {
+        "default": {"facing_direction": 2},
+        "support_value": {"facing_direction": [0,1,2,3,4,5]}
+    },
+    "minecraft:pale_oak_hanging_sign": {
+        "default": {"facing_direction": 0,"attached_bit": false,"hanging": false,"ground_sign_direction": 0},
+        "support_value": {"facing_direction": [0,1,2,3,4,5],"attached_bit": [false,true],"hanging": [false,true],
+        "ground_sign_direction": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]}
+    },
+    "minecraft:pale_oak_standing_sign": {
+        "default": {"ground_sign_direction": 0},
+        "support_value": {"ground_sign_direction": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]}
+    },
+    "minecraft:pale_oak_trapdoor": {
+        "default": {"direction": 0,"upside_down_bit": false,"open_bit": false},
+        "support_value": {"direction": [0,1,2,3],"upside_down_bit": [false,true],"open_bit": [false,true]}
+    },
+    "minecraft:pale_oak_double_slab": {
+        "default": {"minecraft:vertical_half": false},
+        "support_value": {"minecraft:vertical_half": [false,true]}
+    },
+    "minecraft:pale_oak_slab": {
+        "default": {"minecraft:vertical_half": false},
+        "support_value": {"minecraft:vertical_half": [false,true]}
+    },
+    
+    "minecraft:resin_brick_stairs": {
+        "default": {"weirdo_direction": 0,"upside_down_bit": false},
+        "support_value": {"weirdo_direction": [0,1,2,3],"upside_down_bit": [false,true]}
+    },
+    "minecraft:resin_brick_double_slab": {
+        "default": {"minecraft:vertical_half": false},
+        "support_value": {"minecraft:vertical_half": [false,true]}
+    },
+    "minecraft:resin_brick_slab": {
+        "default": {"minecraft:vertical_half": false},
+        "support_value": {"minecraft:vertical_half": [false,true]}
+    },
+    "minecraft:resin_brick_wall": {
+        "default": {"wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true},
+        "support_value": {"wall_connection_type_east": ["none","short","tall"],"wall_connection_type_north": ["none","short","tall"],"wall_connection_type_south": ["none","short","tall"],"wall_connection_type_west": ["none","short","tall"],"wall_post_bit": [true,false]}
+    },
+
+    "minecraft:leaf_litter": {
+        "default": {"growth":0,"minecraft:cardinal_direction":"south"},
+        "support_value": {"growth": [0,1,2,3,4,5,6,7],"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:wildflowers": {
+        "default": {"growth":0,"minecraft:cardinal_direction":"south"},
+        "support_value": {"growth": [0,1,2,3,4,5,6,7],"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:dried_ghast": {
+        "default": {"rehydration_level":0,"minecraft:cardinal_direction":"south"},
+        "support_value": {"rehydration_level": [0,1,2,3],"minecraft:cardinal_direction":["south","west","north","east"]}
+    }
 }
 

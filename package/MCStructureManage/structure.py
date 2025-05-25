@@ -21,7 +21,7 @@ class CommonStructure :
     * 可用属性 size : 结构长宽高(x, y, z)
     * 可用属性 origin : 结构保存时的位置
     * 可用属性 block_index : 方块索引列表
-    * 可用属性 contain_index : 方块是否含有其他方块，方块索引列表（例如含水，-1代表跳过）
+    * 可用属性 contain_index : 位置索引与方块索引映射的字典（-1代表跳过）
     * 可用属性 block_palette : 方块对象列表（索引指向该列表内的方块）
     * 可用属性 entity_nbt : 实体对象列表
     * 可用属性 block_nbt : 以方块索引字符串数字和nbt对象组成的字典
@@ -41,7 +41,7 @@ class CommonStructure :
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
         self.block_index: array.array[int] = array.array("i", b"\x00\x00\x00\x00" * Volume)     #修改元素✔，赋值✘
-        self.contain_index: array.array[int] = array.array("i", b"\xff\xff\xff\xff" * Volume)   #修改元素✔，赋值✘
+        self.contain_index: Dict[int, int] = {}                                                 #修改元素✔，赋值✘
         self.block_palette: BiList = BiList()                                                   #修改元素✔，赋值✘
         self.entity_nbt: List[nbt.TAG_Compound] = TypeCheckList().setChecker(nbt.TAG_Compound)  #修改元素✔，赋值✘
         self.block_nbt: Dict[int, nbt.TAG_Compound] = {}                                        #修改元素✔，赋值✘
@@ -66,13 +66,16 @@ class CommonStructure :
         SupportType = {
             StructureBDX.BDX_File: Codecs.BDX, StructureMCS.Mcstructure: Codecs.MCSTRUCTURE, 
             StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, StructureRUNAWAY.RunAway: Codecs.RUNAWAY,
-            StructureRUNAWAY.Kbdx: Codecs.KBDX, StructureRUNAWAY.MianYang_V1: Codecs.MIANYANG_V1, 
-            StructureRUNAWAY.MianYang_V2: Codecs.MIANYANG_V2, 
+            StructureRUNAWAY.Kbdx: Codecs.KBDX, 
+            StructureRUNAWAY.MianYang_V1: Codecs.MIANYANG_V1, StructureRUNAWAY.MianYang_V2: Codecs.MIANYANG_V2, 
+            StructureRUNAWAY.MianYang_V3: Codecs.MIANYANG_V3, 
             StructureRUNAWAY.GangBan_V1: Codecs.GANGBAN_V1, StructureRUNAWAY.GangBan_V2: Codecs.GANGBAN_V2,
-            StructureRUNAWAY.GangBan_V3: Codecs.GANGBAN_V3, StructureRUNAWAY.FuHong_V1: Codecs.FUHONG_V1, 
-            StructureRUNAWAY.FuHong_V2: Codecs.FUHONG_V2, StructureRUNAWAY.FuHong_V3: Codecs.FUHONG_V3, 
-            StructureRUNAWAY.FuHong_V4: Codecs.FUHONG_V4, 
-            StructureRUNAWAY.QingXu_V1: Codecs.QingXu_V1
+            StructureRUNAWAY.GangBan_V3: Codecs.GANGBAN_V3, StructureRUNAWAY.GangBan_V4: Codecs.GANGBAN_V4, 
+            StructureRUNAWAY.GangBan_V5: Codecs.GANGBAN_V5, StructureRUNAWAY.GangBan_V6: Codecs.GANGBAN_V6, 
+            StructureRUNAWAY.GangBan_V7: Codecs.GANGBAN_V7, 
+            StructureRUNAWAY.FuHong_V1: Codecs.FUHONG_V1, StructureRUNAWAY.FuHong_V2: Codecs.FUHONG_V2, 
+            StructureRUNAWAY.FuHong_V3: Codecs.FUHONG_V3, StructureRUNAWAY.FuHong_V4: Codecs.FUHONG_V4, 
+            StructureRUNAWAY.QingXu_V1: Codecs.QINGXU_V1
         }
 
         if Decoder is not None and not isinstance(Decoder, Codecs.CodecsBase) : 

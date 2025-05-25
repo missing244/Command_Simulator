@@ -88,9 +88,10 @@ class FuHong_V1 :
     
     
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(bytes_io)
-        except : return False
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+
         if isinstance(Json1, list) and len(Json1) and isinstance(Json1[0], dict) and \
             "name" in Json1[0] and isinstance(Json1[0].get("x", None), list) : return True
         return False
@@ -213,21 +214,20 @@ class FuHong_V2 :
     def save_as(self, buffer:Union[str, FileIO, StringIO]) :
         import time, random
         #self.error_check()
+        StartPos, EndPos = self.get_volume()
 
         Json1:FILEFORMAT_V2 = { "Build_Info":{
             "UserInfo":"用户名称:3556824 用户称号:3556824 玩家名称:小莫罒乌云加",
             "Export_Mode":"导出模式:两点导出",
             "PlayerGameMode":"玩家游戏模式:1",
-            "PlayerSelfSite":"玩家自身坐标:X:%s Y:%s Z:%s" % tuple(self.origin),
+            "PlayerSelfSite":"玩家自身坐标:X:%s Y:%s Z:%s" % tuple(StartPos),
             "WorldName":"世界名称:我的世界",
             "WorldSeed":"世界种子:%s" % random.randint(-2**48, 2**48),
             "WorldTime":"世界时间:%s" % random.randint(1, 2**24),
             "WorldTickSpeed":"世界随机刻速度:1",
-            "SiteInfo":"调用导出范围:%s,%s,%s > %s,%s,%s" % (*tuple(self.origin), *tuple(i+j-1 for i,j in zip(self.origin, self.size))),
-            "ExportSiteInfo":"计算后的导出范围:%s,%s,%s > %s,%s,%s" % (*tuple(self.origin), *tuple(i+j-1 for i,j in zip(self.origin, self.size))),
+            "SiteInfo":"调用导出范围:%s,%s,%s > %s,%s,%s" % (*StartPos, *tuple(i+j-1 for i,j in zip(StartPos, EndPos))),
+            "ExportSiteInfo":"计算后的导出范围:%s,%s,%s > %s,%s,%s" % (*StartPos, *tuple(i+j-1 for i,j in zip(StartPos, EndPos))),
             "BlockInfo":"单导出区块长度:16 计算大小:1区块",
-            "BlockRange":"区块范围:X:%s-%s Z:%s-%s" % (self.origin[0] // 16, (self.origin[0] + self.size[0] - 1) // 16 + 1,
-                self.origin[2] // 16, (self.origin[2] + self.size[2] - 1) // 16 + 1),
             "VersionInfo":"format last update:%s author:FuHong" % time.strftime("%Y-%m-%d", time.localtime()),
             "ExportTime":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             "ExportEndTime":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
@@ -246,9 +246,10 @@ class FuHong_V2 :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(bytes_io)
-        except : return False
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+
         if isinstance(Json1, dict) and isinstance(Json1.get("Build_Info", None), dict) and \
             isinstance(Json1.get("FuHongBuild_FinalFormat", None), list) : return True
         return False
@@ -379,9 +380,10 @@ class FuHong_V3 :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(bytes_io)
-        except : return False
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+        
         if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
             isinstance(Json1.get("FuHongBuild", None), list) and Json1.get("BlockCalculationPos", False) : return True
         return False
@@ -478,9 +480,10 @@ class FuHong_V4 :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(bytes_io)
-        except : return False
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+        
         if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
             isinstance(Json1.get("FuHongBuild", None), list) and not Json1.get("BlockCalculationPos", False) : return True
         return False

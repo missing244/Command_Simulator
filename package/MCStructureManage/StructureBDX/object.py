@@ -157,9 +157,11 @@ class BDX_File :
 
     
     @classmethod
-    def is_this_file(cls, bytes_io:io.BytesIO) :
-        if bytes_io.read(3) != b'BD@' : return False
-        try : a = brotli.decompress(bytes_io.read())[0:4]
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "bytes" : return False
+
+        if data.read(3) != b'BD@' : return False
+        try : a = brotli.decompress(data.read())[0:4]
         except : return False
 
         if a != b'BDX\0' : return False

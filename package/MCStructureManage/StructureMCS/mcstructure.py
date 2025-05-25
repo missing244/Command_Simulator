@@ -1,7 +1,7 @@
 import os,array,ctypes
 from .. import nbt
 from ..__private import TypeCheckList
-from typing import Union,List,TypedDict,Dict
+from typing import Union,List,TypedDict,Dict,Literal
 from io import FileIO, BytesIO
 
 class BLOCK_TYPE(TypedDict): 
@@ -117,8 +117,10 @@ class Mcstructure :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : NBT = nbt.read_from_nbt_file(bytes_io, byteorder="little").get_tag()
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "bytes" : return False
+
+        try : NBT = nbt.read_from_nbt_file(data, byteorder="little").get_tag()
         except : return False
 
         if "size" in NBT and "structure_world_origin" in NBT and 'structure' in NBT : return True

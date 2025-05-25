@@ -88,9 +88,12 @@ class RunAway :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
-        try : Json1 = json.load(fp=bytes_io)
-        except : return False
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+
+        if not isinstance(Json1, list)  : return False
+        if any(not isinstance(i, dict) for i in Json1[0:10]) : return False
         if isinstance(Json1, list) and len(Json1) and isinstance(Json1[0], dict) and \
             "name" in Json1[0] and isinstance(Json1[0].get("x", None), int) : return True
         return False
@@ -189,11 +192,13 @@ class Kbdx :
 
 
     @classmethod
-    def is_this_file(cls, bytes_io:BytesIO) :
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "bytes" : return False
+
         try : 
-            block_count = int.from_bytes(bytes_io.read(4), "little", signed=False)
-            bytes_io.read(20 * block_count)
-            json.load(bytes_io)
+            block_count = int.from_bytes(data.read(4), "little", signed=False)
+            data.read(20 * block_count)
+            json.load(data)
         except : return False
         else : return True
 
