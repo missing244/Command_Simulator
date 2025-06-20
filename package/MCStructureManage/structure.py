@@ -66,7 +66,7 @@ class CommonStructure :
         from . import StructureRUNAWAY, StructureSCHEMATIC
         SupportType = {
             StructureBDX.BDX_File: Codecs.BDX, StructureMCS.Mcstructure: Codecs.MCSTRUCTURE, 
-            StructureSCHEM.Schem: Codecs.SCHEM, StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, 
+            StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, 
             StructureRUNAWAY.RunAway: Codecs.RUNAWAY, StructureRUNAWAY.Kbdx: Codecs.KBDX, 
             StructureRUNAWAY.MianYang_V1: Codecs.MIANYANG_V1, StructureRUNAWAY.MianYang_V2: Codecs.MIANYANG_V2, 
             StructureRUNAWAY.MianYang_V3: Codecs.MIANYANG_V3, 
