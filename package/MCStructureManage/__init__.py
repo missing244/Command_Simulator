@@ -20,7 +20,7 @@ from .. import python_nbt as nbt
 def getStructureType(IO_Byte_Path) :
     import io, traceback, json
     from typing import Union
-    from . import StructureBDX, StructureMCS
+    from . import StructureBDX, StructureMCS, StructureSCHEM
     from . import StructureRUNAWAY, StructureSCHEMATIC
     IO_Byte_Path: Union[str, bytes, io.IOBase]
 
@@ -35,13 +35,13 @@ def getStructureType(IO_Byte_Path) :
     else : data_type = "json"
 
     Test = [StructureBDX.BDX_File, StructureMCS.Mcstructure, StructureSCHEMATIC.Schematic, 
-            StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, 
+            StructureSCHEM.Schem, StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, 
             StructureRUNAWAY.MianYang_V1, StructureRUNAWAY.MianYang_V2, StructureRUNAWAY.MianYang_V3, 
             StructureRUNAWAY.GangBan_V1, StructureRUNAWAY.GangBan_V2, StructureRUNAWAY.GangBan_V3,
             StructureRUNAWAY.GangBan_V4, StructureRUNAWAY.GangBan_V5, StructureRUNAWAY.GangBan_V6,
             StructureRUNAWAY.GangBan_V7,
             StructureRUNAWAY.FuHong_V1, StructureRUNAWAY.FuHong_V2, StructureRUNAWAY.FuHong_V3,
-            StructureRUNAWAY.FuHong_V4, 
+            StructureRUNAWAY.FuHong_V4, StructureRUNAWAY.FuHong_V5, 
             StructureRUNAWAY.QingXu_V1]
 
     for class_obj in Test :
@@ -55,7 +55,7 @@ def getStructureType(IO_Byte_Path) :
     if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
 
 
-from . import StructureBDX, StructureMCS
+from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 from .block import Block
 from .codec import Codecs

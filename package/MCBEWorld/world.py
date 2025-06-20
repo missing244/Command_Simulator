@@ -42,13 +42,13 @@ class World :
                 f.write( cycle_xor(bytes1, key_bytes) )
 
     def __netease_decrypt__(self, db_path:str, key:int) :
-        key_bytes = key.to_bytes(8, signed=False)
+        key_bytes = key.to_bytes(8, byteorder="big", signed=False)
         name_list = os.listdir(db_path)
         if "CURRENT" in name_list : name_list.remove("CURRENT")
         name_list.append("CURRENT")
 
         for name in os.listdir(db_path) :
-            path = os.path.join(db_path, path)
+            path = os.path.join(db_path, name)
             if not os.path.isfile(path) : continue
             read_file = open(path, "rb")
             if read_file.read(4) != Encrypt_Header : read_file.close() ; continue
@@ -61,15 +61,18 @@ class World :
         self.close()
 
     def __setattr__(self, name:str, value):
-        if name == "world_nbt" and isinstance(self.world_nbt, (nbt.RootNBT, nbt.TAG_Compound)) : 
+        if name == "world_nbt" and not isinstance(value, (nbt.RootNBT, nbt.TAG_Compound)) : 
             raise TypeError(f"不正确的 world_nbt 类型 ({value.__class__})")
-        elif name == "world_name" and isinstance(self.world_name, str) : 
+        elif name == "world_name" and not isinstance(value, str) : 
             raise TypeError(f"不正确的 world_name 类型 ({value.__class__})")
-        elif name == "encrypt_key" and isinstance(self.encrypt_key, int): 
+        elif name == "encrypt_key" and not isinstance(value, (int, type(None))) : 
             raise TypeError(f"不正确的 encrypt_key 类型 ({value.__class__})")
-        elif name == "world_db" : raise RuntimeError("不允许修改 world_db 属性")
+        elif name == "world_db" and not hasattr(self, name) and not isinstance(value, LevelDatabase.MinecraftLevelDB) : 
+            raise TypeError(f"不正确的 world_db 类型 ({value.__class__})")
+        elif name == "world_db" and hasattr(self, name) : 
+            raise RuntimeError("不允许修改 world_db 属性")
         else : 
-            if name == "encrypt_key" :
+            if name == "encrypt_key" and value is not None:
                 if not(0 <= value <= (2**64)-1) : raise ValueError("encrypt_key 应为非负数且不超过8字节整数最大值")
                 self.__runtime_cache["encrypt_key"] = value
             super().__setattr__(name, value)
@@ -117,7 +120,7 @@ class World :
 
 
     def close(self, encryption=True) :
-        if self.__close or sys.is_finalizing() : return None
+        if sys.is_finalizing() or self.__close : return None
 
         world_dat_path = os.path.join(self.__world_path, "level.dat")
         world_name_path = os.path.join(self.__world_path, "levelname.txt")

@@ -1,4 +1,5 @@
 from .. import nbt
+from ..C_API import chunk_parser
 from typing import Literal,List,Union,Dict,TypedDict,Tuple
 import itertools, functools, io, traceback, leveldb, math, array
 
@@ -132,22 +133,17 @@ class Chunks :
 
             chunk_bytesIO = io.BytesIO( leveldb.get(chunk_key) )
             sub_layers = chunk_bytesIO.read(3)[1]
+            print(chunk_bytesIO.getvalue())
 
             for _ in range(sub_layers) :
                 block_use_bit = chunk_bytesIO.read(1)[0] >> 1  # 字节使用的bit位数
+                if not block_use_bit : break
                 block_count_save_in_4bytes = 32 // block_use_bit # 4个字节能存储多少索引
                 read_items = math.ceil(4096 / block_count_save_in_4bytes) # 一共需要多少个int型
 
-                # 获取用于截断的掩码
-                number_of_and = 0xffffffff >> (32 - block_use_bit)
-                data_array = array.array("I", chunk_bytesIO.read(read_items * 4))
-                block_index = [None] * 4150
-
                 #解析方块索引
-                for data_count, data in zip(range(0, 4096, block_count_save_in_4bytes), data_array) :
-                    for i in range(data_count, data_count+block_count_save_in_4bytes) :
-                        block_index[i] = data & number_of_and
-                        data >>= block_use_bit
+                block_index = chunk_parser(chunk_bytesIO.read(read_items * 4), block_use_bit)
+                #print(block_index)
 
                 #解析方块
                 block_count = int.from_bytes(chunk_bytesIO.read(4), "little")
@@ -156,7 +152,7 @@ class Chunks :
                     blocks[j] = nbt.read_from_nbt_file(chunk_bytesIO, byteorder="little").get_tag()
 
                 if layer_int not in Object.chunk_data : Object.chunk_data[layer_int] = []
-                Object.chunk_data[layer_int].append( (block_index[0:4096], blocks) )
+                Object.chunk_data[layer_int].append( (block_index, blocks) )
 
             chunk_bytesIO.close()
         return Object

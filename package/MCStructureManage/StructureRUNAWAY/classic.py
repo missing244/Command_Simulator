@@ -116,7 +116,7 @@ class Kbdx :
 
     def __init__(self) :
         self.blocks: List[Tuple[int, int, int, int]] = TypeCheckList().setChecker(tuple)
-        self.block_palette: Dict[int, str] = {}
+        self.block_palette: Dict[str, int] = {}
         self.block_nbt: List[dict] = TypeCheckList().setChecker(dict)
 
     def __setattr__(self, name, value) :
@@ -168,7 +168,7 @@ class Kbdx :
         StructureObject.block_nbt = TypeCheckList(save_data.get('BlockEntityData', [])).setChecker(dict)
         del save_data['BlockEntityData']
 
-        for i,j in save_data.items() : StructureObject.block_palette[j] = i
+        for i,j in save_data.items() : StructureObject.block_palette[i] = j
 
         return StructureObject
 
@@ -186,7 +186,7 @@ class Kbdx :
         for i in self.blocks : _file.write( S1.pack(*i) )
 
         Json1 = {'BlockEntityData': list(self.block_nbt)}
-        for i,j in self.block_palette.items() : Json1[j] = i
+        for i,j in self.block_palette.items() : Json1[i] = j
 
         _file.write( json.dumps(Json1, separators=(',', ':')).encode("utf-8") )
 

@@ -48,10 +48,10 @@ class TypeCheckList(list) :
 
 class BiList :
 
-    def __init__(self, iterable:Iterable = []) :
-        a = dict.fromkeys(iterable)
-        self.__backward:Dict[Any, int] = {j:i for i,j in enumerate(a)}
-        self.__forward:List[Any] = list(self.__backward.keys())
+    def __init__(self, iterable:Iterable=[]) :
+        self.__forward:List[Any] = list(iterable)
+        self.__backward:Dict[Any, int] = {j:i for i,j in zip( reversed(self.__forward), 
+            reversed( range(len(self.__forward)) ) )}
 
 
     def __str__(self) :

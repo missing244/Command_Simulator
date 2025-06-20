@@ -1,4 +1,4 @@
-import os,array,json,re,ast
+import os,array,json,zlib
 from .. import nbt
 from ..__private import TypeCheckList
 from typing import Union,List,TypedDict,Dict,Tuple,Literal,Optional
@@ -121,7 +121,8 @@ class BLOCK2(TypedDict) :
     x: List[int]
     y: List[int]
     z: List[int]
-    d: List[Dict[Literal["b", "e"], str]]
+    c: Dict[Literal["c", "t", "a", "n"], list]
+    d: List[Union[Dict[Literal["b", "e"], str], Dict[Literal["d"], dict]]]
 
 class ENTITY2(TypedDict) :
     en: str
@@ -357,7 +358,6 @@ class FuHong_V3 :
                 "PlayerInfo": "玩家名称:ComFHawa 游戏模式:1 玩家自身坐标:X:0 Y:-0 Z:0",
                 "WorldInfo": "世界名称:我的世界1 世界种子:%s 世界时间:5000 时间随机刻速度:1" % random.randint(-2**48, 2**48),
                 "Export_Mode": "导出模式:命令导出",
-                "ExportSiteInfo": "调用导出范围:82,-52,40 > 73,-44,31 计算后的导出范围:73,-52,31 > 82,-44,40",
                 "FormatInfo": "format info last update:%s author:FuHong" % time.strftime("%Y%m%d", time.localtime()),
                 "ExportTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                 "ExportEndTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
@@ -387,7 +387,6 @@ class FuHong_V3 :
         if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
             isinstance(Json1.get("FuHongBuild", None), list) and Json1.get("BlockCalculationPos", False) : return True
         return False
-
 
 class FuHong_V4 :
     """
@@ -454,6 +453,7 @@ class FuHong_V4 :
 
         Json1:FILEFORMAT_V3 = { 
             "Build_Info":{
+                "Version": 20250529,
                 "UserInfo": "用户名称:FuHong§f 用户称号:分期用户 用户版本:17.3-20250328",
                 "PlayerInfo": "玩家名称:ComFHawa 游戏模式:1 玩家自身坐标:X:0 Y:-0 Z:0",
                 "WorldInfo": "世界名称:我的世界1 世界种子:%s 世界时间:5000 时间随机刻速度:1" % random.randint(-2**48, 2**48),
@@ -487,5 +487,62 @@ class FuHong_V4 :
         if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
             isinstance(Json1.get("FuHongBuild", None), list) and not Json1.get("BlockCalculationPos", False) : return True
         return False
+
+class FuHong_V5(FuHong_V4) : 
+    """
+    由 FuHong 开发的结构文件对象
+    -----------------------
+    * 以 .json 为后缀的json格式文件
+    -----------------------
+    * 可用属性 chunks : 区块储存列表
+    * 可用属性 block_palette : 方块储存列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+    
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+        from .. import C_API
+        if isinstance(buffer,str) : _file = open(buffer, "rb")
+        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
+        else : _file = buffer
+
+        IO1 = StringIO( C_API.fuhong_v5_decrypt( zlib.decompress(_file.read()) ) )
+
+        Struct1 = cls()
+        Struct2 = FuHong_V4.from_buffer(IO1)
+        Struct1.chunks = Struct2.chunks
+        Struct1.block_palette = Struct2.block_palette
+
+        return Struct1
+
+    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
+        from .. import C_API
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "wb")
+        else : _file = buffer
+
+        IO1 = StringIO()
+        super().save_as(IO1)
+        data = zlib.compress( C_API.fuhong_v5_encrypt( IO1.getvalue() ) )
+
+        _file.write(data)
+
+    
+    @classmethod
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        from .. import C_API
+        import traceback
+        if data_type != "bytes" : return False
+        try : Json1 = json.loads( C_API.fuhong_v5_decrypt( zlib.decompress(data.read()) ) )
+        except : return False
+
+        if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
+            isinstance(Json1.get("FuHongBuild", None), list) : return True
+        return False
+
 
 

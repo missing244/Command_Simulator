@@ -11,8 +11,10 @@ BlockState = json.load(fp=open(os.path.join(CurrentPath, "res", "blockstate.json
 OldBlockData = json.load(fp=open(os.path.join(CurrentPath, "res", "flatten.json"), "r", encoding="utf-8"))
 
 SpecialStates = {"direction":{"south":0, "west":1, "north":2, "east":3}, 
-    "facing_direction":{"south":0, "west":1, "north":2, "east":5}}
+    "facing_direction":{"south":0, "west":1, "north":2, "east":5},
+    "top_slot_bit":{"top":True, "bottom":False}}
 def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str, Union[bool, int, str]]]:
+    if id.endswith("seaLantern") : id = "sea_lantern"
     BlockID = f"minecraft:{id}" if id.find("minecraft:") else id
 
     if BlockID in BlockState and value.__class__ is int :
@@ -40,6 +42,13 @@ def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str
         elif "direction" in NewBlockState : 
             value["direction"] = SpecialStates["direction"][cardinal_direction]
         del value["minecraft:cardinal_direction"]
+    
+    vertical_half = value.get("minecraft:vertical_half", None)
+    if vertical_half in SpecialStates["top_slot_bit"] :
+        if "top_slot_bit" in NewBlockState : 
+            value["top_slot_bit"] = SpecialStates["top_slot_bit"][vertical_half]
+        del value["minecraft:vertical_half"]
+
     NewBlockState.update( (i,j) for i,j in value.items() if (i in NewBlockState)
         and (j in BlockState[NewBlockID]["support_value"][i]) )
     return (NewBlockID, NewBlockState)

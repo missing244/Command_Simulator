@@ -158,12 +158,11 @@ class MianYang_V2(MianYang_V1) :
         
         if "chunkedBlocks" not in Json1 : raise FormatError("文件缺少chunkedBlocks参数")
         if "namespaces" not in Json1 : raise FormatError("文件缺少namespaces参数")
-        if "entities" not in Json1 : raise FormatError("文件缺少namespaces参数")
 
         StructureObject = cls()
         StructureObject.chunks.extend(Json1["chunkedBlocks"])
         StructureObject.block_palette.extend(Json1["namespaces"])
-        StructureObject.entities.extend(Json1["entities"])
+        StructureObject.entities.extend(Json1.get("entities", []))
 
         return StructureObject
 
@@ -232,12 +231,11 @@ class MianYang_V3(MianYang_V1) :
         
         if "chunkedBlocks" not in Json1 : raise FormatError("文件缺少chunkedBlocks参数")
         if "namespaces" not in Json1 : raise FormatError("文件缺少namespaces参数")
-        if "entities" not in Json1 : raise FormatError("文件缺少namespaces参数")
 
         StructureObject = cls()
         StructureObject.chunks.extend(Json1["chunkedBlocks"])
         StructureObject.block_palette.extend(Json1["namespaces"])
-        StructureObject.entities.extend(Json1["entities"])
+        StructureObject.entities.extend(Json1.get("entities", []))
 
         return StructureObject
 

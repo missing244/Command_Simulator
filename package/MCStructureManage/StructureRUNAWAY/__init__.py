@@ -16,5 +16,5 @@ from .mianyang import MianYang_V1, MianYang_V2, MianYang_V3
 from .gangban import GangBan_V1, GangBan_V2, GangBan_V3
 from .gangban import GangBan_V4, GangBan_V5, GangBan_V6, GangBan_V7
 from .classic import RunAway, Kbdx
-from .fuhong import FuHong_V1, FuHong_V2, FuHong_V3, FuHong_V4
+from .fuhong import FuHong_V1, FuHong_V2, FuHong_V3, FuHong_V4, FuHong_V5
 from .qingxu import QingXu_V1

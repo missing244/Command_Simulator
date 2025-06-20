@@ -15,7 +15,7 @@ class MinecraftLevelDB(leveldb.LevelDB) :
     """
 
     def __init__(self, path:str):
-        super().__init__(os.path.join(path, "db"), create_if_missing=True)
+        super().__init__(path, create_if_missing=True)
 
 
     def Chunk_Pos(self, dimension:DimensionType) :

@@ -562,7 +562,7 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
     )))
 
     Selector : List[BaseMatch.Match_Base] = [
-        BaseMatch.KeyWord("Selector","@p","@a","@r","@s","@e","@initiator").add_leaves(
+        BaseMatch.KeyWord("Selector","@p","@a","@r","@s","@e","@n","@initiator").add_leaves(
             BaseMatch.KeyWord("Start_Selector_Argument","[").add_leaves(*Selector_Var2),
             *end_node
         ),

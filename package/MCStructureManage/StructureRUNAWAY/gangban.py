@@ -1,4 +1,4 @@
-import os,array,json,re
+import os,array,json,re,zlib
 from .. import nbt
 from ..__private import TypeCheckList
 from typing import Union,List,TypedDict,Dict,Tuple,Literal,Optional
@@ -479,233 +479,6 @@ class GangBan_V5 :
     由 钢板 开发的结构文件对象
     -----------------------
     * 以 .json 为后缀的json格式文件
-    * List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, List[str]]]
-    -----------------------
-    * 可用属性 size : 结构大小
-    * 可用属性 blocks : 方块储存列表
-    * 可用属性 entities : 实体储存列表
-    * 可用属性 block_palette : 方块ID映射列表
-    -----------------------
-    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
-    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
-    """
-
-
-    def __init__(self) :
-        self.size: array.array = array.array("i", [0, 0, 0])
-        self.blocks: List[AREA_BLOCK] = TypeCheckList().setChecker(list)
-        self.entities: List[AREA_ENTITY] = TypeCheckList().setChecker(list)
-        self.block_palette: List[str] = TypeCheckList().setChecker(str)
-
-    def __setattr__(self, name, value) :
-        if not hasattr(self, name) : super().__setattr__(name, value)
-        elif isinstance(value, type(getattr(self, name))) : super().__setattr__(name, value)
-        else : raise Exception("无法修改 %s 属性" % name)
-
-    def __delattr__(self, name) :
-        raise Exception("无法删除任何属性")
-
-
-    def error_check(self) :
-        if len(self.size) != 3 : raise Exception("结构长宽高列表长度不为3")
-
-        for entity in self.entities :
-            if len(entity) < 5 : raise Exception("实体参数不完整")
-            if any(not isinstance(i, (int,float)) for i in entity[0:3]) : raise Exception(f"实体坐标参数存在非法数据")
-            if not isinstance(entity[3], str) : raise Exception(f"实体名字参数存在非法数据")
-            if not isinstance(entity[4], str) : raise Exception(f"实体id参数存在非法数据")
-
-        for block in self.blocks :
-            data_len = len(block)
-            if data_len < 5 : raise Exception("方块参数不完整")
-            if any(not isinstance(block[i], int) for i in range(5)) : raise Exception("方块数据存在非法参数")
-            if data_len > 5 and isinstance(block[5], list) :
-                for item in block[5] :
-                    if not isinstance(item.get("ns", None), (str, type(None))) : raise Exception(f"物品id参数存在非法数据")
-                    if not isinstance(item.get("aux", None), (int, type(None))) : raise Exception(f"物品aux参数存在非法数据")
-                    if not isinstance(item.get("num", None), (int, type(None))) : raise Exception(f"物品num参数存在非法数据")
-                    if not isinstance(item.get("slot", None), (int, type(None))) : raise Exception(f"物品slot参数存在非法数据")
-            if data_len > 5 and isinstance(block[5], dict) :
-                if not isinstance(block[5].get("auto", None), bool) : raise Exception(f"命令方块auto参数存在非法数据")
-                if not isinstance(block[5].get("condition", None), bool) : raise Exception(f"命令方块condition参数存在非法数据")
-                if not isinstance(block[5].get("cmd", None), str) : raise Exception(f"命令方块cmd参数存在非法数据")
-                if not isinstance(block[5].get("name", None), str) : raise Exception(f"命令方块name参数存在非法数据")
-                if not isinstance(block[5].get("delay", None), int) : raise Exception(f"命令方块delay参数存在非法数据")
-
-
-    @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
-        if isinstance(buffer,str) : _file = open(buffer, "rb")
-        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
-        else : _file = buffer
-        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, List[str]]] = json.load(fp=_file)
-
-        palette:List[str] = Json1.pop()
-        area:AREA_SIZE = Json1.pop()
-
-        StructureObject = cls()
-        StructureObject.size = array.array("i", (i+1 for i in area["ep"]))
-        StructureObject.block_palette.extend(palette)
-        B_APPEND = super(TypeCheckList, StructureObject.blocks).append
-        E_APPEND = super(TypeCheckList, StructureObject.entities).append
-        for data in Json1 :
-            if type(data[3]) is str : E_APPEND(data)
-            else : B_APPEND(data)
-
-        return StructureObject
-
-    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        #self.error_check()
-
-        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, PALETTE]] = [
-            *self.entities,
-            *self.blocks,
-            {"ep": [i-1 for i in self.size]},
-            list(self.block_palette) ]
-
-        if isinstance(buffer, str) : 
-            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
-            os.makedirs(base_path, exist_ok=True)
-            _file = open(buffer, "w+", encoding="utf-8")
-        else : _file = buffer
-
-        if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
-        json.dump(Json1, _file, separators=(',', ':'))
-
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 3 and \
-            isinstance(Json1[0], list) and isinstance(Json1[-1], list) and \
-            (isinstance(Json1[-2], dict) and "ep" in Json1[-2]) : return True
-        return False
-
-class GangBan_V6 :
-    """
-    由 钢板 开发的结构文件对象
-    -----------------------
-    * 以 .json 为后缀的json格式文件
-    * List[Union[AREA_ENTITY, AREA_BLOCK, List[str]]]
-    -----------------------
-    * 可用属性 blocks : 方块储存列表
-    * 可用属性 entities : 实体储存列表
-    * 可用属性 block_palette : 方块ID映射列表
-    -----------------------
-    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
-    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
-    """
-
-
-    def __init__(self) :
-        self.blocks: List[AREA_BLOCK] = TypeCheckList().setChecker(list)
-        self.entities: List[AREA_ENTITY] = TypeCheckList().setChecker(list)
-        self.block_palette: List[str] = TypeCheckList().setChecker(str)
-
-    def __setattr__(self, name, value) :
-        if not hasattr(self, name) : super().__setattr__(name, value)
-        elif isinstance(value, type(getattr(self, name))) : super().__setattr__(name, value)
-        else : raise Exception("无法修改 %s 属性" % name)
-
-    def __delattr__(self, name) :
-        raise Exception("无法删除任何属性")
-
-
-    def error_check(self) :
-        for entity in self.entities :
-            if len(entity) < 5 : raise Exception("实体参数不完整")
-            if any(not isinstance(i, (int,float)) for i in entity[0:3]) : raise Exception(f"实体坐标参数存在非法数据")
-            if not isinstance(entity[3], str) : raise Exception(f"实体名字参数存在非法数据")
-            if not isinstance(entity[4], str) : raise Exception(f"实体id参数存在非法数据")
-
-        for block in self.blocks :
-            data_len = len(block)
-            if data_len < 5 : raise Exception("方块参数不完整")
-            if any(not isinstance(block[i], int) for i in range(5)) : raise Exception("方块数据存在非法参数")
-            if data_len > 5 and isinstance(block[5], list) :
-                for item in block[5] :
-                    if not isinstance(item.get("ns", None), (str, type(None))) : raise Exception(f"物品id参数存在非法数据")
-                    if not isinstance(item.get("aux", None), (int, type(None))) : raise Exception(f"物品aux参数存在非法数据")
-                    if not isinstance(item.get("num", None), (int, type(None))) : raise Exception(f"物品num参数存在非法数据")
-                    if not isinstance(item.get("slot", None), (int, type(None))) : raise Exception(f"物品slot参数存在非法数据")
-            if data_len > 5 and isinstance(block[5], dict) :
-                if not isinstance(block[5].get("auto", None), bool) : raise Exception(f"命令方块auto参数存在非法数据")
-                if not isinstance(block[5].get("condition", None), bool) : raise Exception(f"命令方块condition参数存在非法数据")
-                if not isinstance(block[5].get("cmd", None), str) : raise Exception(f"命令方块cmd参数存在非法数据")
-                if not isinstance(block[5].get("name", None), str) : raise Exception(f"命令方块name参数存在非法数据")
-                if not isinstance(block[5].get("delay", None), int) : raise Exception(f"命令方块delay参数存在非法数据")
-
-    def get_volume(self) :
-        origin_min, origin_max, = [0, 0, 0], [0, 0, 0]
-
-        def pos_iter() :
-            a1 = [0, 0, 0]
-            for block in self.blocks :
-                a1[0] += block[0]
-                a1[1] += block[1]
-                a1[2] += block[2]
-                yield a1
-        for i in range(3) : origin_min[i] = min(j[i] for j in pos_iter())
-        for i in range(3) : origin_max[i] = max(j[i] for j in pos_iter())
-
-        return origin_min, origin_max
-    
-
-    @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
-        if isinstance(buffer,str) : _file = open(buffer, "rb")
-        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
-        else : _file = buffer
-        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, List[str]]] = json.load(fp=_file)
-
-        palette:List[str] = Json1.pop()
-
-        StructureObject = cls()
-        StructureObject.block_palette.extend(palette)
-        B_APPEND = super(TypeCheckList, StructureObject.blocks).append
-        E_APPEND = super(TypeCheckList, StructureObject.entities).append
-        for data in Json1 :
-            if data[3].__class__ is str : E_APPEND(data)
-            elif data[0] is None : continue
-            else : B_APPEND(data)
-
-        return StructureObject
-
-    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        #self.error_check()
-
-        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, PALETTE]] = [
-            *self.entities,
-            *self.blocks,
-            [None, None, None, None, None],
-            list(self.block_palette) ]
-
-        if isinstance(buffer, str) : 
-            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
-            os.makedirs(base_path, exist_ok=True)
-            _file = open(buffer, "w+", encoding="utf-8")
-        else : _file = buffer
-
-        if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
-        json.dump(Json1, _file, separators=(',', ':'))
-
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 2 and isinstance(Json1[-1], list) and \
-            (isinstance(Json1[-2], list) and Json1[-2][0] is None) : return True
-        return False
-
-class GangBan_V7 :
-    """
-    由 钢板 开发的结构文件对象
-    -----------------------
-    * 以 .json 为后缀的json格式文件
     * List[Union[int, List[CONTANIER], CB_DATA, AREA_SIZE, List[str]]]
     -----------------------
     * 可用属性 size : 结构大小
@@ -795,6 +568,198 @@ class GangBan_V7 :
         if isinstance(Json1, list) and len(Json1) >= 3 and \
             isinstance(Json1[0], int) and isinstance(Json1[-1], list) and \
             (isinstance(Json1[-2], dict) and "ep" in Json1[-2]) : return True
+        return False
+
+
+
+class GangBan_V6 :
+    """
+    由 钢板 开发的结构文件对象
+    -----------------------
+    * 以 .json 为后缀的json格式文件
+    * List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, List[str]]]
+    -----------------------
+    * 可用属性 size : 结构大小
+    * 可用属性 blocks : 方块储存列表
+    * 可用属性 entities : 实体储存列表
+    * 可用属性 block_palette : 方块ID映射列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+
+
+    def __init__(self) :
+        self.size: Union[None, array.array] = None
+        self.blocks: List[AREA_BLOCK] = TypeCheckList().setChecker(list)
+        self.entities: List[AREA_ENTITY] = TypeCheckList().setChecker(list)
+        self.block_palette: List[str] = TypeCheckList().setChecker(str)
+
+    def __setattr__(self, name, value) :
+        if not hasattr(self, name) : super().__setattr__(name, value)
+        elif name == "size" and isinstance(value, (type(None), array.array)) : super().__setattr__(name, value)
+        elif name != "size" and isinstance(value, type(getattr(self, name))) : super().__setattr__(name, value)
+        else : raise Exception("无法修改 %s 属性" % name)
+
+    def __delattr__(self, name) :
+        raise Exception("无法删除任何属性")
+
+
+    def error_check(self) :
+        if len(self.size) != 3 : raise Exception("结构长宽高列表长度不为3")
+
+        for entity in self.entities :
+            if len(entity) < 5 : raise Exception("实体参数不完整")
+            if any(not isinstance(i, (int,float)) for i in entity[0:3]) : raise Exception(f"实体坐标参数存在非法数据")
+            if not isinstance(entity[3], str) : raise Exception(f"实体名字参数存在非法数据")
+            if not isinstance(entity[4], str) : raise Exception(f"实体id参数存在非法数据")
+
+        for block in self.blocks :
+            data_len = len(block)
+            if data_len < 5 : raise Exception("方块参数不完整")
+            if any(not isinstance(block[i], int) for i in range(5)) : raise Exception("方块数据存在非法参数")
+            if data_len > 5 and isinstance(block[5], list) :
+                for item in block[5] :
+                    if not isinstance(item.get("ns", None), (str, type(None))) : raise Exception(f"物品id参数存在非法数据")
+                    if not isinstance(item.get("aux", None), (int, type(None))) : raise Exception(f"物品aux参数存在非法数据")
+                    if not isinstance(item.get("num", None), (int, type(None))) : raise Exception(f"物品num参数存在非法数据")
+                    if not isinstance(item.get("slot", None), (int, type(None))) : raise Exception(f"物品slot参数存在非法数据")
+            if data_len > 5 and isinstance(block[5], dict) :
+                if not isinstance(block[5].get("auto", None), bool) : raise Exception(f"命令方块auto参数存在非法数据")
+                if not isinstance(block[5].get("condition", None), bool) : raise Exception(f"命令方块condition参数存在非法数据")
+                if not isinstance(block[5].get("cmd", None), str) : raise Exception(f"命令方块cmd参数存在非法数据")
+                if not isinstance(block[5].get("name", None), str) : raise Exception(f"命令方块name参数存在非法数据")
+                if not isinstance(block[5].get("delay", None), int) : raise Exception(f"命令方块delay参数存在非法数据")
+
+    def get_volume(self) :
+        origin_min, origin_max, = [0, 0, 0], [0, 0, 0]
+
+        def pos_iter() :
+            a1 = [0, 0, 0]
+            for block in self.blocks :
+                a1[0] += block[0]
+                a1[1] += block[1]
+                a1[2] += block[2]
+                yield a1
+        for i in range(3) : origin_min[i] = min(j[i] for j in pos_iter())
+        for i in range(3) : origin_max[i] = max(j[i] for j in pos_iter())
+
+        return origin_min, origin_max
+    
+
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+        if isinstance(buffer,str) : _file = open(buffer, "rb")
+        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
+        else : _file = buffer
+        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, List[str]]] = json.load(fp=_file)
+
+        palette:List[str] = Json1.pop()
+        area:AREA_SIZE = Json1.pop()
+
+        StructureObject = cls()
+        if isinstance(area, list) and all( isinstance(i, int) for i in area[0:5] ) : Json1.append(area)
+
+        StructureObject.block_palette.extend(palette)
+        B_APPEND = super(TypeCheckList, StructureObject.blocks).append
+        E_APPEND = super(TypeCheckList, StructureObject.entities).append
+        for data in Json1 :
+            if type(data[3]) is str and type(data[4]) is str : E_APPEND(data)
+            else : B_APPEND(data)
+
+        return StructureObject
+
+    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
+        #self.error_check()
+
+        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, PALETTE]] = [
+            *self.entities,
+            *self.blocks,
+            list(self.block_palette) ]
+
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "w+", encoding="utf-8")
+        else : _file = buffer
+
+        if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
+        json.dump(Json1, _file, separators=(',', ':'))
+
+
+    @classmethod
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "json" : return False
+        Json1 = data
+
+        if isinstance(Json1, list) and len(Json1) >= 3 and \
+            isinstance(Json1[0], list) and isinstance(Json1[-2], (list, dict)) and \
+            isinstance(Json1[-1], list) : return True
+        return False
+
+class GangBan_V7(GangBan_V6) :
+    """
+    由 钢板 开发的结构文件对象
+    -----------------------
+    * 以 .json 为后缀的json格式文件
+    * List[Union[AREA_ENTITY, AREA_BLOCK, List[str]]]
+    -----------------------
+    * 可用属性 size : 结构大小
+    * 可用属性 blocks : 方块储存列表
+    * 可用属性 entities : 实体储存列表
+    * 可用属性 block_palette : 方块ID映射列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+        if isinstance(buffer,str) : _file = open(buffer, "rb")
+        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
+        else : _file = buffer
+        buffer0 = BytesIO( zlib.decompress(_file.read()) )
+        Struct1 = GangBan_V6.from_buffer(buffer0)
+        
+        Object = cls()
+        Object.size = Struct1.size
+        Object.blocks = Struct1.blocks
+        Object.entities = Struct1.entities
+        Object.block_palette = Struct1.block_palette
+        
+        return Object
+
+    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
+        #self.error_check()
+
+        Struct1 = GangBan_V6()
+        
+        Struct1.size = self.size
+        Struct1.blocks = self.blocks
+        Struct1.entities = self.entities
+        Struct1.block_palette = self.block_palette
+        
+        io1 = StringIO()
+        Struct1.save_as(io1)
+
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "wb")
+        else : _file = buffer
+        _file.write( zlib.compress( io1.getvalue().encode("utf-8") ))
+
+
+
+    @classmethod
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "bytes" : return False
+
+        try : Json1 = json.load(fp=BytesIO( zlib.decompress(data.read()) ) )
+        except : return False
+
+        if isinstance(Json1, list) and len(Json1) >= 3 and isinstance(Json1[-1], list) and \
+            isinstance(Json1[0], list) and isinstance(Json1[-2], (list, dict)) : return True
         return False
 
 

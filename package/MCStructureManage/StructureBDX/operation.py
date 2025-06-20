@@ -82,7 +82,7 @@ class OperationBase :
     "conditional", "needsRedstone", "__pool", "__runtimeId", "data", "ChestData", "buffer", "nbt")"""
 
     def __repr__(self) -> str :
-        a = [i for i in dir(self) if (i[0:2] != "__" and i not in ["from_bytes","to_bytes","add_item","operation_code"])]
+        a = [i for i in dir(self) if (i[0:2] != "__" and i not in ["_memory", "from_bytes","to_bytes","add_item","operation_code"])]
         b = "".join(["   %s => %s"%(i, print_test(getattr(self,i))) for i in a])
         return "<%s%s>" % (self.__class__.__name__,b)
 

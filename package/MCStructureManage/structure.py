@@ -1,4 +1,5 @@
 from . import nbt, Block, getStructureType
+from .block import GetNbtID, GenerateCommandBlockNBT, GenerateContainerNBT, GenerateSignNBT
 from .__private import TypeCheckList, BiList
 from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
@@ -21,7 +22,7 @@ class CommonStructure :
     * 可用属性 size : 结构长宽高(x, y, z)
     * 可用属性 origin : 结构保存时的位置
     * 可用属性 block_index : 方块索引列表
-    * 可用属性 contain_index : 位置索引与方块索引映射的字典（-1代表跳过）
+    * 可用属性 contain_index : 位置索引与方块索引映射的字典
     * 可用属性 block_palette : 方块对象列表（索引指向该列表内的方块）
     * 可用属性 entity_nbt : 实体对象列表
     * 可用属性 block_nbt : 以方块索引字符串数字和nbt对象组成的字典
@@ -42,7 +43,7 @@ class CommonStructure :
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
         self.block_index: array.array[int] = array.array("i", b"\x00\x00\x00\x00" * Volume)     #修改元素✔，赋值✘
         self.contain_index: Dict[int, int] = {}                                                 #修改元素✔，赋值✘
-        self.block_palette: BiList = BiList()                                                   #修改元素✔，赋值✘
+        self.block_palette: List[Block] = BiList()                                              #修改元素✔，赋值✘
         self.entity_nbt: List[nbt.TAG_Compound] = TypeCheckList().setChecker(nbt.TAG_Compound)  #修改元素✔，赋值✘
         self.block_nbt: Dict[int, nbt.TAG_Compound] = {}                                        #修改元素✔，赋值✘
 
@@ -61,12 +62,12 @@ class CommonStructure :
     @classmethod
     def from_buffer(cls, Reader:Union[str, bytes, IOBase], Decoder=None) :
         from . import Codecs
-        from . import StructureBDX, StructureMCS
+        from . import StructureBDX, StructureMCS, StructureSCHEM
         from . import StructureRUNAWAY, StructureSCHEMATIC
         SupportType = {
             StructureBDX.BDX_File: Codecs.BDX, StructureMCS.Mcstructure: Codecs.MCSTRUCTURE, 
-            StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, StructureRUNAWAY.RunAway: Codecs.RUNAWAY,
-            StructureRUNAWAY.Kbdx: Codecs.KBDX, 
+            StructureSCHEM.Schem: Codecs.SCHEM, StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, 
+            StructureRUNAWAY.RunAway: Codecs.RUNAWAY, StructureRUNAWAY.Kbdx: Codecs.KBDX, 
             StructureRUNAWAY.MianYang_V1: Codecs.MIANYANG_V1, StructureRUNAWAY.MianYang_V2: Codecs.MIANYANG_V2, 
             StructureRUNAWAY.MianYang_V3: Codecs.MIANYANG_V3, 
             StructureRUNAWAY.GangBan_V1: Codecs.GANGBAN_V1, StructureRUNAWAY.GangBan_V2: Codecs.GANGBAN_V2,
@@ -75,6 +76,7 @@ class CommonStructure :
             StructureRUNAWAY.GangBan_V7: Codecs.GANGBAN_V7, 
             StructureRUNAWAY.FuHong_V1: Codecs.FUHONG_V1, StructureRUNAWAY.FuHong_V2: Codecs.FUHONG_V2, 
             StructureRUNAWAY.FuHong_V3: Codecs.FUHONG_V3, StructureRUNAWAY.FuHong_V4: Codecs.FUHONG_V4, 
+            StructureRUNAWAY.FuHong_V5: Codecs.FUHONG_V5, 
             StructureRUNAWAY.QingXu_V1: Codecs.QINGXU_V1
         }
 
@@ -98,14 +100,30 @@ class CommonStructure :
 
 
     def get_block(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, Block] :
+        if not(0 <= pos_x < self.size[0]) : return None
+        if not(0 <= pos_y < self.size[1]) : return None
+        if not(0 <= pos_z < self.size[2]) : return None
         index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
-        return self.block_palette[self.block_index[index]] if (index < self.__volume) else None
+        return self.block_palette[self.block_index[index]]
 
     def set_block(self, pos_x:int, pos_y:int, pos_z:int, block:Union[int, Block]) :
         index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
-        if block.__class__ is int : self.block_index[index] = block 
-        else : self.block_index[index] = self.block_palette.append(block)
-    
+        if block.__class__ is int : 
+            self.block_index[index] = block 
+            Block_ID = self.block_palette[block].name
+            NBT_ID_NAME = GetNbtID(Block_ID)
+        else : 
+            self.block_index[index] = self.block_palette.append(block)
+            Block_ID = block.name
+            NBT_ID_NAME = GetNbtID(Block_ID)
+
+        if not NBT_ID_NAME : return None
+        if NBT_ID_NAME == "CommandBlock" : NBTFunc = GenerateCommandBlockNBT
+        elif NBT_ID_NAME == "HangingSign" : NBTFunc = GenerateSignNBT
+        elif NBT_ID_NAME == "Sign" : NBTFunc = GenerateSignNBT
+        else : NBTFunc = GenerateContainerNBT
+        self.block_nbt[index] = NBTFunc(Block_ID)
+
     def get_blockNBT(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, nbt.TAG_Compound] :
         index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
         return self.block_nbt.get(index, None)

@@ -171,7 +171,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.END_NODE
         )
     ),
-    # ability ✓ V
+    # aimassist ✓ V
     BaseMatch.Char("Command","aimassist").set_version(1,21,50,"min").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Char("Argument","clear").add_leaves(BaseMatch.END_NODE),
@@ -197,6 +197,17 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","alwaysday").add_leaves( 
         BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ) ,
         BaseMatch.END_NODE
+    ),
+    # controlscheme ✓ V
+    BaseMatch.Char("Command","controlscheme").set_version(1,21,90,"min").add_leaves(
+        *SpecialMatch.BE_Selector_Tree(
+            BaseMatch.Char("Argument","clear").add_leaves(BaseMatch.END_NODE),
+            BaseMatch.Char("Argument","set").add_leaves(
+                BaseMatch.Enum("ControlScheme", "camera_relative", "camera_relative_strafe", 
+                "locked_player_relative_strafe", "player_relative", "player_relative_strafe"
+                ).add_leaves(BaseMatch.END_NODE)
+            )
+        )
     ),
     # camera ✓ V ps: 1.20.10.23加入了facing,不过在1.20.20.22以前属于实验玩法
     BaseMatch.Char("Command","camera").set_version(1,20,30,"min").add_leaves(
@@ -302,6 +313,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     BaseMatch.END_NODE
                 )
             ),
+            BaseMatch.Char("Argument","fov_set").set_version(1,21,100,"min").add_leaves( 
+                BaseMatch.Float("FovValue").add_leaves( BaseMatch.END_NODE )
+            ),
+            BaseMatch.Char("Argument","fov_clear").set_version(1,21,100,"min").add_leaves( BaseMatch.END_NODE )
         )
     ),
     # camerashake ✓ V
