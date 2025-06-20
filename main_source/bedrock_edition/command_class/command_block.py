@@ -2,7 +2,6 @@ import re,os,itertools
 from . import HtmlGenerate,Command_Tokenizer_Compiler
 from .. import MathFunction,Constants,RunTime,FileOperation,np,BlockComponent
 import package.python_nbt as python_nbt
-import package.MCStructureManage.StructureBDX as python_bdx
 from typing import Dict,List,Tuple
 
 
@@ -214,6 +213,7 @@ class command_block_compile_system :
 
 
     def transfor_bdx_file(self, _game:RunTime.minecraft_thread) :
+        import package.MCStructureManage.StructureBDX as python_bdx
         node = python_nbt.NBT_Builder()
         GameVersion = 19 if MathFunction.version_compare(_game.game_version,[1,19,50]) == -1 else 36
 

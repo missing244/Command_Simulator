@@ -469,6 +469,7 @@ def flash_minecraft_source(user:user_manager, log:initialization_log) :
     log.set_time_end()
 
 def check_leveldb_c_extension(platform:Literal["windows","android"], log:initialization_log) :
+    minor_version = sys.version_info.minor
     log.write_log("正在检查 leveldb C拓展库...")
     try : import leveldb
     except : 
@@ -476,7 +477,7 @@ def check_leveldb_c_extension(platform:Literal["windows","android"], log:initial
         if platform == "windows" :
             for iii in ['Cython', "leveldb-py"] :
                 log.write_log("正在安装 %s 模块" % iii, 4)
-                m1 = subprocess.getstatusoutput("pip3 install " + iii)
+                m1 = subprocess.getstatusoutput("py -3.%s -m pip install %s" % (minor_version, iii))
                 if not m1[0] : continue
                 log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
                 log.write_log(m1[1])
@@ -492,6 +493,7 @@ def check_leveldb_c_extension(platform:Literal["windows","android"], log:initial
     else : log.write_log("leveldb库验证通过", 2)
 
 def check_brotli_c_extension(platform:Literal["windows","android"], log:initialization_log) :
+    minor_version = sys.version_info.minor
     log.write_log("正在检查 brotli C拓展库...")
     try : import brotli
     except : 
@@ -499,7 +501,7 @@ def check_brotli_c_extension(platform:Literal["windows","android"], log:initiali
         if platform == "windows" :
             for iii in ["Brotli"] :
                 log.write_log("正在安装 %s 模块" % iii, 4)
-                m1 = subprocess.getstatusoutput("pip3 install " + iii)
+                m1 = subprocess.getstatusoutput("py -3.%s -m pip install %s" % (minor_version, iii))
                 if not m1[0] : continue
                 log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
                 log.write_log(m1[1])

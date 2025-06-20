@@ -121,3 +121,29 @@ class place :
         return Response.Response_Template("已在$x, $y, $z位置生成规则地物（仅模拟）", 1, 1).substitute(
             x = spawn_pos[0], y = spawn_pos[1], z = spawn_pos[2]
         )
+
+class controlscheme : 
+
+    @classmethod
+    def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
+        index, entity_func = Selector.Selector_Compiler(_game, token_list, 1, is_player=True)
+        if token_list[index]["token"] == "clear" : return functools.partial(cls.clear, entity_get=entity_func)
+        elif token_list[index]["token"] == "set" : return functools.partial(cls.set, entity_get=entity_func)
+
+    def clear(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        for i,_ in enumerate(entity_list) : entity_list[i] = ID_tracker(entity_list[i])
+
+        return Response.Response_Template("已清除以下玩家的摄像头控制模式：\n$player", 1, len(entity_list)).substitute(
+            player=", ".join(entity_list)
+        )
+
+    def set(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list:List[BaseNbtClass.entity_nbt] = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+        for i,_ in enumerate(entity_list) : entity_list[i] = ID_tracker(entity_list[i])
+
+        return Response.Response_Template("已修改以下玩家的摄像头控制模式：\n$player", 1, len(entity_list)).substitute(
+            player=", ".join(entity_list)
+        )

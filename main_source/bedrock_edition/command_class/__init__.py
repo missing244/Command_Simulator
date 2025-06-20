@@ -1,15 +1,17 @@
 from .. import RunTime
 from .. import BaseNbtClass,Constants
 from package import MCCommandParser as CommandParser
-from typing import Dict,Union,List,Tuple,Literal,Callable
+from typing import Dict,Union,List,Tuple,Literal,Callable,TypedDict
 import re
 
 
 COMMAND_TOKEN = List[CommandParser.ParserSystem.Token]
-COMMAND_CONTEXT = Dict[
-    Literal["executer", "dimension", "pos", "rotate", "version"],
-    Union[BaseNbtClass.entity_nbt, Literal["overworld","nether","the_end"], List[float], List[float], List[int]]
-]
+class COMMAND_CONTEXT(TypedDict) :
+    executer: BaseNbtClass.entity_nbt
+    dimension: Literal["overworld","nether","the_end"]
+    pos: List[float]
+    rotate: List[float]
+    version: List[int]
 Command_Compile_Dict_Save:Dict[Tuple[int],Dict[str,Callable]] = {}
 
 def ID_tracker(entity:Union[str, BaseNbtClass.entity_nbt]) :

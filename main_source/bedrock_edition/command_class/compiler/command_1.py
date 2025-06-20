@@ -125,6 +125,11 @@ class camera :
         elif token_list[index]["token"] == "target_entity" :
             _,facing_entity_func = Selector.Selector_Compiler(_game, token_list, index+1, is_single=True)
             return functools.partial(cls.set_focus_camera, entity_get=entity_func, focus_entity_get=facing_entity_func)
+        elif token_list[index]["token"] == "fov_set" :
+            return functools.partial(cls.set_fov, entity_get=entity_func, fov=token_list[index+1]["token"])
+        elif token_list[index]["token"] == "fov_clear" :
+            return functools.partial(cls.clear_fov, entity_get=entity_func)
+            
 
 
     def clear(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
@@ -187,6 +192,22 @@ class camera :
         if isinstance(facing_entity_list, Response.Response_Template) : return facing_entity_list
 
         return Response.Response_Template("将以下玩家的自由摄像头设置为聚焦相机：\n$players", 1, len(entity_list)).substitute(
+            players=", ".join( (ID_tracker(i) for i in entity_list) )
+        )
+
+    def set_fov(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable, fov:float) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+
+        return Response.Response_Template("将以下玩家的场视角设置为$fov：\n$players", 1, len(entity_list)).substitute(
+            players=", ".join( (ID_tracker(i) for i in entity_list) ), fov=fov
+        )
+    
+    def clear_fov(execute_var:COMMAND_CONTEXT, game:RunTime.minecraft_thread, entity_get:Callable) :
+        entity_list = entity_get(execute_var, game)
+        if isinstance(entity_list, Response.Response_Template) : return entity_list
+
+        return Response.Response_Template("将以下玩家的场视角恢复：\n$players", 1, len(entity_list)).substitute(
             players=", ".join( (ID_tracker(i) for i in entity_list) )
         )
 

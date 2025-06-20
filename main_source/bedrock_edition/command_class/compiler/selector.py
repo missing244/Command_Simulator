@@ -508,6 +508,10 @@ def Selector_Compiler(game_tread:RunTime.minecraft_thread, token_list:COMMAND_TO
     elif Selector_Var == "@e" : selector_func = RunTime_Selector_Entity
     elif Selector_Var == "@s" : selector_func = RunTime_Selector_Self
     elif Selector_Var == "@initiator" : return (index+1, RunTime_Selector_Initiator)
+    elif Selector_Var == "@n" : 
+        Selector_Var = "@e"
+        selector_save["limit"]  = 1
+        selector_func = RunTime_Selector_Entity
 
     has_selector_arg_test = False ; check_sum = 0
     if (index+1) < token_list.__len__() and token_list[index+1]["type"] == "Start_Selector_Argument" :

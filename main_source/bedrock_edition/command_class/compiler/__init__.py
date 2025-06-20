@@ -161,7 +161,7 @@ Command_to_Compiler = {
     "w" : Command2.tell, "weather" : Command2.weather, "xp" : Command2.xp,
 
     "hud" : Command4.hud, "scriptevent":Command4.scriptevent, "aimassist":Command4.aimassist,
-    "place":Command4.place,
+    "place":Command4.place, "controlscheme": Command4.controlscheme
 }
 
 def Start_Compile(token_list:List[Dict[Literal["type","token"],Union[str,re.Match]]], _game:RunTime.minecraft_thread, 
