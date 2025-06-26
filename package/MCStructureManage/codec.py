@@ -311,6 +311,7 @@ class Codecs :
             StructureObject.block_nbt = MCS.block_nbt
 
             for key, value in StructureObject.block_nbt.items() :
+                if "block_entity_data" not in value : continue
                 StructureObject.block_nbt[key] = value["block_entity_data"]
             
             block_list = [None] * len(MCS.block_palette)
