@@ -30,7 +30,7 @@ def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str
     else : return (BlockID, {})
 
     NewBlockState = dict( sorted(NewBlockState.items()) )
-    if value.__class__ is str : value = StringTransforBlockStates(value)
+    if value.__class__ is str : value = BE_BlockStates_Parser(value)
     elif value.__class__ is dict : value = value.copy()
     elif value.__class__ is MappingProxyType : value = value
     else : value = {}
@@ -99,7 +99,7 @@ KeyMatch   = re.compile('"(\\\\.|[^\\\\"]){0,}"')
 EqualMatch = re.compile('=|:')
 ValueMatch = re.compile('"(\\\\.|[^\\\\"]){0,}"|true|false|[0-9]+')
 NextMatch  = re.compile(',')
-def StringTransforBlockStates(s:str) :
+def BE_BlockStates_Parser(s:str) :
     index = SpaceMatch.match(s).end()
     if s[index] != "[" : return {}
     else : index += 1
@@ -122,6 +122,40 @@ def StringTransforBlockStates(s:str) :
         else : index = VALUE.end()
         
         StateSave[json.loads(KEY.group())] = json.loads(VALUE.group())
+
+        index = SpaceMatch.match(s, pos=index).end()
+        if s[index] == "," : index += 1
+        else : break
+
+    return StateSave
+
+KeyMatch_1   = re.compile('[a-zA-Z0-9]+')
+EqualMatch_1 = re.compile('=')
+ValueMatch_1 = re.compile('[a-zA-Z0-9]+')
+def JE_BlockStates_Parser(s:str) :
+    index = SpaceMatch.match(s).end()
+    if s[index] != "[" : return {}
+    else : index += 1
+
+    StateSave = {}
+    while index < len(s) :
+        index = SpaceMatch.match(s, pos=index).end()
+        KEY = KeyMatch_1.match(s, index)
+        if KEY is None : break
+        else : index = KEY.end()
+
+        index = SpaceMatch.match(s, pos=index).end()
+        EQUAL = EqualMatch_1.match(s, index)
+        if EQUAL is None : break
+        else : index = EQUAL.end()
+
+        index = SpaceMatch.match(s, pos=index).end()
+        VALUE = ValueMatch_1.match(s, index)
+        if VALUE is None : break
+        else : index = VALUE.end()
+        
+        try : StateSave[KEY.group()] = json.loads(VALUE.group())
+        except : StateSave[KEY.group()] = VALUE.group()
 
         index = SpaceMatch.match(s, pos=index).end()
         if s[index] == "," : index += 1

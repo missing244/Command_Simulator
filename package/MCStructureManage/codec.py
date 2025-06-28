@@ -1,7 +1,8 @@
 from . import nbt
-from .block import Block, GetNbtID, GenerateContainerNBT, GenerateSignNBT, GenerateCommandBlockNBT
+from .block import Block, GetNbtID, JE_BlockStates_Parser
+from .block import GenerateContainerNBT, GenerateSignNBT, GenerateCommandBlockNBT
 from .__private import TypeCheckList
-from . import StructureBDX, StructureMCS
+from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 
 from typing import Union,Dict,Tuple,Literal,List
@@ -313,7 +314,7 @@ class Codecs :
             for key, value in StructureObject.block_nbt.items() :
                 if "block_entity_data" not in value : continue
                 StructureObject.block_nbt[key] = value["block_entity_data"]
-            
+
             block_list = [None] * len(MCS.block_palette)
             for index, block in enumerate(MCS.block_palette) :
                 name = block["name"].value
@@ -376,6 +377,39 @@ class Codecs :
                 SCHMATIC.block_data[Index] = block.dataValue[1]
 
             SCHMATIC.save_as(Writer)
+
+    class SCHEM(CodecsBase) :
+
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
+            Schma_File = StructureSCHEM.Schem.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.__init__( Schma_File.size )
+
+            blocks = [None] * len(Schma_File.block_palette)
+            for index, block in Schma_File.block_palette.items() :
+                state_start = block.find("[")
+                ID = block[:state_start] if state_start != -1 else block
+                State = JE_BlockStates_Parser(block[state_start:]) if state_start != -1 else {}
+                blocks[index] = Block(ID, State)
+            StructureObject.block_palette.__init__(blocks)
+
+            O_X, O_Y, O_Z = Schma_File.size
+            block_index, pos_x, pos_y, pos_z = 0, 0, 0, 0
+            for index_data in Schma_File.block_index :
+                block_index |= 0b0111_1111 & index_data
+                if index_data >= 0 :
+                    StructureObject.set_block(pos_x, pos_y, pos_z, block_index)
+                    block_index = 0
+                    pos_x += 1
+                    if pos_x >= O_X : pos_x = 0 ; pos_z += 1
+                    if pos_z >= O_Z : pos_z = 0 ; pos_y += 1
+
+            
+
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]) :
+            raise RuntimeError(f"{Writer} 并不支持序列化数据对象")
 
     class MIANYANG_V1(CodecsBase) :
 
@@ -476,7 +510,7 @@ class Codecs :
             Struct1.chunks.extend(Chunks.values())
             Struct1.block_palette.extend(i.name for i in self.block_palette)
             Struct1.save_as(Writer)
- 
+
     class MIANYANG_V2(CodecsBase) :
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
@@ -1374,7 +1408,7 @@ class Codecs :
             block_palette = {j:i for i,j in Struct1.block_palette.items()}
 
             for block in Struct1.blocks :
-                block_obj = Block(block_palette[block[3]], 0)
+                block_obj = Block(block_palette[block[3]], block[4])
                 posx, posy, posz = block[0] - O_X, block[1] - O_Y, block[2] - O_Z
                 StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -1414,7 +1448,7 @@ class Codecs :
                 if IgnoreAir and BlockID == "minecraft:air" : continue
 
                 block_index = Struct1.block_palette[block.runawayID]
-                block = (posx, posy, posz, block_index)
+                block = (posx, posy, posz, block_index, DataValue)
                 Struct1.blocks.append(block)
 
                 if index not in self.block_nbt : continue

@@ -35,7 +35,7 @@ def getStructureType(IO_Byte_Path) :
     else : data_type = "json"
 
     Test = [StructureBDX.BDX_File, StructureMCS.Mcstructure, StructureSCHEMATIC.Schematic, 
-            StructureSCHEM.Schem, StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, 
+            StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, StructureSCHEM.Schem, 
             StructureRUNAWAY.MianYang_V1, StructureRUNAWAY.MianYang_V2, StructureRUNAWAY.MianYang_V3, 
             StructureRUNAWAY.GangBan_V1, StructureRUNAWAY.GangBan_V2, StructureRUNAWAY.GangBan_V3,
             StructureRUNAWAY.GangBan_V4, StructureRUNAWAY.GangBan_V5, StructureRUNAWAY.GangBan_V6,

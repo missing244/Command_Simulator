@@ -1,7 +1,8 @@
 from ..__private import TypeCheckList
 from . import operation as OperationCode
-from typing import Union,Literal,List,Callable,Generator
-import io, brotli, os, traceback, json
+from .. import C_brotli as brotli
+from typing import Union,Literal,List,Callable,Generator,Tuple
+import io, os, traceback, json
 
 from .operation import match_string_bytes,OPERATION_BYTECODES
 
@@ -85,7 +86,7 @@ class BDX_File :
 
         return origin_min, origin_max
 
-    def get_blocks(self) -> Generator[tuple[int, int, int, Operation], None, None] :
+    def get_blocks(self) -> Generator[Tuple[int, int, int, Operation], None, None] :
         from . import PosX_Change_OperationCode, PosY_Change_OperationCode, PosZ_Change_OperationCode
         
         PosXChange = set(PosX_Change_OperationCode)

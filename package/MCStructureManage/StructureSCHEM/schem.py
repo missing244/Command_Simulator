@@ -53,7 +53,7 @@ class Schem :
         StructureObject.size[2] = NBT["Length"].value
         StructureObject.block_index = NBT['BlockData'].value
         StructureObject.block_palette.update((j.value, i) for i,j in NBT['Palette'].items())
-        StructureObject.block_nbt.extend(NBT["BlockEntities"])
+        StructureObject.block_nbt.extend(NBT.get("BlockEntities", []))
 
         return StructureObject
 

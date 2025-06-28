@@ -115,7 +115,7 @@ class Kbdx :
 
 
     def __init__(self) :
-        self.blocks: List[Tuple[int, int, int, int]] = TypeCheckList().setChecker(tuple)
+        self.blocks: List[Tuple[int, int, int, int, int]] = TypeCheckList().setChecker(tuple)
         self.block_palette: Dict[str, int] = {}
         self.block_nbt: List[dict] = TypeCheckList().setChecker(dict)
 
@@ -157,7 +157,7 @@ class Kbdx :
         
         StructureObject = cls()
         block_count = int.from_bytes(_file.read(4), "little", signed=False)
-        S1 = struct.Struct(f'<iiiQ')
+        S1 = struct.Struct(f'<iiiII')
 
         blocks = TypeCheckList([None] * block_count).setChecker(tuple)
         setmethod = super(TypeCheckList, blocks).__setitem__
