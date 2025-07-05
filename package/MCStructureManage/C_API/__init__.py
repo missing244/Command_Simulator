@@ -15,7 +15,7 @@ def init() :
             if not test_path.endswith("site-packages") : continue
             else : break
         target_path = os.path.join(test_path, "Command_Simulator_C_API")
-        target_abi = os.path.join(base_path, "ABI_File", "Linux_aarch64.so")
+        target_abi = os.path.join(base_path, "ABI_File", "Linux_aarch64.pyd")
         os.makedirs( target_path, exist_ok=True )
         target_path = os.path.join(target_path, py_dll_name % "so")
     elif system == 'linux' and machine == "x86_64" :
