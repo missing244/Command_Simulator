@@ -51,6 +51,8 @@ class Codecs :
     * 可用类 BDX: 解析/生成 bdx 文件的编解码器
     * 可用类 MCSTRUCTURE: 解析/生成 mcstructure 文件的编解码器
     * 可用类 SCHEMATIC: 解析/生成 schematic 文件的编解码器
+    * 可用类 SCHEM_V1: 解析/生成 schem 文件的编解码器
+    * 可用类 SCHEM_V2: 解析/生成 schem 文件的编解码器
     * 可用类 MIANYANG_V1: 解析/生成 绵阳 json结构文件的编解码器
     * 可用类 MIANYANG_V2: 解析/生成 绵阳 json结构文件的编解码器
     * 可用类 MIANYANG_V3: 解析/生成 绵阳 json结构文件的编解码器
@@ -385,9 +387,7 @@ class Codecs :
             StructureObject.__init__( Schma_File.size )
 
             blocks:List[Block] = [None] * len(Schma_File.block_palette)
-            for index, block in Schma_File.block_palette.items() : 
-                blocks[index] = JE_Transfor_BE_Block(block)
-                print(block) ; print(blocks[index])
+            for index, block in Schma_File.block_palette.items() : blocks[index] = JE_Transfor_BE_Block(block)
             StructureObject.block_palette.__init__(blocks)
 
             O_X, O_Y, O_Z = Schma_File.size
