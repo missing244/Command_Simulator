@@ -9,6 +9,7 @@ CommandBlockIDTest = re.compile("command_block$")
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 BlockState = json.load(fp=open(os.path.join(CurrentPath, "res", "blockstate.json"), "r", encoding="utf-8"))
 OldBlockData = json.load(fp=open(os.path.join(CurrentPath, "res", "flatten.json"), "r", encoding="utf-8"))
+JEtransfor = json.load(fp=open(os.path.join(CurrentPath, "res", "JEtransfor.json"), "r", encoding="utf-8"))
 
 SpecialStates = {"direction":{"south":0, "west":1, "north":2, "east":3}, 
     "facing_direction":{"south":0, "west":1, "north":2, "east":5},
@@ -48,6 +49,7 @@ def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str
         if "top_slot_bit" in NewBlockState : 
             value["top_slot_bit"] = SpecialStates["top_slot_bit"][vertical_half]
         del value["minecraft:vertical_half"]
+    #print(1, NewBlockID, NewBlockState, value)
 
     NewBlockState.update( (i,j) for i,j in value.items() if (i in NewBlockState)
         and (j in BlockState[NewBlockID]["support_value"][i]) )
@@ -101,7 +103,7 @@ ValueMatch = re.compile('"(\\\\.|[^\\\\"]){0,}"|true|false|[0-9]+')
 NextMatch  = re.compile(',')
 def BE_BlockStates_Parser(s:str) :
     index = SpaceMatch.match(s).end()
-    if s[index] != "[" : return {}
+    if index >= len(s) or s[index] != "[" : return {}
     else : index += 1
 
     StateSave = {}
@@ -134,7 +136,7 @@ EqualMatch_1 = re.compile('=')
 ValueMatch_1 = re.compile('[a-zA-Z0-9]+')
 def JE_BlockStates_Parser(s:str) :
     index = SpaceMatch.match(s).end()
-    if s[index] != "[" : return {}
+    if index >= len(s) or s[index] != "[" : return {}
     else : index += 1
 
     StateSave = {}
@@ -163,13 +165,63 @@ def JE_BlockStates_Parser(s:str) :
 
     return StateSave
 
+IdentifierAndStateSeacher = {i:re.compile(i) for i in JEtransfor["IdentifierAndState"].keys()}
+def JE_Transfor_BE_Block(id:str) -> "Block": 
+    start1 = id.find("[") if id.find("[") >= 0 else len(id)
+    JE_ID, JE_State = id[:start1], JE_BlockStates_Parser(id[start1:])
+
+    #处理方块ID差异
+    BE_ID = JEtransfor["Identifier"][JE_ID]["name"] if JE_ID in JEtransfor["Identifier"] else JE_ID
+    if IdentifierAndStateSeacher["_slab$"].search(JE_ID) and JE_State.get("type", None) == "double" : BE_ID = BE_ID[:-5] + "_double_slab"
+    BE_ID, BE_State = TransforBlock(BE_ID)
+
+    #特殊方块对应方块状态处理
+    Marcher1 = None
+    for re1, re2 in IdentifierAndStateSeacher.items() :
+        if not re2.search(JE_ID) : continue
+        Marcher1 = re1
+        break
+    for je_state, be_state_data in JEtransfor["IdentifierAndState"].get(Marcher1, {}).items() :
+        if je_state not in JE_State : continue
+        if str(JE_State[je_state]) not in be_state_data : continue
+        if be_state_data["BEstate"] not in BE_State : continue
+
+        if Marcher1 == "_slab$" and str(JE_State[je_state]) == "double" : pass
+        else : BE_State[be_state_data["BEstate"]] = be_state_data[str(JE_State[je_state])]
+        del JE_State[je_state]
+    
+    #普通方块状态处理
+    for je_state, je_state_value in JE_State.items() :
+        if je_state not in JEtransfor["State"] : continue
+        transfor_key, transfor_value = None, None
+        for transfor_key_1, transfor_value_1 in JEtransfor["State"][je_state].items() :
+            #print(JE_State, BE_State, transfor_key_1, transfor_value_1)
+            if transfor_key_1 not in BE_State : continue
+            transfor_key, transfor_value = transfor_key_1, transfor_value_1
+            break
+        if not transfor_key : continue
+        if transfor_value is None : BE_State[transfor_key] = je_state_value
+        elif str(je_state_value) in transfor_value : BE_State[transfor_key] = transfor_value[str(je_state_value)]
+
+    #特殊方块状态处理
+    if BE_ID in JEtransfor["Special"] :
+        transfor_info = JEtransfor["Special"][BE_ID]
+        default_var = 0
+        for je_state_key, je_state_value in JE_State.items() :
+            #print(je_state_key, je_state_value)
+            if je_state_key not in transfor_info : continue
+            if transfor_info["Operation"] == "OR" : default_var |= (transfor_info[je_state_key] if je_state_value else 0)
+        BE_State[transfor_info["BEstate"]] = default_var
+
+    return Block(BE_ID, BE_State)
+
 
 ContainerNBT_ID = {"minecraft:chest": "Chest", "minecraft:trapped_chest": "Chest", 
 "minecraft:lit_blast_furnace": "BlastFurnace", "minecraft:hopper": "Hopper", 
 "minecraft:white_shulker_box": "ShulkerBox", "minecraft:undyed_shulker_box": "ShulkerBox", 
 "minecraft:barrel": "Barrel", "minecraft:dispenser": "Dispenser", "minecraft:dropper": "Dropper", 
 "minecraft:furnace": "Furnace", "minecraft:lit_furnace": "Furnace", "minecraft:smoker": "Smoker", 
-"minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace", "minecraft:ender_chest":"Chest"}
+"minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace", "minecraft:ender_chest":"EnderChest"}
 
 def GetNbtID(id:str) :
     id = f"minecraft:{id}" if id.find("minecraft:") else id
@@ -285,7 +337,6 @@ def GenerateContainerNBT(id:str) -> Union[None, nbt.TAG_Compound] :
     node = nbt.NBT_Builder()
     return node.compound(
         Findable = node.byte(0),
-        IsIgnoreShuffle = node.byte(0),
         IsOpened = node.byte(0),
         isMovable = node.byte(1),
         id = node.string(id),

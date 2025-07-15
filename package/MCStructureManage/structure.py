@@ -1,4 +1,4 @@
-from . import nbt, Block, getStructureType
+from . import nbt, Block
 from .block import GetNbtID, GenerateCommandBlockNBT, GenerateContainerNBT, GenerateSignNBT
 from .__private import TypeCheckList, BiList
 from io import IOBase
@@ -7,9 +7,44 @@ import os, json, re, array, ctypes, itertools, functools
 from math import floor
 
 
+def getStructureType(IO_Byte_Path) :
+    import io, traceback, json
+    from typing import Union
+    from . import StructureBDX, StructureMCS, StructureSCHEM
+    from . import StructureRUNAWAY, StructureSCHEMATIC
+    IO_Byte_Path: Union[str, bytes, io.IOBase]
 
+    if isinstance(IO_Byte_Path, str) : _file = open(IO_Byte_Path, "rb")
+    elif isinstance(IO_Byte_Path, bytes) : _file = io.BytesIO(IO_Byte_Path)
+    elif isinstance(IO_Byte_Path, io.IOBase) : _file = IO_Byte_Path
+    else : raise ValueError(f"{IO_Byte_Path} is not Readable Object")
 
+    data, data_type = _file, "bytes"
+    try : data = json.load(fp=_file)
+    except : _file.seek(0)
+    else : data_type = "json"
 
+    Test = [StructureBDX.BDX_File, StructureMCS.Mcstructure, StructureSCHEMATIC.Schematic, 
+            StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, 
+            StructureRUNAWAY.MianYang_V1, StructureRUNAWAY.MianYang_V2, StructureRUNAWAY.MianYang_V3, 
+            StructureRUNAWAY.GangBan_V1, StructureRUNAWAY.GangBan_V2, StructureRUNAWAY.GangBan_V3,
+            StructureRUNAWAY.GangBan_V4, StructureRUNAWAY.GangBan_V5, StructureRUNAWAY.GangBan_V6,
+            StructureRUNAWAY.GangBan_V7,
+            StructureRUNAWAY.FuHong_V1, StructureRUNAWAY.FuHong_V2, StructureRUNAWAY.FuHong_V3,
+            StructureRUNAWAY.FuHong_V4, StructureRUNAWAY.FuHong_V5, 
+            StructureRUNAWAY.QingXu_V1,
+            StructureSCHEM.Schem_V1, StructureSCHEM.Schem_V2
+            ]
+
+    for class_obj in Test :
+        if data_type == "bytes" : data.seek(0)
+        try : bool1 = class_obj.is_this_file(data, data_type)
+        except : traceback.print_exc() ; continue
+
+        if bool1 : 
+            if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
+            return class_obj
+    if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
 
 
 class CommonStructure :
@@ -41,7 +76,7 @@ class CommonStructure :
         Volume = size[0] * size[1] * size[2]
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
-        self.block_index: array.array[int] = array.array("i", b"\x00\x00\x00\x00" * Volume)     #修改元素✔，赋值✘
+        self.block_index: array.array[int] = array.array("h", b"\x00\x00" * Volume)             #修改元素✔，赋值✘
         self.contain_index: Dict[int, int] = {}                                                 #修改元素✔，赋值✘
         self.block_palette: List[Block] = BiList()                                              #修改元素✔，赋值✘
         self.entity_nbt: List[nbt.TAG_Compound] = TypeCheckList().setChecker(nbt.TAG_Compound)  #修改元素✔，赋值✘
@@ -66,7 +101,7 @@ class CommonStructure :
         from . import StructureRUNAWAY, StructureSCHEMATIC
         SupportType = {
             StructureBDX.BDX_File: Codecs.BDX, StructureMCS.Mcstructure: Codecs.MCSTRUCTURE, 
-            StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, StructureSCHEM.Schem: Codecs.SCHEM, 
+            StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, 
             StructureRUNAWAY.RunAway: Codecs.RUNAWAY, StructureRUNAWAY.Kbdx: Codecs.KBDX, 
             StructureRUNAWAY.MianYang_V1: Codecs.MIANYANG_V1, StructureRUNAWAY.MianYang_V2: Codecs.MIANYANG_V2, 
             StructureRUNAWAY.MianYang_V3: Codecs.MIANYANG_V3, 
@@ -77,7 +112,8 @@ class CommonStructure :
             StructureRUNAWAY.FuHong_V1: Codecs.FUHONG_V1, StructureRUNAWAY.FuHong_V2: Codecs.FUHONG_V2, 
             StructureRUNAWAY.FuHong_V3: Codecs.FUHONG_V3, StructureRUNAWAY.FuHong_V4: Codecs.FUHONG_V4, 
             StructureRUNAWAY.FuHong_V5: Codecs.FUHONG_V5, 
-            StructureRUNAWAY.QingXu_V1: Codecs.QINGXU_V1
+            StructureRUNAWAY.QingXu_V1: Codecs.QINGXU_V1,
+            StructureSCHEM.Schem_V1: Codecs.SCHEM_V1, StructureSCHEM.Schem_V2: Codecs.SCHEM_V2, 
         }
 
         if Decoder is not None and not isinstance(Decoder, Codecs.CodecsBase) : 

@@ -5,7 +5,7 @@ from typing import Union,List,TypedDict,Dict,Literal
 from io import FileIO, BytesIO
 
 
-class Schem :
+class Schem_V1 :
     """
     Schem 结构文件对象
     -----------------------
@@ -59,6 +59,7 @@ class Schem :
 
     def save_as(self, buffer:Union[str, FileIO, BytesIO]) :
         #self.error_check()
+        raise RuntimeError("该格式无法写回为二进制流对象")
 
         node = nbt.NBT_Builder()
         NBT = node.compound(
@@ -96,6 +97,76 @@ class Schem :
         try : NBT = nbt.read_from_nbt_file(data, byteorder="big", zip_mode="gzip").get_tag()
         except : return False
 
-        if "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
+        if "Version" in NBT and NBT["Version"].value <= 2 and \
+            "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
             "BlockData" in NBT and 'Palette' in NBT : return True
+        else : return False
+
+"""
+Schematic -> <'TAG_Compound'
+    Version --> <class 'TAG_Int'>
+    DataVersion --> <class 'TAG_Int'>
+    Metadata --> <class 'TAG_Compound'
+        Date --> <class 'TAG_Long'>
+        WorldEdit --> <class 'TAG_Compound'
+            Version --> <class 'TAG_String'>
+            EditingPlatform --> <class 'TAG_String'>
+            Origin --> <class 'TAG_IntArray'>
+            Platforms --> <class 'TAG_Compound'>
+        >
+    >
+    Width --> <class 'TAG_Short'>
+    Height --> <class 'TAG_Short'>
+    Length --> <class 'TAG_Short'>
+    Offset --> <class 'TAG_IntArray'>
+    Blocks --> <class 'TAG_Compound'
+        Palette --> <class 'package.python_nbt.tags.TAG_Compound' Dict[str, TAG_Int] >
+        Data --> <class 'package.python_nbt.tags.TAG_ByteArray'>
+        BlockEntities --> <class 'package.python_nbt.tags.TAG_List' List[TAG_Compound] >
+    >
+>
+"""
+class Schem_V2(Schem_V1) :
+    """
+    Schem 结构文件对象
+    -----------------------
+    * 管理 .schem 为后缀的大端gzip压缩的nbt文件
+    * 方块按照 yzx 顺序进行储存（x坐标变化最频繁）
+    * 此对象并不能完整保留所有储存的数据
+    -----------------------
+    * 可用属性 size : 结构长宽高(x, y, z)
+    * 可用属性 block_index : 方块索引列表（数量与结构体积相同）
+    * 可用属性 block_palette : 方块列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO]) :
+        NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
+        NBT = NBT["Schematic"]
+
+        StructureObject = cls()
+        StructureObject.size[0] = NBT["Width"].value
+        StructureObject.size[1] = NBT["Height"].value
+        StructureObject.size[2] = NBT["Length"].value
+        StructureObject.block_index = NBT['Blocks']['Data'].value
+        StructureObject.block_palette.update((j.value, i) for i,j in NBT['Blocks']['Palette'].items())
+        StructureObject.block_nbt.extend(NBT['Blocks'].get("BlockEntities", []))
+
+        return StructureObject
+
+
+    @classmethod
+    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+        if data_type != "bytes" : return False
+
+        try : NBT = nbt.read_from_nbt_file(data, byteorder="big", zip_mode="gzip").get_tag()
+        except : return False
+
+        if "Schematic" not in NBT : return False
+        if "Version" in NBT["Schematic"] and NBT["Schematic"]["Version"].value == 3 and \
+            "Width" in NBT["Schematic"] and "Height" in NBT["Schematic"] and 'Length' in NBT["Schematic"] and \
+            "Blocks" in NBT["Schematic"] : return True
         else : return False

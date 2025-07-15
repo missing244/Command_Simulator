@@ -6,4 +6,4 @@
     * 可用属性 Block_to_RuntimeID: 方块-数字ID 映射字典
 """
 
-from .schem import Schem
+from .schem import Schem_V1, Schem_V2

@@ -1,5 +1,5 @@
 from . import nbt
-from .block import Block, GetNbtID, JE_BlockStates_Parser
+from .block import Block, GetNbtID, JE_Transfor_BE_Block
 from .block import GenerateContainerNBT, GenerateSignNBT, GenerateCommandBlockNBT
 from .__private import TypeCheckList
 from . import StructureBDX, StructureMCS, StructureSCHEM
@@ -329,7 +329,7 @@ class Codecs :
 
             MCS.size = self.size
             MCS.origin = self.origin
-            MCS.block_index = self.block_index
+            MCS.block_index = array.array("i", self.block_index)
             MCS.contain_index = array.array("i", b"\xff\xff\xff\xff" * len(self.block_index))
             MCS.block_palette = TypeCheckList(i.to_nbt() for i in self.block_palette)
             MCS.entity_nbt = self.entity_nbt
@@ -353,7 +353,7 @@ class Codecs :
             RunTimeBlock = StructureSCHEMATIC.RuntimeID_to_Block
             PosIter = itertools.product(range(SCHMATIC.size[1]), range(SCHMATIC.size[2]), range(SCHMATIC.size[0]))
             for (posy, posz, posx), id_index, data in zip(PosIter, SCHMATIC.block_index, SCHMATIC.block_data) :
-                StructureObject.set_block(posx, posy, posz, Block(RunTimeBlock[id_index], data))
+                if id_index : StructureObject.set_block(posx, posy, posz, Block(RunTimeBlock[id_index], data))
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]):
             IgnoreAir, self = self.IgnoreAir, self.Common
@@ -378,20 +378,16 @@ class Codecs :
 
             SCHMATIC.save_as(Writer)
 
-    class SCHEM(CodecsBase) :
+    class SCHEM_V1(CodecsBase) :
 
-        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
-            Schma_File = StructureSCHEM.Schem.from_buffer(Reader)
-
+        def operation_structure(self, Schma_File:StructureSCHEM.Schem_V1) :
             StructureObject = self.Common
             StructureObject.__init__( Schma_File.size )
 
-            blocks = [None] * len(Schma_File.block_palette)
-            for index, block in Schma_File.block_palette.items() :
-                state_start = block.find("[")
-                ID = block[:state_start] if state_start != -1 else block
-                State = JE_BlockStates_Parser(block[state_start:]) if state_start != -1 else {}
-                blocks[index] = Block(ID, State)
+            blocks:List[Block] = [None] * len(Schma_File.block_palette)
+            for index, block in Schma_File.block_palette.items() : 
+                blocks[index] = JE_Transfor_BE_Block(block)
+                print(block) ; print(blocks[index])
             StructureObject.block_palette.__init__(blocks)
 
             O_X, O_Y, O_Z = Schma_File.size
@@ -400,16 +396,25 @@ class Codecs :
                 block_index |= 0b0111_1111 & index_data
                 if index_data >= 0 :
                     StructureObject.set_block(pos_x, pos_y, pos_z, block_index)
+                    nbtdata = GenerateContainerNBT(blocks[block_index].name)
+                    if nbtdata : StructureObject.set_blockNBT(pos_x, pos_y, pos_z, nbtdata)
                     block_index = 0
                     pos_x += 1
                     if pos_x >= O_X : pos_x = 0 ; pos_z += 1
                     if pos_z >= O_Z : pos_z = 0 ; pos_y += 1
 
-            
-
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
+            Schma_File = StructureSCHEM.Schem_V1.from_buffer(Reader)
+            self.operation_structure(Schma_File)
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]) :
             raise RuntimeError(f"{Writer} 并不支持序列化数据对象")
+
+    class SCHEM_V2(SCHEM_V1) :
+
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
+            Schma_File = StructureSCHEM.Schem_V2.from_buffer(Reader)
+            self.operation_structure(Schma_File)
 
     class MIANYANG_V1(CodecsBase) :
 

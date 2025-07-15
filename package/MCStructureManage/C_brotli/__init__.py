@@ -4,7 +4,8 @@
 # See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 def init() :
-    import os, platform, sys, hashlib, re
+    import os, platform, sys, hashlib, re, zipfile, subprocess
+    LinkCommand = "aarch64-linux-android-gcc -shared bin/temp.linux-aarch64-3.9/c/common/constants.o bin/temp.linux-aarch64-3.9/c/common/context.o bin/temp.linux-aarch64-3.9/c/common/dictionary.o bin/temp.linux-aarch64-3.9/c/common/platform.o bin/temp.linux-aarch64-3.9/c/common/shared_dictionary.o bin/temp.linux-aarch64-3.9/c/common/transform.o bin/temp.linux-aarch64-3.9/c/dec/bit_reader.o bin/temp.linux-aarch64-3.9/c/dec/decode.o bin/temp.linux-aarch64-3.9/c/dec/huffman.o bin/temp.linux-aarch64-3.9/c/dec/state.o bin/temp.linux-aarch64-3.9/c/enc/backward_references.o bin/temp.linux-aarch64-3.9/c/enc/backward_references_hq.o bin/temp.linux-aarch64-3.9/c/enc/bit_cost.o bin/temp.linux-aarch64-3.9/c/enc/block_splitter.o bin/temp.linux-aarch64-3.9/c/enc/brotli_bit_stream.o bin/temp.linux-aarch64-3.9/c/enc/cluster.o bin/temp.linux-aarch64-3.9/c/enc/command.o bin/temp.linux-aarch64-3.9/c/enc/compound_dictionary.o bin/temp.linux-aarch64-3.9/c/enc/compress_fragment.o bin/temp.linux-aarch64-3.9/c/enc/compress_fragment_two_pass.o bin/temp.linux-aarch64-3.9/c/enc/dictionary_hash.o bin/temp.linux-aarch64-3.9/c/enc/encode.o bin/temp.linux-aarch64-3.9/c/enc/encoder_dict.o bin/temp.linux-aarch64-3.9/c/enc/entropy_encode.o bin/temp.linux-aarch64-3.9/c/enc/fast_log.o bin/temp.linux-aarch64-3.9/c/enc/histogram.o bin/temp.linux-aarch64-3.9/c/enc/literal_cost.o bin/temp.linux-aarch64-3.9/c/enc/memory.o bin/temp.linux-aarch64-3.9/c/enc/metablock.o bin/temp.linux-aarch64-3.9/c/enc/static_dict.o bin/temp.linux-aarch64-3.9/c/enc/utf8_util.o bin/temp.linux-aarch64-3.9/python/_brotli.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
     py_dll_name = "_brotli.%s"
     
     system_info = platform.uname()
@@ -16,9 +17,16 @@ def init() :
         target_path = os.path.join(base_path, py_dll_name % "pyd")
         target_abi = os.path.join(base_path, "ABI_File", "Win_amd64.pyd")
     elif system == 'linux' and machine == "aarch64" : 
+        zipfile1 = zipfile.ZipFile(os.path.join(base_path, "ABI_File", "Linux_aarch64.build"), "r")
+        zipfile1.extractall( os.path.join(base_path, "ABI_File") )
+        lib_path_re = re.compile("lib/python[0-9]\\.[0-9]{1,}$")
+        for lib_path in sys.path :
+            if lib_path_re.search(lib_path) : break
+        lib_path = os.path.realpath( os.path.join(lib_path, "..") )
+        subprocess.run(LinkCommand % (lib_path, sys.version_info.major, sys.version_info.minor), 
+            shell=True, capture_output=True, text=True, cwd=os.path.join(base_path, "ABI_File"))
         for test_path in sys.path :
-            if not test_path.endswith("site-packages") : continue
-            else : break
+            if test_path.endswith("site-packages") : break
         target_path = os.path.join(test_path, "Command_Simulator_C_API")
         target_abi = os.path.join(base_path, "ABI_File", "Linux_aarch64.pyd")
         os.makedirs( target_path, exist_ok=True )

@@ -24,12 +24,12 @@
         "minecraft:acacia_log" : {"block_id":"minecraft:log2","block_data":{"new_log_type": "acacia"}},
         "minecraft:dark_oak_log" : {"block_id":"minecraft:log2","block_data":{"new_log_type": "dark_oak"}},
 
-        "minecraft:oak_fence" : {"block_id":"minecraft:fence","block_data":{"old_log_type": "oak"}},
-        "minecraft:spruce_fence" : {"block_id":"minecraft:fence","block_data":{"old_log_type": "spruce"}},
-        "minecraft:birch_fence" : {"block_id":"minecraft:fence","block_data":{"old_log_type": "birch"}},
-        "minecraft:jungle_fence" : {"block_id":"minecraft:fence","block_data":{"old_log_type": "jungle"}},
-        "minecraft:acacia_fence" : {"block_id":"minecraft:fence","block_data":{"new_log_type": "acacia"}},
-        "minecraft:dark_oak_fence" : {"block_id":"minecraft:fence","block_data":{"new_log_type": "dark_oak"}},
+        "minecraft:oak_fence" : {"block_id":"minecraft:fence","block_data":{"wood_type": "oak"}},
+        "minecraft:spruce_fence" : {"block_id":"minecraft:fence","block_data":{"wood_type": "spruce"}},
+        "minecraft:birch_fence" : {"block_id":"minecraft:fence","block_data":{"wood_type": "birch"}},
+        "minecraft:jungle_fence" : {"block_id":"minecraft:fence","block_data":{"wood_type": "jungle"}},
+        "minecraft:acacia_fence" : {"block_id":"minecraft:fence","block_data":{"wood_type": "acacia"}},
+        "minecraft:dark_oak_fence" : {"block_id":"minecraft:fence","block_data":{"wood_type": "dark_oak"}},
 
         "minecraft:white_carpet" : {"block_id":"minecraft:carpet","block_data":{"color": "white"}},
         "minecraft:orange_carpet" : {"block_id":"minecraft:carpet","block_data":{"color": "orange"}},
@@ -185,12 +185,12 @@
         "minecraft:acacia_leaves" : {"block_id":"minecraft:leaves2","block_data":{"old_leaf_type": "acacia","update_bit": false,"persistent_bit": false}},
         "minecraft:dark_oak_leaves" : {"block_id":"minecraft:leaves2","block_data":{"old_leaf_type": "dark_oak","update_bit": false,"persistent_bit": false}},
         
-        "minecraft:double_oak_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "oka","top_slot_bit": false}},
-        "minecraft:double_spruce_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "spruce","top_slot_bit": false}},
-        "minecraft:double_birch_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "birch","top_slot_bit": false}},
-        "minecraft:double_jungle_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "jungle","top_slot_bit": false}},
-        "minecraft:double_acacia_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "acacia","top_slot_bit": false}},
-        "minecraft:double_dark_oak_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "dark_oak","top_slot_bit": false}},
+        "minecraft:oak_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "oka","top_slot_bit": false}},
+        "minecraft:spruce_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "spruce","top_slot_bit": false}},
+        "minecraft:birch_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "birch","top_slot_bit": false}},
+        "minecraft:jungle_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "jungle","top_slot_bit": false}},
+        "minecraft:acacia_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "acacia","top_slot_bit": false}},
+        "minecraft:dark_oak_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "dark_oak","top_slot_bit": false}},
         
         "minecraft:oak_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "oka","top_slot_bit": false}},
         "minecraft:spruce_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "spruce","top_slot_bit": false}},
@@ -431,7 +431,7 @@
         "minecraft:vertical_half":{
             "version": [1,21,0], "old_name": "top_slot_bit", "value_map":{"top":true, "bottom":false}
         },
-        "minecraft:minecraft:block_face":{
+        "minecraft:block_face":{
             "version": [1,21,0], "old_name": "facing_direction", "value_map":{"down":0, "up":1, 
             "north":2, "south":3, "west":4, "east":5}
         }
