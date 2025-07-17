@@ -28,7 +28,7 @@ def string_to_rematch(s:str) -> str :
     s_list = [ "\\u" + ("000%s" % hex( ord(i)).replace("0x","",1) )[-4:] for i in s]
     return "".join(s_list)
 
-TERMINATOR_RE = string_to_rematch(' ,@~^$&"!#%+*/=[{]}\|<>`')
+TERMINATOR_RE = string_to_rematch(r' ,@~^$&"!#%+*/=[{]}\|<>`')
 
 
 class Match_Base(metaclass=abc.ABCMeta) :

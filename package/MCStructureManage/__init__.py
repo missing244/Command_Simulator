@@ -3,11 +3,12 @@
     ---------------------------------
     * 可用模块 StructureBDX: 解析bdx文件的模块
     * 可用模块 StructureMCS: 解析mcstructure文件的模块
+    * 可用模块 StructureSCHEM: 解析schem文件的模块
     * 可用模块 StructureSCHEMATIC: 解析schematic文件的模块
     * 可用模块 StructureRUNAWAY: 解析跑路结构文件的模块
     ---------------------------------
     * 可用对象 Block : 方块对象（向低版本支持的方块格式）
-    * 可用对象 CommonStructure: 通用结构对象
+    * 可用对象 CommonStructure: 通用结构对象（结构文件需被此对象打开读取）
     ---------------------------------
     * 可用编解码器 Codecs: 通用结构对象from_buffer/save_as方法使用的编码器类
     ---------------------------------
