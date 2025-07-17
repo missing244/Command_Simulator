@@ -10,9 +10,10 @@ Context = jnius.autoclass('android.content.Context') if jnius else None
 
 First_Load_Build_Dir = (
     "save_world", "expand_pack", 
-    os.path.join("functionality","command"), 
-    os.path.join("functionality","structure_output"),
-    os.path.join("functionality","example")
+    os.path.join("functionality", "command"), 
+    os.path.join("functionality", "structure_output"),
+    os.path.join("functionality", "example"),
+    os.path.join("functionality", "BE_Structure")
 )
 
 #ID文件验证列表

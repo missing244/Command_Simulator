@@ -150,7 +150,7 @@ class Welcome_Screen(tkinter.Frame) :
         self.main_win = main_win
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(6)).pack()
         tkinter.Label(self, text="命令模拟器", fg='black', font=tk_tool.get_default_font(25), width=15, height=1).pack()
-        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(6)).pack()
         
         tkinter.Button(self,text='开始命令模拟',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=self.main_win.game_ready_or_run).pack(side="top")
@@ -163,11 +163,14 @@ class Welcome_Screen(tkinter.Frame) :
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
         tkinter.Button(self,text='批量复制字符',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("unicode_char")).pack(side="top")
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+        tkinter.Button(self,text='结构文件转换',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+            command=lambda:self.main_win.set_display_frame("structure_transfor")).pack(side="top")
         if self.main_win.platform == "android" or app_constant.debug_testing :
             tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
             tkinter.Button(self,text='复制文件命令',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("copy_file_command")).pack(side="top")
-        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(11)).pack()
+        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(8)).pack()
 
         frame_m4 = tkinter.Frame(self)
         tkinter.Button(frame_m4,text='使用须知',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
@@ -398,7 +401,6 @@ class Find_Minecraft_ID(tkinter.Frame) :
         display_x = self.master.winfo_x() + (self.master.winfo_width() - toplevel.winfo_reqwidth()) // (
             6 if self.main_win.platform == "android" else 3)
         display_y = self.master.winfo_y() + (self.master.winfo_height() - toplevel.winfo_reqheight()) // 2
-        print(self.master.winfo_x(), self.master.winfo_y())
         toplevel.geometry("+%s+%s" % (display_x, display_y))
 
     def search(self) :
@@ -419,6 +421,23 @@ class Find_Minecraft_ID(tkinter.Frame) :
         self.label1.config(text = "ID 复制完成")
 
 class Copy_File_Command(tkinter.Frame) :
+    base_path = os.path.join("functionality", "command")
+    file_list_hash = -1
+
+    def __loop__(self) :
+        if self.main_win.now_display_frame != "copy_file_command" : return None
+
+        file_list = []
+        path1 = os.path.join(self.base_path, "")
+        for i in [i for i in FileOperation.file_in_path(path1) if self.check_name(i)] : 
+            file_list.append( i.replace(path1, "", 1) )
+        
+        file_list_hash = sum( hash(i) for i in file_list )
+        if file_list_hash == self.file_list_hash : return None
+        self.search_result.delete(0, tkinter.END)
+        for i in file_list : self.search_result.insert(tkinter.END, i)
+        self.file_list_hash = file_list_hash
+        
 
     def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
@@ -487,17 +506,12 @@ class Copy_File_Command(tkinter.Frame) :
         self.counter1 = tkinter.Label(frame_m10, text="",fg='black',font=tk_tool.get_default_font(10), width=15, height=1)
         self.counter1.pack(side=tkinter.LEFT)
         frame_m10.pack()
-
-        path1 = os.path.join("functionality","command","")
-        for i in [i for i in FileOperation.file_in_path(path1) if self.check_name(i)] : 
-            if i[0] == "dir" : continue
-            search_result.insert(tkinter.END, i.replace(path1,"",1))
         
         self.bind("<Unmap>", lambda e: self.save_saves())
 
     
     def read_saves(self) -> dict :
-        save_path = os.path.join("functionality", "command", "saves.pick")
+        save_path = os.path.join(self.base_path, "saves.pick")
         if not os.path.exists(save_path) or not os.path.isfile(save_path) : return {}
         else : 
             with open(save_path, 'rb') as f : a = pickle.load(f)
@@ -506,7 +520,7 @@ class Copy_File_Command(tkinter.Frame) :
     def save_saves(self) :
         if not hasattr(self, "save_hash") : self.save_hash = -1
         hash1 = json.dumps(self.read_file_data).__hash__()
-        save_path = os.path.join("functionality","command","saves.pick")
+        save_path = os.path.join(self.base_path, "saves.pick")
         if hash1 == self.save_hash : return None
         with open(save_path, 'wb') as f: pickle.dump(self.read_file_data, f)
         self.save_hash = hash1
@@ -514,7 +528,7 @@ class Copy_File_Command(tkinter.Frame) :
     def open_file(self) :
         if len(self.search_result.curselection()) == 0 : self.label1.config(text = "你没有选择需要打开的文件") ; return None
         path1 = self.search_result.get(self.search_result.curselection())
-        try : f = open(os.path.join("functionality","command",path1),"r",encoding="utf-8")
+        try : f = open(os.path.join(self.base_path, path1),"r",encoding="utf-8")
         except : self.label1.config(text = "文件打开失败") ; traceback.print_exc() ; return None
         else : 
             content_1 = f.read() ; f.close()
@@ -550,6 +564,163 @@ class Copy_File_Command(tkinter.Frame) :
         self.command_display_1.tag_add("green","0.0",tkinter.END)
         tk_tool.copy_to_clipboard(self.file_content[self.read_file_data[self.file_name]['lines'] - 1])
 
+class BE_Structure_Transfor(tkinter.Frame) :
+    base_path = os.path.join("functionality", "BE_Structure")
+    file_list_hash = -1
+
+    def __loop__(self) :
+        if self.main_win.now_display_frame != "structure_transfor" : return None
+
+        file_list = []
+        path1 = os.path.join(self.base_path, "")
+        for i in [i for i in os.listdir(path1) if os.path.isfile( os.path.join(path1, i) )] : 
+            file_list.append( i.replace(path1, "", 1) )
+        
+        file_list_hash = sum( hash(i) for i in file_list )
+        if file_list_hash == self.file_list_hash : return None
+        self.search_result.delete(0, tkinter.END)
+        for i in file_list : self.search_result.insert(tkinter.END, i)
+        self.file_list_hash = file_list_hash
+
+    def __init__(self, main_win, **karg) -> None :
+        from package.MCStructureManage import Codecs
+
+        super().__init__(main_win.window, **karg)
+        self.main_win = main_win
+        self.codecs = {
+            "请选择转换格式": None,
+            "bdx文件": (".bdx", Codecs.BDX), "mcstructure文件": (".mcstructure", Codecs.MCSTRUCTURE), 
+            "MianYang_V1 Json文件": (".json", Codecs.MIANYANG_V1), "MianYang_V2 Json文件": (".json", Codecs.MIANYANG_V2), 
+            "MianYang_V3 building文件（最新）": (".building", Codecs.MIANYANG_V3),
+            "GangBan_V1 Json文件": (".json", Codecs.GANGBAN_V1), "GangBan_V2 Json文件": (".json", Codecs.GANGBAN_V2), 
+            "GangBan_V3 Json文件": (".json", Codecs.GANGBAN_V3), "GangBan_V4 Json文件": (".json", Codecs.GANGBAN_V4), 
+            "GangBan_V5 Json文件": (".json", Codecs.GANGBAN_V5), "GangBan_V6 Json文件": (".json", Codecs.GANGBAN_V6), 
+            "GangBan_V7 reb文件（最新）": (".reb", Codecs.GANGBAN_V7), 
+            "RunAway Json文件": (".json", Codecs.RUNAWAY), "万花筒 Kbdx文件": (".kbdx", Codecs.KBDX),
+            "FuHong_V3 Json文件": (".json", Codecs.FUHONG_V3), "FuHong_V4 Json文件": (".json", Codecs.FUHONG_V4), 
+            "FuHong_V5 fhbuild文件（最新）": (".fhbuild", Codecs.FUHONG_V5), 
+            "QingXu_V1 Json文件": (".json", Codecs.QINGXU_V1), 
+            "MC函数 Zip文件": (".zip", Codecs.FunctionCommand), "MC命令 Txt文件": (".txt", Codecs.TextCommand)}
+
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(6)).pack()
+
+        MainScreen = tkinter.Frame(self) 
+        MainScreen.pack()
+        frame_m10 = tkinter.Frame(MainScreen)
+        sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+        sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
+        self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
+            height=10,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+        self.search_result.grid(row=0,column=0)
+        sco1.config(command=self.search_result.yview)
+        sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
+        sco2.config(command=self.search_result.xview)
+        sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
+        frame_m10.pack()
+
+        tkinter.Label(MainScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+        self.transfor_choose = ttk.Combobox(MainScreen, font=tk_tool.get_default_font(11), width=22, state='readonly', justify='center')
+        self.transfor_choose["value"] = list( i for i,j in self.codecs.items() )
+        self.transfor_choose.current(0)
+        self.transfor_choose.pack()
+        
+        tkinter.Label(MainScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+        frame_m4 = tkinter.Frame(MainScreen)
+        tkinter.Button(frame_m4, height=1,text=" 阅读使用须知 ",font=tk_tool.get_default_font(10), bg="#fdd142",
+            command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.add_tips()]).pack(side='left')
+        tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
+        tkinter.Button(frame_m4, height=1,text=" 开始转换文件 ",font=tk_tool.get_default_font(10), bg="#9ae9d1",
+            command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.start_thread()]).pack(side='left')
+        frame_m4.pack()
+
+        tkinter.Label(MainScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+        tkinter.Label(MainScreen, text="请将需要转换的结构文件放入\nfunctionality/BE_Structure文件夹下\n文件将生成在该目录下的result文件夹内",
+            fg='black', font=tk_tool.get_default_font(10)).pack()
+        
+        tkinter.Label(MainScreen, height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Button(MainScreen, height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
+            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
+        
+
+        FeedbackScreen = tkinter.Frame(self) 
+        frame_m10 = tkinter.Frame(FeedbackScreen)
+        sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+        self.input_box = tkinter.Text(frame_m10,show=None,height=20,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
+        self.input_box.grid()
+        sco1.config(command=self.input_box.yview)
+        sco1.grid(row=0,column=1, sticky=tkinter.N+tkinter.S)
+        frame_m10.pack()
+
+        tkinter.Label(FeedbackScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+        self.back_button = tkinter.Button(FeedbackScreen, height=1,text=" 返回上一页 ",font=tk_tool.get_default_font(13), bg="#9ae9d1",
+            command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack()])
+        self.back_button.pack()
+
+
+    def start_thread(self) :
+        threading.Thread(target=self.transfor_file).start()
+
+    def transfor_file(self) :
+        from package.MCStructureManage import CommonStructure
+
+        self.input_box.delete("0.0", tkinter.END)
+        if self.transfor_choose.current() < 1 : 
+            self.input_box.insert(tkinter.END, "转换格式选择不正确\n请重新选择")
+            return None
+        if not self.search_result.get(0, tkinter.END) : 
+            self.input_box.insert(tkinter.END, "没有任何文件被转换\n请确认是否放入文件")
+            return None
+
+        self.back_button.config(state=tkinter.DISABLED)
+        file_name_list = self.search_result.get(0, tkinter.END)
+        file_type_re = re.compile("\\.[0-9a-zA-Z]{0,}$")
+        choose_trans_mode = self.codecs[self.transfor_choose.get()]
+        for index, file_name in enumerate(file_name_list, start=1) :
+            self.input_box.insert(tkinter.END, "正在转换 %s/%s 文件...\n%s\n" % (index, len(file_name_list), file_name))
+            self.input_box.see(tkinter.END)
+            time.sleep(0.3)
+
+            file_path = os.path.join( self.base_path, file_name )
+            try : Struct1 = CommonStructure.from_buffer(file_path)
+            except Exception as e : 
+                self.input_box.insert( tkinter.END, e.args[0] + "\n\n" )
+                self.input_box.see(tkinter.END)
+                continue
+            end_name = file_type_re.search(file_name)
+            save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
+            save_file_path = os.path.join( self.base_path, "result", save_file_name )
+            Struct1.save_as(save_file_path, choose_trans_mode[1])
+            self.input_box.insert(tkinter.END, "文件转换完成 (%s/%s)\n\n" % (index, len(file_name_list)))
+            self.input_box.see(tkinter.END)
+        
+        self.back_button.config(state=tkinter.NORMAL)
+
+    def add_tips(self) :
+        from package.MCStructureManage import Codecs
+        self.input_box.delete("0.0", tkinter.END)
+
+        Tips = [
+            "本工具支持读取的文件：",
+            "bdx  mcstructure  schematic",
+            "schem  跑路json  万花筒kbdx",
+            "绵阳Json  绵阳building",
+            "钢板Json  钢板reb",
+            "浮鸿Json  浮鸿fhbuild",
+            "情绪json",
+            "",
+            "",
+            "",
+            "如果发现有文件无法被读取，且确定是结构文件，可以点击",
+            "",
+            "设置-联系作者-交流群",
+            "",
+            "在交流群中与作者进行技术交流，litematic文件暂时不会支持"
+        ]
+        self.input_box.insert(tkinter.END, "\n".join(Tips))
+
+
+
+
 
 class Game_Ready(tkinter.Frame) :
 
@@ -577,13 +748,8 @@ class Game_Ready(tkinter.Frame) :
         main_win.add_can_change_hight_component([self.list_select, a1,c1,c1,c1,frame_m3])
         self.flash_world()
 
-    def create_world(self):
-        try : import brotli
-        except : 
-            if self.main_win.initialization_process[3].is_alive() :
-                tkinter.messagebox.showwarning("Warn","brotli 拓展库正在后台进行安装\n您可以在 设置--启动日志 中查看\nbrotli 拓展库安装完成后即可正常启用")
-            else : tkinter.messagebox.showerror("Error","brotli 拓展库安装失败\n您可以在 设置--启动日志 中查看错误日志")
-        else : self.main_win.set_display_frame("creat_world")
+    def create_world(self) :
+        self.main_win.set_display_frame("creat_world")
 
     def delete_world(self):
         if len(self.list_select.curselection()) == 0 : return
@@ -602,13 +768,6 @@ class Game_Ready(tkinter.Frame) :
             tkinter.messagebox.showerror("Error", "正在加载软件,请稍后....") ; return None
 
         if len(self.list_select.curselection()) == 0 : return None
-        try : import brotli 
-        except : 
-            if self.main_win.initialization_process[3].is_alive() :
-                tkinter.messagebox.showwarning("Warn","brotli 拓展库正在后台进行安装\n您可以在 设置--启动日志 中查看\nbrotli 拓展库安装完成后即可正常启用")
-            else : tkinter.messagebox.showerror("Error","brotli 拓展库安装失败\n您可以在 设置--启动日志 中查看错误日志")
-            return None
-        else : importlib.reload(Minecraft_BE.Constants)
         game_process = Minecraft_BE.RunTime.minecraft_thread()
         world_name = self.list_select.get(self.list_select.curselection()).split("-->")[1]
         func1 = self.main_win.display_frame["game_run"].set_gametime
@@ -1277,7 +1436,7 @@ class Login(tkinter.Frame) :
                 msg_laber.config(text=msg_laber.cget("text") + "登录成功") ; return True
             else : msg_laber.config(text=msg_laber.cget("text") + "登录失败")
 
-        if re.search("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$",self.account_input_1.get()) is None :
+        if re.search(r"^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$",self.account_input_1.get()) is None :
             tkinter.messagebox.showerror("Error","用户邮箱格式不正确") ; return None
         if re.search("^[a-zA-Z0-9]+$",self.account_input_2.get()) is None  :
             tkinter.messagebox.showerror("Error","用户密码格式不正确") ; return None

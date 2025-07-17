@@ -3589,6 +3589,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:music_disc_lava_chicken": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:music_disc_mall": {
     "damage_max": null,
     "can_enchant": []
@@ -3618,6 +3622,10 @@
     "can_enchant": []
   },
   "minecraft:music_disc_strad": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:music_disc_tears": {
     "damage_max": null,
     "can_enchant": []
   },

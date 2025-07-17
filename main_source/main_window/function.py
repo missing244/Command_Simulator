@@ -397,7 +397,7 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         if not i() : break
     user.write_back()
     log.set_time_end()
-    if user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
+    if not app_constant.debug_testing and user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
         tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
         user.save_data['online_get']['app_version']))
 
@@ -467,54 +467,6 @@ def flash_minecraft_source(user:user_manager, log:initialization_log) :
     for i in [download_online_source,generate_online_source] :
         if not i() : break
     log.set_time_end()
-
-def check_leveldb_c_extension(platform:Literal["windows","android"], log:initialization_log) :
-    minor_version = sys.version_info.minor
-    log.write_log("正在检查 leveldb C拓展库...")
-    try : import leveldb
-    except : 
-        log.write_log("leveldb库验证失败，正在安装...", 2)
-        if platform == "windows" :
-            for iii in ['Cython', "leveldb-py"] :
-                log.write_log("正在安装 %s 模块" % iii, 4)
-                m1 = subprocess.getstatusoutput("py -3.%s -m pip install %s" % (minor_version, iii))
-                if not m1[0] : continue
-                log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
-                log.write_log(m1[1])
-                return None
-        elif platform == "android" :
-            py_version = (sys.version_info.major, sys.version_info.minor)
-            start_path = os.path.join("C_extension", "py_leveldb_%s.%s" % py_version)
-            if not FileOperation.is_dir(start_path) : 
-                log.write_log("无法找到依赖库 leveldb, py=%s.%s" % py_version, 2) ; return None
-            end_path = "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python%s.%s/site-packages/leveldb" % py_version
-            FileOperation.copy_all_file(start_path, end_path)
-        log.write_log("leveldb库安装完成", 2)
-    else : log.write_log("leveldb库验证通过", 2)
-
-def check_brotli_c_extension(platform:Literal["windows","android"], log:initialization_log) :
-    minor_version = sys.version_info.minor
-    log.write_log("正在检查 brotli C拓展库...")
-    try : import brotli
-    except : 
-        log.write_log("brotli库验证失败，正在安装...", 2)
-        if platform == "windows" :
-            for iii in ["Brotli"] :
-                log.write_log("正在安装 %s 模块" % iii, 4)
-                m1 = subprocess.getstatusoutput("py -3.%s -m pip install %s" % (minor_version, iii))
-                if not m1[0] : continue
-                log.write_log("依赖库 %s 安装失败, 日志 install_extension.txt 已保存" % iii, 2)
-                log.write_log(m1[1])
-                return None
-        elif platform == "android" :
-            py_version = (sys.version_info.major, sys.version_info.minor)
-            start_path = os.path.join("C_extension", "py_brotli_%s.%s" % py_version)
-            if not FileOperation.is_dir(start_path) : 
-                log.write_log("无法找到依赖库 brotli, py=%s.%s" % py_version, 2) ; return None
-            end_path = "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python%s.%s/site-packages/brotli" % py_version
-            FileOperation.copy_all_file(start_path, end_path)
-        log.write_log("brotli库安装完成", 2)
-    else : log.write_log("brotli库验证通过", 2)
 
 
 

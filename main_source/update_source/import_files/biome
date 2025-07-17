@@ -11,7 +11,7 @@
   },
   "minecraft:basalt_deltas": {
     "dimension": [
-      "overworld"
+      "nether"
     ]
   },
   "minecraft:beach": {
@@ -71,7 +71,7 @@
   },
   "minecraft:crimson_forest": {
     "dimension": [
-      "overworld"
+      "nether"
     ]
   },
   "minecraft:deep_cold_ocean": {
@@ -181,7 +181,7 @@
   },
   "minecraft:hell": {
     "dimension": [
-      "overworld"
+      "nether"
     ]
   },
   "minecraft:ice_mountains": {
@@ -371,7 +371,7 @@
   },
   "minecraft:soulsand_valley": {
     "dimension": [
-      "overworld"
+      "nether"
     ]
   },
   "minecraft:stone_beach": {
@@ -416,7 +416,7 @@
   },
   "minecraft:the_end": {
     "dimension": [
-      "overworld"
+      "the_end"
     ]
   },
   "minecraft:warm_ocean": {
@@ -426,7 +426,7 @@
   },
   "minecraft:warped_forest": {
     "dimension": [
-      "overworld"
+      "nether"
     ]
   }
 }

@@ -4,7 +4,7 @@
 #原生模块加载与设置
 from idlelib.calltip_w import CalltipWindow
 import http.server, ssl, importlib
-import json, tkinter, tkinter.font, tkinter.messagebox, time,threading, sys, gzip, gc
+import json, tkinter, tkinter.font, tkinter.messagebox, time, threading, sys, gzip, gc
 import platform, os, types, traceback, webbrowser, re, functools
 from tkinter import ttk
 from typing import List,Dict,Union,Literal
@@ -118,50 +118,52 @@ class control_windows :
         Announcement.pack()
 
         self.user_manager = app_function.user_manager() #用户管理
-        self.initialization_log = [app_function.initialization_log() for i in range(5)]
+        self.game_process:Minecraft_BE.RunTime.minecraft_thread = None #模拟世界线程
+        self.initialization_log = [app_function.initialization_log() for i in range(3)]
         self.initialization_process:List[threading.Thread] = [
             threading.Thread(target=app_function.get_app_infomation_and_login, args=(Announcement, self.user_manager, self.initialization_log[0])),
             threading.Thread(target=app_function.flash_minecraft_id, args=(self.initialization_log[1], )),
-            threading.Thread(target=app_function.flash_minecraft_source, args=(self.user_manager, self.initialization_log[2])),
-            threading.Thread(target=app_function.check_leveldb_c_extension, args=(self.platform, self.initialization_log[3])),
-            threading.Thread(target=app_function.check_brotli_c_extension, args=(self.platform, self.initialization_log[4])),
+            threading.Thread(target=app_function.flash_minecraft_source, args=(self.user_manager, self.initialization_log[2]))
         ]
-        self.game_process:Minecraft_BE.RunTime.minecraft_thread = None #模拟世界线程
 
-        #self.windows_constant()
         for i in self.initialization_process : i.start()
         self.window.protocol("WM_DELETE_WINDOW", self.window_exit)
+        self.window.bind("<Button-3>", lambda e : self.display_frame["right_click_menu"].post(
+            e.x_root, e.y_root-self.display_frame["right_click_menu"].winfo_reqheight()))
 
 
     def creat_windows(self):
         self.button_bar = app_tk_frame.Bottom_Bar(self)
         self.button_bar.pack(side="bottom")
-        self.display_frame["right_click_menu"] = app_tk_frame.Global_Right_Click_Menu(self)
+        self.display_frame["right_click_menu"] = app_tk_frame.Global_Right_Click_Menu(self.window)
+
+        self.display_frame["welcome_screen"] = app_tk_frame.Welcome_Screen(self)
+        self.display_frame["special_char"] = app_tk_frame.Special_Char(self)
+        self.display_frame["unicode_char"] = app_tk_frame.Unicode_Char(self)
+        self.display_frame["find_minecraft_ID"] = app_tk_frame.Find_Minecraft_ID(self)
+        self.display_frame["structure_transfor"] = app_tk_frame.BE_Structure_Transfor(self)
+        self.display_frame["copy_file_command"] = app_tk_frame.Copy_File_Command(self)
 
         self.display_frame["game_ready"] = app_tk_frame.Game_Ready(self)
         self.display_frame["creat_world"] = app_tk_frame.Creat_World(self)
         self.display_frame["game_run"] = app_tk_frame.Game_Run(self)
         self.display_frame["game_terminal"] = app_tk_frame.Game_Terminal(self)
+
         self.display_frame["choose_expand"] = app_tk_frame.Choose_Expand(self)
-        self.display_frame["expand_pack"] = app_tk_frame.Expand_Pack_Example(self)
+
         self.display_frame["setting_frame"] = app_tk_frame.Setting(self)
         self.display_frame["login_frame"] = app_tk_frame.Login(self)
         self.display_frame["policy_frame"] = app_tk_frame.Policy(self)
         self.display_frame["user_info"] = app_tk_frame.User_Info(self)
         self.display_frame["log_display"] = app_tk_frame.Log_Display(self)
-        self.set_display_frame("game_ready")
+
+        self.set_display_frame("welcome_screen")
 
         self.user_manager.save_data["open_app_count"] += 1
-        if self.user_manager.save_data["open_app_count"] == 1 and self.platform == "android" :
+        if self.user_manager.save_data["open_app_count"] == 1 :
             yesorno = tkinter.messagebox.askquestion("question", "看起来您是第一次打开\n需要熟悉软件如何使用吗？(新用户请务必点击确定！)")
             if self.platform == "android" and yesorno == "yes" : app_function.Beginner_Tutorial(self, False)
             elif self.platform == "windows" and yesorno == "yes" : webbrowser.open("http://localhost:32323/tutorial/Instructions.html")
-        
-        self.bind_events()
-
-    def bind_events(self):
-        self.window.bind("<Button-3>", lambda e : self.display_frame["right_click_menu"].post(
-            e.x_root, e.y_root-self.display_frame["right_click_menu"].winfo_reqheight()))
 
     def window_exit(self) :
         threading.Thread(target=lambda:[time.sleep(10), os._exit(0)]).start()
@@ -183,7 +185,7 @@ class control_windows :
             threading.Thread(target=aaa).start()
         self.paset_thread_time = 10
 
-    def set_focus_input(self,event:tkinter.Event) :
+    def set_focus_input(self, event:tkinter.Event) :
         compont = event.widget
         if isinstance(compont,(tkinter.Text, tkinter.Entry, ttk.Entry)) : self.focus_input = compont
         else : self.focus_input = None ; return None
@@ -219,17 +221,20 @@ class control_windows :
 
             if test_flag and self.now_display_frame == "expand_pack" and name != "expand_pack" : #退出拓展包界面
                 right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
-                while right_click_menu.item_counter > 4 : right_click_menu.remove_item()
+                while right_click_menu.item_counter : right_click_menu.remove_item()
                 if hasattr(data["object"],"exit_method") : data["object"].exit_method()
             if test_flag and self.now_display_frame != "expand_pack" and name == "expand_pack" :  #进入拓展包界面
                 right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
-                if right_click_menu.item_counter <= 4 and hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
+                if hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
                 if hasattr(data["object"],"exit_method") : data["object"].exit_method()
         self.now_display_frame = name
         self.display_frame[self.now_display_frame].pack()
         self.focus_input = None
 
-    def game_ready_or_run(self):
+    def game_ready_or_run(self) :
+        for i in self.button_bar.menu_list[0:4] : self.button_bar.itemconfig(i, fill="white")
+        change_color_item = self.button_bar.menu_list[1]
+        self.button_bar.itemconfig(change_color_item, fill="#00ff00")
         if not self.game_process : self.set_display_frame("game_ready")
         else : self.set_display_frame("game_run")
 
@@ -250,9 +255,9 @@ class control_windows :
         self.display_frame["policy_frame"].policy_title.config(text = a[mode])
         self.display_frame["policy_frame"].notes.config(text = "")
 
-        if mode == "use" : text1 = file_IO.read_a_file(os.path.join("main_source", "app_policy", "use.txt"))
-        elif mode == "privacy" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","privacy.txt"))
-        elif mode == "about" : text1 = file_IO.read_a_file(os.path.join("main_source","app_policy","about_app.txt"))
+        if mode == "use" : text1 = file_IO.read_a_file(os.path.join("main_source", "app_source", "use_policy.txt"))
+        elif mode == "privacy" : text1 = file_IO.read_a_file(os.path.join("main_source","app_source","privacy.txt"))
+        elif mode == "about" : text1 = file_IO.read_a_file(os.path.join("main_source","app_source","about_app.txt"))
         elif mode == "open" : 
             self.display_frame["policy_frame"].notes.config(text = "重新进入 “启动日志” 即可刷新内容")
             text1 = "\n".join([i.log_text for i in self.initialization_log])
@@ -270,7 +275,7 @@ class control_windows :
         if a is None : return None
         return a.get('object')
 
-    def get_display_expand_pack_record(self) :
+    def get_display_expand_pack(self) :
         if self.now_display_frame != "expand_pack" : return None
 
         saves = None
@@ -296,6 +301,7 @@ class control_windows :
                     if hasattr(self.expand_pack_open_list[i]['object'],'loop_method') : 
                         self.expand_pack_open_list[i]['object'].loop_method()
             except : traceback.print_exc()
+
             #变高组件循环事件部分
             for index, list1 in enumerate(self.change_hight_component_list.copy()) :
                 if not list1[2].winfo_exists() : 
@@ -315,6 +321,9 @@ class control_windows :
                 will_remove_can_change_hight_component.reverse()
                 for i in will_remove_can_change_hight_component : self.change_hight_component_list.pop(i)
                 will_remove_can_change_hight_component.clear()
+            
+            if "copy_file_command" in self.display_frame : self.display_frame["copy_file_command"].__loop__()
+            if "structure_transfor" in self.display_frame : self.display_frame["structure_transfor"].__loop__()
             time.sleep(0.5)
 
 
@@ -349,12 +358,4 @@ debug_windows = control_windows()
 threading.Thread(target=debug_windows.all_time_loop_event).start()
 debug_windows.window.mainloop()
 
-Minecraft_BE.Command_Compile_Dict_Save
-importlib.reload(Minecraft_BE.Command_Tokenizer_Compiler(debug_windows.game_process, "aaaa", (1,20,60)))
-importlib.reload(Minecraft_BE.CommandCompiler.Command1)
-#debug_windows.game_process.minecraft_chunk.loading_chunk["overworld"][(0,0)]
-debug_windows.game_process.minecraft_chunk.player
-debug_windows.game_process.minecraft_ident.functions.keys()
-
 # //[a-zA-Z \\+->:_.'\\",~0-9()]{0,}   update_pack\bedrock_edition\**\**\**.json
-debug_windows.get_display_expand_pack_record()
