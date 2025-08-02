@@ -1,7 +1,7 @@
 from . import nbt
 from .block import Block, GetNbtID, JE_Transfor_BE_Block
 from .block import GenerateContainerNBT, GenerateSignNBT, GenerateCommandBlockNBT
-from .__private import TypeCheckList
+from .__private import TypeCheckList, BiList
 from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 
@@ -346,16 +346,22 @@ class Codecs :
     class SCHEMATIC(CodecsBase) :
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
+            from .C_API import codecs_parser_schematic
             SCHMATIC = StructureSCHEMATIC.Schematic.from_buffer(Reader)
 
             StructureObject = self.Common
             StructureObject.__init__( SCHMATIC.size )
-            StructureObject.block_palette.append( Block("minecraft:air") )
 
             RunTimeBlock = StructureSCHEMATIC.RuntimeID_to_Block
-            PosIter = itertools.product(range(SCHMATIC.size[1]), range(SCHMATIC.size[2]), range(SCHMATIC.size[0]))
-            for (posy, posz, posx), id_index, data in zip(PosIter, SCHMATIC.block_index, SCHMATIC.block_data) :
-                if id_index : StructureObject.set_block(posx, posy, posz, Block(RunTimeBlock[id_index], data))
+            BlockPaletteArray = array.array("H", b"\x00\x00"*65536)
+            codecs_parser_schematic(SCHMATIC.block_index, SCHMATIC.block_data, 
+                StructureObject.block_index, BlockPaletteArray, SCHMATIC.size)
+
+            BlockList = [None] * max(BlockPaletteArray)
+            for block_id, block_index in enumerate(BlockPaletteArray) :
+                if not block_index : continue
+                BlockList[block_index-1] = Block(RunTimeBlock[block_id >> 8], block_id & 255)
+            StructureObject.block_palette.__init__( [Block("minecraft:air")] + BlockList )
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]):
             IgnoreAir, self = self.IgnoreAir, self.Common
@@ -383,6 +389,7 @@ class Codecs :
     class SCHEM_V1(CodecsBase) :
 
         def operation_structure(self, Schma_File:StructureSCHEM.Schem_V1) :
+            from .C_API import codecs_parser_schem
             StructureObject = self.Common
             StructureObject.__init__( Schma_File.size )
 
@@ -390,19 +397,35 @@ class Codecs :
             for index, block in Schma_File.block_palette.items() : blocks[index] = JE_Transfor_BE_Block(block)
             StructureObject.block_palette.__init__(blocks)
 
-            O_X, O_Y, O_Z = Schma_File.size
-            block_index, pos_x, pos_y, pos_z = 0, 0, 0, 0
-            for index_data in Schma_File.block_index :
-                block_index |= 0b0111_1111 & index_data
-                if index_data >= 0 :
-                    StructureObject.set_block(pos_x, pos_y, pos_z, block_index)
-                    nbtdata = GenerateContainerNBT(blocks[block_index].name)
-                    if nbtdata : StructureObject.set_blockNBT(pos_x, pos_y, pos_z, nbtdata)
-                    block_index = 0
-                    pos_x += 1
-                    if pos_x >= O_X : pos_x = 0 ; pos_z += 1
-                    if pos_z >= O_Z : pos_z = 0 ; pos_y += 1
+            NBTBlockBit = array.array("B", b"\x00"*len(StructureObject.block_palette))
+            for index, block in enumerate(StructureObject.block_palette) : 
+                if GenerateContainerNBT(block.name) : NBTBlockBit[index] = 1
+                elif GenerateSignNBT(block.name) : NBTBlockBit[index] = 2
+                elif GenerateCommandBlockNBT(block.name) : NBTBlockBit[index] = 3
+            
+            NBTDict = codecs_parser_schem(Schma_File.block_index, StructureObject.block_index,
+                NBTBlockBit, Schma_File.size)
+            for key, value in NBTDict.items() :
+                block = StructureObject.block_palette[StructureObject.block_index[key]]
+                if value == 1 : StructureObject.block_nbt[key] = GenerateContainerNBT(block.name)
+                elif value == 2 : StructureObject.block_nbt[key] = GenerateSignNBT(block.name)
+                elif value == 3 : StructureObject.block_nbt[key] = GenerateCommandBlockNBT(block.name)
 
+
+            """
+                O_X, O_Y, O_Z = Schma_File.size
+                block_index, pos_x, pos_y, pos_z = 0, 0, 0, 0
+                for index_data in Schma_File.block_index :
+                    block_index |= 0b0111_1111 & index_data
+                    if index_data >= 0 :
+                        StructureObject.set_block(pos_x, pos_y, pos_z, block_index)
+                        nbtdata = GenerateContainerNBT(blocks[block_index].name)
+                        if nbtdata : StructureObject.set_blockNBT(pos_x, pos_y, pos_z, nbtdata)
+                        block_index = 0
+                        pos_x += 1
+                        if pos_x >= O_X : pos_x = 0 ; pos_z += 1
+                        if pos_z >= O_Z : pos_z = 0 ; pos_y += 1
+            """
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
             Schma_File = StructureSCHEM.Schem_V1.from_buffer(Reader)
             self.operation_structure(Schma_File)
@@ -1838,7 +1861,7 @@ class Codecs :
 
             Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
                 range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
-            ChunkCache:dict = {"block":{}, "entity":[]}
+            ChunkCache:Dict[Tuple[int, int], list] = {}
 
             for index, block_index, (posx, posy, posz) in Generator :
                 if block_index < 0 : continue
@@ -1846,7 +1869,9 @@ class Codecs :
                 BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
                 if IgnoreAir and BlockID == "minecraft:air" : continue
 
-                block_data_list = ChunkCache["block"]
+                chunk_pos = (posx//32*32, posz//32*32)
+                if chunk_pos not in ChunkCache : ChunkCache[chunk_pos] = {"block":{}, "entity":[]}
+                block_data_list = ChunkCache[chunk_pos]["block"]
                 BlockHash = (BlockID, DataValue)
                 if BlockHash not in block_data_list : 
                     block_data_list[BlockHash] = [block_index, DataValue, [], [], []]
@@ -1859,7 +1884,7 @@ class Codecs :
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
                         block_data_list[BlockHash][-1].append([NBT_Obj["Command"].value, 
-                        NBT_Obj["TickDelay"].value, NBT_Obj["auto"].value, NBT_Obj["CustomName"].value ])
+                        NBT_Obj["auto"].value, NBT_Obj["TickDelay"].value, NBT_Obj["CustomName"].value ])
                     else : block_data_list[BlockHash][-1].append(["", 0, 0, ""])
                 elif BlockID.endswith("_sign") : 
                     if block_data_list[BlockHash].__len__() < 6 : block_data_list[BlockHash].append([])
@@ -1882,13 +1907,17 @@ class Codecs :
                 EntityName = entity.get("CustomName", nbt.TAG_String()).value
                 posx, posy, posz = entity["Pos"][0].value, entity["Pos"][1].value, entity["Pos"][2].value
 
-                block_data_list = ChunkCache["entity"]
-                block_data_list.append( [EntityID, EntityName, posx, posy-self.origin[1], posz] )
+                chunk_pos = (posx//32*32, posz//32*32)
+                if chunk_pos not in ChunkCache : ChunkCache[chunk_pos] = {"block":{}, "entity":[]}
+                block_data_list = ChunkCache[chunk_pos]["entity"]
+                block_data_list.append( [EntityID, EntityName, posx-chunk_pos[0], 
+                    posy-self.origin[1], posz-chunk_pos[1]] )
             
-            chunk_data = {"block":[]}
-            chunk_data["block"].extend(ChunkCache["entity"])
-            chunk_data["block"].extend(ChunkCache["block"].values())
-            Struct1.chunks.append(chunk_data)
+            for pos, data in ChunkCache.items() :
+                chunk_data = {"startX":pos[0],"startZ":pos[1],"block":[]}
+                chunk_data["block"].extend(data["entity"])
+                chunk_data["block"].extend(data["block"].values())
+                Struct1.chunks.append(chunk_data)
 
             Struct1.block_palette.extend(i.name for i in self.block_palette)
             Struct1.save_as(Writer)
@@ -1964,7 +1993,7 @@ class Codecs :
 
             Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
                 range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
-            ChunkCache:dict = {"block":{}, "entity":[]}
+            ChunkCache:Dict[Tuple[int, int], list] = {}
 
             for index, block_index, (posx, posy, posz) in Generator :
                 if block_index < 0 : continue
@@ -1972,7 +2001,9 @@ class Codecs :
                 BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
                 if IgnoreAir and BlockID == "minecraft:air" : continue
 
-                block_data_list = ChunkCache["block"]
+                chunk_pos = (posx//32*32, posz//32*32)
+                if chunk_pos not in ChunkCache : ChunkCache[chunk_pos] = {"block":{}, "entity":[]}
+                block_data_list = ChunkCache[chunk_pos]["block"]
                 BlockHash = (BlockID, DataValue)
                 if BlockHash not in block_data_list : 
                     block_data_list[BlockHash] = [block_index, DataValue, [], [], []]
@@ -1985,7 +2016,7 @@ class Codecs :
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
                         block_data_list[BlockHash][-1].append([NBT_Obj["Command"].value, 
-                        NBT_Obj["TickDelay"].value, NBT_Obj["auto"].value, NBT_Obj["CustomName"].value ])
+                        NBT_Obj["auto"].value, NBT_Obj["TickDelay"].value, NBT_Obj["CustomName"].value ])
                     else : block_data_list[BlockHash][-1].append(["", 0, 0, ""])
                 elif BlockID.endswith("_sign") : 
                     if block_data_list[BlockHash].__len__() < 6 : block_data_list[BlockHash].append([])
@@ -2008,13 +2039,17 @@ class Codecs :
                 EntityName = entity.get("CustomName", nbt.TAG_String()).value
                 posx, posy, posz = entity["Pos"][0].value, entity["Pos"][1].value, entity["Pos"][2].value
 
-                block_data_list = ChunkCache["entity"]
-                block_data_list.append( [EntityID, EntityName, posx, posy-self.origin[1], posz] )
+                chunk_pos = (posx//32*32, posz//32*32)
+                if chunk_pos not in ChunkCache : ChunkCache[chunk_pos] = {"block":{}, "entity":[]}
+                block_data_list = ChunkCache[chunk_pos]["entity"]
+                block_data_list.append( [EntityID, EntityName, posx-chunk_pos[0], 
+                    posy-self.origin[1], posz-chunk_pos[1]] )
             
-            chunk_data = {"block":[]}
-            chunk_data["block"].extend(ChunkCache["entity"])
-            chunk_data["block"].extend(ChunkCache["block"].values())
-            Struct1.chunks.append(chunk_data)
+            for pos, data in ChunkCache.items() :
+                chunk_data = {"startX":pos[0],"startZ":pos[1],"block":[]}
+                chunk_data["block"].extend(data["entity"])
+                chunk_data["block"].extend(data["block"].values())
+                Struct1.chunks.append(chunk_data)
 
             Struct1.block_palette.extend(i.name for i in self.block_palette)
             Struct1.save_as(Writer)

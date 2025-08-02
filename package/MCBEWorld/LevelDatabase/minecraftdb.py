@@ -1,4 +1,5 @@
-import leveldb, os
+import os
+from .. import C_leveldb as leveldb
 from typing import Literal
 from . import chunk_data as ChunkData
 from . import other_data as OtherData

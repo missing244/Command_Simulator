@@ -3,7 +3,7 @@ from .block import GetNbtID, GenerateCommandBlockNBT, GenerateContainerNBT, Gene
 from .__private import TypeCheckList, BiList
 from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
-import os, json, re, array, ctypes, itertools, functools
+import array, zlib
 from math import floor
 
 
@@ -20,9 +20,20 @@ def getStructureType(IO_Byte_Path) :
     else : raise ValueError(f"{IO_Byte_Path} is not Readable Object")
 
     data, data_type = _file, "bytes"
-    try : data = json.load(fp=_file)
-    except : _file.seek(0)
-    else : data_type = "json"
+    try : 
+        data = json.load(fp=_file)
+        data_type = "json"
+    except : 
+        try : 
+            _file.seek(0)
+            data = nbt.read_from_nbt_file(_file, byteorder="big", zip_mode="gzip").get_tag()
+            data_type = "nbt"
+        except : 
+            try : 
+                _file.seek(0)
+                data = nbt.read_from_nbt_file(_file, byteorder="little").get_tag()
+                data_type = "nbt"
+            except : pass
 
     Test = [StructureBDX.BDX_File, StructureMCS.Mcstructure, StructureSCHEMATIC.Schematic, 
             StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, 
@@ -45,7 +56,6 @@ def getStructureType(IO_Byte_Path) :
             if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
             return class_obj
     if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
-
 
 class CommonStructure :
     """
@@ -116,7 +126,7 @@ class CommonStructure :
             StructureSCHEM.Schem_V1: Codecs.SCHEM_V1, StructureSCHEM.Schem_V2: Codecs.SCHEM_V2, 
         }
 
-        if Decoder is not None and not isinstance(Decoder, Codecs.CodecsBase) : 
+        if Decoder is not None and Codecs.CodecsBase not in Decoder.mro() : 
             raise TypeError(f"{Decoder}是不受支持的解码器")
         elif Decoder is None : 
             TypeObj = getStructureType(Reader)

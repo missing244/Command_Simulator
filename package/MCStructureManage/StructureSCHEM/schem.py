@@ -91,12 +91,10 @@ class Schem_V1 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
-        if data_type != "bytes" : return False
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
+        if data_type != "nbt" : return False
 
-        try : NBT = nbt.read_from_nbt_file(data, byteorder="big", zip_mode="gzip").get_tag()
-        except : return False
-
+        NBT = data
         if "Version" in NBT and NBT["Version"].value <= 2 and \
             "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
             "BlockData" in NBT and 'Palette' in NBT : return True
@@ -159,12 +157,10 @@ class Schem_V2(Schem_V1) :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
-        if data_type != "bytes" : return False
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
+        if data_type != "nbt" : return False
 
-        try : NBT = nbt.read_from_nbt_file(data, byteorder="big", zip_mode="gzip").get_tag()
-        except : return False
-
+        NBT = data
         if "Schematic" not in NBT : return False
         if "Version" in NBT["Schematic"] and NBT["Schematic"]["Version"].value == 3 and \
             "Width" in NBT["Schematic"] and "Height" in NBT["Schematic"] and 'Length' in NBT["Schematic"] and \

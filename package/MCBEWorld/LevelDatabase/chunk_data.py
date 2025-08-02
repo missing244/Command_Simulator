@@ -1,7 +1,8 @@
 from .. import nbt
 from ..C_API import chunk_parser
+from .. import C_leveldb as leveldb
 from typing import Literal,List,Union,Dict,TypedDict,Tuple
-import itertools, functools, io, traceback, leveldb, math, array
+import itertools, functools, io, traceback, math, array
 
 class SUBCHUNK(TypedDict) :
     block_index: List[int]

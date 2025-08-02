@@ -151,12 +151,10 @@ class Schematic :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
-        if data_type != "bytes" : return False
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
+        if data_type != "nbt" : return False
 
-        try : NBT = nbt.read_from_nbt_file(data, byteorder="big", zip_mode="gzip").get_tag()
-        except : return False
-
+        NBT = data
         if "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
             "Blocks" in NBT and 'Data' in NBT : return True
         else : return False

@@ -1,6 +1,7 @@
 from .. import nbt
+from .. import C_leveldb as leveldb
 from typing import Literal,List,Union,Dict,Tuple
-import leveldb, io
+import io
 
 
 class LocalPlayer :

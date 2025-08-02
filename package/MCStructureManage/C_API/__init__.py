@@ -43,7 +43,8 @@ init()
 
 try : from . import MCBEStructure_C_API
 except : import Command_Simulator_C_API.MCBEStructure_C_API as MCBEStructure_C_API
-from typing import List
+import array
+from typing import List, Tuple, Dict
 
 def fuhong_v5_decrypt(bytes1:bytes) -> str : 
     """
@@ -56,3 +57,19 @@ def fuhong_v5_encrypt(str1:str) -> bytes :
     fuhong_v5 加密函数
     """
     return MCBEStructure_C_API.fuhong_v5_encrypt(str1)
+
+def codecs_parser_schematic(block_array:array.array, blockData_array:array.array, 
+        blockIndex_array:array.array, blockPalette_array:array.array, Volume:Tuple[int, int, int]) -> None : 
+    """
+    schematic 加速函数
+    """
+    return MCBEStructure_C_API.codecs_parser_schematic(block_array, 
+        blockData_array, blockIndex_array, blockPalette_array, Volume)
+
+def codecs_parser_schem(block_array:array.array, blockIndex_array:array.array, 
+    blockType_array:array.array, Volume:Tuple[int, int, int]) -> Dict[int, int] : 
+    """
+    schem 加速函数
+    """
+    return MCBEStructure_C_API.codecs_parser_schem(block_array, 
+        blockIndex_array, blockType_array, Volume)

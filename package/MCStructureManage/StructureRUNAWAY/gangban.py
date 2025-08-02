@@ -127,7 +127,7 @@ class GangBan_V1 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -235,7 +235,7 @@ class GangBan_V2 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -368,7 +368,7 @@ class GangBan_V3 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -443,7 +443,7 @@ class GangBan_V4(GangBan_V3) :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -561,7 +561,7 @@ class GangBan_V5 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -688,7 +688,7 @@ class GangBan_V6 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -752,7 +752,7 @@ class GangBan_V7(GangBan_V6) :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "bytes" : return False
 
         try : Json1 = json.load(fp=BytesIO( zlib.decompress(data.read()) ) )

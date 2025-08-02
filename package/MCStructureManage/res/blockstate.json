@@ -5891,6 +5891,122 @@
     "minecraft:dried_ghast": {
         "default": {"rehydration_level":0,"minecraft:cardinal_direction":"south"},
         "support_value": {"rehydration_level": [0,1,2,3],"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+
+
+    "minecraft:copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:exposed_copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:weathered_copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:oxidized_copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_exposed_copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_weathered_copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_oxidized_copper_chest": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+
+    "minecraft:copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:exposed_copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:weathered_copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:oxidized_copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_exposed_copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_weathered_copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    "minecraft:waxed_oxidized_copper_golem_statue": {
+        "default": {"minecraft:cardinal_direction":"south"},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"]}
+    },
+    
+    "minecraft:oak_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:spruce_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:birch_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:jungle_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:acacia_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:dark_oak_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:mangrove_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:cherry_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:pale_oak_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:bamboo_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:crimson_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
+    },
+    "minecraft:warped_shelf": {
+        "default": {"minecraft:cardinal_direction":"south", "powered_bit": false, "powered_shelf_type":0},
+        "support_value": {"minecraft:cardinal_direction":["south","west","north","east"],"powered_bit": [false,true], "powered_shelf_type":[0,1,2,3]}
     }
 }
 

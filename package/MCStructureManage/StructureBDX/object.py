@@ -158,7 +158,7 @@ class BDX_File :
 
     
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "bytes" : return False
 
         if data.read(3) != b'BD@' : return False

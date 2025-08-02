@@ -1,8 +1,9 @@
 """
 私有模块用于定义非暴露但是重要的自定义对象
 """
-import itertools
-from typing import Dict,Any,Iterable,Union,List
+import itertools, struct, array
+from typing import Dict,Any,Iterable,Union,List,Literal
+array.array
 
 
 class TypeCheckList(list) :
@@ -149,5 +150,4 @@ class BiList :
     
     def index(self, value:Any, start:int=0, stop:int=2**63-1) :
         return self.__forward.index(value, start, stop)
-
 

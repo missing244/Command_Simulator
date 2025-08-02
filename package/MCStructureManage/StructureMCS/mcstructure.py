@@ -117,7 +117,7 @@ class Mcstructure :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "bytes" : return False
 
         try : NBT = nbt.read_from_nbt_file(data, byteorder="little").get_tag()

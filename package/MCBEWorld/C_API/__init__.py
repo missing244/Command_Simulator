@@ -1,18 +1,26 @@
 def init() :
-    import os, platform, sys, hashlib
+    import os, platform, sys, hashlib, re
     py_dll_name = "MCBEWorld_C_API.%s"
     
     system_info = platform.uname()
-    py_version = (sys.version_info.major, sys.version_info.minor)
+    system = system_info.system.lower()
+    machine = system_info.machine.lower()
     base_path = os.path.realpath( os.path.join(__file__, "..") )
-    if system_info.system.lower() == 'windows' and system_info.machine.lower() == "amd64" :
+
+    if system == 'windows' and machine == "amd64" :
         target_path = os.path.join(base_path, py_dll_name % "pyd")
-        target_abi = os.path.join(base_path, "ABI_File", "amd64.pyd")
-    elif system_info.system.lower() == 'linux' and system_info.machine.lower() == "aarch64" : 
-        target_path = "/data/user/0/ru.iiec.pydroid3/files/aarch64-linux-android/lib/python%s.%s/site-packages/Command_Simulator_C_API" % py_version
-        target_abi = os.path.join(base_path, "ABI_File", "aarch64.pyd")
+        target_abi = os.path.join(base_path, "ABI_File", "Win_amd64.pyd")
+    elif system == 'linux' and machine == "aarch64" : 
+        for test_path in sys.path :
+            if not test_path.endswith("site-packages") : continue
+            else : break
+        target_path = os.path.join(test_path, "Command_Simulator_C_API")
+        target_abi = os.path.join(base_path, "ABI_File", "Linux_aarch64.pyd")
         os.makedirs( target_path, exist_ok=True )
         target_path = os.path.join(target_path, py_dll_name % "so")
+    elif system == 'linux' and machine == "x86_64" :
+        target_path = os.path.join(base_path, py_dll_name % "so")
+        target_abi = os.path.join(base_path, "ABI_File", "Linux_x86_64.pyd")
     else : raise RuntimeError(f"未支持的系统{system_info}")
 
     if os.path.isfile(target_path) : 

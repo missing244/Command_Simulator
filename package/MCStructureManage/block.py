@@ -16,7 +16,7 @@ SpecialStates = {"direction":{"south":0, "west":1, "north":2, "east":3},
     "top_slot_bit":{"top":True, "bottom":False}}
 def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str, Union[bool, int, str]]]:
     if id.endswith("seaLantern") : id = "sea_lantern"
-    BlockID = f"minecraft:{id}" if id.find("minecraft:") else id
+    BlockID = f"minecraft:{id}" if ":" not in id else id
 
     if BlockID in BlockState and value.__class__ is int :
         NewBlockID = BlockID
@@ -67,7 +67,7 @@ def TransforRunawayBlock(id:Union[str, "Block"]) :
     if id.__class__ is str :
         str1 = id.split(".")
         block_id, block_state = str1[0], str1[1:]
-        block_id = f"minecraft:{block_id}" if block_id.find("minecraft:") else block_id
+        block_id = f"minecraft:{block_id}" if ":" not in block_id else block_id
         if not block_state or block_id not in BlockState : return (block_id, {})
         if "runaway_blockstate_key" not in BlockState[block_id] : return (block_id, {})
 
@@ -224,11 +224,12 @@ ContainerNBT_ID = {"minecraft:chest": "Chest", "minecraft:trapped_chest": "Chest
 "minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace", "minecraft:ender_chest":"EnderChest"}
 
 def GetNbtID(id:str) :
-    id = f"minecraft:{id}" if id.find("minecraft:") else id
+    id = f"minecraft:{id}" if ":" not in id else id
     if id in ContainerNBT_ID : return ContainerNBT_ID[id]
     elif id.endswith("command_block") : return "CommandBlock"
     elif id.endswith("hanging_sign") : return "HangingSign"
     elif id.endswith("_sign") : return "Sign"
+    elif id.endswith("_shelf") : return "Shelf"
 
 
 
@@ -331,7 +332,7 @@ def GenerateCommandBlockNBT(id:str) -> nbt.TAG_Compound :
     ).build()
 
 def GenerateContainerNBT(id:str) -> Union[None, nbt.TAG_Compound] :
-    id = f"minecraft:{id}" if id.find("minecraft:") else id
+    id = f"minecraft:{id}" if ":" not in id else id
     id = ContainerNBT_ID.get(id, None)
     if not id : return None
     node = nbt.NBT_Builder()

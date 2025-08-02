@@ -88,7 +88,7 @@ class FuHong_V1 :
     
     
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -247,7 +247,7 @@ class FuHong_V2 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
@@ -380,7 +380,7 @@ class FuHong_V3 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
         
@@ -458,12 +458,11 @@ class FuHong_V4 :
                 "PlayerInfo": "玩家名称:ComFHawa 游戏模式:1 玩家自身坐标:X:0 Y:-0 Z:0",
                 "WorldInfo": "世界名称:我的世界1 世界种子:%s 世界时间:5000 时间随机刻速度:1" % random.randint(-2**48, 2**48),
                 "Export_Mode": "导出模式:命令导出",
-                "ExportSiteInfo": "调用导出范围:82,-52,40 > 73,-44,31 计算后的导出范围:73,-52,31 > 82,-44,40",
                 "FormatInfo": "format info last update:%s author:FuHong" % time.strftime("%Y%m%d", time.localtime()),
                 "ExportTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                 "ExportEndTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                "TimeConsuming": "耗时:1ms",
-                "BlocksQuantity": "%s" % len(self.chunks)},
+                "BlocksQuantity": "%s" % len(self.chunks)
+            },
             "FuHongBuild":list(self.chunks),
             "BlocksList": list(self.block_palette),
             "TimeUsed":"1ms"
@@ -480,7 +479,7 @@ class FuHong_V4 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
         
@@ -533,7 +532,7 @@ class FuHong_V5(FuHong_V4) :
 
     
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         from .. import C_API
         import traceback
         if data_type != "bytes" : return False

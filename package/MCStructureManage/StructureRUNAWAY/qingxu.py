@@ -101,7 +101,7 @@ class QingXu_V1 :
 
 
     @classmethod
-    def is_this_file(cls, data, data_type:Literal["bytes", "json"]) :
+    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
         if data_type != "json" : return False
         Json1 = data
 
