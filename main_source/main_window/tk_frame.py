@@ -74,7 +74,7 @@ class Bottom_Bar(tkinter.Canvas) :
         self.main_win = main_win
 
         canvas_width = int(self.cget("width")) ; canvas_height = int(self.cget("height"))
-        text_id_0 = self.create_text(20, 20, text="游戏", font=tk_tool.get_default_font(14, weight="bold"), fill="#00ff00")
+        text_id_0 = self.create_text(20, 20, text="主页", font=tk_tool.get_default_font(14, weight="bold"), fill="#00ff00")
         self.coords(text_id_0, int(canvas_width*0.13), canvas_height//2)
         text_id_1 = self.create_text(20, 20, text="模拟", font=tk_tool.get_default_font(14, weight="bold"), fill="white")
         self.coords(text_id_1, int(canvas_width*0.315), canvas_height//2)
@@ -152,8 +152,6 @@ class Welcome_Screen(tkinter.Frame) :
         tkinter.Label(self, text="命令模拟器", fg='black', font=tk_tool.get_default_font(25), width=15, height=1).pack()
         tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(6)).pack()
         
-        tkinter.Button(self,text='开始命令模拟',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
-            command=self.main_win.game_ready_or_run).pack(side="top")
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
         tkinter.Button(self,text='查询游戏内ID',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("find_minecraft_ID")).pack(side="top")
@@ -166,11 +164,15 @@ class Welcome_Screen(tkinter.Frame) :
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
         tkinter.Button(self,text='结构文件转换',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("structure_transfor")).pack(side="top")
+        if 0 :
+            tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+            tkinter.Button(self,text='导出世界结构',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+                command=lambda:self.main_win.set_display_frame("structure_transfor")).pack(side="top")
         if self.main_win.platform == "android" or app_constant.debug_testing :
             tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
             tkinter.Button(self,text='复制文件命令',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("copy_file_command")).pack(side="top")
-        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(7)).pack()
 
         frame_m4 = tkinter.Frame(self)
         tkinter.Button(frame_m4,text='使用须知',font=tk_tool.get_default_font(11),bg='#D369a9',width=8,height=1,
@@ -683,9 +685,11 @@ class BE_Structure_Transfor(tkinter.Frame) :
             file_path = os.path.join( self.base_path, file_name )
             try : Struct1 = CommonStructure.from_buffer(file_path)
             except Exception as e : 
-                self.input_box.insert( tkinter.END, e.args[0] + "\n\n" )
+                self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
+                self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
                 self.input_box.see(tkinter.END)
                 continue
+            self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
             end_name = file_type_re.search(file_name)
             save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
             save_file_path = os.path.join( self.base_path, "result", save_file_name )
@@ -727,7 +731,7 @@ class Game_Ready(tkinter.Frame) :
     def __init__(self, main_win, **karg) -> None:
         super().__init__(main_win.window, **karg)
         self.main_win = main_win
-        a1 = tkinter.Label(self, text="模拟世界存档", bg='#82aaff',fg='black',font=tk_tool.get_default_font(20), width=15, height=1)
+        a1 = tkinter.Label(self, text="命令模拟存档", bg='#82aaff',fg='black',font=tk_tool.get_default_font(20), width=15, height=1)
         a1.pack()
 
         c1 = tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)) ; c1.pack()
@@ -1385,6 +1389,9 @@ class Setting(tkinter.Frame) :
         tkinter.Button(frame_0,text='交流群',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
             lambda:webbrowser.open("https://commandsimulator.great-site.net/qq_group.html")).pack(side=tkinter.LEFT)
         frame_0.pack()
+        
+        tkinter.Label(self, text="Version: %s" % app_constant.APP_VERSION, fg='black', font=tk_tool.get_default_font(11), height=1).pack(side="bottom")
+        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(5), width=2, height=2).pack(side="bottom")
 
 class Login(tkinter.Frame) :
 
