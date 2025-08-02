@@ -50,7 +50,7 @@ def decompress_buffer(buffer, zip_mode, head_byte=None):
         try: return BytesIO(zlib.decompress(buffer.read()))
         except Exception as e: raise NbtFileError("(%s)zlib解压失败: %s" % (buffer, e.args[0]))
     if zip_mode == 'gzip' or head_byte == b'\x1F\x8B':
-        try: return BytesIO(gzip.decompress(buffer.read()))
+        try: return gzip.GzipFile(fileobj=buffer)
         except Exception as e: raise NbtFileError("(%s)gzip解压失败: %s" % (buffer, e.args[0]))
     else:
         return buffer
