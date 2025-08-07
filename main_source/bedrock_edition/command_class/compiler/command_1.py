@@ -581,11 +581,10 @@ class dialogue:
 
 
 class difficulty :
-    DIFFICULTY:list = Constants.GAME_DATA["difficult_type"]
 
     @classmethod
     def __compiler__(cls, _game:RunTime.minecraft_thread, token_list:COMMAND_TOKEN) :
-        difficulty_data = cls.DIFFICULTY
+        difficulty_data = Constants.GAME_DATA["difficult_type"]
         token = token_list[1]["token"]
         difficulty = difficulty_data.index(token) // 3   #The var 'difficulty' is the numeric id of difficulty
         difficulty_name = difficulty_data[0::3][difficulty]     #Get the column 0 and get the full name of difficulty
