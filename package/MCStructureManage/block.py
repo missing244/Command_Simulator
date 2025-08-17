@@ -172,7 +172,9 @@ def JE_Transfor_BE_Block(id:str) -> "Block":
 
     #处理方块ID差异
     BE_ID = JEtransfor["Identifier"][JE_ID]["name"] if JE_ID in JEtransfor["Identifier"] else JE_ID
-    if IdentifierAndStateSeacher["_slab$"].search(JE_ID) and JE_State.get("type", None) == "double" : BE_ID = BE_ID[:-5] + "_double_slab"
+    if IdentifierAndStateSeacher["_slab$"].search(JE_ID) and JE_State.get("type", None) == "double" : 
+        if BE_ID[-1] not in "0123456789" : BE_ID = BE_ID[:-5] + "_double_slab"
+        else : BE_ID = BE_ID[:-6] + "_double_slab"
     BE_ID, BE_State = TransforBlock(BE_ID)
 
     #特殊方块对应方块状态处理

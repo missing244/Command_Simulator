@@ -114,8 +114,8 @@ class Schematic :
         StructureObject.offset[0] = NBT.get("WEOffsetX", 0)
         StructureObject.offset[1] = NBT.get("WEOffsetY", 0)
         StructureObject.offset[2] = NBT.get("WEOffsetZ", 0)
-        StructureObject.block_index = array.array("B", NBT['Blocks'].value.tobytes())
-        StructureObject.block_data = array.array("B", NBT['Data'].value.tobytes())
+        StructureObject.block_index = NBT['Blocks'].value
+        StructureObject.block_data = NBT['Data'].value
         StructureObject.entity_nbt = TypeCheckList(NBT.get('Entities', [])).setChecker(nbt.TAG_Compound)
         StructureObject.block_nbt = TypeCheckList(NBT.get('TileEntities', [])).setChecker(nbt.TAG_Compound)
 

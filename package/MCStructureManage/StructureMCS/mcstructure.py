@@ -118,10 +118,8 @@ class Mcstructure :
 
     @classmethod
     def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "bytes" : return False
-
-        try : NBT = nbt.read_from_nbt_file(data, byteorder="little").get_tag()
-        except : return False
+        if data_type != "nbt" : return False
+        NBT = data
 
         if "size" in NBT and "structure_world_origin" in NBT and 'structure' in NBT : return True
         else : return False

@@ -426,6 +426,7 @@ class Codecs :
                         if pos_x >= O_X : pos_x = 0 ; pos_z += 1
                         if pos_z >= O_Z : pos_z = 0 ; pos_y += 1
             """
+            
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
             Schma_File = StructureSCHEM.Schem_V1.from_buffer(Reader)
             self.operation_structure(Schma_File)

@@ -3,7 +3,7 @@ from .block import GetNbtID, GenerateCommandBlockNBT, GenerateContainerNBT, Gene
 from .__private import TypeCheckList, BiList
 from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
-import array, zlib
+import array, mmap
 from math import floor
 
 
@@ -86,7 +86,7 @@ class CommonStructure :
         Volume = size[0] * size[1] * size[2]
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
-        self.block_index: array.array[int] = array.array("h", b"\x00\x00" * Volume)             #修改元素✔，赋值✘
+        self.block_index: array.array[int] = array.array("h", bytearray(Volume*2))               #修改元素✔，赋值✘
         self.contain_index: Dict[int, int] = {}                                                 #修改元素✔，赋值✘
         self.block_palette: List[Block] = BiList()                                              #修改元素✔，赋值✘
         self.entity_nbt: List[nbt.TAG_Compound] = TypeCheckList().setChecker(nbt.TAG_Compound)  #修改元素✔，赋值✘
