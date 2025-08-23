@@ -92,18 +92,11 @@ class TAG_Array(TAG_Base_Array):
     @classmethod
     def _from_bytesIO(cls, buffer, mode=False):
         byte = buffer_read(buffer, 4, "数组元素个数")
-        try:
-            count = ce.unpack_data(byte, TAG.INT, mode)[0]
-        except Exception as e:
-            throw_nbt_error(e, buffer, 4)
-        length = ce.number_bytes_len[cls._type]
-        size = count * length
-        byte = buffer_read(buffer, size, "数组元素")
+        try: count = ce.unpack_data(byte, TAG.INT, mode)[0]
+        except Exception as e: throw_nbt_error(e, buffer, 4)
         array = cls()
-        try:
-            array.__value.frombytes(byte)
-        except Exception as e:
-            throw_nbt_error(e, buffer, size)
+        try: array.__value.fromfile(buffer, count)
+        except Exception as e: throw_nbt_error(e, buffer, count * ce.number_bytes_len[cls._type])
         if mode: array.__value.byteswap()
         return array
 
@@ -348,20 +341,14 @@ class TAG_List(TAG_Base_List):
             throw_nbt_error(e, buffer, 1)
         tag = TAGLIST[type]
         byte = buffer_read(buffer, 4, "列表元素数量")
-        try:
-            count = ce.unpack_data(byte, TAG.INT, mode)[0]
-        except Exception as e:
-            throw_nbt_error(e, buffer, 4)
+        try: count = ce.unpack_data(byte, TAG.INT, mode)[0]
+        except Exception as e: throw_nbt_error(e, buffer, 4)
         List = cls()
         List.set_type(type)
         if type in list(ARRAY_TYPECODE.keys()):
             res = array(ARRAY_TYPECODE[type])
-            length = ce.number_bytes_len[type]
-            byte = buffer_read(buffer, count * length, "列表元素内容")
-            try:
-                res.frombytes(byte)
-            except Exception as e:
-                throw_nbt_error(e, buffer, length)
+            try: res.fromfile(buffer, count)
+            except Exception as e: throw_nbt_error(e, buffer, count * ce.number_bytes_len[type])
             if mode: res.byteswap()
             List.__value = res
         else:
@@ -495,7 +482,10 @@ class TAG_List(TAG_Base_List):
                 if not isinstance(v, TAG_Base) or not type == v.type: raise TypeError("TAG_List容器元素期望类型为 %s，但传入了 %s" % (type, v.type))
             self.set_type(type)
             self.test_type()
-            self.__value = value.copy()
+            if self.__is_number_list:
+                self.__value = array(ARRAY_TYPECODE[self.__type], [v.get_value() for v in value])
+            else:
+                self.__value = value.copy()
         elif isinstance(value, array) and value.typecode in ARRAY_TYPECODE.values():
             self.__value = value
             self.set_type({v:k for k, v in ARRAY_TYPECODE.items()}[value.typecode])
@@ -561,6 +551,7 @@ class TAG_List(TAG_Base_List):
         if self.__is_number_list: return self.__class__(self.__value)
         res = self.__class__()
         res.__value = [v.copy() for v in self.__value]
+        res.__type = self.__type
         return res
 
     def __repr__(self) -> str:

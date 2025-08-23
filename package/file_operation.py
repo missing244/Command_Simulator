@@ -19,8 +19,8 @@ def search_file(path1:str,condition_func=None) -> List[Tuple[Literal["file","dir
         search_file_list = list(os.walk(path1))
         for base_path_name,_,file_name_list in search_file_list :
             for file_name in file_name_list :
-                if condition_func and not condition_func(base_path_name,file_name) : continue
-                search_result.append( ("file", base_path_name, os.path.join(base_path_name,file_name)) )
+                if condition_func and not condition_func(base_path_name, file_name) : continue
+                search_result.append( ("file", base_path_name, os.path.join(base_path_name, file_name)) )
             if len(file_name_list) == 0 : search_result.append( ("dir", base_path_name ) )
         return search_result
 

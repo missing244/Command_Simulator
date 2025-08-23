@@ -213,7 +213,7 @@ class js_execute :
             c1 = js_execute.toNumber(http_str[re_3.start():re_3.end()].replace("c=toNumbers(","").replace("\"",""))
             return "__test=" + js_execute.cbc_decode(c1,a1,b1)
         else :
-            re_1 = re.search("document.cookie=[\"\w_=]+",http_str)
+            re_1 = re.search(r"document.cookie=[\"\w_=]+",http_str)
             return http_str[re_1.start():re_1.end()].split("\"")[1]
 
     def cbc_decode(text1,key,vi):
@@ -255,7 +255,7 @@ AUTO_LOGIN = ["https://command.infinityfreeapp.com/app_login.php?i=1","https://c
 MANUAL_LOGIN = ["https://command.infinityfreeapp.com/manual_login.php?i=1","https://commandsimulatorapi.great-site.net/manual_login.php?i=1"]
 UPDATE_EXPAND_PACK = ["https://command.infinityfreeapp.com/expand_pack_get.php?i=1","https://commandsimulatorapi.great-site.net/expand_pack_get.php?i=1"]
 
-UPDATE_BE_ID = "https://ca.projectxero.top/idlist/data/beta/vanilla.zip"
+UPDATE_BE_ID = "https://idlist.projectxero.top/data/beta/vanilla.zip"
 
 
 
