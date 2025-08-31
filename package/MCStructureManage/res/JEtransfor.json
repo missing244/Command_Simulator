@@ -66,7 +66,7 @@
         "minecraft:jungle_sign": {"name": "minecraft:jungle_standing_sign"},
         "minecraft:kelp_plant": {"name": "minecraft:kelp"},
         "minecraft:lava_cauldron": {"name": "minecraft:cauldron"},
-        "minecraft:light": {"name": "minecraft:bed"},
+        "minecraft:light": {"name": "minecraft:light_block"},
         "minecraft:light_blue_banner": {"name": "minecraft:standing_banner"},
         "minecraft:light_blue_bed": {"name": "minecraft:bed"},
         "minecraft:light_blue_wall_banner": {"name": "minecraft:wall_banner"},
@@ -291,6 +291,7 @@
             "twisting_vines_age":null
         },
         "level":{
+            "block_light_level": null,
             "composter_fill_level":null,
             "liquid_depth":null
         }

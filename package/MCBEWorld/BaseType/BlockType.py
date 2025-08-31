@@ -76,19 +76,25 @@ class BlockPermutationType :
         return self.__str__()
 
     def __setattr__(self, name:str, value) :
-        if name not in {"Identifier", "States", "Version"} : raise ModifyError("不存在%s属性" % name)
-        elif not hasattr(self, name) : super().__setattr__(name, value)
+        if not hasattr(self, name) : super().__setattr__(name, value)
         else : raise ModifyError("不允许修改%s属性" % name)
 
     def __delattr__(self, name) :
         raise ModifyError("不允许删除%s属性" % name)
         
+    def __hash__(self):
+        return self.__hash
+
+    def __eq__(self, value):
+        return value.__hash__()  == self.__hash
+
 
     def __init__(self, id:str, state:Union[str, Dict[str, Union[str, bool, int]]]={}, version:int=17959425) :
         self.Identifier:str = f"minecraft:{id}" if ":" not in id else id
         self.States:Dict[str, Union[str, bool, int]] = types.MappingProxyType(
             state.copy() if isinstance(state, dict) else BE_BlockStates_Parser(state) )
         self.Version:int = version
+        self.__hash = (self.Identifier, *self.States.items()).__hash__()
 
 
     @classmethod
@@ -141,7 +147,7 @@ class BlockNbtType :
         elif name == "x" and isinstance(value, int) : super().__setattr__(name, ctypes.c_int32(value).value)
         elif name == "y" and isinstance(value, int) : super().__setattr__(name, ctypes.c_int32(value).value)
         elif name == "z" and isinstance(value, int) : super().__setattr__(name, ctypes.c_int32(value).value)
-        elif name == "CustomName" and isinstance(value, str) : super().__setattr__(name, bool(value))
+        elif name == "CustomName" and isinstance(value, str) : super().__setattr__(name, value)
         elif not hasattr(self, name) : super().__setattr__(name, value)
         else : raise ModifyError("不允许修改%s属性" % name)
 
@@ -168,7 +174,7 @@ class BlockNbtType :
         BlockEntityObject.x = nbt_data["x"].value
         BlockEntityObject.y = nbt_data["y"].value
         BlockEntityObject.z = nbt_data["z"].value
-        BlockEntityObject.CustomName = nbt_data["CustomName"].value if "CustomName" in nbt_data else ""
+        if "CustomName" in nbt_data : BlockEntityObject.CustomName = nbt_data["CustomName"].value
 
         for ContainerID in ["Items"] :
             Contanier = getattr(BlockEntityObject, ContainerID)

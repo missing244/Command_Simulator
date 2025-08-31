@@ -141,7 +141,7 @@ class control_windows :
         self.display_frame["special_char"] = app_tk_frame.Special_Char(self)
         self.display_frame["unicode_char"] = app_tk_frame.Unicode_Char(self)
         self.display_frame["find_minecraft_ID"] = app_tk_frame.Find_Minecraft_ID(self)
-        self.display_frame["structure_transfor"] = app_tk_frame.BE_Structure_Transfor(self)
+        self.display_frame["structure_transfor"] = app_tk_frame.BE_Structure_Tool(self)
         self.display_frame["copy_file_command"] = app_tk_frame.Copy_File_Command(self)
 
         self.display_frame["game_ready"] = app_tk_frame.Game_Ready(self)
@@ -161,7 +161,7 @@ class control_windows :
 
         self.user_manager.save_data["open_app_count"] += 1
         if self.user_manager.save_data["open_app_count"] == 1 :
-            yesorno = tkinter.messagebox.askquestion("question", "看起来您是第一次打开\n需要熟悉软件如何使用吗？(新用户请务必点击确定！)")
+            yesorno = tkinter.messagebox.askquestion("question", "看起来您是第一次打开\n需要熟悉软件如何使用吗？\n(新用户请务必点击确定！)")
             if self.platform == "android" and yesorno == "yes" : app_function.Beginner_Tutorial(self, False)
             elif self.platform == "windows" and yesorno == "yes" : webbrowser.open("http://localhost:32323/tutorial/Instructions.html")
 

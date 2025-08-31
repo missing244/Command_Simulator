@@ -73,3 +73,10 @@ def codecs_parser_schem(block_array:array.array, blockIndex_array:array.array,
     """
     return MCBEStructure_C_API.codecs_parser_schem(block_array, 
         blockIndex_array, blockType_array, Volume)
+
+def split_commonstructure(input_index:array.array, output_index:array.array, 
+    Size:Tuple[int, int, int], StartPos:Tuple[int, int, int], EndPos:Tuple[int, int, int]) :
+    """
+    CommonStructure裁切函数
+    """
+    MCBEStructure_C_API.split_commonstructure(input_index, output_index, Size, StartPos, EndPos)

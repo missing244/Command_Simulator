@@ -3,8 +3,7 @@ from .block import GetNbtID, GenerateCommandBlockNBT, GenerateContainerNBT, Gene
 from .__private import TypeCheckList, BiList
 from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal,TypedDict
-import array, mmap
-from math import floor
+import array, math
 
 
 def getStructureType(IO_Byte_Path) :
@@ -77,6 +76,10 @@ class CommonStructure :
     -----------------------
     * 可用方法 get_block : 传入非负整数坐标，返回方块对象
     * 可用方法 set_block : 传入非负整数坐标和方块，修改方块
+    * 可用方法 get_blockNBT : 传入非负整数坐标，返回方块NBT对象
+    * 可用方法 set_blockNBT : 传入非负整数坐标和方块NBT，修改方块NBT对象
+    * 可用方法 count : 传入方块对象，获取在结构中方块的数量
+    * 可用方法 split : 传入起始坐标与结束坐标，获取对应的结构切片
     -----------------------
     * Coder注意事项1 : 部分属性均不可直接修改，请调用对象方法进行修改，以避免数据不正确
     """
@@ -86,7 +89,7 @@ class CommonStructure :
         Volume = size[0] * size[1] * size[2]
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
-        self.block_index: array.array[int] = array.array("h", bytearray(Volume*2))               #修改元素✔，赋值✘
+        self.block_index: array.array[int] = array.array("h", bytearray(Volume*2))              #修改元素✔，赋值✘
         self.contain_index: Dict[int, int] = {}                                                 #修改元素✔，赋值✘
         self.block_palette: List[Block] = BiList()                                              #修改元素✔，赋值✘
         self.entity_nbt: List[nbt.TAG_Compound] = TypeCheckList().setChecker(nbt.TAG_Compound)  #修改元素✔，赋值✘
@@ -178,5 +181,48 @@ class CommonStructure :
         index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
         if nbt : self.block_nbt[index] = nbt
         elif index in self.block_nbt : del self.block_nbt[index]
+
+
+    def count(self, block_obj:Block) :
+        if block_obj not in self.block_palette : return 0
+        index_list = [index for index, block in enumerate(self.block_palette) if block_obj == block]
+        return sum( self.block_index.count(i) for i in index_list )
+
+    def split(self, start_pos:Tuple[int, int, int], end_pos:Tuple[int, int, int]) -> "CommonStructure" :
+        from . import C_API
+        if any( j<i for i,j in zip(start_pos, end_pos) ) : 
+            raise ValueError("结束坐标%s不能小于起始坐标%s" % (end_pos, start_pos))
+        split_size = [ j-i+1 for i,j in zip(start_pos, end_pos) ]
+        NewCommonStructure = self.__class__()
+        NewCommonStructure.__init__( split_size )
+        C_API.split_commonstructure(self.block_index, NewCommonStructure.block_index,
+            self.size, start_pos, end_pos)
+        NewCommonStructure.block_palette = self.block_palette.copy()
+
+        for entityNBT in self.entity_nbt :
+            EnX = entityNBT["Pos"][0] - self.origin[0]
+            EnY = entityNBT["Pos"][1] - self.origin[1]
+            EnZ = entityNBT["Pos"][2] - self.origin[2]
+            if  not(start_pos[0] <= EnX < end_pos[0]+1 and start_pos[1] <= EnY < end_pos[1]+1
+                and start_pos[2] <= EnZ < end_pos[2]+1) : continue
+            NewentityNBT = entityNBT.copy()
+            NewentityNBT["Pos"][0] = nbt.TAG_Float(EnX - start_pos[0])
+            NewentityNBT["Pos"][1] = nbt.TAG_Float(EnY - start_pos[1])
+            NewentityNBT["Pos"][2] = nbt.TAG_Float(EnZ - start_pos[2])
+            NewCommonStructure.entity_nbt.append(NewentityNBT)
+
+        sizeX, sizeY, sizeZ = self.size[0], self.size[1], self.size[2]
+        for nbt_index, blockNBT in self.block_nbt.items() :
+            blockX = nbt_index // (sizeY * sizeZ)
+            blockY = (nbt_index % (sizeY * sizeZ)) // sizeZ
+            blockZ = (nbt_index % (sizeY * sizeZ)) % sizeZ
+            if  not(start_pos[0] <= blockX <= end_pos[0] and start_pos[1] <= blockY <= end_pos[1]
+                and start_pos[2] <= blockZ <= end_pos[2]) : continue
+            NewCommonStructure.set_blockNBT(blockX-start_pos[0], blockY-start_pos[1],
+                blockZ-start_pos[2], blockNBT.copy())
+
+        return NewCommonStructure
+
+    
 
 

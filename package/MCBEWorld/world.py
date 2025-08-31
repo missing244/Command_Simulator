@@ -1,12 +1,11 @@
-from typing import Literal,Union,List,Tuple
-import os,io,gzip,base64,json,sys
-from . import nbt
-from .C_API import cycle_xor
-from . import LevelDatabase
+from typing import Literal,Union,List,Dict,Tuple,Iterable
+import os,io,gzip,base64,json,sys,array
+from . import nbt, BaseType
+from . import C_API
+from .C_leveldb import LevelDB as MinecraftLevelDB
 
 LevelDatFileDefaultData = b'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'
 Encrypt_Header = b"\x80\x1d\x30\x01"
-
 
 def GetWorldEdtion(path:str) :
     """
@@ -69,7 +68,7 @@ class World :
             read_file.close()
             with open(path, "wb") as f : 
                 f.write( Encrypt_Header )
-                f.write( cycle_xor(bytes1, key_bytes) )
+                f.write( C_API.cycle_xor(bytes1, key_bytes) )
 
     def __netease_decrypt__(self, db_path:str, key:int) :
         key_bytes = key.to_bytes(8, byteorder="big", signed=False)
@@ -84,7 +83,7 @@ class World :
             if read_file.read(4) != Encrypt_Header : read_file.close() ; continue
             bytes1 = read_file.read()
             read_file.close()
-            with open(path, "wb") as f : f.write( cycle_xor(bytes1, key_bytes) )
+            with open(path, "wb") as f : f.write( C_API.cycle_xor(bytes1, key_bytes) )
 
 
     def __str__(self):
@@ -100,8 +99,6 @@ class World :
             raise TypeError(f"不正确的 world_name 类型 ({value.__class__})")
         elif name == "encrypt_key" and not isinstance(value, (int, type(None))) : 
             raise TypeError(f"不正确的 encrypt_key 类型 ({value.__class__})")
-        elif name == "world_db" and not hasattr(self, name) and not isinstance(value, LevelDatabase.MinecraftLevelDB) : 
-            raise TypeError(f"不正确的 world_db 类型 ({value.__class__})")
         elif name == "world_db" and hasattr(self, name) : 
             raise RuntimeError("不允许修改 world_db 属性")
         else : 
@@ -109,6 +106,7 @@ class World :
                 if not(0 <= value <= (2**64)-1) : raise ValueError("encrypt_key 应为非负数且不超过8字节整数最大值")
                 self.__runtime_cache["encrypt_key"] = value
             super().__setattr__(name, value)
+
 
     def __init__(self, world_path:str) :
         world_dat_path = os.path.join(world_path, "level.dat")
@@ -149,8 +147,7 @@ class World :
         with open(world_name_path, "r", encoding="utf-8") as f : self.world_name = f.read()
         self.encrypt_key = self.__runtime_cache["encrypt_key"]
         self.world_nbt = world_nbt
-        self.world_db = LevelDatabase.MinecraftLevelDB(world_database_path)
-
+        self.world_db = MinecraftLevelDB(world_database_path, create_if_missing=True)
 
     def close(self, encryption=True) :
         if sys.is_finalizing() or self.__close : return None
@@ -177,10 +174,49 @@ class World :
         self.__close = True
 
 
+    def import_CommonStructure(self, CommonStructure, dimension:int, startPos:Tuple[int, int, int]) :
+        BlockHashTable:Dict[BaseType.BlockPermutationType, int] = {}
+        SizeX, SizeY, SizeZ = CommonStructure.size
+        BlockIndex:array.array = CommonStructure.block_index
+        BlockHashTable.update((BaseType.BlockPermutationType(j.name, j.states), i) for i,j in enumerate(CommonStructure.block_palette))
+        
+        if  (dimension == 0 and ( not(-64 <= startPos[1] < 320) or not(-64 <= startPos[1]+SizeY < 320) )) or \
+            (dimension == 1 and ( not(0 <= startPos[1] < 256) or not(0 <= startPos[1]+SizeY < 256) )) or \
+            (dimension == 2 and ( not(0 <= startPos[1] < 256) or not(0 <= startPos[1]+SizeY < 256) )) :
+            raise ValueError("结构放置超出世界有效高度范围")
+        
+        Iter1 = C_API.StructureOperatePosRange(startPos[0], startPos[2], startPos[0]+SizeX, startPos[2]+SizeZ)
+        for x1, z1, x2, z2 in Iter1 :
+            ChunkOBJ = BaseType.ChunkType.from_leveldb(self.world_db, dimension, x1//16, z1//16)
+            if -4 not in ChunkOBJ.SubChunks : 
+                ChunkOBJ.SubChunks[-4] = BaseType.SubChunkType()
+                ChunkOBJ.SubChunks[-4].BlockIndex[0:4096] = array.array("H", BaseType.DefaultChunkData)
+                ChunkOBJ.SubChunks[-4].BlockPalette.extend( BaseType.DefaultChunkPalette )
+            for layer in range(-3, (startPos[1]+SizeY-1)//16) :
+                if layer not in ChunkOBJ.SubChunks :
+                    ChunkOBJ.SubChunks[layer] = BaseType.SubChunkType()
+            C_API.import_CommonStructure_to_chunk(x1, startPos[0], z1,
+                x2, startPos[0]+SizeY, z2, ChunkOBJ.SubChunks, BlockIndex, BlockHashTable)
+            
+
+        raise NotImplementedError()
+
+    def export_CommonStructure(self, CommonStructure, dimension:int, startPos:Tuple[int, int, int], endPos:Tuple[int, int, int]) :
+        raise NotImplementedError()
 
 
+    def chunk_pos_iter(self, dimension:int) -> Iterable[Tuple[int, int]] :
+        for key_bytes in self.world_db.keys() :
+            Test1 = C_API.is_chunk_key(key_bytes, dimension)
+            if Test1 : yield Test1
+    
+    def chunk_exists(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> bool :
+        key = BaseType.GenerateChunkLevelDBKey(dimension, chunk_pos_x, chunk_pos_z, 44)
+        return key in self.world_db
 
-
+    def get_chunk(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> Union[BaseType.ChunkType, None]: 
+        if not self.chunk_exists(dimension, chunk_pos_x, chunk_pos_z) : return None
+        return BaseType.ChunkType.from_leveldb(self.world_db, dimension, chunk_pos_x, chunk_pos_z)
 
 
 

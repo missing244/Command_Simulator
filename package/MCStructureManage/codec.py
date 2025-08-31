@@ -1826,8 +1826,8 @@ class Codecs :
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
-                CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
                 CommandBlockNBT["TickDelay"] = nbt.TAG_Int(data[1])
+                CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
                 CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3])
                 CommandBlockNBT["Version"] = nbt.TAG_Int(38 if ExecuteTest.match(CommandStr) else 19)
                 return CommandBlockNBT
@@ -1885,7 +1885,7 @@ class Codecs :
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
                         block_data_list[BlockHash][-1].append([NBT_Obj["Command"].value, 
-                        NBT_Obj["auto"].value, NBT_Obj["TickDelay"].value, NBT_Obj["CustomName"].value ])
+                        NBT_Obj["TickDelay"].value, NBT_Obj["auto"].value, NBT_Obj["CustomName"].value ])
                     else : block_data_list[BlockHash][-1].append(["", 0, 0, ""])
                 elif BlockID.endswith("_sign") : 
                     if block_data_list[BlockHash].__len__() < 6 : block_data_list[BlockHash].append([])
@@ -1958,8 +1958,8 @@ class Codecs :
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
-                CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
                 CommandBlockNBT["TickDelay"] = nbt.TAG_Int(data[1])
+                CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
                 CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3])
                 CommandBlockNBT["Version"] = nbt.TAG_Int(38 if ExecuteTest.match(CommandStr) else 19)
                 return CommandBlockNBT
@@ -2017,7 +2017,7 @@ class Codecs :
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
                         block_data_list[BlockHash][-1].append([NBT_Obj["Command"].value, 
-                        NBT_Obj["auto"].value, NBT_Obj["TickDelay"].value, NBT_Obj["CustomName"].value ])
+                        NBT_Obj["TickDelay"].value, NBT_Obj["auto"].value, NBT_Obj["CustomName"].value ])
                     else : block_data_list[BlockHash][-1].append(["", 0, 0, ""])
                 elif BlockID.endswith("_sign") : 
                     if block_data_list[BlockHash].__len__() < 6 : block_data_list[BlockHash].append([])

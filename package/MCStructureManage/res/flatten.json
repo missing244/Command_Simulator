@@ -425,7 +425,9 @@
         "minecraft:dead_horn_coral_wall_fan": {"block_id":"minecraft:coral_fan_hang3","block_data":{"coral_hang_type_bit": false,"dead_bit": true,"coral_direction": 0}},
         
         "minecraft:wet_sponge": {"block_id":"minecraft:sponge","block_data":{"sponge_type": "wet"}},
-        "minecraft:sponge": {"block_id":"minecraft:sponge","block_data":{"sponge_type": "dry"}}
+        "minecraft:sponge": {"block_id":"minecraft:sponge","block_data":{"sponge_type": "dry"}},
+        
+        "minecraft:iron_chain": {"block_id":"minecraft:chain","block_data":{}}
     },
     "block_state": {
         "minecraft:vertical_half":{

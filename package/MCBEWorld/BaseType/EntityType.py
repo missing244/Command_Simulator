@@ -61,12 +61,13 @@ class EntityType :
 
     def __delattr__(self, name) :
         raise ModifyError("不允许删除%s属性" % name)
-        
+
+
     def __init__(self, id:str, pos:Tuple[int, int, int]=[0, 0, 0], rotation:Tuple[int, int]=[0,0]) :
         from . import ItemType, BlockPermutationType
 
         #实体通用属性
-        self.UniqueID:int = random.randint(2**32, 2**34)
+        self.UniqueID:int = random.randint(-2**62, 2**62)
         self.Identifier:str = f"minecraft:{id}" if ":" not in id else id
         self.Pos = array.array("f", pos)
         self.Rotation = array.array("f", rotation)
@@ -118,13 +119,15 @@ class EntityType :
         node = nbt.NBT_Builder()
         NBTObject = node.compound(
             identifier = node.string( self.Identifier ),
-            UniqueID = node.long( self.UniqueID ),
+            UniqueID = node.long( random.randint(-2**32, -1) ),
             Pos = node.list( node.float(self.Pos[0]), node.float(self.Pos[1]), node.float(self.Pos[2]) ),
             Rotation = node.list( node.float(self.Pos[0]), node.float(self.Pos[1]) ),
             CustomName = node.string( self.CustomName ),
             CustomNameVisible = node.byte( self.CustomNameVisible ),
             Invulnerable = node.byte( self.Invulnerable )
         ).build()
+        #NBTObject["Pos"] = nbt.TAG_List([nbt.TAG_Float(i) for i in self.Pos], type=nbt.TAG_Float )
+        #NBTObject["Rotation"] = nbt.TAG_List([nbt.TAG_Float(i) for i in self.Rotation], type=nbt.TAG_Float )
         if self.ChestItems : 
             NBTObject["ChestItems"] = nbt.TAG_List([], type=nbt.TAG_Compound )
             for slot, item in self.ChestItems.items() :
@@ -148,7 +151,7 @@ class EntityType :
             EntityObject[key] = value.copy() if hasattr(value, "copy") else value
         for key, value in self.ChestItems.items() : EntityObject.ChestItems[key] = value.copy()
         for key, value in self.ExtraNBT.items() : EntityObject.ExtraNBT[key] = value.copy()
-        EntityObject.UniqueID = random.randint(2**32, 2**34)
+        EntityObject.UniqueID = random.randint(-2**62, 2**62)
         return EntityObject
 
 class ItemEntityType(EntityType) :
@@ -334,7 +337,7 @@ class MobType(EntityType) :
         MobObject = super().copy()
         for i,j in MobObject.ActiveEffects.items() : MobObject.ActiveEffects[i] = j.copy()
         return MobObject
-        
+
 class PlayerType(MobType) :
     """
     ## 基岩版实体对象
@@ -449,7 +452,7 @@ class PlayerType(MobType) :
 
 
 def NBTtoEntity(nbt_data: Union[bytes, nbt.TAG_Compound]) :
-    if isinstance(nbt_data, nbt.TAG_Compound) : nbt_data = nbt.read_from_nbt_file(nbt_data).get_tag()
+    if not isinstance(nbt_data, nbt.TAG_Compound) : nbt_data = nbt.read_from_nbt_file(nbt_data).get_tag()
     if not len( nbt_data.get("identifier", "") ) : return None
 
     id = nbt_data["identifier"].value

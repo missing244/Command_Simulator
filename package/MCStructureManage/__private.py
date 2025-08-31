@@ -51,7 +51,7 @@ class BiList :
 
     def __init__(self, iterable:Iterable=[]) :
         self.__forward:List[Any] = list(iterable)
-        self.__backward:Dict[Any, int] = {j:i for i,j in zip( reversed(self.__forward), 
+        self.__backward:Dict[Any, int] = {i:j for i,j in zip( reversed(self.__forward), 
             reversed( range(len(self.__forward)) ) )}
 
 
@@ -116,7 +116,7 @@ class BiList :
         self.__backward.clear()
 
     def copy(self) :
-        self.__class__(self.__forward)
+        return self.__class__(self.__forward)
 
     def append(self, value:Any) :
         if value in self.__backward : return self.__backward[value]
