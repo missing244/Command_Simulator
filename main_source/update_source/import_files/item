@@ -47,6 +47,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:acacia_shelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:acacia_sign": {
     "damage_max": null,
     "can_enchant": []
@@ -239,6 +243,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:bamboo_shelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:bamboo_sign": {
     "damage_max": null,
     "can_enchant": []
@@ -368,6 +376,10 @@
     "can_enchant": []
   },
   "minecraft:birch_sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:birch_shelf": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -814,10 +826,6 @@
     "damage_max": null,
     "can_enchant": []
   },
-  "minecraft:chain": {
-    "damage_max": null,
-    "can_enchant": []
-  },
   "minecraft:chain_command_block": {
     "damage_max": null,
     "can_enchant": []
@@ -934,6 +942,10 @@
     "can_enchant": []
   },
   "minecraft:cherry_sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:cherry_shelf": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1175,7 +1187,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:copper_axe": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:copper_block": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_boots": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1183,7 +1207,27 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_chest": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_chestplate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:copper_door": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_golem_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_golem_statue": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1191,11 +1235,51 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:copper_helmet": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_hoe": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_horse_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:copper_ingot": {
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:copper_lantern": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_leggings": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_nugget": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:copper_ore": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_pickaxe": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_shovel": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_sword": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_torch": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1300,6 +1384,10 @@
     "can_enchant": []
   },
   "minecraft:crimson_roots": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:crimson_shelf": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1475,6 +1563,10 @@
     "can_enchant": []
   },
   "minecraft:dark_oak_sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:dark_oak_shelf": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2002,7 +2094,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:exposed_copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:exposed_copper_bulb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_copper_chest": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2010,7 +2114,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:exposed_copper_golem_statue": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:exposed_copper_grate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_copper_lantern": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2027,6 +2139,10 @@
     "can_enchant": []
   },
   "minecraft:exposed_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:exposed_lightning_rod": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -2712,6 +2828,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:iron_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:iron_chestplate": {
     "damage_max": 240,
     "can_enchant": [
@@ -2885,6 +3005,10 @@
     "can_enchant": []
   },
   "minecraft:jungle_sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:jungle_shelf": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3413,6 +3537,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:mangrove_shelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:mangrove_sign": {
     "damage_max": null,
     "can_enchant": []
@@ -3873,6 +4001,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:oak_shelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:oak_sign": {
     "damage_max": null,
     "can_enchant": []
@@ -3985,7 +4117,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:oxidized_copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:oxidized_copper_bulb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_copper_chest": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -3993,7 +4137,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:oxidized_copper_golem_statue": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:oxidized_copper_grate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_copper_lantern": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4010,6 +4162,10 @@
     "can_enchant": []
   },
   "minecraft:oxidized_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:oxidized_lightning_rod": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -4082,6 +4238,10 @@
     "can_enchant": []
   },
   "minecraft:pale_oak_sapling": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:pale_oak_shelf": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5155,6 +5315,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:spruce_shelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:spruce_sign": {
     "damage_max": null,
     "can_enchant": []
@@ -5700,6 +5864,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:warped_shelf": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:warped_sign": {
     "damage_max": null,
     "can_enchant": []
@@ -5740,7 +5908,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_copper_bulb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_copper_chest": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5748,7 +5928,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_copper_golem_statue": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_copper_grate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_copper_lantern": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5776,7 +5964,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_exposed_copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_exposed_copper_bulb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_exposed_copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_exposed_copper_chest": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5784,7 +5984,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_exposed_copper_golem_statue": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_exposed_copper_grate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_exposed_copper_lantern": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5804,6 +6012,14 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_exposed_lightning_rod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_lightning_rod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_oxidized_chiseled_copper": {
     "damage_max": null,
     "can_enchant": []
@@ -5812,7 +6028,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_oxidized_copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_oxidized_copper_bulb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_oxidized_copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_oxidized_copper_chest": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5820,7 +6048,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_oxidized_copper_golem_statue": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_oxidized_copper_grate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_oxidized_copper_lantern": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5840,6 +6076,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_oxidized_lightning_rod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_weathered_chiseled_copper": {
     "damage_max": null,
     "can_enchant": []
@@ -5848,7 +6088,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_weathered_copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_weathered_copper_bulb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_weathered_copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_weathered_copper_chest": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5856,7 +6108,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_weathered_copper_golem_statue": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:waxed_weathered_copper_grate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:waxed_weathered_copper_lantern": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5876,6 +6136,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:waxed_weathered_lightning_rod": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:wayfinder_armor_trim_smithing_template": {
     "damage_max": null,
     "can_enchant": []
@@ -5888,7 +6152,19 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:weathered_copper_bars": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:weathered_copper_bulb": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_copper_chain": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_copper_chest": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5896,7 +6172,15 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:weathered_copper_golem_statue": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:weathered_copper_grate": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_copper_lantern": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -5913,6 +6197,10 @@
     "can_enchant": []
   },
   "minecraft:weathered_cut_copper_stairs": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:weathered_lightning_rod": {
     "damage_max": null,
     "can_enchant": []
   },

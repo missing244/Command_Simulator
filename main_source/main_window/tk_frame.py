@@ -1,4 +1,4 @@
-import tkinter,tkinter.messagebox,webbrowser,re,json,os,traceback,pickle,base64
+import tkinter,tkinter.messagebox,webbrowser,re,json,os,traceback,pickle,base64,itertools
 import copy,random,threading,time,gc,zlib,subprocess,sys,types,importlib.util,zipfile
 from typing import Any,Literal,Union,Dict,Tuple,List,Callable
 import tkinter.ttk as ttk
@@ -152,6 +152,8 @@ class Welcome_Screen(tkinter.Frame) :
         tkinter.Label(self, text="命令模拟器", fg='black', font=tk_tool.get_default_font(25), width=15, height=1).pack()
         tkinter.Label(self,height=2,text="         ",font=tk_tool.get_default_font(6)).pack()
         
+        tkinter.Button(self,text='开始命令模拟',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+            command=self.main_win.game_ready_or_run).pack(side="top")
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
         tkinter.Button(self,text='查询游戏内ID',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("find_minecraft_ID")).pack(side="top")
@@ -162,12 +164,8 @@ class Welcome_Screen(tkinter.Frame) :
         tkinter.Button(self,text='批量复制字符',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("unicode_char")).pack(side="top")
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
-        tkinter.Button(self,text='结构文件转换',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
+        tkinter.Button(self,text='结构处理工具',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
             command=lambda:self.main_win.set_display_frame("structure_transfor")).pack(side="top")
-        if 0 :
-            tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
-            tkinter.Button(self,text='导出世界结构',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
-                command=lambda:self.main_win.set_display_frame("structure_transfor")).pack(side="top")
         if self.main_win.platform == "android" or app_constant.debug_testing :
             tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
             tkinter.Button(self,text='复制文件命令',font=tk_tool.get_default_font(13),bg='#66ccff',width=16,height=1,
@@ -566,7 +564,7 @@ class Copy_File_Command(tkinter.Frame) :
         self.command_display_1.tag_add("green","0.0",tkinter.END)
         tk_tool.copy_to_clipboard(self.file_content[self.read_file_data[self.file_name]['lines'] - 1])
 
-class BE_Structure_Transfor(tkinter.Frame) :
+class BE_Structure_Tool(tkinter.Frame) :
     base_path = os.path.join("functionality", "BE_Structure")
     file_list_hash = -1
 
@@ -589,6 +587,9 @@ class BE_Structure_Transfor(tkinter.Frame) :
 
         super().__init__(main_win.window, **karg)
         self.main_win = main_win
+        self.can_readFile = True
+        self.enable_split = tkinter.IntVar(main_win.window, 0)
+        self.split_size = [99999, 99999, 99999]
         self.codecs = {
             "请选择转换格式": None,
             "bdx文件": (".bdx", Codecs.BDX), "mcstructure文件": (".mcstructure", Codecs.MCSTRUCTURE), 
@@ -605,6 +606,8 @@ class BE_Structure_Transfor(tkinter.Frame) :
             "MC函数 Zip文件": (".zip", Codecs.FunctionCommand), "MC命令 Txt文件": (".txt", Codecs.TextCommand)}
 
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(6)).pack()
+        tkinter.Label(self, text="初次使用请先阅读使用说明",fg='red', font=tk_tool.get_default_font(10)).pack()
+        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(6)).pack()
 
         MainScreen = tkinter.Frame(self) 
         MainScreen.pack()
@@ -612,42 +615,70 @@ class BE_Structure_Transfor(tkinter.Frame) :
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
         sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
         self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
-            height=10,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+            height=9,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+        self.search_result.bind("<ButtonRelease-1>", self.test_can_readFile)
         self.search_result.grid(row=0,column=0)
         sco1.config(command=self.search_result.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
         sco2.config(command=self.search_result.xview)
         sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
         frame_m10.pack()
-
-        tkinter.Label(MainScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
-        self.transfor_choose = ttk.Combobox(MainScreen, font=tk_tool.get_default_font(11), width=22, state='readonly', justify='center')
-        self.transfor_choose["value"] = list( i for i,j in self.codecs.items() )
-        self.transfor_choose.current(0)
-        self.transfor_choose.pack()
         
         tkinter.Label(MainScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
         frame_m4 = tkinter.Frame(MainScreen)
-        tkinter.Button(frame_m4, height=1,text=" 阅读使用须知 ",font=tk_tool.get_default_font(10), bg="#fdd142",
+        tkinter.Button(frame_m4, height=1,text=" 使用说明 ",font=tk_tool.get_default_font(10), bg="#fdd142",
             command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.add_tips()]).pack(side='left')
         tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-        tkinter.Button(frame_m4, height=1,text=" 开始转换文件 ",font=tk_tool.get_default_font(10), bg="#9ae9d1",
-            command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.start_thread()]).pack(side='left')
+        tkinter.Button(frame_m4, height=1,text=" 结构详情 ",font=tk_tool.get_default_font(10), bg="#9ae9d1",
+            command=lambda:[SubScreen_1.pack(), SubScreen_2.pack_forget(), SubScreen_3.pack_forget(), 
+            SubScreen_3.pack(), self.search_result.bind("<ButtonRelease-1>", self.test_can_readFile)]).pack(side='left')
+        tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
+        tkinter.Button(frame_m4, height=1,text=" 转换器 ",font=tk_tool.get_default_font(10), bg="#9ae9d1",
+            command=lambda:[SubScreen_2.pack(), SubScreen_1.pack_forget(), SubScreen_3.pack_forget(), 
+            SubScreen_3.pack(), self.search_result.unbind("<ButtonRelease-1>")]).pack(side='left')
         frame_m4.pack()
-
-        tkinter.Label(MainScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
-        tkinter.Label(MainScreen, text="请将需要转换的结构文件放入\nfunctionality/BE_Structure文件夹下\n文件将生成在该目录下的result文件夹内",
-            fg='black', font=tk_tool.get_default_font(10)).pack()
         
-        tkinter.Label(MainScreen, height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
-        tkinter.Button(MainScreen, height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
+
+        SubScreen_1 = tkinter.Frame(MainScreen) 
+        SubScreen_1.pack()
+        tkinter.Label(SubScreen_1, text="", fg='black',font=tk_tool.get_default_font(5), width=15, height=1).grid(row=0, column=0)
+        self.FileInfo1 = tkinter.Label(SubScreen_1, text="文件名：(请点击列表中的文件)", fg='black',font=tk_tool.get_default_font(10), width=24, height=1, anchor='w')
+        self.FileInfo2 = tkinter.Label(SubScreen_1, text="结构大小：", fg='black',font=tk_tool.get_default_font(10), width=24, height=1, anchor='w')
+        self.FileInfo3 = tkinter.Label(SubScreen_1, text="结构体积：", fg='black',font=tk_tool.get_default_font(10), width=24, height=1, anchor='w')
+        self.FileInfo4 = tkinter.Label(SubScreen_1, text="空气方块数：", fg='black',font=tk_tool.get_default_font(10), width=24, height=1, anchor='w')
+        self.FileInfo5 = tkinter.Label(SubScreen_1, text="非空气方块数：", fg='black',font=tk_tool.get_default_font(10), width=24, height=1, anchor='w')
+        self.FileInfo1.grid(row=1, column=0)
+        self.FileInfo2.grid(row=2, column=0)
+        self.FileInfo3.grid(row=3, column=0)
+        self.FileInfo4.grid(row=4, column=0)
+        self.FileInfo5.grid(row=5, column=0)
+         
+        SubScreen_2 = tkinter.Frame(MainScreen)
+        tkinter.Label(SubScreen_2, text="",fg='black',font=tk_tool.get_default_font(8), width=15, height=1).pack()
+        self.transfor_choose = ttk.Combobox(SubScreen_2, font=tk_tool.get_default_font(11), width=22, state='readonly', justify='center')
+        self.transfor_choose["value"] = list( i for i,j in self.codecs.items() )
+        self.transfor_choose.current(0)
+        self.transfor_choose.pack()
+        tkinter.Label(SubScreen_2, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+        frame_m4 = tkinter.Frame(SubScreen_2)
+        tkinter.Button(frame_m4, height=1,text=" 高级设置 ",font=tk_tool.get_default_font(10), bg="#61eaff",
+            command=lambda:self.transfor_setting(tkinter.Toplevel(main_win.window))).pack(side="left")
+        tkinter.Label(frame_m4, text="",fg='black',font=tk_tool.get_default_font(8), width=3, height=1).pack(side="left")
+        tkinter.Button(frame_m4, height=1,text=" 开始转换 ",font=tk_tool.get_default_font(10), bg="#61eaff",
+            command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.start_thread()]).pack(side="left")
+        frame_m4.pack()
+        
+        SubScreen_3 = tkinter.Frame(MainScreen)
+        SubScreen_3.pack()
+        tkinter.Label(SubScreen_3, height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Button(SubScreen_3, height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
             command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
         
 
         FeedbackScreen = tkinter.Frame(self) 
         frame_m10 = tkinter.Frame(FeedbackScreen)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-        self.input_box = tkinter.Text(frame_m10,show=None,height=20,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
+        self.input_box = tkinter.Text(frame_m10,show=None,height=18,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
         self.input_box.grid()
         sco1.config(command=self.input_box.yview)
         sco1.grid(row=0,column=1, sticky=tkinter.N+tkinter.S)
@@ -659,7 +690,52 @@ class BE_Structure_Transfor(tkinter.Frame) :
         self.back_button.pack()
 
 
+    def transfor_setting(self, toplevel:tkinter.Toplevel) :
+        parent_window = toplevel.master
+        toplevel.transient(parent_window)
+        toplevel.title("Setting")
+        toplevel.geometry('%sx%s+%s+%s' % (
+            int(parent_window.winfo_width()*9/10), int(parent_window.winfo_height()/2.7),
+            int(parent_window.winfo_x() + parent_window.winfo_width()/2 - toplevel.winfo_reqwidth()/1.5),
+            int(parent_window.winfo_y() + parent_window.winfo_height()/2 - toplevel.winfo_reqheight()/2) ))
+
+        tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(2), width=15, height=1).pack()
+        tkinter.Checkbutton(toplevel, text="启用结构分割", font=tk_tool.get_default_font(10), variable=self.enable_split, 
+            onvalue=1, offvalue=0).pack()
+        frame_m0 = tkinter.Frame(toplevel)
+        frame_m0.pack()
+        tkinter.Label(frame_m0, text="最小分割长度x", font=tk_tool.get_default_font(10), width=12, height=1).grid(row=0, column=0)
+        SplitX = tkinter.Entry(frame_m0, justify='center', font=tk_tool.get_default_font(10), width=6)
+        tkinter.Label(frame_m0, text="最小分割长度y", font=tk_tool.get_default_font(10), width=12, height=1).grid(row=1, column=0)
+        SplitY = tkinter.Entry(frame_m0, justify='center', font=tk_tool.get_default_font(10), width=6)
+        tkinter.Label(frame_m0, text="最小分割长度z", font=tk_tool.get_default_font(10), width=12, height=1).grid(row=2, column=0)
+        SplitZ = tkinter.Entry(frame_m0, justify='center', font=tk_tool.get_default_font(10), width=6)
+        SplitX.grid(row=0, column=1) ; SplitX.insert(0, str(self.split_size[0]))
+        SplitY.grid(row=1, column=1) ; SplitY.insert(0, str(self.split_size[1]))
+        SplitZ.grid(row=2, column=1) ; SplitZ.insert(0, str(self.split_size[2]))
+
+        def test_value() :
+            re1 = re.compile("^([0-9]+)$")
+            if not re1.search(SplitX.get()) : 
+                FeedBack.config(text="x参数格式错误") ; return None
+            if not re1.search(SplitY.get()) : 
+                FeedBack.config(text="y参数格式错误") ; return None
+            if not re1.search(SplitZ.get()) : 
+                FeedBack.config(text="z参数格式错误") ; return None
+            self.split_size[0] = int(SplitX.get())
+            self.split_size[1] = int(SplitY.get())
+            self.split_size[2] = int(SplitZ.get())
+            toplevel.destroy()
+
+        tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(2), width=15, height=1).pack()
+        FeedBack = tkinter.Label(toplevel, text=" 请输入分割参数 ", fg='red', font=tk_tool.get_default_font(10), width=15, height=1)
+        FeedBack.pack()
+        tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(2), width=15, height=1).pack()
+        tkinter.Button(toplevel, height=1,text=" 保存设置 ",font=tk_tool.get_default_font(10), bg="#6eee70", command=test_value).pack()
+        
+
     def start_thread(self) :
+        tkinter.messagebox.showinfo("Info", "转换中如果将此APP变为后台\n安卓系统会暂停APP运行\n转换也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
         threading.Thread(target=self.transfor_file).start()
 
     def transfor_file(self) :
@@ -677,23 +753,50 @@ class BE_Structure_Transfor(tkinter.Frame) :
         file_name_list = self.search_result.get(0, tkinter.END)
         file_type_re = re.compile("\\.[0-9a-zA-Z]{0,}$")
         choose_trans_mode = self.codecs[self.transfor_choose.get()]
+
         for index, file_name in enumerate(file_name_list, start=1) :
             self.input_box.insert(tkinter.END, "正在转换 %s/%s 文件...\n%s\n" % (index, len(file_name_list), file_name))
             self.input_box.see(tkinter.END)
             time.sleep(0.3)
 
             file_path = os.path.join( self.base_path, file_name )
+            end_name = file_type_re.search(file_name)
             try : Struct1 = CommonStructure.from_buffer(file_path)
             except Exception as e : 
                 self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
                 self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
                 self.input_box.see(tkinter.END)
                 continue
-            self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
-            end_name = file_type_re.search(file_name)
-            save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
-            save_file_path = os.path.join( self.base_path, "result", save_file_name )
-            Struct1.save_as(save_file_path, choose_trans_mode[1])
+            
+            if self.enable_split.get() :
+                save_file_dirname = file_name if end_name is None else file_name[:end_name.start()]
+                save_file_dir = os.path.join( self.base_path, "result", save_file_dirname+"(分割)" )
+
+                range_x = range(0, Struct1.size[0], self.split_size[0])
+                range_y = range(0, Struct1.size[1], self.split_size[1])
+                range_z = range(0, Struct1.size[2], self.split_size[2])
+                split_pos_iter = itertools.product( range_x, range_y, range_z )
+                struct_count = len(range_x) * len(range_y) * len(range_z)
+                if struct_count == 1 :
+                    self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
+                    save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
+                    save_file_path = os.path.join( self.base_path, "result", save_file_name )
+                    Struct1.save_as(save_file_path, choose_trans_mode[1]) 
+                else :
+                    os.makedirs(save_file_dir, exist_ok=True)
+                    for current_count, split_origin in enumerate(split_pos_iter, 1) :
+                        save_file_name = save_file_dirname + ("[%s,%s,%s]" % split_origin) + choose_trans_mode[0]
+                        split_max = ( min(split_origin[0]+self.split_size[0], Struct1.size[0]) - 1,
+                        min(split_origin[1]+self.split_size[1], Struct1.size[1]) - 1,
+                        min(split_origin[2]+self.split_size[2], Struct1.size[2]) - 1 )
+                        self.input_box.insert(tkinter.END, "正在生成分割转换文件(%s/%s)...\n" % (current_count, struct_count))
+                        Struct2 = Struct1.split(split_origin, split_max)
+                        Struct2.save_as( os.path.join(save_file_dir, save_file_name), choose_trans_mode[1] )
+            else :
+                self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
+                save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
+                save_file_path = os.path.join( self.base_path, "result", save_file_name )
+                Struct1.save_as(save_file_path, choose_trans_mode[1])
             self.input_box.insert(tkinter.END, "文件转换完成 (%s/%s)\n\n" % (index, len(file_name_list)))
             self.input_box.see(tkinter.END)
         
@@ -712,18 +815,53 @@ class BE_Structure_Transfor(tkinter.Frame) :
             "浮鸿Json  浮鸿fhbuild",
             "情绪json",
             "",
+            "请将需要读取的结构文件放入",
+            "functionality/BE_Structure",
+            "文件夹下，即可显示文件。",
             "",
+            "结构详情：读取结构文件并显示结构信息摘要，例如结构大小、空气数量等等。",
+            "转换器：选择转换的文件格式，列表中显示的文件都将被转换，转换结果将生成上述目录下的result文件夹内。",
             "",
             "如果发现有文件无法被读取，且确定是结构文件，可以点击",
+            "→→ 设置-联系作者-交流群 ←←",
+            "在交流群中与作者进行技术交流，litematic文件暂时不会支持",
             "",
-            "设置-联系作者-交流群",
             "",
-            "在交流群中与作者进行技术交流，litematic文件暂时不会支持"
         ]
         self.input_box.insert(tkinter.END, "\n".join(Tips))
 
+    def test_can_readFile(self, event:tkinter.Event) :
+        if not self.can_readFile : return None
+        self.can_readFile = False
+        threading.Thread(target=self.show_structure_info, args=(event, )).start()
 
+    def show_structure_info(self, event:tkinter.Event) :
+        from package.MCStructureManage import CommonStructure,Block
 
+        Widget:tkinter.Listbox = event.widget
+        Selector:tuple = Widget.curselection()
+        if not Selector : return None
+        
+        self.FileInfo1.config(text="文件名：(正在解析)")
+        file_name = self.search_result.get(Selector[0])
+        file_path = os.path.join( self.base_path, file_name )
+        try : Structure1 = CommonStructure.from_buffer(file_path)
+        except :
+            self.FileInfo1.config(text="文件名：%s" % file_name)
+            self.FileInfo2.config(text="结构大小：解析失败")
+            self.FileInfo3.config(text="结构体积：解析失败")
+            self.FileInfo4.config(text="空气方块数：解析失败")
+            self.FileInfo5.config(text="非空气方块数：解析失败")
+        else :
+            Size = tuple(Structure1.size)
+            AirCount = Structure1.count( Block("air") )
+            self.FileInfo1.config(text="文件名：%s" % file_name)
+            self.FileInfo2.config(text="结构大小：%s" % str(Size))
+            self.FileInfo3.config(text="结构体积：%s" % (Size[0]*Size[1]*Size[2]))
+            self.FileInfo4.config(text="空气方块数：%s" % AirCount)
+            self.FileInfo5.config(text="非空气方块数：%s" % (Size[0]*Size[1]*Size[2]-AirCount))
+        
+        self.can_readFile = True
 
 
 class Game_Ready(tkinter.Frame) :
