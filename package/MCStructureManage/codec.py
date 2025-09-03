@@ -1753,7 +1753,7 @@ class Codecs :
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
                         block_data_list[BlockHash][-1].append([NBT_Obj["Command"].value, 
-                        NBT_Obj["auto"].value, NBT_Obj["TickDelay"].value, NBT_Obj["CustomName"].value ])
+                        NBT_Obj["TickDelay"].value, NBT_Obj["auto"].value, NBT_Obj["CustomName"].value ])
                     else : block_data_list[BlockHash][-1].append(["", 0, 0, ""])
                 elif BlockID.endswith("_sign") : 
                     if block_data_list[BlockHash].__len__() < 6 : block_data_list[BlockHash].append([])
