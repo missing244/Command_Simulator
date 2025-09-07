@@ -4,7 +4,7 @@ try :
     if platform.system() == "Windows" : raise Exception
 except : jnius = None
 
-APP_VERSION = "2.3.0 beta-3" ; debug_testing = True
+APP_VERSION = "2.3.0 beta-3" ; debug_testing = False
 PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius else None
 Context = jnius.autoclass('android.content.Context') if jnius else None
 
@@ -71,4 +71,5 @@ world_config = {
     "mobGriefing": True, "naturalRegeneration": True, "respawnblocksexplode": True,
     "spawnRadius" : 5#值需要在0-12之间
   }
+
 }
