@@ -59,12 +59,13 @@ def fuhong_v5_encrypt(str1:str) -> bytes :
     return MCBEStructure_C_API.fuhong_v5_encrypt(str1)
 
 def codecs_parser_schematic(block_array:array.array, blockData_array:array.array, 
-        blockIndex_array:array.array, blockPalette_array:array.array, Volume:Tuple[int, int, int]) -> None : 
+        blockIndex_array:array.array, blockPalette_array:array.array, 
+        blockType_array:array.array, Volume:Tuple[int, int, int]) -> Dict[int, int] : 
     """
     schematic 加速函数
     """
     return MCBEStructure_C_API.codecs_parser_schematic(block_array, 
-        blockData_array, blockIndex_array, blockPalette_array, Volume)
+        blockData_array, blockIndex_array, blockPalette_array, blockType_array, Volume)
 
 def codecs_parser_schem(block_array:array.array, blockIndex_array:array.array, 
     blockType_array:array.array, Volume:Tuple[int, int, int]) -> Dict[int, int] : 

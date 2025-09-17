@@ -43,6 +43,7 @@ def getStructureType(IO_Byte_Path) :
             StructureRUNAWAY.FuHong_V1, StructureRUNAWAY.FuHong_V2, StructureRUNAWAY.FuHong_V3,
             StructureRUNAWAY.FuHong_V4, StructureRUNAWAY.FuHong_V5, 
             StructureRUNAWAY.QingXu_V1,
+            StructureRUNAWAY.TimeBuilder_V1,
             StructureSCHEM.Schem_V1, StructureSCHEM.Schem_V2
             ]
 
@@ -70,6 +71,7 @@ class CommonStructure :
     * 可用属性 block_palette : 方块对象列表（索引指向该列表内的方块）
     * 可用属性 entity_nbt : 实体对象列表
     * 可用属性 block_nbt : 以方块索引字符串数字和nbt对象组成的字典
+    * 可用属性 BLOCKTYPE : 公开该结构的使用方块对象类(block_palette元素)
     -----------------------
     * 反序列化方法 from_buffer : 手/自动指定解码器，并且通过路径、字节数字 或 流式缓冲区 生成对象
     * 序列化方法 save_as : 指定编码器，并且通过路径 或 流式缓冲区 保存对象数据
@@ -84,7 +86,8 @@ class CommonStructure :
     * Coder注意事项1 : 部分属性均不可直接修改，请调用对象方法进行修改，以避免数据不正确
     """
 
-
+    BLOCKTYPE = Block                                                                  #公开该结构的使用方块对象类
+    
     def __init__(self, size:Tuple[int, int, int] = (0, 0, 0)) :
         Volume = size[0] * size[1] * size[2]
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
@@ -100,6 +103,7 @@ class CommonStructure :
 
     def __setattr__(self, name, value) :
         if not hasattr(self, name) : super().__setattr__(name, value)
+        elif name == "BLOCKTYPE" : raise Exception("无法修改 %s 属性" % name)
         elif isinstance(value, type(getattr(self, name))) : super().__setattr__(name, value)
         else : raise Exception("无法修改 %s 属性" % name)
 
@@ -125,7 +129,8 @@ class CommonStructure :
             StructureRUNAWAY.FuHong_V1: Codecs.FUHONG_V1, StructureRUNAWAY.FuHong_V2: Codecs.FUHONG_V2, 
             StructureRUNAWAY.FuHong_V3: Codecs.FUHONG_V3, StructureRUNAWAY.FuHong_V4: Codecs.FUHONG_V4, 
             StructureRUNAWAY.FuHong_V5: Codecs.FUHONG_V5, 
-            StructureRUNAWAY.QingXu_V1: Codecs.QINGXU_V1,
+            StructureRUNAWAY.QingXu_V1: Codecs.QINGXU_V1, 
+            StructureRUNAWAY.TimeBuilder_V1: Codecs.TIMEBUILDER_V1,
             StructureSCHEM.Schem_V1: Codecs.SCHEM_V1, StructureSCHEM.Schem_V2: Codecs.SCHEM_V2, 
         }
 

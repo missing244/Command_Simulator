@@ -92,7 +92,7 @@ class BlockPermutationType :
     def __init__(self, id:str, state:Union[str, Dict[str, Union[str, bool, int]]]={}, version:int=17959425) :
         self.Identifier:str = f"minecraft:{id}" if ":" not in id else id
         self.States:Dict[str, Union[str, bool, int]] = types.MappingProxyType(
-            state.copy() if isinstance(state, dict) else BE_BlockStates_Parser(state) )
+            state.copy() if isinstance(state, (dict, types.MappingProxyType)) else BE_BlockStates_Parser(state) )
         self.Version:int = version
         self.__hash = (self.Identifier, *self.States.items()).__hash__()
 
@@ -170,6 +170,9 @@ class BlockNbtType :
     def from_nbt(cls, nbt_data:nbt.TAG_Compound) :
         from . import ItemType
         if "id" not in nbt_data : return None
+        if "x" not in nbt_data : return None
+        if "y" not in nbt_data : return None
+        if "z" not in nbt_data : return None
         BlockEntityObject = cls(nbt_data["id"].value)
         BlockEntityObject.x = nbt_data["x"].value
         BlockEntityObject.y = nbt_data["y"].value

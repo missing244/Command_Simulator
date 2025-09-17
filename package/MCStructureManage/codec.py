@@ -6,7 +6,7 @@ from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 
 from typing import Union,Dict,Tuple,Literal,List
-import abc, re, io, json, array, itertools, urllib.parse, random, os, math, zipfile
+import abc, re, io, json, array, itertools, urllib.parse, random, os, math, zipfile, time
 ExecuteTest = re.compile("[ ]*?/?[ ]*?execute[ ]*?(as|at|align|anchored|facing|in|positioned|rotated|if|unless|run)")
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 Translate = json.load(fp=open(os.path.join(CurrentPath, "res", "translate.json"), "r", encoding="utf-8"))
@@ -252,6 +252,7 @@ class Codecs :
             0x1a:Operation_0x1a, 0x1b:Operation_0x1b, 0x20:Operation_0x20, 0x21:Operation_0x20,
             0x22:Operation_0x22, 0x23:Operation_0x22, 0x24:Operation_0x24, 0x25:Operation_0x25,
             0x26:Operation_0x25, 0x28:Operation_0x28, 0x29:Operation_0x29}
+            
             for PosX, PosY, PosZ, Oper in BDX.get_blocks() :
                 if Oper.operation_code not in FUNCTION : continue
                 FUNCTION[Oper.operation_code](Oper, PosX-PosStart[0], PosY-PosStart[1], PosZ-PosStart[2])
@@ -351,17 +352,29 @@ class Codecs :
 
             StructureObject = self.Common
             StructureObject.__init__( SCHMATIC.size )
-
             RunTimeBlock = StructureSCHEMATIC.RuntimeID_to_Block
+
+            NBTBlockBit = array.array("B", b"\x00"*256)
+            for index, blockname in enumerate(RunTimeBlock) : 
+                if GenerateContainerNBT(blockname) : NBTBlockBit[index] = 1
+                elif GenerateSignNBT(blockname) : NBTBlockBit[index] = 2
+                elif GenerateCommandBlockNBT(blockname) : NBTBlockBit[index] = 3
+
             BlockPaletteArray = array.array("H", b"\x00\x00"*65536)
-            codecs_parser_schematic(SCHMATIC.block_index, SCHMATIC.block_data, 
-                StructureObject.block_index, BlockPaletteArray, SCHMATIC.size)
+            NBTDict = codecs_parser_schematic(SCHMATIC.block_index, SCHMATIC.block_data, 
+                StructureObject.block_index, BlockPaletteArray, NBTBlockBit, SCHMATIC.size)
 
             BlockList = [None] * max(BlockPaletteArray)
             for block_id, block_index in enumerate(BlockPaletteArray) :
                 if not block_index : continue
                 BlockList[block_index-1] = Block(RunTimeBlock[block_id >> 8], block_id & 255)
             StructureObject.block_palette.__init__( [Block("minecraft:air")] + BlockList )
+
+            for key, value in NBTDict.items() :
+                block = StructureObject.block_palette[StructureObject.block_index[key]]
+                if value == 1 : StructureObject.block_nbt[key] = GenerateContainerNBT(block.name)
+                elif value == 2 : StructureObject.block_nbt[key] = GenerateSignNBT(block.name)
+                elif value == 3 : StructureObject.block_nbt[key] = GenerateCommandBlockNBT(block.name)
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]):
             IgnoreAir, self = self.IgnoreAir, self.Common
@@ -1693,8 +1706,8 @@ class Codecs :
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
-                CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
                 CommandBlockNBT["TickDelay"] = nbt.TAG_Int(data[1])
+                CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
                 CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3])
                 CommandBlockNBT["Version"] = nbt.TAG_Int(38 if ExecuteTest.match(CommandStr) else 19)
                 return CommandBlockNBT
@@ -2093,6 +2106,50 @@ class Codecs :
                 Chunks[chunk_pos].append({"Name":block.runawayID, "X":o_x + posx, "Y":o_y + posy, "Z":o_z + posz})
             
             Struct1.chunks.extend(Chunks.values())
+            Struct1.save_as(Writer)
+
+    class TIMEBUILDER_V1(CodecsBase) :
+        
+        def decode(self, Reader:Union[str, io.IOBase]) :
+            Struct1 = StructureRUNAWAY.TimeBuilder_V1.from_buffer(Reader)
+            PosStart, PosEnd = Struct1.get_volume()
+
+            StructureObject = self.Common
+            StructureObject.__init__( [j-i+1 for i,j in zip(PosStart, PosEnd)] )
+
+            block_list = [None] * len(Struct1.blocks)
+            for index, block in enumerate(Struct1.blocks) :
+                block_list[index] = Block(block["name"], block["aux"])
+            StructureObject.block_palette.__init__([Block("minecraft:air")] + block_list)
+
+            start_x, start_y, start_z = PosStart
+            for index, block in enumerate(Struct1.blocks, start=1) :
+                for posx, posy, posz in block["pos"] : 
+                    StructureObject.set_block(posx-start_x, posy-start_y, posz-start_z, index)
+
+        def encode(self, Writer:Union[str, io.IOBase]) :
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureRUNAWAY.TimeBuilder_V1()
+
+            Generator = zip(self.block_index, itertools.product(
+                range(self.size[0]), range(self.size[1]), range(self.size[2]) ))
+
+            for block in self.block_palette :
+                Struct1.blocks.append({"name":block.name, "aux":block.dataValue[1], "pos":[]})
+
+            JsonBlockData = Struct1.blocks
+            for block_index, (posx, posy, posz) in Generator :
+                if block_index < 0 : continue
+                BlockObj = self.block_palette[block_index]
+                if IgnoreAir and BlockObj.name == "minecraft:air" : continue
+                JsonBlockData[block_index]["pos"].append([posx, posy, posz])
+            
+            if IgnoreAir : 
+                MiddleLen = len(Struct1.blocks)
+                for index, block_data in enumerate( list( reversed(Struct1.blocks) ), start=1 ) :
+                    if block_data["name"] != "minecraft:air" : continue
+                    Struct1.blocks.pop(MiddleLen - index)
+
             Struct1.save_as(Writer)
 
     class FunctionCommand(CodecsBase) :

@@ -33,7 +33,7 @@ def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str
     NewBlockState = dict( sorted(NewBlockState.items()) )
     if value.__class__ is str : value = BE_BlockStates_Parser(value)
     elif value.__class__ is dict : value = value.copy()
-    elif value.__class__ is MappingProxyType : value = value
+    elif value.__class__ is MappingProxyType : value = dict(value)
     else : value = {}
 
     cardinal_direction = value.get("minecraft:cardinal_direction", None)
@@ -220,7 +220,7 @@ def JE_Transfor_BE_Block(id:str) -> "Block":
 
 ContainerNBT_ID = {"minecraft:chest": "Chest", "minecraft:trapped_chest": "Chest", 
 "minecraft:lit_blast_furnace": "BlastFurnace", "minecraft:hopper": "Hopper", 
-"minecraft:white_shulker_box": "ShulkerBox", "minecraft:undyed_shulker_box": "ShulkerBox", 
+"minecraft:shulker_box": "ShulkerBox", "minecraft:undyed_shulker_box": "ShulkerBox", 
 "minecraft:barrel": "Barrel", "minecraft:dispenser": "Dispenser", "minecraft:dropper": "Dropper", 
 "minecraft:furnace": "Furnace", "minecraft:lit_furnace": "Furnace", "minecraft:smoker": "Smoker", 
 "minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace", "minecraft:ender_chest":"EnderChest"}

@@ -5,7 +5,7 @@ from typing import Tuple,List,Union,Dict,Literal,Optional
 import types, ctypes, math, traceback, array, io, random
 from . import BlockPermutationType
 
-DefaultChunkData = b'\x01\x00\x02\x00\x02\x00\x02\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' * 256
+DefaultChunkData = b'\x01\x00\x02\x00\x02\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' * 256
 DefaultChunkPalette = [BlockPermutationType("air"), BlockPermutationType("bedrock", {"infiniburn_bit":False}),
     BlockPermutationType("dirt", {"dirt_type":"normal"}), BlockPermutationType("grass")]
 
@@ -16,21 +16,31 @@ def GenerateChunkLevelDBKey(dimension:int, chunk_pos_x:int, chunk_pos_z:int, ope
     dimension_bytes = dimension.to_bytes(4, "little", signed=True)
     operation_bytes = operation_id.to_bytes(1, "little", signed=False) if operation_id is not None else b""
     if dimension : return b"".join((chunk_x_bytes, chunk_z_bytes, dimension_bytes, operation_bytes))
-    else : return b"".join((chunk_x_bytes, chunk_z_bytes, dimension_bytes, operation_bytes))
+    else : return b"".join((chunk_x_bytes, chunk_z_bytes, operation_bytes))
+
+def GenerateSuperflatSubChunk() :
+    SubChunk = SubChunkType()
+    SubChunk.BlockIndex[0:4096] = array.array("H", DefaultChunkData)
+    SubChunk.BlockPalette.clear()
+    SubChunk.BlockPalette.extend( DefaultChunkPalette )
+    return SubChunk
 
 
 class SubChunkType :
     """
     ## 子区块类
     * 属性**Version**               : 区块数据格式版本 **(int)** 
-    * 属性**BlockIndex**            : 区块高度数组 **(array.array[int])**
-    * 属性**BlockPalette**          : 区块生物群系 **(List[BlockPermutationType])**
-    * 属性**ContainBlockIndex**     : 区块方块信息 **(array.array[int])**
-    * 属性**BlockBlockPalette**     : 区块实体列表 **(List[BlockPermutationType])**
+    * 属性**BlockIndex**            : 区块方块信息 **(array.array[int])**
+    * 属性**BlockPalette**          : 区块方块对象信息 **(List[BlockPermutationType])**
+    * 属性**ContainBlockIndex**     : 区块内含方块信息 **(array.array[int])**
+    * 属性**BlockBlockPalette**     : 区块内含方块对象信息 **(List[BlockPermutationType])**
     --------------------------------------------------------------------------------------------
     * 可用类方法**from_bytes** : 通过bytes生成对象
     * 可用方法**to_bytes** : 通过对象生成bytes
     """
+    
+    bit_size = [1, 2, 3, 4, 5, 6, 8, 16]
+    block_size = [2, 4, 8, 16, 32, 64, 256, 65536]
 
     def __str__(self) :
         return "<SubChunk Version='%s' Pointer=%s>" % ( self.Version, hex(id(self)).upper() )
@@ -63,8 +73,8 @@ class SubChunkType :
         sub_layers = bytes_io.read(3)[1]
         LayersName = [("BlockIndex", "BlockPalette"), ("ContainBlockIndex", "ContainBlockPalette")]
         for i in range(sub_layers) :
-            block_use_bit = bytes_io.read(1)[0] >> 1  # 字节使用的bit位数
-            if not block_use_bit : continue
+            block_use_bit = bytes_io.read(1)[0] >> 1 # 字节使用的bit位数
+            if block_use_bit < 1 : continue
             block_count_save_in_4bytes = 32 // block_use_bit # 4个字节能存储多少索引
             read_items = math.ceil(4096 / block_count_save_in_4bytes) # 一共需要多少个int型
             block_index_bytes = bytes_io.read(read_items*4)
@@ -91,9 +101,14 @@ class SubChunkType :
             BlockList:List[BlockPermutationType] = getattr(self, j)
 
             block_count = len(BlockList)
-            block_use_bit = math.ceil(math.log2(block_count))
+            block_use_bit = 1
+            for index in range(8) :
+                if index < 7 and self.block_size[index] < block_count : continue
+                block_use_bit = self.bit_size[index]
+                break
+
             BytesIO_1.write( (block_use_bit << 1).to_bytes(1, "little") )
-            BytesIO_1.write( chunk_serialize(IndexList, block_count) )
+            BytesIO_1.write( chunk_serialize(IndexList, block_use_bit) )
 
             BytesIO_1.write( block_count.to_bytes(4, "little") )
             for block in BlockList : nbt.write_to_nbt_file(BytesIO_1, block.to_nbt(), byteorder="little")
@@ -170,15 +185,17 @@ class ChunkType :
                     ChunkObject.Entities.append(EntityObj)
         except : pass
         #获取区块方块实体
-        NBtData = minecraft_leveldb.get( LevelDBKey+b"1" )
-        NBtDataLength = len(NBtData)
-        buffer = io.BytesIO(NBtData)
-        while buffer.tell() < NBtDataLength : 
-            try : BlockNBT = BlockNbtType.from_nbt(nbt.read_from_nbt_file(buffer, byteorder="little").get_tag())
-            except : continue
-            else : 
-                if BlockNBT : ChunkObject.BlockEntities.append( BlockNBT )
-        buffer.close()
+        try :
+            NBtData = minecraft_leveldb.get( LevelDBKey+b"1" )
+            NBtDataLength = len(NBtData)
+            buffer = io.BytesIO(NBtData)
+            while buffer.tell() < NBtDataLength : 
+                try : BlockNBT = BlockNbtType.from_nbt(nbt.read_from_nbt_file(buffer, byteorder="little").get_tag())
+                except : continue
+                else : 
+                    if BlockNBT : ChunkObject.BlockEntities.append( BlockNBT )
+            buffer.close()
+        except : pass
         #获取区块计划刻、随机刻数据
         KeyIter = {b'3':"PendingTicks", b':':"RandomTicks"}
         for keybytes, propertyID in KeyIter.items() :
@@ -247,8 +264,9 @@ class ChunkType :
         for layer_id, chunk in self.SubChunks.items() : 
             chunk_key = b"%s%s" % (ChunkByteHeader, layer_id.to_bytes(1, "little", signed=True))
             try : SubChunkData = chunk.to_bytes( layer_id )
-            except : continue
+            except : traceback.print_exc()
             else : minecraft_leveldb.put(chunk_key, SubChunkData)
+
 
 
 

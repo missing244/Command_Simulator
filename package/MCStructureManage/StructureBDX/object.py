@@ -72,17 +72,10 @@ class BDX_File :
         )
 
     def get_volume(self) :
-        origin_min, origin_max, current_pos = [0, 0, 0], [0, 0, 0], [0, 0, 0]
-        Oper = {0x06:2, 0x0c:2, 0x18:2, 0x19:2, 0x1e:2, 0x12:2, 0x13:2, 0x10:1, 0x11:1, 0x16:1, 0x17:1, 0x1d:1,
-            0x0e:0, 0x0f:0, 0x14:0, 0x15:0, 0x1c:0}
-        pos_index = 0
-
-        for code in self.operation_list :
-            if code.operation_code not in Oper : continue
-            pos_index = Oper[code.operation_code]
-            current_pos[pos_index] += code.value
-            if current_pos[pos_index] < origin_min[pos_index] : origin_min[pos_index] = current_pos[pos_index]
-            elif current_pos[pos_index] > origin_max[pos_index] : origin_max[pos_index] = current_pos[pos_index]
+        origin_min, origin_max = [0, 0, 0], [0, 0, 0]
+        
+        for i in range(3) : origin_min[i] = min( data[i] for data in self.get_blocks() )
+        for i in range(3) : origin_max[i] = max( data[i] for data in self.get_blocks() )
 
         return origin_min, origin_max
 

@@ -1,5 +1,6 @@
 def init() :
-    import os, platform, sys, hashlib, re
+    import os, platform, sys, hashlib, re, zipfile, subprocess
+    LinkCommand = "aarch64-linux-android-gcc -shared build/temp.linux-aarch64-3.9/fast_api.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
     py_dll_name = "MCBEWorld_C_API.%s"
     
     system_info = platform.uname()
@@ -11,6 +12,14 @@ def init() :
         target_path = os.path.join(base_path, py_dll_name % "pyd")
         target_abi = os.path.join(base_path, "ABI_File", "Win_amd64.pyd")
     elif system == 'linux' and machine == "aarch64" : 
+        zipfile1 = zipfile.ZipFile(os.path.join(base_path, "ABI_File", "Linux_aarch64.build"), "r")
+        zipfile1.extractall( os.path.join(base_path, "ABI_File") )
+        lib_path_re = re.compile("lib/python[0-9]\\.[0-9]{1,}$")
+        for lib_path in sys.path :
+            if lib_path_re.search(lib_path) : break
+        lib_path = os.path.realpath( os.path.join(lib_path, "..") )
+        subprocess.run(LinkCommand % (lib_path, sys.version_info.major, sys.version_info.minor), 
+            shell=True, capture_output=True, text=True, cwd=os.path.join(base_path, "ABI_File"))
         for test_path in sys.path :
             if not test_path.endswith("site-packages") : continue
             else : break
@@ -69,12 +78,24 @@ def StructureOperatePosRange(startX:int, startZ:int, endX:int, endZ:int) -> \
     """
     return MCBEWorld_C_API.StructureOperatePosRange(startX, startZ, endX, endZ)
 
-def import_CommonStructure_to_chunk(startX:int, startY:int, startZ:int, endX:int, 
-    endY:int, endZ:int, subchunk, blockindex:array.array, blockHashTable:dict) :
+def import_CommonStructure_to_chunk(startX:int, startY:int, startZ:int, SizeX:int, SizeY:int, SizeZ:int,
+    chunkStartX:int, chunkStartY:int, chunkStartZ:int, chunkEndX:int, chunkEndY:int, chunkEndZ:int, 
+    subchunk, blockindex:array.array, blockList:list, Array:array.array) :
     """
     将结构输出进区块对象中
     """
-    MCBEWorld_C_API.CommonStructure_to_chunk(startX, startY, startZ,
-        endX, endY, endZ, subchunk, blockindex, blockHashTable)
+    MCBEWorld_C_API.CommonStructure_to_chunk(startX, startY, startZ, SizeX, SizeY, SizeZ,
+        chunkStartX, chunkStartY, chunkStartZ, chunkEndX, chunkEndY, chunkEndZ, 
+        subchunk, blockindex, blockList, Array)
+
+def export_chunk_to_CommonStructure(startX:int, startY:int, startZ:int, SizeX:int, SizeY:int, SizeZ:int,
+    chunkStartX:int, chunkStartY:int, chunkStartZ:int, chunkEndX:int, chunkEndY:int, chunkEndZ:int, 
+    subchunk, blockindex:array.array, blockList:list, Array:array.array) :
+    """
+    将区块输出进结构对象中
+    """
+    MCBEWorld_C_API.chunk_to_CommonStructure(startX, startY, startZ, SizeX, SizeY, SizeZ,
+        chunkStartX, chunkStartY, chunkStartZ, chunkEndX, chunkEndY, chunkEndZ, 
+        subchunk, blockindex, blockList, Array)
 
 

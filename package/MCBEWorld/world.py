@@ -1,5 +1,5 @@
 from typing import Literal,Union,List,Dict,Tuple,Iterable
-import os,io,gzip,base64,json,sys,array
+import os,io,gzip,base64,json,sys,array,time
 from . import nbt, BaseType
 from . import C_API
 from .C_leveldb import LevelDB as MinecraftLevelDB
@@ -43,14 +43,16 @@ class World :
     -----------------------
     * 当指定路径不存在存档时自动创建
     * 数据库中提供了很多方法可修改世界数据
-    * 请注意显式调用close方法保存和释放资源
+    * 请务必显式调用close方法保存数据并释放资源
     -----------------------
-    * 可用属性 world_name  : 世界名(字符串)
-    * 可用属性 world_nbt   : level.dat的nbt对象
-    * 可用属性 world_db    : leveldb数据库
-    * 可用属性 encrypt_key : leveldb数据库加密int密钥（网易使用）
+    * 可用属性 **world_name**  : 世界名(字符串)
+    * 可用属性 **world_nbt**   : level.dat的nbt对象
+    * 可用属性 **world_db**    : leveldb数据库
+    * 可用属性 **encrypt_key   : leveldb数据库加密int密钥（网易使用）
     -----------------------
-    * 可用方法 close : 保存世界并释放资源，传参encryption可以控制是否启用加密
+    * 可用方法 **close** : 保存世界并释放资源，传参encryption可以控制是否启用加密
+    * 可用方法 **import_CommonStructure** : 通过CommonStructure对象将结构写入存档内
+    * 可用方法 **export_CommonStructure** : 通过CommonStructure对象将存档写出至结构对象
     """
 
     def __netease_encrypt__(self, db_path:str, key:int) : 
@@ -175,10 +177,12 @@ class World :
 
 
     def import_CommonStructure(self, CommonStructure, dimension:int, startPos:Tuple[int, int, int]) :
-        BlockHashTable:Dict[BaseType.BlockPermutationType, int] = {}
+        BlockPalette:List[BaseType.BlockPermutationType] = []
         SizeX, SizeY, SizeZ = CommonStructure.size
         BlockIndex:array.array = CommonStructure.block_index
-        BlockHashTable.update((BaseType.BlockPermutationType(j.name, j.states), i) for i,j in enumerate(CommonStructure.block_palette))
+        BlockNBTTable:Dict[int, nbt.TAG_Compound] = CommonStructure.block_nbt
+        BlockPalette.extend(BaseType.BlockPermutationType(j.name, j.states) for j in CommonStructure.block_palette)
+        MiddleArray = array.array("H", b"\x00\x00"*len(BlockPalette))
         
         if  (dimension == 0 and ( not(-64 <= startPos[1] < 320) or not(-64 <= startPos[1]+SizeY < 320) )) or \
             (dimension == 1 and ( not(0 <= startPos[1] < 256) or not(0 <= startPos[1]+SizeY < 256) )) or \
@@ -186,23 +190,99 @@ class World :
             raise ValueError("结构放置超出世界有效高度范围")
         
         Iter1 = C_API.StructureOperatePosRange(startPos[0], startPos[2], startPos[0]+SizeX, startPos[2]+SizeZ)
-        for x1, z1, x2, z2 in Iter1 :
-            ChunkOBJ = BaseType.ChunkType.from_leveldb(self.world_db, dimension, x1//16, z1//16)
-            if -4 not in ChunkOBJ.SubChunks : 
-                ChunkOBJ.SubChunks[-4] = BaseType.SubChunkType()
-                ChunkOBJ.SubChunks[-4].BlockIndex[0:4096] = array.array("H", BaseType.DefaultChunkData)
-                ChunkOBJ.SubChunks[-4].BlockPalette.extend( BaseType.DefaultChunkPalette )
-            for layer in range(-3, (startPos[1]+SizeY-1)//16) :
-                if layer not in ChunkOBJ.SubChunks :
-                    ChunkOBJ.SubChunks[layer] = BaseType.SubChunkType()
-            C_API.import_CommonStructure_to_chunk(x1, startPos[0], z1,
-                x2, startPos[0]+SizeY, z2, ChunkOBJ.SubChunks, BlockIndex, BlockHashTable)
-            
+        SubChunkDict:Dict[int, BaseType.SubChunkType] = {}
 
-        raise NotImplementedError()
+        for x1, z1, x2, z2 in Iter1 :
+            ChunkKey = BaseType.GenerateChunkLevelDBKey(dimension, x1//16, z1//16)
+            for layer in range(startPos[1]//16, (startPos[1]+SizeY-1)//16+1) :
+                SubChunkKey = b"%s/%s" % (ChunkKey, layer.to_bytes(1, "little", signed=True))
+                if SubChunkKey in self.world_db :
+                    SubChunkData = self.world_db.get(SubChunkKey)
+                    SubChunkDict[layer] = BaseType.SubChunkType.from_bytes(SubChunkData)
+                elif layer != -4 : SubChunkDict[layer] = BaseType.SubChunkType()
+            if startPos[1]//16 == -4 and (-4 not in SubChunkDict) : 
+                SubChunkDict[-4] = BaseType.GenerateSuperflatSubChunk()
+
+            C_API.import_CommonStructure_to_chunk(
+                startPos[0], startPos[1], startPos[2], SizeX, SizeY, SizeZ,
+                x1, startPos[1], z1, x2, startPos[1]+SizeY, z2, 
+                SubChunkDict, BlockIndex, BlockPalette, MiddleArray)
+            
+            for layer in range(startPos[1]//16, (startPos[1]+SizeY-1)//16+1) :
+                SubChunkKey = b"%s/%s" % (ChunkKey, layer.to_bytes(1, "little", signed=True))
+                SubChunkData = SubChunkDict[layer].to_bytes(layer)
+                self.world_db.put(SubChunkKey, SubChunkData)
+
+            self.world_db.put(ChunkKey+b',', (41).to_bytes(1, "little"))
+            self.world_db.put(ChunkKey+b'6', b"\x02\x00\x00\x00")
+            SubChunkDict.clear()
+
+        NBT_IO_Cache : Dict[Tuple[int, int], io.BytesIO] = {}
+        for index, BlockNBT in BlockNBTTable.items() :
+            NBTPosX = (index // (SizeY * SizeZ)) + startPos[0]
+            remain = index % (SizeY * SizeZ)
+            NBTPosY = (remain // SizeZ) + startPos[1]
+            NBTPosZ = (remain % SizeZ) + startPos[2]
+
+            ChunkPosTuple = (NBTPosX//16, NBTPosZ//16)
+            if ChunkPosTuple not in NBT_IO_Cache :
+                NBT_IO_Cache[ChunkPosTuple] = io.BytesIO()
+                ChunkNBTKey = BaseType.GenerateChunkLevelDBKey(dimension, ChunkPosTuple[0], ChunkPosTuple[1], 49)
+                if ChunkNBTKey in self.world_db : NBT_IO_Cache[ChunkPosTuple].write( self.world_db.get(ChunkNBTKey) )
+
+            BlockNBTCopy = BlockNBT.copy()
+            BlockNBTCopy["x"] = nbt.TAG_Int(NBTPosX)
+            BlockNBTCopy["y"] = nbt.TAG_Int(NBTPosY)
+            BlockNBTCopy["z"] = nbt.TAG_Int(NBTPosZ)
+            nbt.write_to_nbt_file(NBT_IO_Cache[ChunkPosTuple], BlockNBTCopy)
+        for ChunkPos, IO1 in NBT_IO_Cache.items() :
+            ChunkNBTKey = BaseType.GenerateChunkLevelDBKey(dimension, ChunkPos[0], ChunkPos[1], 49)
+            self.world_db.put(ChunkNBTKey, IO1.getvalue())
+            IO1.close()
+
+        if "common_structure_range" not in self.__runtime_cache : 
+            self.__runtime_cache["common_structure_range"] = {}
+        LocalTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        self.__runtime_cache["common_structure_range"][LocalTime] = [startPos[0], startPos[1], 
+            startPos[2], startPos[0]+SizeX-1, startPos[1]+SizeY-1, startPos[2]+SizeZ-1]
+        with open(os.path.join(self.__world_path, "runtime.cache"), "w", encoding="utf-8") as f : 
+            json.dump(self.__runtime_cache, fp=f)
 
     def export_CommonStructure(self, CommonStructure, dimension:int, startPos:Tuple[int, int, int], endPos:Tuple[int, int, int]) :
-        raise NotImplementedError()
+        if  (dimension == 0 and ( not(-64 <= startPos[1] < 320) or not(-64 <= endPos[1] < 320) )) or \
+            (dimension == 1 and ( not(0 <= startPos[1] < 256) or not(0 <= endPos[1] < 256) )) or \
+            (dimension == 2 and ( not(0 <= startPos[1] < 256) or not(0 <= endPos[1] < 256) )) :
+            raise ValueError("结构读取区域超出世界有效高度范围")
+
+        startPos, endPos = list(startPos), list(endPos)
+        for i,j,k in zip(range(3), startPos, endPos) :
+            if j > k : startPos[i], endPos[i] = endPos[i], startPos[i]
+
+        CommonStructure.__init__([j-i+1 for i,j in zip(startPos, endPos)])
+        SizeX, SizeY, SizeZ = CommonStructure.size
+        BlockIndex:array.array = CommonStructure.block_index
+        BlockPalette:Dict[int, nbt.TAG_Compound] = CommonStructure.block_palette
+        BlockNBTDict:Dict[int, nbt.TAG_Compound] = CommonStructure.block_nbt
+        MiddleArray = array.array("H", b"\x00\x00"*32767)
+
+        BlockPaletteMiddleList:List[BaseType.BlockPermutationType] = [BaseType.BlockPermutationType("air")]
+        Iter1 = C_API.StructureOperatePosRange(startPos[0], startPos[2], endPos[0]+1, endPos[2]+1)
+        for x1, z1, x2, z2 in Iter1 :
+            ChunkObj = BaseType.ChunkType.from_leveldb(self.world_db, dimension, x1//16, z1//16)
+            C_API.export_chunk_to_CommonStructure(
+                startPos[0], startPos[1], startPos[2], SizeX, SizeY, SizeZ, 
+                x1, startPos[1], z1, x2, endPos[1]+1, z2,
+                ChunkObj.SubChunks, BlockIndex, BlockPaletteMiddleList, MiddleArray)
+            
+            for BlockNBT in ChunkObj.BlockEntities :
+                if  not(startPos[0] <= BlockNBT.x <= endPos[0]) or \
+                    not(startPos[1] <= BlockNBT.y <= endPos[1]) or \
+                    not(startPos[2] <= BlockNBT.z <= endPos[2]) : continue
+                NBTPointer = (BlockNBT.x - startPos[0]) * (SizeY * SizeZ) + \
+                    (BlockNBT.y - startPos[1]) * SizeZ + (BlockNBT.z - startPos[2])
+                BlockNBTDict[NBTPointer] = BlockNBT.to_nbt()
+        
+        BlockPalette.extend(CommonStructure.BLOCKTYPE(j.Identifier, j.States) for j in BlockPaletteMiddleList)
 
 
     def chunk_pos_iter(self, dimension:int) -> Iterable[Tuple[int, int]] :
@@ -214,7 +294,7 @@ class World :
         key = BaseType.GenerateChunkLevelDBKey(dimension, chunk_pos_x, chunk_pos_z, 44)
         return key in self.world_db
 
-    def get_chunk(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> Union[BaseType.ChunkType, None]: 
+    def get_chunk(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> Union[BaseType.ChunkType, None] : 
         if not self.chunk_exists(dimension, chunk_pos_x, chunk_pos_z) : return None
         return BaseType.ChunkType.from_leveldb(self.world_db, dimension, chunk_pos_x, chunk_pos_z)
 
