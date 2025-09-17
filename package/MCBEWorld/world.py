@@ -151,7 +151,7 @@ class World :
         self.world_nbt = world_nbt
         self.world_db = MinecraftLevelDB(world_database_path, create_if_missing=True)
 
-    def close(self, encryption=True) :
+    def close(self, encryption=False) :
         if sys.is_finalizing() or self.__close : return None
 
         world_dat_path = os.path.join(self.__world_path, "level.dat")
@@ -297,6 +297,7 @@ class World :
     def get_chunk(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> Union[BaseType.ChunkType, None] : 
         if not self.chunk_exists(dimension, chunk_pos_x, chunk_pos_z) : return None
         return BaseType.ChunkType.from_leveldb(self.world_db, dimension, chunk_pos_x, chunk_pos_z)
+
 
 
 
