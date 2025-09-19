@@ -6,57 +6,6 @@ from typing import Union,List,Dict,Tuple,Literal,TypedDict
 import array, math
 
 
-def getStructureType(IO_Byte_Path) :
-    import io, traceback, json
-    from typing import Union
-    from . import StructureBDX, StructureMCS, StructureSCHEM
-    from . import StructureRUNAWAY, StructureSCHEMATIC
-    IO_Byte_Path: Union[str, bytes, io.IOBase]
-
-    if isinstance(IO_Byte_Path, str) : _file = open(IO_Byte_Path, "rb")
-    elif isinstance(IO_Byte_Path, bytes) : _file = io.BytesIO(IO_Byte_Path)
-    elif isinstance(IO_Byte_Path, io.IOBase) : _file = IO_Byte_Path
-    else : raise ValueError(f"{IO_Byte_Path} is not Readable Object")
-
-    data, data_type = _file, "bytes"
-    try : 
-        data = json.load(fp=_file)
-        data_type = "json"
-    except : 
-        try : 
-            _file.seek(0)
-            data = nbt.read_from_nbt_file(_file, byteorder="big", zip_mode="gzip").get_tag()
-            data_type = "nbt"
-        except : 
-            try : 
-                _file.seek(0)
-                data = nbt.read_from_nbt_file(_file, byteorder="little").get_tag()
-                data_type = "nbt"
-            except : pass
-
-    Test = [StructureBDX.BDX_File, StructureMCS.Mcstructure, StructureSCHEMATIC.Schematic, 
-            StructureRUNAWAY.RunAway, StructureRUNAWAY.Kbdx, 
-            StructureRUNAWAY.MianYang_V1, StructureRUNAWAY.MianYang_V2, StructureRUNAWAY.MianYang_V3, 
-            StructureRUNAWAY.GangBan_V1, StructureRUNAWAY.GangBan_V2, StructureRUNAWAY.GangBan_V3,
-            StructureRUNAWAY.GangBan_V4, StructureRUNAWAY.GangBan_V5, StructureRUNAWAY.GangBan_V6,
-            StructureRUNAWAY.GangBan_V7,
-            StructureRUNAWAY.FuHong_V1, StructureRUNAWAY.FuHong_V2, StructureRUNAWAY.FuHong_V3,
-            StructureRUNAWAY.FuHong_V4, StructureRUNAWAY.FuHong_V5, 
-            StructureRUNAWAY.QingXu_V1,
-            StructureRUNAWAY.TimeBuilder_V1,
-            StructureSCHEM.Schem_V1, StructureSCHEM.Schem_V2
-            ]
-
-    for class_obj in Test :
-        if data_type == "bytes" : data.seek(0)
-        try : bool1 = class_obj.is_this_file(data, data_type)
-        except : traceback.print_exc() ; continue
-
-        if bool1 : 
-            if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
-            return class_obj
-    if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
-
 class CommonStructure :
     """
     基岩版通用结构对象
@@ -113,35 +62,16 @@ class CommonStructure :
 
     @classmethod
     def from_buffer(cls, Reader:Union[str, bytes, IOBase], Decoder=None) :
-        from . import Codecs
-        from . import StructureBDX, StructureMCS, StructureSCHEM
-        from . import StructureRUNAWAY, StructureSCHEMATIC
-        SupportType = {
-            StructureBDX.BDX_File: Codecs.BDX, StructureMCS.Mcstructure: Codecs.MCSTRUCTURE, 
-            StructureSCHEMATIC.Schematic: Codecs.SCHEMATIC, 
-            StructureRUNAWAY.RunAway: Codecs.RUNAWAY, StructureRUNAWAY.Kbdx: Codecs.KBDX, 
-            StructureRUNAWAY.MianYang_V1: Codecs.MIANYANG_V1, StructureRUNAWAY.MianYang_V2: Codecs.MIANYANG_V2, 
-            StructureRUNAWAY.MianYang_V3: Codecs.MIANYANG_V3, 
-            StructureRUNAWAY.GangBan_V1: Codecs.GANGBAN_V1, StructureRUNAWAY.GangBan_V2: Codecs.GANGBAN_V2,
-            StructureRUNAWAY.GangBan_V3: Codecs.GANGBAN_V3, StructureRUNAWAY.GangBan_V4: Codecs.GANGBAN_V4, 
-            StructureRUNAWAY.GangBan_V5: Codecs.GANGBAN_V5, StructureRUNAWAY.GangBan_V6: Codecs.GANGBAN_V6, 
-            StructureRUNAWAY.GangBan_V7: Codecs.GANGBAN_V7, 
-            StructureRUNAWAY.FuHong_V1: Codecs.FUHONG_V1, StructureRUNAWAY.FuHong_V2: Codecs.FUHONG_V2, 
-            StructureRUNAWAY.FuHong_V3: Codecs.FUHONG_V3, StructureRUNAWAY.FuHong_V4: Codecs.FUHONG_V4, 
-            StructureRUNAWAY.FuHong_V5: Codecs.FUHONG_V5, 
-            StructureRUNAWAY.QingXu_V1: Codecs.QINGXU_V1, 
-            StructureRUNAWAY.TimeBuilder_V1: Codecs.TIMEBUILDER_V1,
-            StructureSCHEM.Schem_V1: Codecs.SCHEM_V1, StructureSCHEM.Schem_V2: Codecs.SCHEM_V2, 
-        }
+        from . import Codecs, getStructureType
 
         if Decoder is not None and Codecs.CodecsBase not in Decoder.mro() : 
             raise TypeError(f"{Decoder}是不受支持的解码器")
         elif Decoder is None : 
-            TypeObj = getStructureType(Reader)
-            if TypeObj not in SupportType : raise TypeError(f"{Reader}是不支持解析的文件或数据")
+            CodecsType = getStructureType(Reader)
+            if CodecsType is None : raise TypeError(f"{Reader}是不支持解析的文件或数据")
 
         Common = cls()
-        Decoder = SupportType[TypeObj] if Decoder is None else Decoder
+        Decoder = CodecsType if Decoder is None else Decoder
         Decoder(Common).decode(Reader)
         return Common
 

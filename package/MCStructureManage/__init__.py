@@ -22,7 +22,7 @@ from .. import python_nbt as nbt
 from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 from .block import Block
-from .codec import Codecs
-from .structure import CommonStructure, getStructureType
+from .codec import Codecs, getStructureType, registerCodecs
+from .structure import CommonStructure
 
 

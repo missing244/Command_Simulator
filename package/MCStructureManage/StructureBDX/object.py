@@ -149,18 +149,6 @@ class BDX_File :
         Writer1.close()
         if isinstance(buffer, str) : _file.close()
 
-    
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "bytes" : return False
-
-        if data.read(3) != b'BD@' : return False
-        try : a = brotli.decompress(data.read())[0:4]
-        except : return False
-
-        if a != b'BDX\0' : return False
-        else : return True
-
 
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 RunTimeID_117 = json.load(fp=open(os.path.join(CurrentPath, "runtimeIds_117.json"), "r", encoding="utf-8"))

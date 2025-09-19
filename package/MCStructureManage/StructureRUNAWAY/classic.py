@@ -87,18 +87,6 @@ class RunAway :
         json.dump(Json1, _file, separators=(',', ':'))
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if not isinstance(Json1, list)  : return False
-        if any(not isinstance(i, dict) for i in Json1[0:10]) : return False
-        if isinstance(Json1, list) and len(Json1) and isinstance(Json1[0], dict) and \
-            "name" in Json1[0] and isinstance(Json1[0].get("x", None), int) : return True
-        return False
-
-
 class Kbdx :
     """
     由 RunAway 官方开发的结构文件对象
@@ -190,15 +178,4 @@ class Kbdx :
 
         _file.write( json.dumps(Json1, separators=(',', ':')).encode("utf-8") )
 
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "bytes" : return False
-
-        try : 
-            block_count = int.from_bytes(data.read(4), "little", signed=False)
-            data.read(20 * block_count)
-            json.load(data)
-        except : return False
-        else : return True
 

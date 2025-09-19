@@ -149,12 +149,3 @@ class Schematic :
         else : _file = buffer
         nbt.write_to_nbt_file(_file, NBT, zip_mode="gzip" ,byteorder="big")
 
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "nbt" : return False
-
-        NBT = data
-        if "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
-            "Blocks" in NBT and 'Data' in NBT : return True
-        else : return False

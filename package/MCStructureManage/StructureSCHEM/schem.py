@@ -90,16 +90,6 @@ class Schem_V1 :
         nbt.write_to_nbt_file(_file, NBT, zip_mode="gzip" ,byteorder="big")
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "nbt" : return False
-
-        NBT = data
-        if "Version" in NBT and NBT["Version"].value <= 2 and \
-            "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
-            "BlockData" in NBT and 'Palette' in NBT : return True
-        else : return False
-
 """
 Schematic -> <'TAG_Compound'
     Version --> <class 'TAG_Int'>
@@ -155,14 +145,3 @@ class Schem_V2(Schem_V1) :
 
         return StructureObject
 
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "nbt" : return False
-
-        NBT = data
-        if "Schematic" not in NBT : return False
-        if "Version" in NBT["Schematic"] and NBT["Schematic"]["Version"].value == 3 and \
-            "Width" in NBT["Schematic"] and "Height" in NBT["Schematic"] and 'Length' in NBT["Schematic"] and \
-            "Blocks" in NBT["Schematic"] : return True
-        else : return False

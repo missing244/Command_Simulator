@@ -116,12 +116,4 @@ class Mcstructure :
         nbt.write_to_nbt_file(_file, StructureNBT, byteorder="little")
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "nbt" : return False
-        NBT = data
-
-        if "size" in NBT and "structure_world_origin" in NBT and 'structure' in NBT : return True
-        else : return False
-
 

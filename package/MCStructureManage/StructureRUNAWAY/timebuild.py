@@ -95,14 +95,4 @@ class TimeBuilder_V1 :
         json.dump(Json1, _file, separators=(',', ':'))
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, dict) and Json1.get("version", None) == "TimeBuilder" and \
-            isinstance(Json1.get("block", None), list) : return True
-        return False
-
-
 

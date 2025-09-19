@@ -107,16 +107,6 @@ class MianYang_V1 :
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
 
-
-    @classmethod
-    def is_this_file(cls,data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
-            and ("namespaces" in Json1)and ("totalBlocks" in Json1) : return True
-        return False
-
 class MianYang_V2(MianYang_V1) :
     """
     由 绵阳 开发的结构文件对象
@@ -179,16 +169,6 @@ class MianYang_V2(MianYang_V1) :
         
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, fp=_file, separators=(',', ':'))
-
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
-            and ("namespaces" in Json1) and ("totB" in Json1): return True
-        return False
 
 class MianYang_V3(MianYang_V1) :
     """
@@ -254,13 +234,3 @@ class MianYang_V3(MianYang_V1) :
         json_bytes = json.dumps(Json1, separators=(',', ':')).encode("utf-8")
         _file.write( zlib.compress(json_bytes) )
 
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "bytes" : return False
-        
-        try : Json1 = json.load(fp=BytesIO( zlib.decompress(data.read()) ) )
-        except : return False
-        if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
-            and ("namespaces" in Json1) and ("totB" in Json1): return True
-        return False

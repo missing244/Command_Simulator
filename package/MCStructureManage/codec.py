@@ -6,7 +6,7 @@ from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 
 from typing import Union,Dict,Tuple,Literal,List
-import abc, re, io, json, array, itertools, urllib.parse, random, os, math, zipfile, time
+import abc, re, io, json, array, itertools, urllib.parse, random, os, math, zipfile, traceback, zlib
 ExecuteTest = re.compile("[ ]*?/?[ ]*?execute[ ]*?(as|at|align|anchored|facing|in|positioned|rotated|if|unless|run)")
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 Translate = json.load(fp=open(os.path.join(CurrentPath, "res", "translate.json"), "r", encoding="utf-8"))
@@ -39,7 +39,6 @@ def GenerateEntity(id:str, pos:Tuple[int, int, int], name:str=None) :
     if isinstance(name, str) : NBTdata["CustomName"] = nbt.TAG_String(name)
 
     return NBTdata
-
 
 
 class Codecs :
@@ -83,6 +82,11 @@ class Codecs :
             self.IgnoreAir:bool = IgnoreAir
 
         @abc.abstractmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) -> bool :
+            raise NotImplementedError()
+
+        @abc.abstractmethod
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]) :
             raise NotImplementedError()
 
@@ -91,6 +95,19 @@ class Codecs :
             raise NotImplementedError()
 
     class BDX(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            from . import C_brotli
+            if DataType != "bytes" : return False
+
+            if Data.read(3) != b'BD@' : return False
+            try : a = C_brotli.decompress(Data.read())[0:4]
+            except : return False
+
+            if a != b'BDX\0' : return False
+            else : return True
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]) :
             CommandBlockID = ["minecraft:command_block", "minecraft:repeating_command_block", 
@@ -303,6 +320,15 @@ class Codecs :
 
     class MCSTRUCTURE(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+            NBT = Data
+
+            if "size" in NBT and "structure_world_origin" in NBT and 'structure' in NBT : return True
+            else : return False
+
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
             MCS = StructureMCS.Mcstructure.from_buffer(Reader)
             
@@ -345,6 +371,16 @@ class Codecs :
             MCS.save_as(Writer)
 
     class SCHEMATIC(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+
+            NBT = Data
+            if "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
+                "Blocks" in NBT and 'Data' in NBT : return True
+            else : return False
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
             from .C_API import codecs_parser_schematic
@@ -401,6 +437,17 @@ class Codecs :
 
     class SCHEM_V1(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+
+            NBT = Data
+            if "Version" in NBT and NBT["Version"].value <= 2 and \
+                "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
+                "BlockData" in NBT and 'Palette' in NBT : return True
+            else : return False
+
         def operation_structure(self, Schma_File:StructureSCHEM.Schem_V1) :
             from .C_API import codecs_parser_schem
             StructureObject = self.Common
@@ -449,11 +496,33 @@ class Codecs :
 
     class SCHEM_V2(SCHEM_V1) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+
+            NBT = Data
+            if "Schematic" not in NBT : return False
+            if "Version" in NBT["Schematic"] and NBT["Schematic"]["Version"].value == 3 and \
+                "Width" in NBT["Schematic"] and "Height" in NBT["Schematic"] and 'Length' in NBT["Schematic"] and \
+                "Blocks" in NBT["Schematic"] : return True
+            else : return False
+
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
             Schma_File = StructureSCHEM.Schem_V2.from_buffer(Reader)
             self.operation_structure(Schma_File)
 
     class MIANYANG_V1(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
+                and ("namespaces" in Json1)and ("totalBlocks" in Json1) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.MianYang_V1.from_buffer(Reader)
@@ -554,6 +623,16 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class MIANYANG_V2(CodecsBase) :
+        
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
+                and ("namespaces" in Json1) and ("totB" in Json1): return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.MianYang_V2.from_buffer(Reader)
@@ -673,6 +752,17 @@ class Codecs :
  
     class MIANYANG_V3(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+            
+            try : Json1 = json.load(fp=io.BytesIO( zlib.decompress(Data.read()) ) )
+            except : return False
+            if isinstance(Json1, dict) and ("chunkedBlocks" in Json1) \
+                and ("namespaces" in Json1) and ("totB" in Json1): return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.MianYang_V3.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -790,6 +880,17 @@ class Codecs :
             Struct1.save_as(Writer)
  
     class GANGBAN_V1(CodecsBase) :
+        
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, list) and len(Json1) >= 2 and \
+                (isinstance(Json1[-1], dict) and "list" in Json1[-1]) and \
+                (isinstance(Json1[-2], dict) and "start" in Json1[-2] and "end" in Json1[-2]) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.GangBan_V1.from_buffer(Reader)
@@ -858,6 +959,17 @@ class Codecs :
 
     class GANGBAN_V2(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, list) and len(Json1) >= 2 and \
+                (isinstance(Json1[-1], dict) and "list" in Json1[-1]) and \
+                (isinstance(Json1[0], dict) and "p" in Json1[0] and "id" in Json1[0]) : return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.GangBan_V2.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -923,6 +1035,17 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class GANGBAN_V3(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, list) and len(Json1) >= 2 and \
+                (isinstance(Json1[0], dict) and "name" in Json1[0]) and \
+                (isinstance(Json1[1], str)) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.GangBan_V3.from_buffer(Reader)
@@ -1006,6 +1129,17 @@ class Codecs :
 
     class GANGBAN_V4(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, list) and len(Json1) >= 2 and \
+                (isinstance(Json1[0], dict) and "name" in Json1[0]) and \
+                (isinstance(Json1[1], list) and Json1[1] and isinstance(Json1[1][0], str)) : return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.GangBan_V4.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -1087,6 +1221,17 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class GANGBAN_V5(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, list) and len(Json1) >= 3 and \
+                isinstance(Json1[0], int) and isinstance(Json1[-1], list) and \
+                (isinstance(Json1[-2], dict) and "ep" in Json1[-2]) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.GangBan_V5.from_buffer(Reader)
@@ -1185,6 +1330,17 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class GANGBAN_V6(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, list) and len(Json1) >= 3 and \
+                isinstance(Json1[0], list) and isinstance(Json1[-2], (list, dict)) and \
+                isinstance(Json1[-1], list) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.GangBan_V6.from_buffer(Reader)
@@ -1297,6 +1453,18 @@ class Codecs :
 
     class GANGBAN_V7(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+
+            try : Json1 = json.load(fp=io.BytesIO( zlib.decompress(Data.read()) ) )
+            except : return False
+
+            if isinstance(Json1, list) and len(Json1) >= 3 and isinstance(Json1[-1], list) and \
+                isinstance(Json1[0], list) and isinstance(Json1[-2], (list, dict)) : return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.GangBan_V7.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -1404,6 +1572,18 @@ class Codecs :
 
     class RUNAWAY(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if not isinstance(Json1, list)  : return False
+            if any(not isinstance(i, dict) for i in Json1[0:10]) : return False
+            if isinstance(Json1, list) and len(Json1) and isinstance(Json1[0], dict) and \
+                "name" in Json1[0] and isinstance(Json1[0].get("x", None), int) : return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.RunAway.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -1437,6 +1617,18 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class KBDX(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+
+            try : 
+                block_count = int.from_bytes(Data.read(4), "little", signed=False)
+                Data.seek(20 * block_count, 1)
+                json.load(Data)
+            except : return False
+            else : return True
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.Kbdx.from_buffer(Reader)
@@ -1507,6 +1699,16 @@ class Codecs :
 
     class FUHONG_V1(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, list) and len(Json1) and isinstance(Json1[0], dict) and \
+                "name" in Json1[0] and isinstance(Json1[0].get("x", None), list) : return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.FuHong_V1.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -1542,6 +1744,16 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class FUHONG_V2(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, dict) and isinstance(Json1.get("Build_Info", None), dict) and \
+                isinstance(Json1.get("FuHongBuild_FinalFormat", None), list) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.FuHong_V2.from_buffer(Reader)
@@ -1671,6 +1883,16 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class FUHONG_V3(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+            
+            if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
+                isinstance(Json1.get("FuHongBuild", None), list) and Json1.get("BlockCalculationPos", False) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.FuHong_V3.from_buffer(Reader)
@@ -1806,6 +2028,16 @@ class Codecs :
 
     class FUHONG_V4(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+            
+            if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
+                isinstance(Json1.get("FuHongBuild", None), list) and not Json1.get("BlockCalculationPos", False) : return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.FuHong_V4.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -1937,6 +2169,19 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class FUHONG_V5(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            from . import C_API
+
+            if DataType != "bytes" : return False
+            try : Json1 = json.loads( C_API.fuhong_v5_decrypt( zlib.decompress(Data.read()) ) )
+            except : return False
+
+            if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
+                isinstance(Json1.get("FuHongBuild", None), list) : return True
+            return False
 
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.FuHong_V5.from_buffer(Reader)
@@ -2070,6 +2315,16 @@ class Codecs :
 
     class QINGXU_V1(CodecsBase) :
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, dict) and "totalBlocks" in Json1 and \
+                isinstance(Json1.get("0", None), str) : return True
+            return False
+
         def decode(self, Reader:Union[str, bytes, io.IOBase]):
             Struct1 = StructureRUNAWAY.QingXu_V1.from_buffer(Reader)
             PosStart, PosEnd = Struct1.get_volume()
@@ -2109,6 +2364,16 @@ class Codecs :
             Struct1.save_as(Writer)
 
     class TIMEBUILDER_V1(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+
+            if isinstance(Json1, dict) and Json1.get("version", None) == "TimeBuilder" and \
+                isinstance(Json1.get("block", None), list) : return True
+            return False
         
         def decode(self, Reader:Union[str, io.IOBase]) :
             Struct1 = StructureRUNAWAY.TimeBuilder_V1.from_buffer(Reader)
@@ -2283,4 +2548,49 @@ class Codecs :
                 if command.__class__ is str : _file.write(f"/{command}")
                 else : _file.write( "".join(f"/{i}" for i in command) )
 
+
+
+SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
+    Codecs.MIANYANG_V1, Codecs.MIANYANG_V2, Codecs.MIANYANG_V3, Codecs.GANGBAN_V1, Codecs.GANGBAN_V2,
+    Codecs.GANGBAN_V3, Codecs.GANGBAN_V4, Codecs.GANGBAN_V5, Codecs.GANGBAN_V6, Codecs.GANGBAN_V7, 
+    Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, Codecs.FUHONG_V5, 
+    Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2]
+
+def registerCodecs(CodecsType:type) :
+    if Codecs.CodecsBase not in CodecsType.mro() :
+        raise TypeError(f"{CodecsType} 是不规范的的解码器")
+    if CodecsType not in SupportCodecs :
+        SupportCodecs.append(CodecsType)
+
+def getStructureType(IO_Byte_Path: Union[str, bytes, io.IOBase]) :
+    if isinstance(IO_Byte_Path, str) : _file = open(IO_Byte_Path, "rb")
+    elif isinstance(IO_Byte_Path, bytes) : _file = io.BytesIO(IO_Byte_Path)
+    elif isinstance(IO_Byte_Path, io.IOBase) : _file = IO_Byte_Path
+    else : raise ValueError(f"{IO_Byte_Path} is not Readable Object")
+
+    data, data_type = _file, "bytes"
+    try : 
+        data = json.load(fp=_file)
+        data_type = "json"
+    except : 
+        try : 
+            _file.seek(0)
+            data = nbt.read_from_nbt_file(_file, byteorder="big", zip_mode="gzip").get_tag()
+            data_type = "nbt"
+        except : 
+            try : 
+                _file.seek(0)
+                data = nbt.read_from_nbt_file(_file, byteorder="little").get_tag()
+                data_type = "nbt"
+            except : pass
+
+    for class_obj in SupportCodecs :
+        if data_type == "bytes" : data.seek(0)
+        try : bool1 = class_obj.verify(data, data_type)
+        except : traceback.print_exc() ; continue
+
+        if bool1 : 
+            if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
+            return class_obj
+    if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
 

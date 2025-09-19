@@ -100,13 +100,4 @@ class QingXu_V1 :
         json.dump(Json1, _file, separators=(',', ':'))
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, dict) and "totalBlocks" in Json1 and \
-            isinstance(Json1.get("0", None), str) : return True
-        return False
-
 

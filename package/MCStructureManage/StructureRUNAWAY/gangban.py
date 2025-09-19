@@ -125,17 +125,6 @@ class GangBan_V1 :
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
 
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 2 and \
-            (isinstance(Json1[-1], dict) and "list" in Json1[-1]) and \
-            (isinstance(Json1[-2], dict) and "start" in Json1[-2] and "end" in Json1[-2]) : return True
-        return False
-
 class GangBan_V2 :
     """
     由 钢板 开发的结构文件对象
@@ -232,17 +221,6 @@ class GangBan_V2 :
 
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
-
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 2 and \
-            (isinstance(Json1[-1], dict) and "list" in Json1[-1]) and \
-            (isinstance(Json1[0], dict) and "p" in Json1[0] and "id" in Json1[0]) : return True
-        return False
 
 
 
@@ -367,17 +345,6 @@ class GangBan_V3 :
         json.dump(Json1, _file, separators=(',', ':'))
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 2 and \
-            (isinstance(Json1[0], dict) and "name" in Json1[0]) and \
-            (isinstance(Json1[1], str)) : return True
-        return False
-
-
 
 class INFO2(TypedDict) :
     name: str
@@ -440,17 +407,6 @@ class GangBan_V4(GangBan_V3) :
 
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
-
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 2 and \
-            (isinstance(Json1[0], dict) and "name" in Json1[0]) and \
-            (isinstance(Json1[1], list) and Json1[1] and isinstance(Json1[1][0], str)) : return True
-        return False
 
 
 
@@ -558,17 +514,6 @@ class GangBan_V5 :
 
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
-
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 3 and \
-            isinstance(Json1[0], int) and isinstance(Json1[-1], list) and \
-            (isinstance(Json1[-2], dict) and "ep" in Json1[-2]) : return True
-        return False
 
 
 
@@ -686,17 +631,6 @@ class GangBan_V6 :
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
 
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) >= 3 and \
-            isinstance(Json1[0], list) and isinstance(Json1[-2], (list, dict)) and \
-            isinstance(Json1[-1], list) : return True
-        return False
-
 class GangBan_V7(GangBan_V6) :
     """
     由 钢板 开发的结构文件对象
@@ -748,18 +682,5 @@ class GangBan_V7(GangBan_V6) :
             _file = open(buffer, "wb")
         else : _file = buffer
         _file.write( zlib.compress( io1.getvalue().encode("utf-8") ))
-
-
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "bytes" : return False
-
-        try : Json1 = json.load(fp=BytesIO( zlib.decompress(data.read()) ) )
-        except : return False
-
-        if isinstance(Json1, list) and len(Json1) >= 3 and isinstance(Json1[-1], list) and \
-            isinstance(Json1[0], list) and isinstance(Json1[-2], (list, dict)) : return True
-        return False
 
 

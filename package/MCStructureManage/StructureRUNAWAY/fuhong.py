@@ -85,16 +85,6 @@ class FuHong_V1 :
 
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
-    
-    
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, list) and len(Json1) and isinstance(Json1[0], dict) and \
-            "name" in Json1[0] and isinstance(Json1[0].get("x", None), list) : return True
-        return False
 
         
 
@@ -246,15 +236,6 @@ class FuHong_V2 :
         json.dump(Json1, _file, separators=(',', ':'))
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-
-        if isinstance(Json1, dict) and isinstance(Json1.get("Build_Info", None), dict) and \
-            isinstance(Json1.get("FuHongBuild_FinalFormat", None), list) : return True
-        return False
-
 
 class BUILD_INFO_V3(TypedDict) :
     UserInfo: str
@@ -379,15 +360,6 @@ class FuHong_V3 :
         json.dump(Json1, _file, separators=(',', ':'))
 
 
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-        
-        if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
-            isinstance(Json1.get("FuHongBuild", None), list) and Json1.get("BlockCalculationPos", False) : return True
-        return False
-
 class FuHong_V4 :
     """
     由 FuHong 开发的结构文件对象
@@ -477,16 +449,6 @@ class FuHong_V4 :
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
 
-
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        if data_type != "json" : return False
-        Json1 = data
-        
-        if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
-            isinstance(Json1.get("FuHongBuild", None), list) and not Json1.get("BlockCalculationPos", False) : return True
-        return False
-
 class FuHong_V5(FuHong_V4) : 
     """
     由 FuHong 开发的结构文件对象
@@ -530,18 +492,6 @@ class FuHong_V5(FuHong_V4) :
 
         _file.write(data)
 
-    
-    @classmethod
-    def is_this_file(cls, data, data_type:Literal["nbt", "json", "bytes"]) :
-        from .. import C_API
-        import traceback
-        if data_type != "bytes" : return False
-        try : Json1 = json.loads( C_API.fuhong_v5_decrypt( zlib.decompress(data.read()) ) )
-        except : return False
-
-        if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
-            isinstance(Json1.get("FuHongBuild", None), list) : return True
-        return False
 
 
 
