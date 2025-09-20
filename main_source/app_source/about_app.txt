@@ -1,14 +1,17 @@
-关于命令模拟器
-
-命令模拟器（以下简称“本应用”）是我们开发的一款运行在Android和Windows平台上的，对《我的世界》（由Microsoft旗下Mojang AB开发并维护的沙盒类独立视频游戏，包括由网易、Mojang AB和Xbox游戏工作室合作开发的中国本地化版本）中的命令系统进行模拟运行的调试工具。
+命令模拟器是我们开发的一款运行在Android和Windows平台上的，对《我的世界》（由Microsoft旗下Mojang AB开发并维护的沙盒类独立视频游戏）中的命令系统进行模拟运行的调试工具。
 
 开发人员：
-missing245
-CB命令君
-胧炎_cber
-伊桑桑桑桑
+missing245   CB命令君
+胧炎_cber   伊桑桑桑桑
 
 特别感谢：
-ProjectXero
-CB命令君
-胧炎_cber
+ProjectXero  正负号
+浮鸿
+
+赞助感谢列表：
+狙踢  LP3790  屠苏  你技太美
+BLUECATXP   能歌擅武
+星河奈叶风   星语工作室
+luckofsea   星白工作室
+考拉.
+

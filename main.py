@@ -138,10 +138,10 @@ class control_windows :
         self.display_frame["right_click_menu"] = app_tk_frame.Global_Right_Click_Menu(self.window)
 
         self.display_frame["welcome_screen"] = app_tk_frame.Welcome_Screen(self)
-        self.display_frame["special_char"] = app_tk_frame.Special_Char(self)
-        self.display_frame["unicode_char"] = app_tk_frame.Unicode_Char(self)
+        self.display_frame["copy_char_tool"] = app_tk_frame.Copy_Char_Tool(self)
         self.display_frame["find_minecraft_ID"] = app_tk_frame.Find_Minecraft_ID(self)
         self.display_frame["structure_transfor"] = app_tk_frame.BE_Structure_Tool(self)
+        self.display_frame["mcworld_reader"] = app_tk_frame.BE_World_Tool(self)
         self.display_frame["copy_file_command"] = app_tk_frame.Copy_File_Command(self)
 
         self.display_frame["game_ready"] = app_tk_frame.Game_Ready(self)
@@ -210,9 +210,14 @@ class control_windows :
                 self.display_frame[self.now_display_frame].pack_forget()
             self.now_display_frame = ""
             return None
+        
+        if name == "mcworld_reader" :
+            tkinter.messagebox.showerror("Error", "正在开发，敬请期待")
+            return None
 
         if name not in self.display_frame or name == self.now_display_frame: return None
         if self.now_display_frame != "" : self.display_frame[self.now_display_frame].pack_forget()
+
         if "expand_pack" in (self.now_display_frame, name) :
             test_flag = False
             for uuid,data in self.expand_pack_open_list.items() : #判断隶属的拓展包
@@ -227,9 +232,18 @@ class control_windows :
                 right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
                 if hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
                 if hasattr(data["object"],"exit_method") : data["object"].exit_method()
-        self.now_display_frame = name
-        self.display_frame[self.now_display_frame].pack()
+
+        if name == "choose_expand" and self.now_display_frame == "expand_pack" :
+            self.display_frame[name].pack()
+            self.now_display_frame = name
+        elif name == "choose_expand" and "expand_pack" in self.display_frame:
+            self.display_frame["expand_pack"].pack()
+            self.now_display_frame = "expand_pack"
+        else : 
+            self.display_frame[name].pack()
+            self.now_display_frame = name
         self.focus_input = None
+
 
     def game_ready_or_run(self) :
         for i in self.button_bar.menu_list[0:4] : self.button_bar.itemconfig(i, fill="white")
@@ -324,6 +338,7 @@ class control_windows :
             
             if "copy_file_command" in self.display_frame : self.display_frame["copy_file_command"].__loop__()
             if "structure_transfor" in self.display_frame : self.display_frame["structure_transfor"].__loop__()
+            if "mcworld_reader" in self.display_frame : self.display_frame["mcworld_reader"].__loop__()
             time.sleep(0.5)
 
 

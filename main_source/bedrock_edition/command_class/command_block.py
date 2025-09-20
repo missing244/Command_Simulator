@@ -217,7 +217,7 @@ class command_block_compile_system :
         node = python_nbt.NBT_Builder()
         GameVersion = 19 if MathFunction.version_compare(_game.game_version,[1,19,50]) == -1 else 36
 
-        FilePath = os.path.join("functionality", "structure_output", _game.world_name+".bdx")
+        FilePath = os.path.join("functionality", "CB_Structure", _game.world_name+".bdx")
         a = python_bdx.BDX_File()
         a.author = "Command_Simulator"
         pos_start = [0,0,0]
@@ -367,7 +367,7 @@ class command_block_compile_system :
             mcstructure_format['structure']['block_indices'][1].append(one)
 
         python_nbt.write_to_nbt_file(
-            os.path.join("functionality","structure_output", _game.world_name + ".mcstructure"),
+            os.path.join("functionality","CB_Structure", _game.world_name + ".mcstructure"),
             mcstructure_format, byteorder="little"
         )
 

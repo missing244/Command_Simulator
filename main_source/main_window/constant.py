@@ -4,16 +4,18 @@ try :
     if platform.system() == "Windows" : raise Exception
 except : jnius = None
 
-APP_VERSION = "2.3.0 beta-3" ; debug_testing = False
+APP_VERSION = "2.3.0 beta-4" ; debug_testing = False
 PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius else None
 Context = jnius.autoclass('android.content.Context') if jnius else None
 
 First_Load_Build_Dir = (
-    "save_world", "expand_pack", 
-    os.path.join("functionality", "command"), 
-    os.path.join("functionality", "structure_output"),
+    "save_world", 
+    "expand_pack", 
     os.path.join("functionality", "example"),
-    os.path.join("functionality", "BE_Structure")
+    os.path.join("functionality", "Command_Text"), 
+    os.path.join("functionality", "CB_Structure"),
+    os.path.join("functionality", "BE_Structure"),
+    os.path.join("functionality", "BE_World")
 )
 
 #ID文件验证列表
@@ -71,5 +73,4 @@ world_config = {
     "mobGriefing": True, "naturalRegeneration": True, "respawnblocksexplode": True,
     "spawnRadius" : 5#值需要在0-12之间
   }
-
 }
