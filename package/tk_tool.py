@@ -153,7 +153,6 @@ def copy_to_clipboard(text:str) :
     entry1.selection_range("0",tkinter.END)
     entry1.event_generate("<<Copy>>")
 
-
 def get_selection_component(text : tkinter.Text) :
     button_list = text.winfo_children() ; button_content = text.dump("0.0", tkinter.END, window=True)
     result_list = []
@@ -182,11 +181,18 @@ def get_selection_component(text : tkinter.Text) :
         result_list.append(text.get(start,end_index))
     return result_list
 
-
 def get_default_font(size:int,**karg) :
     import tkinter.font
     a = tkinter.font.nametofont("TkDefaultFont").actual()['family']
     return tkinter.font.Font(family=a,size=size,**karg)
+
+def platform_string(str1:str) :
+    system_info = platform.uname()
+    if system_info.system.lower() == 'windows' : return f" {str1} "
+    elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : return str1
+    else : return f" {str1} "
+
+
 
 
 
