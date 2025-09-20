@@ -48,7 +48,7 @@ class World :
     * 可用属性 **world_name**  : 世界名(字符串)
     * 可用属性 **world_nbt**   : level.dat的nbt对象
     * 可用属性 **world_db**    : leveldb数据库
-    * 可用属性 **encrypt_key   : leveldb数据库加密int密钥（网易使用）
+    * 可用属性 **encrypt_key**   : leveldb数据库加密int密钥（网易使用）
     -----------------------
     * 可用方法 **close** : 保存世界并释放资源，传参encryption可以控制是否启用加密
     * 可用方法 **import_CommonStructure** : 通过CommonStructure对象将结构写入存档内
@@ -244,7 +244,7 @@ class World :
             self.__runtime_cache["common_structure_range"] = {}
         LocalTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.__runtime_cache["common_structure_range"][LocalTime] = [startPos[0], startPos[1], 
-            startPos[2], startPos[0]+SizeX-1, startPos[1]+SizeY-1, startPos[2]+SizeZ-1]
+            startPos[2], startPos[0]+SizeX, startPos[1]+SizeY, startPos[2]+SizeZ]
         with open(os.path.join(self.__world_path, "runtime.cache"), "w", encoding="utf-8") as f : 
             json.dump(self.__runtime_cache, fp=f)
 
@@ -297,7 +297,6 @@ class World :
     def get_chunk(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> Union[BaseType.ChunkType, None] : 
         if not self.chunk_exists(dimension, chunk_pos_x, chunk_pos_z) : return None
         return BaseType.ChunkType.from_leveldb(self.world_db, dimension, chunk_pos_x, chunk_pos_z)
-
 
 
 

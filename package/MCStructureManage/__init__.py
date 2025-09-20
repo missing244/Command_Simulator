@@ -11,8 +11,10 @@
     * 可用对象 CommonStructure: 通用结构对象（结构文件需被此对象打开读取）
     ---------------------------------
     * 可用编解码器 Codecs: 通用结构对象from_buffer/save_as方法使用的编码器类
+    * 可用编解码器父类 Codecs.CodecsBase: 自定义解/编码器需要继承的父类
     ---------------------------------
-    * 可用函数 getStructureType: 分析结构文件属于以上哪个结构类
+    * 可用函数 getStructureType: 分析结构文件使用什么解码器打开（返回None或者解码器类）
+    * 可用函数 registerCodecs: 注册一个自定义的编/解码器
 """
 
 from .. import python_nbt as nbt
