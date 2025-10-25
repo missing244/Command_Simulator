@@ -8,17 +8,15 @@ APP_VERSION = "2.3.0 beta-5" ; debug_testing = True
 PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius else None
 Context = jnius.autoclass('android.content.Context') if jnius else None
 
-SoftwarePlatform: typing.Literal["windows", "android", "linux_amd64", "linux_arm64"] = None
-try : subprocess.run("getprop ro.build.version.release")
-except : SysTest = False
-else : SysTest = True
-del SysTest
-system_info = platform.uname()
-if system_info.system.lower() == 'windows' : SoftwarePlatform = 'windows'
-elif system_info.system.lower() == 'android' : SoftwarePlatform = 'android'
-elif SysTest is True : SoftwarePlatform = 'android'
-elif system_info.system.lower() == 'linux' and system_info.machine == "x86_64" : SoftwarePlatform = 'linux_amd64'
-elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : SoftwarePlatform = 'linux_arm64'
+def GetPlatform() :
+  result = subprocess.run("getprop ro.build.version.release", shell=True, capture_output=True, text=True)
+  system_info = platform.uname()
+  if system_info.system.lower() == 'windows' : return 'windows'
+  elif system_info.system.lower() == 'android' : return 'android'
+  elif result.returncode == 0 : return 'android'
+  elif system_info.system.lower() == 'linux' and system_info.machine == "x86_64" : return 'linux_amd64'
+  elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : return 'linux_arm64'
+SoftwarePlatform: typing.Literal["windows", "android", "linux_amd64", "linux_arm64"] = GetPlatform()
 
 First_Load_Build_Dir = (
     "save_world", 
