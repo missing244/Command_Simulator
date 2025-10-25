@@ -1,17 +1,14 @@
 def GetPlatform() :
     import subprocess, typing, platform
     SoftwarePlatform: typing.Literal["windows_amd64", "android", "linux_amd64", "linux_arm64"] = None
-    try : subprocess.run("getprop ro.build.version.release")
-    except : SysTest = False
-    else : SysTest = True
-    del SysTest
+    result = subprocess.run("getprop ro.build.version.release", shell=True, capture_output=True, text=True)
     system_info = platform.uname()
     system = system_info.system.lower()
     machine = system_info.machine.lower()
 
     if system == 'windows' and machine == "amd64": SoftwarePlatform = 'windows_amd64'
     elif system == 'android' : SoftwarePlatform = 'android'
-    elif SysTest is True : SoftwarePlatform = 'android'
+    elif result.returncode == 0 : SoftwarePlatform = 'android'
     elif system == 'linux' and machine == "x86_64" : SoftwarePlatform = 'linux_amd64'
     elif system == 'linux' and machine == "aarch64" : SoftwarePlatform = 'linux_arm64'
     return SoftwarePlatform
