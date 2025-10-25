@@ -1,12 +1,24 @@
-import os,uuid,platform
+import os,uuid,platform,typing,subprocess
 try : 
     import jnius
     if platform.system() == "Windows" : raise Exception
 except : jnius = None
 
-APP_VERSION = "2.3.0 beta-4" ; debug_testing = False
+APP_VERSION = "2.3.0 beta-5" ; debug_testing = True
 PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius else None
 Context = jnius.autoclass('android.content.Context') if jnius else None
+
+SoftwarePlatform: typing.Literal["windows", "android", "linux_amd64", "linux_arm64"] = None
+try : subprocess.run("getprop ro.build.version.release")
+except : SysTest = False
+else : SysTest = True
+del SysTest
+system_info = platform.uname()
+if system_info.system.lower() == 'windows' : SoftwarePlatform = 'windows'
+elif system_info.system.lower() == 'android' : SoftwarePlatform = 'android'
+elif SysTest is True : SoftwarePlatform = 'android'
+elif system_info.system.lower() == 'linux' and system_info.machine == "x86_64" : SoftwarePlatform = 'linux_amd64'
+elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : SoftwarePlatform = 'linux_arm64'
 
 First_Load_Build_Dir = (
     "save_world", 
@@ -14,8 +26,6 @@ First_Load_Build_Dir = (
     os.path.join("functionality", "example"),
     os.path.join("functionality", "Command_Text"), 
     os.path.join("functionality", "CB_Structure"),
-    os.path.join("functionality", "BE_Structure"),
-    os.path.join("functionality", "BE_World")
 )
 
 #ID文件验证列表

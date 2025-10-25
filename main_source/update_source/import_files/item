@@ -1259,6 +1259,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:copper_nautilus_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:copper_nugget": {
     "damage_max": null,
     "can_enchant": []
@@ -1272,6 +1276,10 @@
     "can_enchant": []
   },
   "minecraft:copper_shovel": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:copper_spear": {
     "damage_max": null,
     "can_enchant": []
   },
@@ -1850,6 +1858,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:diamond_nautilus_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:diamond_ore": {
     "damage_max": null,
     "can_enchant": []
@@ -1875,6 +1887,10 @@
       "silk_touch",
       "unbreaking"
     ]
+  },
+  "minecraft:diamond_spear": {
+    "damage_max": null,
+    "can_enchant": []
   },
   "minecraft:diamond_sword": {
     "damage_max": 1561,
@@ -2468,6 +2484,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:golden_nautilus_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:golden_pickaxe": {
     "damage_max": 32,
     "can_enchant": [
@@ -2493,6 +2513,10 @@
       "silk_touch",
       "unbreaking"
     ]
+  },
+  "minecraft:golden_spear": {
+    "damage_max": null,
+    "can_enchant": []
   },
   "minecraft:golden_sword": {
     "damage_max": 32,
@@ -2904,6 +2928,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:iron_nautilus_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:iron_nugget": {
     "damage_max": null,
     "can_enchant": []
@@ -2933,6 +2961,10 @@
       "silk_touch",
       "unbreaking"
     ]
+  },
+  "minecraft:iron_spear": {
+    "damage_max": null,
+    "can_enchant": []
   },
   "minecraft:iron_sword": {
     "damage_max": 250,
@@ -3781,6 +3813,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:nautilus_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:nether_brick": {
     "damage_max": null,
     "can_enchant": []
@@ -3909,6 +3945,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:netherite_nautilus_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:netherite_pickaxe": {
     "damage_max": 2031,
     "can_enchant": [
@@ -3934,6 +3974,10 @@
       "silk_touch",
       "unbreaking"
     ]
+  },
+  "minecraft:netherite_spear": {
+    "damage_max": null,
+    "can_enchant": []
   },
   "minecraft:netherite_sword": {
     "damage_max": 2031,
@@ -5430,6 +5474,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:stone_spear": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:stone_stairs": {
     "damage_max": null,
     "can_enchant": []
@@ -6379,6 +6427,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:wooden_spear": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:wooden_sword": {
     "damage_max": 59,
     "can_enchant": [
@@ -6457,6 +6509,10 @@
     "can_enchant": []
   },
   "minecraft:zombie_horse_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:zombie_nautilus_spawn_egg": {
     "damage_max": null,
     "can_enchant": []
   },

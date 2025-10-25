@@ -62,6 +62,9 @@
   "luck_of_the_sea": {
     "max_level": 3
   },
+  "lunge": {
+    "max_level": null
+  },
   "lure": {
     "max_level": 3
   },

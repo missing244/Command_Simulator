@@ -1,5 +1,5 @@
 import tkinter,tkinter.messagebox,webbrowser,re,json,os,traceback,pickle,base64,itertools
-import copy,random,threading,time,gc,zlib,subprocess,sys,types,importlib.util,zipfile
+import copy,random,threading,time,gc,zlib,subprocess,sys,types,importlib.util,zipfile,shutil
 from typing import Any,Literal,Union,Dict,Tuple,List,Callable
 import tkinter.ttk as ttk
 
@@ -389,13 +389,14 @@ class Find_Minecraft_ID(tkinter.Frame) :
         tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(1), width=15, height=1).pack()
 
         self.label1 = tkinter.Label(self, text="双击项目复制，点击浅蓝色按钮设置",fg='black',
-            font=tk_tool.get_default_font(10), width=27, height=1)
+            font=tk_tool.get_default_font(10), width=28, height=1)
         self.label1.pack()
 
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
         tkinter.Button(self,height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
             command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
         self.search()
+        self.label1.config(text = "双击项目复制，点击浅蓝色按钮设置")
 
     def setting(self) :
         toplevel = tkinter.Toplevel(self.main_win.window)
@@ -574,36 +575,40 @@ class Copy_File_Command(tkinter.Frame) :
 
 class BE_Structure_Tool(tkinter.Frame) :
     base_path = os.path.join("functionality", "BE_Structure")
-    file_list_hash = -1
+    android_outside_storage = "/storage/emulated/0/Documents/Pydroid3/Command_Simulator/BE_Structure"
 
     def __loop__(self) :
         if self.main_win.now_display_frame != "structure_transfor" : return None
 
-        file_list = []
-        path1 = os.path.join(self.base_path, "")
-        for i in [i for i in os.listdir(path1) if os.path.isfile( os.path.join(path1, i) )] : 
-            file_list.append( i.replace(path1, "", 1) )
+        file_list = {}
+        inside_path = os.path.join(self.base_path, "")
+        for i in os.listdir(inside_path) : 
+            real_path = os.path.join(inside_path, i)
+            if not os.path.isfile(real_path) : continue
+            file_name = i.replace(inside_path, "", 1) + "(内部)"
+            file_list[file_name] = {"real_path":real_path, "real_name":i, "outside":False}
         
-        file_list_hash = sum( hash(i) for i in file_list )
-        if file_list_hash == self.file_list_hash : return None
+        if self.main_win.platform == "android" :
+            try :
+                outside_path = os.path.join(self.android_outside_storage, "")
+                for i in os.listdir(outside_path) : 
+                    real_path = os.path.join(outside_path, i)
+                    if not os.path.isfile(real_path)  : continue
+                    file_name = i.replace(outside_path, "", 1) + "(外部)"
+                    file_list[file_name] = {"real_path":real_path, "real_name":i, "outside":True}
+            except : pass
+
+        if set(file_list) == set(self.file_list) : return None
         self.search_result.delete(0, tkinter.END)
         for i in file_list : self.search_result.insert(tkinter.END, i)
-        self.file_list_hash = file_list_hash
+        self.file_list = file_list
 
-    def __init__(self, main_win, **karg) -> None :
-        from package.MCStructureManage import Codecs
+    @staticmethod
+    def __get_codecs__() :
         from package.MCBEWorld import World
-
-        super().__init__(main_win.window, **karg)
-        self.main_win = main_win
-        self.can_readFile = True
-        self.choose_index = ()
-        self.enable_split = tkinter.IntVar(main_win.window, 0)
-        self.split_size = [99999, 99999, 99999]
-        self.merge_page = 0
-        self.merge_info: List[Tuple[str, int, int, int]] = []
-        self.codecs = {
-            "请选择转换格式": None,
+        from package.MCStructureManage import Codecs
+        return {
+            "请选择文件格式": None,
             "mcworld 存档文件夹": ("", World),
             "bdx文件": (".bdx", Codecs.BDX), "mcstructure文件": (".mcstructure", Codecs.MCSTRUCTURE), 
             "MianYang_V1 Json文件": (".json", Codecs.MIANYANG_V1), "MianYang_V2 Json文件": (".json", Codecs.MIANYANG_V2), 
@@ -619,6 +624,23 @@ class BE_Structure_Tool(tkinter.Frame) :
             "TimeBuilder_V1 Json文件": (".json", Codecs.TIMEBUILDER_V1), 
             "MC函数 Zip文件": (".zip", Codecs.FunctionCommand), "MC命令 Txt文件": (".txt", Codecs.TextCommand)}
 
+    def __init__(self, main_win, **karg) -> None :
+        os.makedirs(self.base_path, exist_ok=True)
+        if main_win.platform == "android" :
+            try : os.makedirs(self.base_path, exist_ok=True)
+            except : pass
+
+        super().__init__(main_win.window, **karg)
+        self.main_win = main_win
+        self.file_list:Dict[str, Dict[Literal["real_path", "real_name", "outside"], Union[str, bool]]] = {}
+        self.can_readFile: bool = True
+        self.choose_index: Tuple[int] = ()
+        self.enable_split = tkinter.IntVar(main_win.window, 0)
+        self.split_size = [99999, 99999, 99999]
+        self.merge_page = 0
+        self.merge_info: List[Tuple[str, int, int, int]] = []
+        self.codecs = self.__get_codecs__()
+
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
         ReadTips = tkinter.Frame(self) 
         ReadTips.pack()
@@ -627,87 +649,93 @@ class BE_Structure_Tool(tkinter.Frame) :
             command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), SubScreen_3_1.pack_forget(), self.add_tips()]).pack(side='left')
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
 
-        MainScreen = tkinter.Frame(self) 
-        MainScreen.pack()
-        frame_m10 = tkinter.Frame(MainScreen)
-        sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-        sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
-        self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
-            height=9,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
-        self.search_result.bind("<ButtonRelease-1>", self.test_can_readFile)
-        self.search_result.grid(row=0,column=0)
-        sco1.config(command=self.search_result.yview)
-        sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
-        sco2.config(command=self.search_result.xview)
-        sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
-        frame_m10.pack()
+        def set_ListBox_focus() :
+            for i in self.choose_index : self.search_result.select_set(i)
+
+        if "结构列表" :
+            MainScreen = tkinter.Frame(self) 
+            MainScreen.pack()
+            frame_m10 = tkinter.Frame(MainScreen)
+            sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+            sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
+            self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
+                height=9,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+            self.search_result.bind("<ButtonRelease-1>", self.test_can_readFile)
+            self.search_result.grid(row=0,column=0)
+            sco1.config(command=self.search_result.yview)
+            sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
+            sco2.config(command=self.search_result.xview)
+            sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
+            frame_m10.pack()
 
 
-        def Click_StructureTips() :
+            def Click_StructureTips() :
+                SubScreen_1.pack()
+                SubScreen_2.pack_forget()
+                SubScreen_3.pack_forget()
+                SubScreen_0.pack_forget(), 
+                SubScreen_0.pack()
+                self.search_result.bind("<ButtonRelease-1>", lambda e:[self.test_can_readFile(e),
+                    self.set_choose_index()] )
+                self.search_result.config(selectmode=tkinter.SINGLE)
+                self.search_result.select_clear(0, "end")
+            
+            def Click_Transfor() :
+                SubScreen_1.pack_forget()
+                SubScreen_2.pack()
+                SubScreen_3.pack_forget()
+                SubScreen_0.pack_forget()
+                SubScreen_0.pack()
+                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )
+                self.search_result.config(selectmode=tkinter.MULTIPLE)
+                self.search_result.select_clear(0, "end")
+
+            def Click_McworldMerge() :
+                SubScreen_1.pack_forget()
+                SubScreen_2.pack_forget()
+                SubScreen_3.pack()
+                SubScreen_0.pack_forget()
+                SubScreen_0.pack()
+                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )
+                self.search_result.config(selectmode=tkinter.MULTIPLE)
+                self.search_result.select_clear(0, "end")
+
+            tkinter.Label(MainScreen, text=" ",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+            frame_m4 = tkinter.Frame(MainScreen)
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("结构详情"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
+                command=Click_StructureTips).pack(side='left')
+            tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("转换器"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
+                command=Click_Transfor).pack(side='left')
+            tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("合并器"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
+                command=Click_McworldMerge).pack(side='left')
+            frame_m4.pack()
+
+        if "结构信息UI" :
+            SubScreen_1 = tkinter.Frame(MainScreen) 
             SubScreen_1.pack()
-            SubScreen_2.pack_forget()
-            SubScreen_3.pack_forget()
-            SubScreen_0.pack_forget(), 
-            SubScreen_0.pack()
-            self.search_result.bind("<ButtonRelease-1>", lambda e:[self.test_can_readFile(e),
-                self.set_choose_index()] )
-            self.search_result.config(selectmode=tkinter.SINGLE)
-            self.search_result.select_clear(0, "end")
-        
-        def Click_Transfor() :
-            SubScreen_1.pack_forget()
-            SubScreen_2.pack()
-            SubScreen_3.pack_forget()
-            SubScreen_0.pack_forget()
-            SubScreen_0.pack()
-            self.search_result.bind("<ButtonRelease-1>", lambda e:[self.set_choose_index()] )
-            self.search_result.config(selectmode=tkinter.MULTIPLE)
-            self.search_result.select_clear(0, "end")
-
-        def Click_McworldMerge() :
-            SubScreen_1.pack_forget()
-            SubScreen_2.pack_forget()
-            SubScreen_3.pack()
-            SubScreen_0.pack_forget()
-            SubScreen_0.pack()
-            self.search_result.bind("<ButtonRelease-1>", lambda e:[self.set_choose_index()] )
-            self.search_result.config(selectmode=tkinter.MULTIPLE)
-            self.search_result.select_clear(0, "end")
-
-        tkinter.Label(MainScreen, text=" ",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
-        frame_m4 = tkinter.Frame(MainScreen)
-        tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("结构详情"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
-            command=Click_StructureTips).pack(side='left')
-        tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-        tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("转换器"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
-            command=Click_Transfor).pack(side='left')
-        tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-        tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("合并器"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
-            command=Click_McworldMerge).pack(side='left')
-        frame_m4.pack()
-        
-
-        SubScreen_1 = tkinter.Frame(MainScreen) 
-        SubScreen_1.pack()
-        tkinter.Label(SubScreen_1, text="", fg='black',font=tk_tool.get_default_font(5), width=15, height=1).grid(row=0, column=0)
-        self.FileInfo1 = tkinter.Label(SubScreen_1, text="文件名：(点击列表中的文件)", fg='black',
-            font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-        self.FileInfo2 = tkinter.Label(SubScreen_1, text="结构大小：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-        self.FileInfo3 = tkinter.Label(SubScreen_1, text="结构体积：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-        self.FileInfo4 = tkinter.Label(SubScreen_1, text="空气方块数：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-        self.FileInfo5 = tkinter.Label(SubScreen_1, text="非空气方块数：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-        self.FileInfo1.grid(row=1, column=0)
-        self.FileInfo2.grid(row=2, column=0)
-        self.FileInfo3.grid(row=3, column=0)
-        self.FileInfo4.grid(row=4, column=0)
-        self.FileInfo5.grid(row=5, column=0)
-         
+            tkinter.Label(SubScreen_1, text="", fg='black',font=tk_tool.get_default_font(5), width=15, height=1).grid(row=0, column=0)
+            self.FileInfo1 = tkinter.Label(SubScreen_1, text="文件名：(点击列表中的文件)", fg='black',
+                font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
+            self.FileInfo2 = tkinter.Label(SubScreen_1, text="结构大小：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
+            self.FileInfo3 = tkinter.Label(SubScreen_1, text="结构体积：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
+            self.FileInfo4 = tkinter.Label(SubScreen_1, text="空气方块数：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
+            self.FileInfo5 = tkinter.Label(SubScreen_1, text="非空气方块数：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
+            self.FileInfo6 = tkinter.Label(SubScreen_1, text="方块NBT数：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
+            self.FileInfo1.grid(row=1, column=0)
+            self.FileInfo2.grid(row=2, column=0)
+            self.FileInfo3.grid(row=3, column=0)
+            self.FileInfo4.grid(row=4, column=0)
+            self.FileInfo5.grid(row=5, column=0)
+            self.FileInfo6.grid(row=6, column=0)
 
         def start_trans() :
+            self.choose_index = self.search_result.curselection()
             if self.transfor_choose.current() < 1 : 
                 tkinter.messagebox.showerror("Error", "转换格式选择不正确\n请重新选择")
                 return None
-            if not self.search_result.curselection() : 
+            if not self.choose_index : 
                 tkinter.messagebox.showerror("Error", "没有任何文件被转换\n请确认是否选择文件")
                 return None
             
@@ -716,11 +744,7 @@ class BE_Structure_Tool(tkinter.Frame) :
             MainScreen.pack_forget()
             self.start_thread_1()
 
-        def set_ListBox_focus() :
-            for i in self.choose_index :
-                self.search_result.select_set(i)
-
-        if "SubScreen_2" :
+        if "转换选择界面" :
             SubScreen_2 = tkinter.Frame(MainScreen)
             tkinter.Label(SubScreen_2, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
             tkinter.Label(SubScreen_2, text="点击列表，选择单个或多个条目",fg="#2756FF", font=tk_tool.get_default_font(10)).pack()
@@ -733,10 +757,10 @@ class BE_Structure_Tool(tkinter.Frame) :
             tkinter.Label(SubScreen_2, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
             frame_m4 = tkinter.Frame(SubScreen_2)
             tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("全选"),font=tk_tool.get_default_font(9), bg="#ff6cf5",
-                command=lambda:self.search_result.select_set(0, "end")).pack(side='left')
+                command=lambda:[self.search_result.select_set(0, "end"), self.search_result.event_generate("<ButtonRelease-1>")]).pack(side='left')
             tkinter.Label(frame_m4, text=" ", font=tk_tool.get_default_font(5), height=1).pack(side='left')
             tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("清空"),font=tk_tool.get_default_font(9), bg="#ff6cf5",
-                command=lambda:self.search_result.select_clear(0, "end")).pack(side='left')
+                command=lambda:[self.search_result.select_clear(0, "end"), self.search_result.event_generate("<ButtonRelease-1>")]).pack(side='left')
             tkinter.Label(frame_m4, text=" ", font=tk_tool.get_default_font(5), height=1).pack(side='left')
             tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("设置"),font=tk_tool.get_default_font(9), bg="#61eaff",
                 command=lambda:self.transfor_setting(tkinter.Toplevel(main_win.window))).pack(side="left")
@@ -745,11 +769,22 @@ class BE_Structure_Tool(tkinter.Frame) :
                 command=start_trans).pack(side="left")
             frame_m4.pack()
 
-        if "SubScreen_3" :
+        if "合并选择界面" :
+            def ClickStartMerge() :
+                self.choose_index = self.search_result.curselection()
+                self.search_result.unbind("<ButtonRelease-1>")
+                MainScreen.pack_forget() ; SubScreen_3_1.pack()
+                self.merge_ready()
+
             SubScreen_3 = tkinter.Frame(MainScreen)
             tkinter.Label(SubScreen_3, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
             tkinter.Label(SubScreen_3, text="点击列表，选择单个或多个条目\n将选中的结构合并在新建存档内",fg="#2756FF", 
                 font=tk_tool.get_default_font(11)).pack()
+            tkinter.Label(SubScreen_3, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
+            self.MergeWorldNameEntry = tkinter.Entry(SubScreen_3, fg='black', font=tk_tool.get_default_font(11), width=24, justify="center")
+            self.MergeWorldNameEntry.insert("end", "结构合并存档%s" % ("0000%s" % random.randint(0, 99999))[-5:])
+            self.MergeWorldNameEntry.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            self.MergeWorldNameEntry.pack()
             tkinter.Label(SubScreen_3, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
             frame_m4 = tkinter.Frame(SubScreen_3)
             tkinter.Button(frame_m4, height=1,text=" 全选 ",font=tk_tool.get_default_font(9), bg="#ff6cf5",
@@ -759,12 +794,11 @@ class BE_Structure_Tool(tkinter.Frame) :
                 command=lambda:self.search_result.select_clear(0, "end")).pack(side='left')
             tkinter.Label(frame_m4, text=" ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
             tkinter.Button(frame_m4, height=1,text=" 开始合并 ",font=tk_tool.get_default_font(9), bg="#61eaff",
-                command=lambda:[MainScreen.pack_forget(), SubScreen_3_1.pack(), self.merge_ready()]).pack(side="left")
+                command=ClickStartMerge).pack(side="left")
             frame_m4.pack()
 
-
         def start_merge() :
-            if not self.search_result.curselection() : 
+            if not self.choose_index : 
                 tkinter.messagebox.showerror("Error", "没有任何文件被选中\n请确认是否选择文件")
                 return None
             
@@ -774,21 +808,25 @@ class BE_Structure_Tool(tkinter.Frame) :
             MainScreen.pack_forget()
             self.start_thread_2()
 
-        if "SubScreen_3_1" :
+        if "放置坐标UI" :
             SubScreen_3_1 = tkinter.Frame(self)
 
             def merge_entry_input(e:tkinter.Event, pos_index:int) :
                 list_index = (self.merge_page - 1) * 6
                 sub_index = int(str(e.widget)[-3])
+                if not e.widget.get() : return None
 
                 try : int(e.widget.get())
                 except :
                     str1 = e.widget.get()
                     e.widget.delete(0, "end")
-                    for i in str1 : 
-                        if i in "0123456789" : e.widget.insert("end", i)
+                    str1 = "".join(i for i in str1 if i in "0123456789")
+                    if not str1 : return None
+                    e.widget.insert("end", str1)
+                    Var = int(str1)
+                else : Var = int(e.widget.get())
                 if list_index+sub_index >= len(self.merge_info) : return None
-                self.merge_info[list_index+sub_index][pos_index] = int(e.widget.get())
+                self.merge_info[list_index+sub_index][pos_index] = Var
 
             InputBoxUI = tkinter.Frame(SubScreen_3_1) ; InputBoxUI.pack()
             self.Merge_UI:List[Tuple[tkinter.Label, tkinter.Entry, tkinter.Entry, tkinter.Entry]] = []
@@ -818,7 +856,8 @@ class BE_Structure_Tool(tkinter.Frame) :
 
             frame_m4 = tkinter.Frame(SubScreen_3_1)
             tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("返回"),font=tk_tool.get_default_font(10),bg="#00FF88",
-                command=lambda:[SubScreen_3_1.pack_forget(), MainScreen.pack()]).pack(side="left")
+                command=lambda:[SubScreen_3_1.pack_forget(), MainScreen.pack(), 
+                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() ) ]).pack(side="left")
             tkinter.Label(frame_m4, height=1,text=" ",font=tk_tool.get_default_font(8)).pack(side="left")
             tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("<"),font=tk_tool.get_default_font(10),bg="#00FFF7",
                 command=lambda:self.merge_page_set(-1)).pack(side="left")
@@ -832,25 +871,838 @@ class BE_Structure_Tool(tkinter.Frame) :
 
         SubScreen_0 = tkinter.Frame(MainScreen)
         SubScreen_0.pack()
-        tkinter.Label(SubScreen_0, height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Label(SubScreen_0, height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
         tkinter.Button(SubScreen_0, height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
             command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
         
+        if "FeedbackScreen" :
+            FeedbackScreen = tkinter.Frame(self) 
+            frame_m10 = tkinter.Frame(FeedbackScreen)
+            sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+            self.input_box = tkinter.Text(frame_m10,show=None,height=18,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
+            self.input_box.grid()
+            sco1.config(command=self.input_box.yview)
+            sco1.grid(row=0,column=1, sticky=tkinter.N+tkinter.S)
+            frame_m10.pack()
 
-        FeedbackScreen = tkinter.Frame(self) 
-        frame_m10 = tkinter.Frame(FeedbackScreen)
-        sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-        self.input_box = tkinter.Text(frame_m10,show=None,height=18,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
-        self.input_box.grid()
-        sco1.config(command=self.input_box.yview)
-        sco1.grid(row=0,column=1, sticky=tkinter.N+tkinter.S)
-        frame_m10.pack()
+            tkinter.Label(FeedbackScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+            self.back_button = tkinter.Button(FeedbackScreen, height=1,text=" 返回上一页 ",font=tk_tool.get_default_font(12), bg="#9ae9d1",
+                command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack(), 
+                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )  ])
+            self.back_button.pack()
 
-        tkinter.Label(FeedbackScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
-        self.back_button = tkinter.Button(FeedbackScreen, height=1,text=" 返回上一页 ",font=tk_tool.get_default_font(13), bg="#9ae9d1",
-            command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack()])
-        self.back_button.pack()
 
+    def transfor_setting(self, toplevel:tkinter.Toplevel) :
+        parent_window = toplevel.master
+        toplevel.transient(parent_window)
+        toplevel.title("Setting")
+        toplevel.geometry('%sx%s+%s+%s' % (
+            int(parent_window.winfo_width()*9/10), int(parent_window.winfo_height()/2.7),
+            int(parent_window.winfo_x() + parent_window.winfo_width()/2 - toplevel.winfo_reqwidth()/1.5),
+            int(parent_window.winfo_y() + parent_window.winfo_height()/2 - toplevel.winfo_reqheight()/2) ))
+
+        tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(3), width=15, height=1).pack()
+        tkinter.Checkbutton(toplevel, text="启用结构分割（存档转换无效）", font=tk_tool.get_default_font(10), variable=self.enable_split, 
+            onvalue=1, offvalue=0).pack()
+        tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(3), width=15, height=1).pack()
+        frame_m0 = tkinter.Frame(toplevel)
+        frame_m0.pack()
+        tkinter.Label(frame_m0, text="最小分割长度x", font=tk_tool.get_default_font(10), width=12, height=1).grid(row=0, column=0)
+        SplitX = tkinter.Entry(frame_m0, justify='center', font=tk_tool.get_default_font(10), width=6)
+        tkinter.Label(frame_m0, text="最小分割长度y", font=tk_tool.get_default_font(10), width=12, height=1).grid(row=1, column=0)
+        SplitY = tkinter.Entry(frame_m0, justify='center', font=tk_tool.get_default_font(10), width=6)
+        tkinter.Label(frame_m0, text="最小分割长度z", font=tk_tool.get_default_font(10), width=12, height=1).grid(row=2, column=0)
+        SplitZ = tkinter.Entry(frame_m0, justify='center', font=tk_tool.get_default_font(10), width=6)
+        SplitX.grid(row=0, column=1) ; SplitX.insert(0, str(self.split_size[0]))
+        SplitY.grid(row=1, column=1) ; SplitY.insert(0, str(self.split_size[1]))
+        SplitZ.grid(row=2, column=1) ; SplitZ.insert(0, str(self.split_size[2]))
+        SplitX.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+        SplitY.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+        SplitZ.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+
+        def test_value() :
+            re1 = re.compile("^([0-9]+)$")
+            if not re1.search(SplitX.get()) : 
+                FeedBack.config(text="x参数格式错误") ; return None
+            if not re1.search(SplitY.get()) : 
+                FeedBack.config(text="y参数格式错误") ; return None
+            if not re1.search(SplitZ.get()) : 
+                FeedBack.config(text="z参数格式错误") ; return None
+            self.split_size[0] = int(SplitX.get())
+            self.split_size[1] = int(SplitY.get())
+            self.split_size[2] = int(SplitZ.get())
+            for i in self.choose_index : self.search_result.select_set(i)
+            toplevel.destroy()
+
+        tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(3), width=15, height=1).pack()
+        FeedBack = tkinter.Label(toplevel, text=" 请输入分割参数 ", fg='red', font=tk_tool.get_default_font(10), width=15, height=1)
+        FeedBack.pack()
+        tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(3), width=15, height=1).pack()
+        tkinter.Button(toplevel, height=1,text=" 保存设置 ",font=tk_tool.get_default_font(10), bg="#6eee70", command=test_value).pack()
+
+
+    def start_thread_1(self) :
+        tkinter.messagebox.showinfo("Info", "运行中如果将此APP变为后台\n安卓系统会暂停APP运行\n转换也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
+        threading.Thread(target=self.transfor_file).start()
+
+    def transfor_file(self) :
+        from package.MCStructureManage import CommonStructure
+
+        self.back_button.config(state=tkinter.DISABLED)
+        listbox_name_list = self.search_result.get(0, tkinter.END)
+        file_name_list:List[str] = [listbox_name_list[i] for i in self.choose_index]
+        file_type_re = re.compile("\\.[0-9a-zA-Z]{0,}$")
+        choose_trans_mode = self.codecs[self.transfor_choose.get()]
+
+        for index, file_name in enumerate(file_name_list, start=1) :
+            self.input_box.insert(tkinter.END, "正在转换 %s/%s 文件...\n%s\n" % (index, len(file_name_list), file_name))
+            self.input_box.see(tkinter.END)
+            time.sleep(0.3)
+
+            if self.file_list[file_name]["outside"] : save_root_path = os.path.join(self.android_outside_storage, "result")
+            else : save_root_path = os.path.join(self.base_path, "result")
+
+            file_path = self.file_list[file_name]["real_path"]
+            end_name = file_type_re.search( self.file_list[file_name]["real_name"] )
+            save_file_name = file_name if end_name is None else file_name[:end_name.start()]
+            save_split_file_dir = os.path.join( save_root_path, save_file_name+"(分割)" )
+            save_file_path = os.path.join( save_root_path, save_file_name + choose_trans_mode[0] )
+
+            try : Struct1 = CommonStructure.from_buffer(file_path)
+            except Exception as e : 
+                self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
+                self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
+                self.input_box.see(tkinter.END)
+                continue
+
+            try :
+                self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
+                self.input_box.see(tkinter.END)
+                self.generate_file(self.enable_split.get(), self.transfor_choose.current(), self.split_size,
+                    Struct1, save_file_name, save_split_file_dir, save_file_path, choose_trans_mode, self.input_box)
+            except : 
+                self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
+                self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
+            else :
+                self.input_box.insert(tkinter.END, "文件转换完成 (%s/%s)\n\n" % (index, len(file_name_list)))
+                self.input_box.see(tkinter.END)
+        
+        self.back_button.config(state=tkinter.NORMAL)
+
+    @staticmethod
+    def generate_file(EnableSplit:bool, TransFormatChoose:int, SplitSize:Tuple[int,int,int], 
+        Struct1, Name:str, SaveDir:str, SaveFile:str, TransMode:list, FeedBackShow:tkinter.Text) :
+        from package.MCBEWorld import World
+
+        if EnableSplit and TransFormatChoose != 1 :
+            range_x = range(0, Struct1.size[0], SplitSize[0])
+            range_y = range(0, Struct1.size[1], SplitSize[1])
+            range_z = range(0, Struct1.size[2], SplitSize[2])
+            split_pos_iter = itertools.product( range_x, range_y, range_z )
+            struct_count = len(range_x) * len(range_y) * len(range_z)
+            if struct_count != 1 :
+                os.makedirs(SaveDir, exist_ok=True)
+                for current_count, split_origin in enumerate(split_pos_iter, 1) :
+                    save_file_path = os.path.join(SaveDir, Name) + ("[%s,%s,%s]" % split_origin) + TransMode[0]
+                    #print(save_file_path)
+                    split_max = ( min(split_origin[0]+SplitSize[0], Struct1.size[0]) - 1,
+                        min(split_origin[1]+SplitSize[1], Struct1.size[1]) - 1,
+                        min(split_origin[2]+SplitSize[2], Struct1.size[2]) - 1 )
+                    FeedBackShow.insert(tkinter.END, "正在生成分割转换文件(%s/%s)...\n" % (current_count, struct_count))
+                    Struct2 = Struct1.split(split_origin, split_max)
+                    Struct2.save_as( save_file_path, TransMode[1] )
+                return None
+
+        if TransFormatChoose != 1 : Struct1.save_as(SaveFile, TransMode[1])
+        else :
+            save_file_path = SaveFile + "@[0,-64,0]~[%s,%s,%s]" % (Struct1.size[0], Struct1.size[1]-64, Struct1.size[2])
+            MCWorld = World(save_file_path)
+            MCWorld.world_name = Name
+            MCWorld.import_CommonStructure(Struct1, 0, (0, -64, 0))
+            MCWorld.close()
+            BE_Structure_Tool.generate_mcworld(save_file_path)
+
+    @staticmethod
+    def generate_mcworld(world_path:str) :
+        MCWorldZipFile = zipfile.ZipFile(world_path+".mcworld", "w")
+        for dirpath, _, filenames in os.walk(world_path) :
+            for filename in filenames : 
+                file_name = os.path.join(dirpath, filename)
+                arc_file_name = file_name.replace(world_path, "", 1)
+                MCWorldZipFile.write( file_name, arc_file_name )
+
+        MCWorldZipFile.close()
+        for dirpath, _, filenames in os.walk(world_path) :
+            for filename in filenames : os.remove( os.path.join(dirpath, filename) )
+        for dirpath, dirnames, _ in os.walk(world_path) :
+            for dirname in dirnames : 
+                try : os.removedirs( os.path.join(dirpath, dirname) )
+                except : pass
+
+
+    def add_tips(self) :
+        self.input_box.delete("0.0", tkinter.END)
+
+        Tips = [
+            "本工具支持读取的文件：",
+            "bdx  mcstructure  schematic",
+            "schem  跑路json  万花筒kbdx",
+            "绵阳Json  绵阳building",
+            "钢板Json  钢板reb",
+            "浮鸿Json  浮鸿fhbuild",
+            "情绪json TimeBuilderJson",
+            "",
+            "",
+            "内部路径：",
+            "<<Button_Copy_Inside_Path>>",
+            "",
+            "外部路径：",
+            "<<Button_Copy_Outside_Path>>",
+            "",
+            "",
+            "非澎湃OS用户请将需要读取的结构文件放置在内部路径"
+            "文件夹内。澎湃OS用户需要将结构文件需要放置在外部路径"
+            "文件夹内，避免文件读取发生权限错误。",
+            "",
+            "",
+            "结构详情：读取结构文件并显示结构信息摘要，例如结构大小、空气数量等等。",
+            "",
+            "转换器：选择转换的文件格式，被选中的文件如果为内部路径的文件，则转换结果会生成在内部路径的result文件夹内。"
+            "反之则会生成在外部路径的result文件夹内。如果结构过大，推荐启用设置内的结构分割模式。",
+            "",
+            "合并器：选中需要合并的结构文件，设置每个结构放置的起点坐标（结构放置如果重叠会互相覆盖，请估计好大小），"
+            "合并完成的存档文件夹将生成在内部路径的的result文件夹内。",
+            "",
+            "",
+            "如果发现有文件无法被读取，且确定是结构文件，可以点击",
+            "→→ 设置-联系作者-交流群 ←←",
+            "在交流群中与作者进行技术交流，litematic文件暂时不会支持",
+            "",
+        ]
+        
+        for index, Object in enumerate(Tips) :
+            if Object == "<<Button_Copy_Inside_Path>>" :
+                self.input_box.window_create(tkinter.END, window=tkinter.Button(self.input_box, height=1,
+                text="点击复制内部路径",font=tk_tool.get_default_font(8), bg="#9ae9d1",
+                command=lambda:tk_tool.copy_to_clipboard( os.path.realpath( os.path.join("functionality", "BE_Structure") ) )))
+            elif Object == "<<Button_Copy_Outside_Path>>" :
+                self.input_box.window_create(tkinter.END, window=tkinter.Button(self.input_box, height=1,
+                text="点击复制外部路径",font=tk_tool.get_default_font(8), bg="#9ae9d1",
+                command=lambda:tk_tool.copy_to_clipboard( self.android_outside_storage ) ))
+            else : 
+                if index < len(Tips)-1 and Tips[index+1].startswith("<<") :
+                    self.input_box.insert(tkinter.END, Object)
+                else : self.input_box.insert(tkinter.END, Object+"\n")
+        
+    def set_choose_index(self) :
+        self.choose_index = self.search_result.curselection()
+
+
+    def test_can_readFile(self, event:tkinter.Event) :
+        if not self.can_readFile : return None
+        self.can_readFile = False
+        threading.Thread(target=self.show_structure_info, args=(event, )).start()
+
+    def show_structure_info(self, event:tkinter.Event) :
+        from package.MCStructureManage import CommonStructure,Block
+
+        Widget:tkinter.Listbox = event.widget
+        Selector:tuple = Widget.curselection()
+        if not Selector : return None
+        
+        self.FileInfo1.config(text="文件名：(正在解析)")
+        file_name = self.search_result.get(Selector[0])
+        file_path = self.file_list[file_name]["real_path"]
+        try : Structure1 = CommonStructure.from_buffer(file_path)
+        except MemoryError :
+            self.FileInfo1.config(text="文件名：%s" % file_name)
+            self.FileInfo2.config(text="结构大小：内存溢出")
+            self.FileInfo3.config(text="结构体积：内存溢出")
+            self.FileInfo4.config(text="空气方块数：内存溢出")
+            self.FileInfo5.config(text="非空气方块数：内存溢出")
+            self.FileInfo6.config(text="方块NBT数：内存溢出")
+        except PermissionError :
+            self.FileInfo1.config(text="文件名：%s" % file_name)
+            self.FileInfo2.config(text="结构大小：文件权限不足")
+            self.FileInfo3.config(text="结构体积：文件权限不足")
+            self.FileInfo4.config(text="空气方块数：文件权限不足")
+            self.FileInfo5.config(text="非空气方块数：文件权限不足")
+            self.FileInfo6.config(text="方块NBT数：文件权限不足")
+        except :
+            self.FileInfo1.config(text="文件名：%s" % file_name)
+            self.FileInfo2.config(text="结构大小：解析失败")
+            self.FileInfo3.config(text="结构体积：解析失败")
+            self.FileInfo4.config(text="空气方块数：解析失败")
+            self.FileInfo5.config(text="非空气方块数：解析失败")
+            self.FileInfo6.config(text="方块NBT数：解析失败")
+        else :
+            Size = tuple(Structure1.size)
+            AirCount = Structure1.count( Block("air") )
+            self.FileInfo1.config(text="文件名：%s" % file_name)
+            self.FileInfo2.config(text="结构大小：%s" % str(Size))
+            self.FileInfo3.config(text="结构体积：%s" % (Size[0]*Size[1]*Size[2]))
+            self.FileInfo4.config(text="空气方块数：%s" % AirCount)
+            self.FileInfo5.config(text="非空气方块数：%s" % (Size[0]*Size[1]*Size[2]-AirCount))
+            self.FileInfo6.config(text="方块NBT数：%s" % len(Structure1.block_nbt))
+        
+        self.can_readFile = True
+
+
+    def merge_ready(self) :
+        self.merge_info.clear()
+        listbox_name_list = self.search_result.get(0, tkinter.END)
+        file_name_list = [listbox_name_list[i] for i in self.search_result.curselection()]
+        for name in file_name_list : self.merge_info.append([name, 0, -64, 0])
+        self.merge_page_set()
+
+    def merge_page_set(self, value:int=None) :
+        if value is None : self.merge_page = 1 ; value = 0
+        page_max = len(self.merge_info) // 6 + 1
+        if not(0 < self.merge_page + value <= page_max) : return None
+        self.merge_page += value
+        self.merge_page_display.config(text="第%s页   共%s页" % (self.merge_page, page_max))
+
+        current_index = self.merge_page - 1
+        objects = self.merge_info[current_index*6:current_index*6+6]
+        while len(objects) < 6 : objects.append(None)
+        for index, obj in enumerate(objects) :
+            if obj is None : 
+                self.Merge_UI[index][0].config(text="此项无效，无需补充")
+                self.Merge_UI[index][1].delete(0, "end")
+                self.Merge_UI[index][2].delete(0, "end")
+                self.Merge_UI[index][3].delete(0, "end")
+            else :
+                self.Merge_UI[index][0].config(text="%s 放置起点" % obj[0])
+                self.Merge_UI[index][1].delete(0, "end")
+                self.Merge_UI[index][2].delete(0, "end")
+                self.Merge_UI[index][3].delete(0, "end")
+                self.Merge_UI[index][1].insert("end", str(obj[1]))
+                self.Merge_UI[index][2].insert("end", str(obj[2]))
+                self.Merge_UI[index][3].insert("end", str(obj[3]))
+
+    def start_thread_2(self) :
+        tkinter.messagebox.showinfo("Info", "运行中如果将此APP变为后台\n安卓系统会暂停APP运行\n写入也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
+        threading.Thread(target=self.merge_run).start()
+
+    def merge_run(self) :
+        from package.MCStructureManage import CommonStructure
+        from package.MCBEWorld import World
+        ProcessSet = set()
+
+        self.back_button.config(state=tkinter.DISABLED)
+        world_name = self.MergeWorldNameEntry.get()
+        world_path = os.path.join( self.base_path, "result", world_name )
+        MCWorld = World(world_path)
+        MCWorld.world_name = world_name
+        self.input_box.insert(tkinter.END, "%s 已生成...\n\n" % world_name)
+        time.sleep(1)
+
+        def Callback(v1, v2) :
+            Process = int( v1 / v2 * 100 / 5 )
+            if Process in ProcessSet : return None
+            ProcessSet.add(Process)
+            self.input_box.insert(tkinter.END, "正在生成结构对象(%s%%)...\n" % (Process*5))
+            self.input_box.see(tkinter.END)
+
+        for index, [file_name, posx, posy, posz] in enumerate(self.merge_info, start=1) :
+            file_path = self.file_list[file_name]["real_path"]
+            self.input_box.insert(tkinter.END, "正在合并 %s/%s 文件...\n%s\n" % (index, len(self.merge_info), file_name))
+            self.input_box.see(tkinter.END)
+
+            try : Struct1 = CommonStructure.from_buffer(file_path)
+            except Exception as e : 
+                self.input_box.insert( tkinter.END, "合并发生错误，有疑问可询问开发者\n" )
+                self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
+                self.input_box.see(tkinter.END)
+                continue
+
+            MCWorld.import_CommonStructure(Struct1, 0, (posx, posy, posz), Callback)
+            self.input_box.insert(tkinter.END, "合并已完成(%s/%s)\n\n" % (index, len(self.merge_info)))
+            self.input_box.see(tkinter.END)
+            ProcessSet.clear()
+            time.sleep(1)
+        
+        MCWorld.close()
+        self.generate_mcworld(world_path)
+
+        self.input_box.insert(tkinter.END, "所有结构均已合并完成，在 " + world_name + " 内的runtime.cache文本文件中，" \
+            "记录了所有被写入的结构的坐标范围")
+        self.input_box.see(tkinter.END)
+        self.back_button.config(state=tkinter.NORMAL)
+
+class BE_World_Tool(tkinter.Frame) :
+    base_path = os.path.join("functionality", "BE_World")
+    android_outside_storage = "/storage/emulated/0/Documents/Pydroid3/Command_Simulator/BE_World"
+
+    def __loop__(self) :
+        if self.main_win.now_display_frame != "mcworld_reader" : return None
+        from package.MCBEWorld import GetWorldEdtion
+
+        world_list = {}
+        inside_path = os.path.join(self.base_path, "")
+        for i in os.listdir(inside_path) : 
+            real_path = os.path.join(inside_path, i)
+            dir_name = i.replace(inside_path, "", 1) + "(内部)"
+            world_list[dir_name] = {"real_path":real_path, "outside":False}
+        
+        if self.main_win.platform == "android" :
+            try :
+                outside_path = os.path.join(self.android_outside_storage, "")
+                for i in os.listdir(outside_path) : 
+                    real_path = os.path.join(outside_path, i)
+                    dir_name = i.replace(inside_path, "", 1) + "(外部)"
+                    world_list[dir_name] = {"real_path":real_path, "outside":True}
+            except : pass
+
+        if set(world_list) != set(self.world_list) : 
+            self.search_result.delete(0, tkinter.END)
+            self.copy_mcs2world_list.delete(0, tkinter.END)
+            for dir, data in world_list.items() :
+                real_path = data["real_path"]
+                if os.path.isdir(real_path) and GetWorldEdtion(real_path) : 
+                    self.search_result.insert(tkinter.END, dir)
+                    if self.NowOpenWorldDirName != dir : self.copy_mcs2world_list.insert(tkinter.END, dir)
+                data["is_world"] = False
+            self.world_list = world_list
+
+    def __init__(self, main_win, **karg) -> None :
+        from package.MCBEWorld import World
+        super().__init__(main_win.window, **karg)
+        self.world_list: Dict[str, Dict[Literal["real_path", "outside"], Union[str, bool]]] = {}
+        self.main_win = main_win
+        self.NowOpenWorld:World = None
+        self.NowOpenWorldDirName:str = None
+        self.split_size = [99999, 99999, 99999]
+        self.enable_split = tkinter.IntVar(main_win.window, 0)
+        self.codecs = BE_Structure_Tool.__get_codecs__()
+    
+        def OpenWorld() :
+            if not self.search_result.curselection() :
+                tkinter.messagebox.showerror("Error", "没有在列表框中\n选中世界")
+                return None
+            MainScreen.pack_forget(); MainScreen_1.pack()
+            Key = self.search_result.get( self.search_result.curselection()[0] )
+            self.NowOpenWorld = World( self.world_list[Key]["real_path"] )
+            self.NowOpenWorldDirName = Key
+            self.open_title.config( text="已打开世界：%s" % Key )
+            self.back_button.config( command=lambda:[FeedbackScreen.pack_forget(), MainScreen_1.pack()] )
+            self.mcs_list.delete(0, tkinter.END)
+            self.mcs_list.insert(tkinter.END, *[i for i in self.NowOpenWorld.StructureManager])
+            self.world_list.clear()
+
+        def CloseAndSave() :
+            MainScreen.pack(); MainScreen_1.pack_forget()
+            self.NowOpenWorld.close()
+            self.NowOpenWorld = None
+            self.NowOpenWorldDirName = None
+            self.back_button.config( command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack()] )
+
+        if "主界面" :
+            tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
+            ReadTips = tkinter.Frame(self) 
+            ReadTips.pack()
+            tkinter.Label(ReadTips, text="初次使用请先阅读",fg='red', font=tk_tool.get_default_font(12)).pack(side='left')
+            tkinter.Button(ReadTips, height=1,text=tk_tool.platform_string("使用说明"),font=tk_tool.get_default_font(9), bg="#fdd142",
+                command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.add_tips()]).pack(side='left')
+            tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
+
+            MainScreen = tkinter.Frame(self) 
+            MainScreen.pack()
+            frame_m10 = tkinter.Frame(MainScreen)
+            sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+            sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
+            self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
+                height=9,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+            self.search_result.bind("<ButtonRelease-1>", self.show_world_info)
+            self.search_result.grid(row=0,column=0)
+            sco1.config(command=self.search_result.yview)
+            sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
+            sco2.config(command=self.search_result.xview)
+            sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
+            frame_m10.pack()
+        
+        if "详情界面" :
+            SubScreen_1 = tkinter.Frame(MainScreen) 
+            SubScreen_1.pack()
+            tkinter.Label(SubScreen_1, text="", fg='black',font=tk_tool.get_default_font(5), width=15, height=1).grid(row=0, column=0)
+            self.FileInfo1 = tkinter.Label(SubScreen_1, text="文件夹：(点击列表中的世界)", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
+            self.FileInfo2 = tkinter.Label(SubScreen_1, text="世界名：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
+            self.FileInfo3 = tkinter.Label(SubScreen_1, text="世界类型：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
+            self.FileInfo4 = tkinter.Label(SubScreen_1, text="MCS结构：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
+            self.FileInfo5 = tkinter.Label(SubScreen_1, text="加密密钥：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
+            self.FileInfo1.grid(row=1, column=0)
+            self.FileInfo2.grid(row=2, column=0)
+            self.FileInfo3.grid(row=3, column=0)
+            self.FileInfo4.grid(row=4, column=0)
+            self.FileInfo5.grid(row=5, column=0)
+
+            frame_m4 = tkinter.Frame(MainScreen)
+            tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(5), height=1).pack()
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("打开世界提取结构"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
+                command=OpenWorld).pack()
+            frame_m4.pack()
+
+        if "进入世界界面" :
+            MainScreen_1 = tkinter.Frame(self)
+            frame_m4 = tkinter.Frame(MainScreen_1)
+            self.open_title = tkinter.Label(MainScreen_1, text="已打开世界：TRsxjawRa==",fg='black',font=tk_tool.get_default_font(9), width=28, height=1)
+            self.open_title.pack()
+            Mode_Button1 = tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("MCS导出"),font=tk_tool.get_default_font(9), bg="#9ae9d1",
+                command=lambda: [Mode_Button1.config(state=tkinter.DISABLED), Mode_Button2.config(state=tkinter.NORMAL), 
+                Mode_Button3.config(state=tkinter.NORMAL), SubScreen_11.pack(), SubScreen_12.pack_forget(), SubScreen_13.pack_forget(),
+                CloseWorld.pack_forget(), CloseWorld.pack() ])
+            Mode_Button2 = tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("MCS转移"),font=tk_tool.get_default_font(9), bg="#9ae9d1",
+                command=lambda: [Mode_Button1.config(state=tkinter.NORMAL), Mode_Button2.config(state=tkinter.DISABLED), 
+                Mode_Button3.config(state=tkinter.NORMAL), SubScreen_11.pack_forget(), SubScreen_12.pack(), SubScreen_13.pack_forget(),
+                CloseWorld.pack_forget(), CloseWorld.pack() ])
+            Mode_Button3 = tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("选区导出"),font=tk_tool.get_default_font(9), bg="#9ae9d1",
+                command=lambda: [Mode_Button1.config(state=tkinter.NORMAL), Mode_Button2.config(state=tkinter.NORMAL), 
+                Mode_Button3.config(state=tkinter.DISABLED), SubScreen_11.pack_forget(), SubScreen_12.pack_forget(), SubScreen_13.pack(),
+                CloseWorld.pack_forget(), CloseWorld.pack() ])
+            Mode_Button1.pack(side='left')
+            tkinter.Label(frame_m4, text=" ", font=tk_tool.get_default_font(8), height=1).pack(side='left')
+            Mode_Button2.pack(side='left')
+            tkinter.Label(frame_m4, text=" ", font=tk_tool.get_default_font(8), height=1).pack(side='left')
+            Mode_Button3.pack(side='left')
+            Mode_Button1.config(state=tkinter.DISABLED)
+            frame_m4.pack()
+            tkinter.Label(MainScreen_1, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+
+        if "导出MCS界面" :
+            SubScreen_11 = tkinter.Frame(MainScreen_1) ; SubScreen_11.pack()
+            tkinter.Label(SubScreen_11, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+
+            frame_m10 = tkinter.Frame(SubScreen_11)
+            sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+            sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
+            self.mcs_list = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.MULTIPLE,
+                height=10,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+            self.mcs_list.grid(row=0,column=0)
+            sco1.config(command=self.mcs_list.yview)
+            sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
+            sco2.config(command=self.mcs_list.xview)
+            sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
+            frame_m10.pack()
+            
+            def start_export_mcs() :
+                if not self.mcs_list.curselection() : 
+                    tkinter.messagebox.showerror("Error", "没有MCS结构被选中\n请确认是否选择MCS?")
+                    return None
+                
+                self.input_box.delete("0.0", tkinter.END)
+                FeedbackScreen.pack()
+                MainScreen_1.pack_forget()
+                self.start_thread(1)
+            
+            tkinter.Label(SubScreen_11, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
+            tkinter.Label(SubScreen_11, text="点击列表，选择单个或多个条目",fg="#2756FF", 
+                font=tk_tool.get_default_font(11)).pack()
+            tkinter.Label(SubScreen_11, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
+            frame_m4 = tkinter.Frame(SubScreen_11)
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("全选"),font=tk_tool.get_default_font(9), bg="#ff6cf5",
+                command=lambda:self.mcs_list.select_set(0, "end")).pack(side='left')
+            tkinter.Label(frame_m4, text=" ", font=tk_tool.get_default_font(5), height=1).pack(side='left')
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("清空"),font=tk_tool.get_default_font(9), bg="#ff6cf5",
+                command=lambda:self.mcs_list.select_clear(0, "end")).pack(side='left')
+            tkinter.Label(frame_m4, text=" ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("导出MCS"),font=tk_tool.get_default_font(9), bg="#61eaff",
+                command=start_export_mcs).pack(side="left")
+            frame_m4.pack()
+
+        if "转移MCS界面" : 
+            SubScreen_12 = tkinter.Frame(MainScreen_1)
+            tkinter.Label(SubScreen_12, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+
+            frame_m10 = tkinter.Frame(SubScreen_12)
+            sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+            sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
+            self.copy_mcs2world_list = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
+                height=10,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+            self.copy_mcs2world_list.grid(row=0,column=0)
+            sco1.config(command=self.copy_mcs2world_list.yview)
+            sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
+            sco2.config(command=self.copy_mcs2world_list.xview)
+            sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
+            frame_m10.pack()
+            
+            def start_transfer_mcs() :
+                if not self.copy_mcs2world_list.curselection() : 
+                    tkinter.messagebox.showerror("Error", "没有存档被选中\n请确认是否选择存档?")
+                    return None
+                
+                self.input_box.delete("0.0", tkinter.END)
+                FeedbackScreen.pack()
+                MainScreen_1.pack_forget()
+                self.start_thread(2)
+            
+            tkinter.Label(SubScreen_12, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
+            tkinter.Label(SubScreen_12, text="点击列表，选择单个条目",fg="#2756FF", 
+                font=tk_tool.get_default_font(11)).pack()
+            tkinter.Label(SubScreen_12, text="",fg='black',font=tk_tool.get_default_font(3), width=15, height=1).pack()
+            tkinter.Button(SubScreen_12, height=1,text=tk_tool.platform_string("转移MCS至存档"),font=tk_tool.get_default_font(9), bg="#61eaff",
+                command=start_transfer_mcs).pack()
+
+        if "导出结构" : 
+            def start_creat_CommonStructure() :
+                try : int(StartX.get())
+                except : tkinter.messagebox.showerror("Error", "起始X坐标格式错误") ; return None
+                try : int(StartY.get())
+                except : tkinter.messagebox.showerror("Error", "起始Y坐标格式错误") ; return None
+                try : int(StartZ.get())
+                except : tkinter.messagebox.showerror("Error", "起始Z坐标格式错误") ; return None
+                try : int(EndX.get())
+                except : tkinter.messagebox.showerror("Error", "结束X坐标格式错误") ; return None
+                try : int(EndY.get())
+                except : tkinter.messagebox.showerror("Error", "结束Y坐标格式错误") ; return None
+                try : int(EndZ.get())
+                except : tkinter.messagebox.showerror("Error", "结束Z坐标格式错误") ; return None
+                if self.transfor_choose.current() == 0 :
+                    tkinter.messagebox.showerror("Error", "未选择导出格式") ; return None
+                self.input_box.delete("0.0", tkinter.END)
+                FeedbackScreen.pack()
+                MainScreen_1.pack_forget()
+                InputList = [int(i.get()) for i in (StartX, StartY, StartZ, EndX, EndY, EndZ) ]
+                self.start_thread(3, [InputList[i] for i in range(0, 3)], [InputList[i] for i in range(3, 6)])
+
+            SubScreen_13 = tkinter.Frame(MainScreen_1)
+            tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+            tkinter.Label(SubScreen_13, text="选择导出维度",fg='black',font=tk_tool.get_default_font(11), width=15, height=1).pack()
+            self.dimension_choose = ttk.Combobox(SubScreen_13, font=tk_tool.get_default_font(10), width=22, state='readonly', justify='center')
+            self.dimension_choose["value"] = ["主世界", "地狱", "末地"]
+            self.dimension_choose.current(0)
+            self.dimension_choose.pack()
+            tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+            tkinter.Label(SubScreen_13, text="起始位置(x, y, z)",fg='black',font=tk_tool.get_default_font(11), width=15, height=1).pack()
+            frame_m10 = tkinter.Frame(SubScreen_13)
+            StartX = tkinter.Entry(frame_m10, justify='center', font=tk_tool.get_default_font(10), width=9)
+            StartY = tkinter.Entry(frame_m10, justify='center', font=tk_tool.get_default_font(10), width=6)
+            StartZ = tkinter.Entry(frame_m10, justify='center', font=tk_tool.get_default_font(10), width=9)
+            StartX.grid(row=0, column=0)
+            StartY.grid(row=0, column=1)
+            StartZ.grid(row=0, column=2)
+            StartX.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            StartY.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            StartZ.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            frame_m10.pack()
+
+            tkinter.Label(SubScreen_13, text=" ",fg='black',font=tk_tool.get_default_font(2), width=15, height=1).pack()
+            tkinter.Label(SubScreen_13, text="结束位置(x, y, z)",fg='black',font=tk_tool.get_default_font(11), width=15, height=1).pack()
+            frame_m10 = tkinter.Frame(SubScreen_13)
+            EndX = tkinter.Entry(frame_m10, justify='center', font=tk_tool.get_default_font(10), width=9)
+            EndY = tkinter.Entry(frame_m10, justify='center', font=tk_tool.get_default_font(10), width=6)
+            EndZ = tkinter.Entry(frame_m10, justify='center', font=tk_tool.get_default_font(10), width=9)
+            EndX.grid(row=0, column=0)
+            EndY.grid(row=0, column=1)
+            EndZ.grid(row=0, column=2)
+            EndX.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            EndY.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            EndZ.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            frame_m10.pack()
+            [ i.insert("end", "0") for i in (StartX, StartY, StartZ, EndX, EndY, EndZ) ]
+
+            tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+            self.transfor_choose = ttk.Combobox(SubScreen_13, font=tk_tool.get_default_font(10), width=22, state='readonly', justify='center')
+            self.transfor_choose["value"] = list( i for i,j in self.codecs.items() )
+            self.transfor_choose.current(0)
+            self.transfor_choose.pack()
+            tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+            self.ExplotFileNameEntry = tkinter.Entry(SubScreen_13, fg='black', font=tk_tool.get_default_font(11), width=22, justify="center")
+            self.ExplotFileNameEntry.insert("end", "请输入导出文件名")
+            self.ExplotFileNameEntry.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
+            self.ExplotFileNameEntry.pack()
+            tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
+
+            frame_m4 = tkinter.Frame(SubScreen_13)
+            tkinter.Button(frame_m4, text=tk_tool.platform_string("设置"),font=tk_tool.get_default_font(10), bg="#61eaff",
+                command=lambda:self.transfor_setting(tkinter.Toplevel(main_win.window))).pack(side="left")
+            tkinter.Label(frame_m4, text="     ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
+            tkinter.Button(frame_m4, text=tk_tool.platform_string("确认导出"),font=tk_tool.get_default_font(10),
+                bg="#61eaff", command=start_creat_CommonStructure).pack(side="left")
+            frame_m4.pack()
+
+        CloseWorld = tkinter.Frame(MainScreen_1)
+        tkinter.Label(CloseWorld, height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Button(CloseWorld, height=1,text="<<关闭世界并返回",font=tk_tool.get_default_font(13),bg="#bfff36",
+            command=CloseAndSave).pack()
+        CloseWorld.pack()
+
+        SubScreen_END = tkinter.Frame(MainScreen)
+        tkinter.Label(SubScreen_END, height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
+        tkinter.Button(SubScreen_END, height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
+            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
+        SubScreen_END.pack()
+        
+        if "FeedbackScreen" :
+            FeedbackScreen = tkinter.Frame(self) 
+            frame_m10 = tkinter.Frame(FeedbackScreen)
+            sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
+            self.input_box = tkinter.Text(frame_m10,show=None,height=18,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
+            self.input_box.grid()
+            sco1.config(command=self.input_box.yview)
+            sco1.grid(row=0,column=1, sticky=tkinter.N+tkinter.S)
+            frame_m10.pack()
+
+            tkinter.Label(FeedbackScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
+            self.back_button = tkinter.Button(FeedbackScreen, height=1,text=" 返回上一页 ",font=tk_tool.get_default_font(13), bg="#9ae9d1",
+                command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack()])
+            self.back_button.pack()
+
+
+    def start_thread(self, mode:int, *args) :
+        tkinter.messagebox.showinfo("Info", "运行中如果将此APP变为后台\n安卓系统会暂停APP运行\n程序运行也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
+        self.back_button.config(state=tkinter.DISABLED)
+        if mode == 1 : threading.Thread(target=self.explot_mcs).start()
+        if mode == 2 : threading.Thread(target=self.transfer_mcs).start()
+        if mode == 3 : threading.Thread(target=self.creat_commonstructure, args=(args[0], args[1])).start()
+
+    def explot_mcs(self) :
+        choose_index = self.mcs_list.curselection()
+        choose_len = len( choose_index )
+        if self.world_list[self.NowOpenWorldDirName]["outside"] : save_root_path = os.path.join(self.android_outside_storage, "result")
+        else : save_root_path = os.path.join(self.base_path, "result")
+
+        os.makedirs( save_root_path, exist_ok=True )
+        for index, choose_index in enumerate(choose_index, start=1) :
+            mcs_name = self.mcs_list.get(choose_index)
+            self.input_box.insert(tkinter.END, "正在导出 %s/%s 结构...\n%s\n" % (index, choose_len, mcs_name))
+            self.input_box.see(tkinter.END)
+
+            save_file_path = os.path.join( save_root_path, mcs_name.replace(":", "_")+".mcstructure" )
+            with open(save_file_path, "wb") as _f : _f.write( self.NowOpenWorld.StructureManager.get(mcs_name) )
+            self.input_box.insert(tkinter.END, "MCS结构导出完成 (%s/%s)\n\n" % (index, choose_len))
+            self.input_box.see(tkinter.END)
+            time.sleep(0.1)
+
+        self.back_button.config(state=tkinter.NORMAL)
+
+    def transfer_mcs(self) :
+        from package.MCBEWorld import World
+
+        transfer_target_world = self.copy_mcs2world_list.get( self.copy_mcs2world_list.curselection() )
+        transfer_target_world_OBJ = World( self.world_list[transfer_target_world]["real_path"] )
+        mcs_len = len( self.NowOpenWorld.StructureManager )
+        os.makedirs( os.path.join( self.base_path, "result" ), exist_ok=True )
+        for index, mcs_name in enumerate(self.NowOpenWorld.StructureManager, start=1) :
+            self.input_box.insert(tkinter.END, "正在转移 %s/%s 结构...\n%s\n" % (index, mcs_len, mcs_name))
+            self.input_box.see(tkinter.END)
+
+            transfer_target_world_OBJ.StructureManager.set(
+                mcs_name, self.NowOpenWorld.StructureManager.get(mcs_name) )
+            self.input_box.insert(tkinter.END, "MCS结构转移完成 (%s/%s)\n\n" % (index, mcs_len))
+            self.input_box.see(tkinter.END)
+            time.sleep(0.1)
+
+        transfer_target_world_OBJ.close()
+        self.back_button.config(state=tkinter.NORMAL)
+
+    def creat_commonstructure(self, start:Tuple[int, int, int], end:Tuple[int, int, int]) :
+        from package.MCStructureManage import CommonStructure
+        ProcessSet = set()
+
+        def Callback(v1, v2) :
+            Process = int( v1 / v2 * 100 )
+            if Process in ProcessSet : return None
+            ProcessSet.add(Process)
+            self.input_box.insert(tkinter.END, "正在生成结构对象(%s%%)...\n" % Process)
+            self.input_box.see(tkinter.END)
+
+        Struct1 = CommonStructure()
+        self.NowOpenWorld.export_CommonStructure(Struct1, self.dimension_choose.current(), start, end, Callback)
+        
+        if self.world_list[self.NowOpenWorldDirName]["outside"] : save_root_path = os.path.join(self.android_outside_storage, "result")
+        else : save_root_path = os.path.join(self.base_path, "result")
+        choose_trans_mode = self.codecs[self.transfor_choose.get()]
+
+        save_file_name = self.ExplotFileNameEntry.get()
+        save_split_file_dir = os.path.join( save_root_path, save_file_name+"(分割)" )
+        save_file_path = os.path.join( save_root_path, save_file_name + choose_trans_mode[0] )
+
+        self.input_box.insert(tkinter.END, "正在生成结构文件%s...\n" % save_file_name)
+        self.input_box.see(tkinter.END)
+        BE_Structure_Tool.generate_file(self.enable_split.get(), self.transfor_choose.current(), self.split_size,
+            Struct1, save_file_name, save_split_file_dir, save_file_path, choose_trans_mode, self.input_box)
+
+        self.input_box.insert(tkinter.END, "结构文件%s已生成完毕\n" % save_file_name)
+        self.input_box.see(tkinter.END)
+        self.back_button.config(state=tkinter.NORMAL)
+
+
+    def add_tips(self) :
+        self.input_box.delete("0.0", tkinter.END)
+
+        Tips = [
+            "本工具用于读取存档文件夹中的结构内容，"
+            "zip文件与mcworld文件请先自行解压出存档文件夹。",
+            "合法的存档：进入首层文件夹后应存在level.dat与db文件夹。",
+            "",
+            "内部路径：",
+            "<<Button_Copy_Inside_Path>>",
+            "",
+            "外部路径：",
+            "<<Button_Copy_Outside_Path>>",
+            "",
+            "",
+            "非澎湃OS用户请将需要读取的存档文件夹放置在内部路径"
+            "文件夹内。澎湃OS用户需要将存档文件夹需要放置在外部路径"
+            "文件夹内，避免文件读取发生权限错误。",
+            "",
+            "",
+            "存档详情：读取存档文件夹内容并显示信息摘要，例如MCS数量、世界类型等等。",
+            "",
+            "MCS导出：选择世界内的MCS结构进行导出，如果存档文件夹位于内部储存，"
+            "则导出结果会生成在内部路径的result文件夹内，反之会生成在外部路径的result文件夹内。",
+            "",
+            "MCS转移：选中需要转移MCS的目标存档文件夹，即可拷贝MCS至目标存档。",
+            "",
+            "选区导出：指定存档内的起始和结束位置，起始和结束位置的方块都将会被导出至目标文件格式。",
+            "",
+            "",
+        ]
+        
+        for index, Object in enumerate(Tips) :
+            if Object == "<<Button_Copy_Inside_Path>>" :
+                self.input_box.window_create(tkinter.END, window=tkinter.Button(self.input_box, height=1,
+                text="点击复制内部路径",font=tk_tool.get_default_font(8), bg="#9ae9d1",
+                command=lambda:tk_tool.copy_to_clipboard( os.path.realpath( os.path.join("functionality", "BE_World") ) )))
+            elif Object == "<<Button_Copy_Outside_Path>>" :
+                self.input_box.window_create(tkinter.END, window=tkinter.Button(self.input_box, height=1,
+                text="点击复制外部路径",font=tk_tool.get_default_font(8), bg="#9ae9d1",
+                command=lambda:tk_tool.copy_to_clipboard( self.android_outside_storage ) ))
+            else : 
+                if index < len(Tips)-1 and Tips[index+1].startswith("<<") :
+                    self.input_box.insert(tkinter.END, Object)
+                else : self.input_box.insert(tkinter.END, Object+"\n")
+
+    def show_world_info(self, event:tkinter.Event) :
+        from package.MCBEWorld import World
+
+        Widget:tkinter.Listbox = event.widget
+        Selector:tuple = Widget.curselection()
+        if not Selector : return None
+        
+        dir_name = self.search_result.get(Selector[0])
+        dir_path = self.world_list[dir_name]["real_path"]
+        try :  WorldObject = World(dir_path)
+        except PermissionError :
+            self.FileInfo1.config(text="文件名：%s" % dir_name)
+            self.FileInfo2.config(text="结世界名：文件权限不足")
+            self.FileInfo3.config(text="世界类型：文件权限不足")
+            self.FileInfo4.config(text="MCS结构：文件权限不足")
+            self.FileInfo5.config(text="加密密钥：文件权限不足")
+        except :
+            self.FileInfo1.config(text="文件夹：%s" % dir_name)
+            self.FileInfo2.config(text="世界名：解析失败")
+            self.FileInfo3.config(text="世界类型：解析失败")
+            self.FileInfo4.config(text="MCS结构：解析失败")
+            self.FileInfo5.config(text="加密密钥：解析失败")
+        else : 
+            try : WorldName = WorldObject.world_nbt["LevelName"].value
+            except : WorldName = "我的世界"
+            self.FileInfo1.config(text="文件夹：%s" % dir_name)
+            self.FileInfo2.config(text="世界名：%s" % WorldName)
+            self.FileInfo3.config(text="世界类型：%s" % 'Bedrock' if WorldObject.encrypt_key is None else 'Netease')
+            self.FileInfo4.config(text="MCS结构：%s" % len( WorldObject.StructureManager ))
+            self.FileInfo5.config(text="加密密钥：%s" % WorldObject.encrypt_key)
 
     def transfor_setting(self, toplevel:tkinter.Toplevel) :
         parent_window = toplevel.master
@@ -898,461 +1750,6 @@ class BE_Structure_Tool(tkinter.Frame) :
         FeedBack.pack()
         tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(3), width=15, height=1).pack()
         tkinter.Button(toplevel, height=1,text=" 保存设置 ",font=tk_tool.get_default_font(10), bg="#6eee70", command=test_value).pack()
-
-
-    def start_thread_1(self) :
-        tkinter.messagebox.showinfo("Info", "转换中如果将此APP变为后台\n安卓系统会暂停APP运行\n转换也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
-        threading.Thread(target=self.transfor_file).start()
-
-    def transfor_file(self) :
-        from package.MCStructureManage import CommonStructure
-        from package.MCBEWorld import World
-
-        self.back_button.config(state=tkinter.DISABLED)
-        listbox_name_list = self.search_result.get(0, tkinter.END)
-        file_name_list = [listbox_name_list[i] for i in self.search_result.curselection()]
-        file_type_re = re.compile("\\.[0-9a-zA-Z]{0,}$")
-        choose_trans_mode = self.codecs[self.transfor_choose.get()]
-
-        for index, file_name in enumerate(file_name_list, start=1) :
-            self.input_box.insert(tkinter.END, "正在转换 %s/%s 文件...\n%s\n" % (index, len(file_name_list), file_name))
-            self.input_box.see(tkinter.END)
-            time.sleep(0.3)
-
-            file_path = os.path.join( self.base_path, file_name )
-            end_name = file_type_re.search(file_name)
-            try : Struct1 = CommonStructure.from_buffer(file_path)
-            except Exception as e : 
-                self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
-                self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
-                self.input_box.see(tkinter.END)
-                continue
-            
-            if self.enable_split.get() and self.transfor_choose.current() != 1 :
-                save_file_dirname = file_name if end_name is None else file_name[:end_name.start()]
-                save_file_dir = os.path.join( self.base_path, "result", save_file_dirname+"(分割)" )
-
-                range_x = range(0, Struct1.size[0], self.split_size[0])
-                range_y = range(0, Struct1.size[1], self.split_size[1])
-                range_z = range(0, Struct1.size[2], self.split_size[2])
-                split_pos_iter = itertools.product( range_x, range_y, range_z )
-                struct_count = len(range_x) * len(range_y) * len(range_z)
-                if struct_count == 1 :
-                    self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
-                    save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
-                    save_file_path = os.path.join( self.base_path, "result", save_file_name )
-                    Struct1.save_as(save_file_path, choose_trans_mode[1]) 
-                else :
-                    os.makedirs(save_file_dir, exist_ok=True)
-                    for current_count, split_origin in enumerate(split_pos_iter, 1) :
-                        save_file_name = save_file_dirname + ("[%s,%s,%s]" % split_origin) + choose_trans_mode[0]
-                        split_max = ( min(split_origin[0]+self.split_size[0], Struct1.size[0]) - 1,
-                        min(split_origin[1]+self.split_size[1], Struct1.size[1]) - 1,
-                        min(split_origin[2]+self.split_size[2], Struct1.size[2]) - 1 )
-                        self.input_box.insert(tkinter.END, "正在生成分割转换文件(%s/%s)...\n" % (current_count, struct_count))
-                        Struct2 = Struct1.split(split_origin, split_max)
-                        Struct2.save_as( os.path.join(save_file_dir, save_file_name), choose_trans_mode[1] )
-            else :
-                self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
-                self.input_box.see(tkinter.END)
-                save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
-                save_file_path = os.path.join( self.base_path, "result", save_file_name )
-                if self.transfor_choose.current() != 1 : 
-                    Struct1.save_as(save_file_path, choose_trans_mode[1])
-                else :
-                    save_file_path = save_file_path + "@[0,-64,0]~[%s,%s,%s]" % (
-                        Struct1.size[0], Struct1.size[1]-64, Struct1.size[2])
-                    MCWorld = World(save_file_path)
-                    MCWorld.import_CommonStructure(Struct1, 0, (0, -64, 0))
-                    MCWorld.close()
-            self.input_box.insert(tkinter.END, "文件转换完成 (%s/%s)\n\n" % (index, len(file_name_list)))
-            self.input_box.see(tkinter.END)
-        
-        self.back_button.config(state=tkinter.NORMAL)
-
-
-    def add_tips(self) :
-        from package.MCStructureManage import Codecs
-        self.input_box.delete("0.0", tkinter.END)
-
-        Tips = [
-            "本工具支持读取的文件：",
-            "bdx  mcstructure  schematic",
-            "schem  跑路json  万花筒kbdx",
-            "绵阳Json  绵阳building",
-            "钢板Json  钢板reb",
-            "浮鸿Json  浮鸿fhbuild",
-            "情绪json TimeBuilderJson",
-            "",
-            "请将需要读取的结构文件放入",
-            "functionality/BE_Structure",
-            "文件夹下，即可显示文件。",
-            "",
-            "",
-            "结构详情：读取结构文件并显示结构信息摘要，例如结构大小、空气数量等等。",
-            "",
-            "转换器：选择转换的文件格式，被选中的文件转换的结果将生成上述目录下的result文件夹内。",
-            "",
-            "合并器：选中需要合并的结构文件，设置每个结构放置的起点坐标（结构放置如果重叠会互相覆盖，请估计好大小），"
-            "合并完成的存档文件夹将生成上述目录下的result文件夹内。",
-            "",
-            "",
-            "如果发现有文件无法被读取，且确定是结构文件，可以点击",
-            "→→ 设置-联系作者-交流群 ←←",
-            "在交流群中与作者进行技术交流，litematic文件暂时不会支持",
-            "",
-            "",
-        ]
-        self.input_box.insert(tkinter.END, "\n".join(Tips))
-
-    def set_choose_index(self) :
-        self.choose_index = self.search_result.curselection()
-
-
-    def test_can_readFile(self, event:tkinter.Event) :
-        if not self.can_readFile : return None
-        self.can_readFile = False
-        threading.Thread(target=self.show_structure_info, args=(event, )).start()
-
-    def show_structure_info(self, event:tkinter.Event) :
-        from package.MCStructureManage import CommonStructure,Block
-
-        Widget:tkinter.Listbox = event.widget
-        Selector:tuple = Widget.curselection()
-        if not Selector : return None
-        
-        self.FileInfo1.config(text="文件名：(正在解析)")
-        file_name = self.search_result.get(Selector[0])
-        file_path = os.path.join( self.base_path, file_name )
-        try : Structure1 = CommonStructure.from_buffer(file_path)
-        except :
-            self.FileInfo1.config(text="文件名：%s" % file_name)
-            self.FileInfo2.config(text="结构大小：解析失败")
-            self.FileInfo3.config(text="结构体积：解析失败")
-            self.FileInfo4.config(text="空气方块数：解析失败")
-            self.FileInfo5.config(text="非空气方块数：解析失败")
-        else :
-            Size = tuple(Structure1.size)
-            AirCount = Structure1.count( Block("air") )
-            self.FileInfo1.config(text="文件名：%s" % file_name)
-            self.FileInfo2.config(text="结构大小：%s" % str(Size))
-            self.FileInfo3.config(text="结构体积：%s" % (Size[0]*Size[1]*Size[2]))
-            self.FileInfo4.config(text="空气方块数：%s" % AirCount)
-            self.FileInfo5.config(text="非空气方块数：%s" % (Size[0]*Size[1]*Size[2]-AirCount))
-        
-        self.can_readFile = True
-
-
-    def merge_ready(self) :
-        self.merge_info.clear()
-        listbox_name_list = self.search_result.get(0, tkinter.END)
-        file_name_list = [listbox_name_list[i] for i in self.search_result.curselection()]
-        for name in file_name_list : self.merge_info.append([name, 0, -64, 0])
-        self.merge_page_set()
-
-    def merge_page_set(self, value:int=None) :
-        if value is None : self.merge_page = 1 ; value = 0
-        page_max = len(self.merge_info) // 6 + 1
-        if not(0 < self.merge_page + value <= page_max) : return None
-        self.merge_page += value
-        self.merge_page_display.config(text="第%s页   共%s页" % (self.merge_page, page_max))
-
-        current_index = self.merge_page - 1
-        objects = self.merge_info[current_index*6:current_index*6+6]
-        while len(objects) < 6 : objects.append(None)
-        for index, obj in enumerate(objects) :
-            if obj is None : 
-                self.Merge_UI[index][0].config(text="此项无效，无需补充")
-                self.Merge_UI[index][1].delete(0, "end")
-                self.Merge_UI[index][2].delete(0, "end")
-                self.Merge_UI[index][3].delete(0, "end")
-            else :
-                self.Merge_UI[index][0].config(text="%s 放置起点" % obj[0])
-                self.Merge_UI[index][1].delete(0, "end")
-                self.Merge_UI[index][2].delete(0, "end")
-                self.Merge_UI[index][3].delete(0, "end")
-                self.Merge_UI[index][1].insert("end", str(obj[1]))
-                self.Merge_UI[index][2].insert("end", str(obj[2]))
-                self.Merge_UI[index][3].insert("end", str(obj[3]))
-
-    def start_thread_2(self) :
-        tkinter.messagebox.showinfo("Info", "转换中如果将此APP变为后台\n安卓系统会暂停APP运行\n转换也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
-        threading.Thread(target=self.merge_run).start()
-
-    def merge_run(self) :
-        from package.MCStructureManage import CommonStructure
-        from package.MCBEWorld import World
-
-        self.back_button.config(state=tkinter.DISABLED)
-        world_name = "结构合并存档%s" % ("0000%s" % random.randint(0, 99999))[-5:]
-        world_path = os.path.join( self.base_path, "result", world_name )
-        MCWorld = World(world_path)
-        self.input_box.insert(tkinter.END, "%s 已生成...\n\n" % world_name)
-        time.sleep(1)
-
-        for index, [file_name, posx, posy, posz] in enumerate(self.merge_info, start=1) :
-            file_path = os.path.join( self.base_path, file_name )
-            self.input_box.insert(tkinter.END, "正在合并 %s/%s 文件...\n%s\n" % (index, len(self.merge_info), file_name))
-            self.input_box.see(tkinter.END)
-
-            try : Struct1 = CommonStructure.from_buffer(file_path)
-            except Exception as e : 
-                self.input_box.insert( tkinter.END, "合并发生错误，有疑问可询问开发者\n" )
-                self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
-                self.input_box.see(tkinter.END)
-                continue
-
-            MCWorld.import_CommonStructure(Struct1, 0, (posx, posy, posz))
-            self.input_box.insert(tkinter.END, "合并已完成(%s/%s)\n\n" % (index, len(self.merge_info)))
-            self.input_box.see(tkinter.END)
-            time.sleep(1)
-        
-        self.input_box.insert(tkinter.END, "所有结构均已合并完成，在 " + world_name + " 内的runtime.cache文本文件中，" \
-            "记录了所有被写入的结构的坐标范围")
-        self.input_box.see(tkinter.END)
-
-        MCWorld.close()
-        self.back_button.config(state=tkinter.NORMAL)
-
-class BE_World_Tool(tkinter.Frame) :
-    base_path = os.path.join("functionality", "BE_World")
-    file_list_hash = -1
-
-    def __loop__(self) :
-        if self.main_win.now_display_frame != "mcworld_reader" : return None
-
-        file_list = []
-        path1 = os.path.join(self.base_path, "")
-        for i in [i for i in os.listdir(path1) if os.path.isdir( os.path.join(path1, i) )] : 
-            file_list.append( i.replace(path1, "", 1) )
-        
-        file_list_hash = sum( hash(i) for i in file_list )
-        if file_list_hash == self.file_list_hash : return None
-        self.search_result.delete(0, tkinter.END)
-        for i in file_list : self.search_result.insert(tkinter.END, i)
-        self.file_list_hash = file_list_hash
-
-    def __init__(self, main_win, **karg) -> None :
-        super().__init__(main_win.window, **karg)
-        self.main_win = main_win
-        self.can_readFile = True
-        self.codecs = {"请选择转换格式": None, "mcworld 存档文件夹": ("", "")}
-
-        if 1 :
-            tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
-            ReadTips = tkinter.Frame(self) 
-            ReadTips.pack()
-            tkinter.Label(ReadTips, text="初次使用请先阅读",fg='red', font=tk_tool.get_default_font(12)).pack(side='left')
-            tkinter.Button(ReadTips, height=1,text=tk_tool.platform_string("使用说明"),font=tk_tool.get_default_font(9), bg="#fdd142",
-                command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.add_tips()]).pack(side='left')
-            tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
-
-            MainScreen = tkinter.Frame(self) 
-            MainScreen.pack()
-            frame_m10 = tkinter.Frame(MainScreen)
-            sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-            sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
-            self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
-                height=9,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
-            self.search_result.bind("<ButtonRelease-1>", self.test_can_readFile)
-            self.search_result.grid(row=0,column=0)
-            sco1.config(command=self.search_result.yview)
-            sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
-            sco2.config(command=self.search_result.xview)
-            sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
-            frame_m10.pack()
-            
-            tkinter.Label(MainScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
-            frame_m4 = tkinter.Frame(MainScreen)
-            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("存档详情"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
-                command=lambda:[SubScreen_1.pack(), SubScreen_2.pack_forget(), SubScreen_3.pack_forget(), 
-                SubScreen_3.pack(), self.search_result.bind("<ButtonRelease-1>", self.test_can_readFile)]).pack(side='left')
-            tkinter.Label(frame_m4, text=" ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("MCS提取"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
-                command=lambda:[SubScreen_2.pack(), SubScreen_1.pack_forget(), SubScreen_3.pack_forget(), 
-                SubScreen_3.pack(), self.search_result.unbind("<ButtonRelease-1>")]).pack(side='left')
-            tkinter.Label(frame_m4, text=" ", font=tk_tool.get_default_font(11), height=1).pack(side='left')
-            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("结构导出"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
-                command=lambda:[SubScreen_2.pack(), SubScreen_1.pack_forget(), SubScreen_3.pack_forget(), 
-                SubScreen_3.pack(), self.search_result.unbind("<ButtonRelease-1>")]).pack(side='left')
-            frame_m4.pack()
-        
-        if "SubScreen_1" :
-            SubScreen_1 = tkinter.Frame(MainScreen) 
-            SubScreen_1.pack()
-            tkinter.Label(SubScreen_1, text="", fg='black',font=tk_tool.get_default_font(5), width=15, height=1).grid(row=0, column=0)
-            self.FileInfo1 = tkinter.Label(SubScreen_1, text="世界名：(点击列表中的世界)", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-            self.FileInfo2 = tkinter.Label(SubScreen_1, text="世界类型：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-            self.FileInfo3 = tkinter.Label(SubScreen_1, text="MCS个数：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-            self.FileInfo4 = tkinter.Label(SubScreen_1, text="加密密钥：", fg='black',font=tk_tool.get_default_font(10), width=25, height=1, anchor='w')
-            self.FileInfo1.grid(row=1, column=0)
-            self.FileInfo2.grid(row=2, column=0)
-            self.FileInfo3.grid(row=3, column=0)
-            self.FileInfo4.grid(row=4, column=0)
-         
-        SubScreen_2 = tkinter.Frame(MainScreen)
-        tkinter.Label(SubScreen_2, text="",fg='black',font=tk_tool.get_default_font(8), width=15, height=1).pack()
-        self.transfor_choose = ttk.Combobox(SubScreen_2, font=tk_tool.get_default_font(11), width=22, state='readonly', justify='center')
-        self.transfor_choose["value"] = list( i for i,j in self.codecs.items() )
-        self.transfor_choose.current(0)
-        self.transfor_choose.pack()
-        tkinter.Label(SubScreen_2, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
-        frame_m4 = tkinter.Frame(SubScreen_2)
-        tkinter.Button(frame_m4, height=1,text=" 高级设置 ",font=tk_tool.get_default_font(10), bg="#61eaff",
-            command=lambda:self.transfor_setting(tkinter.Toplevel(main_win.window))).pack(side="left")
-        tkinter.Label(frame_m4, text="",fg='black',font=tk_tool.get_default_font(8), width=3, height=1).pack(side="left")
-        tkinter.Button(frame_m4, height=1,text=" 开始转换 ",font=tk_tool.get_default_font(10), bg="#61eaff",
-            command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.start_thread()]).pack(side="left")
-        frame_m4.pack()
-        
-        SubScreen_3 = tkinter.Frame(MainScreen)
-        SubScreen_3.pack()
-        tkinter.Label(SubScreen_3, height=1,text="         ",font=tk_tool.get_default_font(8)).pack()
-        tkinter.Button(SubScreen_3, height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
-            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
-        
-
-        FeedbackScreen = tkinter.Frame(self) 
-        frame_m10 = tkinter.Frame(FeedbackScreen)
-        sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-        self.input_box = tkinter.Text(frame_m10,show=None,height=18,width=25,font=tk_tool.get_default_font(11),yscrollcommand=sco1.set)
-        self.input_box.grid()
-        sco1.config(command=self.input_box.yview)
-        sco1.grid(row=0,column=1, sticky=tkinter.N+tkinter.S)
-        frame_m10.pack()
-
-        tkinter.Label(FeedbackScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
-        self.back_button = tkinter.Button(FeedbackScreen, height=1,text=" 返回上一页 ",font=tk_tool.get_default_font(13), bg="#9ae9d1",
-            command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack()])
-        self.back_button.pack()
-
-
-    def start_thread(self) :
-        tkinter.messagebox.showinfo("Info", "转换中如果将此APP变为后台\n安卓系统会暂停APP运行\n转换也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
-        threading.Thread(target=self.transfor_file).start()
-
-    def transfor_file(self) :
-        from package.MCStructureManage import CommonStructure
-
-        self.input_box.delete("0.0", tkinter.END)
-        if self.transfor_choose.current() < 1 : 
-            self.input_box.insert(tkinter.END, "转换格式选择不正确\n请重新选择")
-            return None
-        if not self.search_result.get(0, tkinter.END) : 
-            self.input_box.insert(tkinter.END, "没有任何文件被转换\n请确认是否放入文件")
-            return None
-
-        self.back_button.config(state=tkinter.DISABLED)
-        file_name_list = self.search_result.get(0, tkinter.END)
-        file_type_re = re.compile("\\.[0-9a-zA-Z]{0,}$")
-        choose_trans_mode = self.codecs[self.transfor_choose.get()]
-
-        for index, file_name in enumerate(file_name_list, start=1) :
-            self.input_box.insert(tkinter.END, "正在转换 %s/%s 文件...\n%s\n" % (index, len(file_name_list), file_name))
-            self.input_box.see(tkinter.END)
-            time.sleep(0.3)
-
-            file_path = os.path.join( self.base_path, file_name )
-            end_name = file_type_re.search(file_name)
-            try : Struct1 = CommonStructure.from_buffer(file_path)
-            except Exception as e : 
-                self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
-                self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
-                self.input_box.see(tkinter.END)
-                continue
-            
-            if self.enable_split.get() :
-                save_file_dirname = file_name if end_name is None else file_name[:end_name.start()]
-                save_file_dir = os.path.join( self.base_path, "result", save_file_dirname+"(分割)" )
-
-                range_x = range(0, Struct1.size[0], self.split_size[0])
-                range_y = range(0, Struct1.size[1], self.split_size[1])
-                range_z = range(0, Struct1.size[2], self.split_size[2])
-                split_pos_iter = itertools.product( range_x, range_y, range_z )
-                struct_count = len(range_x) * len(range_y) * len(range_z)
-                if struct_count == 1 :
-                    self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
-                    save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
-                    save_file_path = os.path.join( self.base_path, "result", save_file_name )
-                    Struct1.save_as(save_file_path, choose_trans_mode[1]) 
-                else :
-                    os.makedirs(save_file_dir, exist_ok=True)
-                    for current_count, split_origin in enumerate(split_pos_iter, 1) :
-                        save_file_name = save_file_dirname + ("[%s,%s,%s]" % split_origin) + choose_trans_mode[0]
-                        split_max = ( min(split_origin[0]+self.split_size[0], Struct1.size[0]) - 1,
-                        min(split_origin[1]+self.split_size[1], Struct1.size[1]) - 1,
-                        min(split_origin[2]+self.split_size[2], Struct1.size[2]) - 1 )
-                        self.input_box.insert(tkinter.END, "正在生成分割转换文件(%s/%s)...\n" % (current_count, struct_count))
-                        Struct2 = Struct1.split(split_origin, split_max)
-                        Struct2.save_as( os.path.join(save_file_dir, save_file_name), choose_trans_mode[1] )
-            else :
-                self.input_box.insert(tkinter.END, "正在生成转换文件...\n")
-                save_file_name = (file_name+choose_trans_mode[0]) if end_name is None else (file_name[:end_name.start()]+choose_trans_mode[0])
-                save_file_path = os.path.join( self.base_path, "result", save_file_name )
-                Struct1.save_as(save_file_path, choose_trans_mode[1])
-            self.input_box.insert(tkinter.END, "文件转换完成 (%s/%s)\n\n" % (index, len(file_name_list)))
-            self.input_box.see(tkinter.END)
-        
-        self.back_button.config(state=tkinter.NORMAL)
-
-    def add_tips(self) :
-        from package.MCStructureManage import Codecs
-        self.input_box.delete("0.0", tkinter.END)
-
-        Tips = [
-            "本工具支持读取的文件：",
-            "bdx  mcstructure  schematic",
-            "schem  跑路json  万花筒kbdx",
-            "绵阳Json  绵阳building",
-            "钢板Json  钢板reb",
-            "浮鸿Json  浮鸿fhbuild",
-            "情绪json",
-            "",
-            "请将需要读取的结构文件放入",
-            "functionality/BE_Structure",
-            "文件夹下，即可显示文件。",
-            "",
-            "结构详情：读取结构文件并显示结构信息摘要，例如结构大小、空气数量等等。",
-            "转换器：选择转换的文件格式，并且在列表中点击需要被转换的文件（可多选），转换结果将生成上述目录下的result文件夹内。",
-            "",
-            "如果发现有文件无法被读取，且确定是结构文件，可以点击",
-            "→→ 设置-联系作者-交流群 ←←",
-            "在交流群中与作者进行技术交流，litematic文件暂时不会支持",
-            "",
-            "",
-        ]
-        self.input_box.insert(tkinter.END, "\n".join(Tips))
-
-    def test_can_readFile(self, event:tkinter.Event) :
-        if not self.can_readFile : return None
-        self.can_readFile = False
-        threading.Thread(target=self.show_structure_info, args=(event, )).start()
-
-    def show_structure_info(self, event:tkinter.Event) :
-        from package.MCStructureManage import CommonStructure,Block
-
-        Widget:tkinter.Listbox = event.widget
-        Selector:tuple = Widget.curselection()
-        if not Selector : return None
-        
-        self.FileInfo1.config(text="文件名：(正在解析)")
-        file_name = self.search_result.get(Selector[0])
-        file_path = os.path.join( self.base_path, file_name )
-        try : Structure1 = CommonStructure.from_buffer(file_path)
-        except :
-            self.FileInfo1.config(text="文件名：%s" % file_name)
-            self.FileInfo2.config(text="结构大小：解析失败")
-            self.FileInfo3.config(text="结构体积：解析失败")
-            self.FileInfo4.config(text="空气方块数：解析失败")
-        else :
-            Size = tuple(Structure1.size)
-            AirCount = Structure1.count( Block("air") )
-            self.FileInfo1.config(text="文件名：%s" % file_name)
-            self.FileInfo2.config(text="结构大小：%s" % str(Size))
-            self.FileInfo3.config(text="结构体积：%s" % (Size[0]*Size[1]*Size[2]))
-            self.FileInfo4.config(text="空气方块数：%s" % AirCount)
-        
-        self.can_readFile = True
 
 
 class Game_Ready(tkinter.Frame) :
@@ -1760,8 +2157,8 @@ class Choose_Expand(tkinter.Frame) :
 
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-        self.expand_select = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(12),selectmode=tkinter.SINGLE,
-            height=17,width=23,yscrollcommand=sco1.set)
+        self.expand_select = tkinter.Listbox(frame_m10, font=tk_tool.get_default_font(12), selectmode=tkinter.SINGLE,
+            height=16, width=23, yscrollcommand=sco1.set)
         self.expand_select.bind("<Double-ButtonRelease-1>", lambda e : self.on_expand_enable(False))
         self.expand_select.grid()
         sco1.config(command=self.expand_select.yview)
