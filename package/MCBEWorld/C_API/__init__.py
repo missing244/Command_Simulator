@@ -1,17 +1,33 @@
+def GetPlatform() :
+    import subprocess, typing, platform
+    SoftwarePlatform: typing.Literal["windows_amd64", "android", "linux_amd64", "linux_arm64"] = None
+    try : subprocess.run("getprop ro.build.version.release")
+    except : SysTest = False
+    else : SysTest = True
+    del SysTest
+    system_info = platform.uname()
+    system = system_info.system.lower()
+    machine = system_info.machine.lower()
+
+    if system == 'windows' and machine == "amd64": SoftwarePlatform = 'windows_amd64'
+    elif system == 'android' : SoftwarePlatform = 'android'
+    elif SysTest is True : SoftwarePlatform = 'android'
+    elif system == 'linux' and machine == "x86_64" : SoftwarePlatform = 'linux_amd64'
+    elif system == 'linux' and machine == "aarch64" : SoftwarePlatform = 'linux_arm64'
+    return SoftwarePlatform
+
 def init() :
     import os, platform, sys, hashlib, re, zipfile, subprocess
     LinkCommand = "aarch64-linux-android-gcc -shared build/temp.linux-aarch64-3.9/fast_api.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
     py_dll_name = "MCBEWorld_C_API.%s"
     
-    system_info = platform.uname()
-    system = system_info.system.lower()
-    machine = system_info.machine.lower()
+    SysPlatfrom = GetPlatform()
     base_path = os.path.realpath( os.path.join(__file__, "..") )
 
-    if system == 'windows' and machine == "amd64" :
+    if SysPlatfrom == "windows_amd64" :
         target_path = os.path.join(base_path, py_dll_name % "pyd")
         target_abi = os.path.join(base_path, "ABI_File", "Win_amd64.pyd")
-    elif system == 'linux' and machine == "aarch64" : 
+    elif SysPlatfrom == "android" : 
         zipfile1 = zipfile.ZipFile(os.path.join(base_path, "ABI_File", "Linux_aarch64.build"), "r")
         zipfile1.extractall( os.path.join(base_path, "ABI_File") )
         lib_path_re = re.compile("lib/python[0-9]\\.[0-9]{1,}$")
@@ -27,10 +43,10 @@ def init() :
         target_abi = os.path.join(base_path, "ABI_File", "Linux_aarch64.pyd")
         os.makedirs( target_path, exist_ok=True )
         target_path = os.path.join(target_path, py_dll_name % "so")
-    elif system == 'linux' and machine == "x86_64" :
+    elif SysPlatfrom == "linux_amd64" :
         target_path = os.path.join(base_path, py_dll_name % "so")
         target_abi = os.path.join(base_path, "ABI_File", "Linux_x86_64.pyd")
-    else : raise RuntimeError(f"未支持的系统{system_info}")
+    else : raise RuntimeError(f"未支持的系统{platform.uname()}")
 
     if os.path.isfile(target_path) : 
         with open(target_abi, "rb") as f1 : data1 = f1.read()

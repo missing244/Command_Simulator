@@ -39,6 +39,7 @@ class CommonStructure :
     
     def __init__(self, size:Tuple[int, int, int] = (0, 0, 0)) :
         Volume = size[0] * size[1] * size[2]
+        if Volume > 2000000000 : raise MemoryError("内存过大无法生成结构模板")
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
         self.block_index: array.array[int] = array.array("h", bytearray(Volume*2))              #修改元素✔，赋值✘

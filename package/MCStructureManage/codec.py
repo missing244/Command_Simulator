@@ -10,32 +10,31 @@ import abc, re, io, json, array, itertools, urllib.parse, random, os, math, zipf
 ExecuteTest = re.compile("[ ]*?/?[ ]*?execute[ ]*?(as|at|align|anchored|facing|in|positioned|rotated|if|unless|run)")
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 Translate = json.load(fp=open(os.path.join(CurrentPath, "res", "translate.json"), "r", encoding="utf-8"))
+EntityNBT:Dict[str, nbt.TAG_Compound] = {}
+def InitEntityNBT() :
+    import gzip
+    NBTGzipFile = gzip.GzipFile(os.path.join(CurrentPath, "res", "entityNBT.gzip"), "rb")
+    while 1 :
+        byte_len1 = NBTGzipFile.read(4)
+        byte_len2 = NBTGzipFile.read(4)
+        if (not byte_len1) or (not byte_len2) : break
 
-def GenerateEntity(id:str, pos:Tuple[int, int, int], name:str=None) :
-    Snbt = """{Air:300s,Armor:[{Count:0b,Damage:0s,Name:"",WasPickedUp:0b},{Count:0b,Damage:0s,Name:"",WasPickedUp:0b},
-    {Count:0b,Damage:0s,Name:"",WasPickedUp:0b},{Count:0b,Damage:0s,Name:"",WasPickedUp:0b},{Count:0b,Damage:0s,Name:"",WasPickedUp:0b}],
-    Attributes:[{Base:0.0f,Current:0.0f,DefaultMax:16.0f,DefaultMin:0.0f,Max:16.0f,Min:0.0f,Name:"minecraft:absorption"},
-    {Base:0.0f,Current:0.0f,DefaultMax:1.0f,DefaultMin:0.0f,Max:1.0f,Min:0.0f,Name:"minecraft:knockback_resistance"},
-    {Base:0.25f,Current:0.25f,DefaultMax:3.4028234663852886e+38f,DefaultMin:0.0f,Max:3.4028234663852886e+38f,Min:0.0f,Name:"minecraft:movement"},
-    {Base:0.019999999552965164f,Current:0.019999999552965164f,DefaultMax:3.4028234663852886e+38f,DefaultMin:0.0f,
-    Max:3.4028234663852886e+38f,Min:0.0f,Name:"minecraft:underwater_movement"},{Base:0.019999999552965164f,Current:0.019999999552965164f,
-    DefaultMax:3.4028234663852886e+38f,DefaultMin:0.0f,Max:3.4028234663852886e+38f,Min:0.0f,Name:"minecraft:lava_movement"},
-    {Base:16.0f,Current:16.0f,DefaultMax:2048.0f,DefaultMin:0.0f,Max:2048.0f,Min:0.0f,Name:"minecraft:follow_range"},
-    {Base:2.0f,Current:2.0f,DefaultMax:2.0f,DefaultMin:2.0f,Max:2.0f,Min:2.0f,Name:"minecraft:attack_damage"}],
-    Chested:0b,Color:0b,Color2:0b,Dead:0b,DeathTime:0s,FallDistance:0.0f,HurtTime:0s,Invulnerable:0b,IsAngry:0b,IsAutonomous:0b,IsBaby:0b,
-    IsEating:0b,IsGliding:0b,IsGlobal:0b,IsIllagerCaptain:0b,IsOrphaned:0b,IsOutOfControl:0b,IsPregnant:0b,IsRoaring:0b,IsScared:0b,IsStunned:0b,
-    IsSwimming:0b,IsTamed:0b,IsTrusting:0b,LeasherID:-1l,Lifetime:270,LootDropped:1b,Mainhand:[{Count:0b,Damage:0s,Name:"",WasPickedUp:0b}],
-    MarkVariant:0,NaturalSpawn:0b,Offhand:[{Count:0b,Damage:0s,Name:"",WasPickedUp:0b}],OnGround:1b,OwnerNew:-1l,Persistent:1b,
-    PortalCooldown:0,Pos:[0.5f,-59.0f,0.5f],Rotation:[0.0f,0.0f],Saddled:0b,Sheared:0b,ShowBottom:0b,Sitting:0b,SkinID:0,
-    SpawnedByNight:0b,Strength:0,StrengthMax:0,Surface:0b,Tags:[],TargetID:-1l,TradeExperience:0,TradeTier:0,UniqueID:-51539607540l,
-    Variant:0,canPickupItems:1b,definitions:[],expDropEnabled:1b,hasSetCanPickupItems:1b,identifier:"",internalComponents:{},Health:5s,Age:-1s,
-    Item:{Name:"minecraft:sand",Count:1b,Damage:0s}}"""
-    Snbt = """{Air:300s,expDropEnabled:1b,hasSetCanPickupItems:1b,identifier:"",internalComponents:{},Health:5s,Age:-1s,
-    Item:{Name:"minecraft:sand",Count:1b,Damage:0s}}"""
-    NBTdata = nbt.read_from_snbt_file(io.StringIO(Snbt)).get_tag()
-    NBTdata["UniqueID"] = nbt.TAG_Long(random.randint(-51539607540, 51539607540))
-    NBTdata["identifier"] = nbt.TAG_String(id if id.startswith("minecraft:") else f"minecraft:{id}")
-    NBTdata["Pos"] = nbt.TAG_List(array.array("f", pos), type=nbt.TAG_Float.type)
+        byte_len1 = int.from_bytes(byte_len1, "big")
+        byte_len2 = int.from_bytes(byte_len2, "big")
+        byte_data1 = NBTGzipFile.read(byte_len1)
+        byte_data2 = NBTGzipFile.read(byte_len2)
+        if (not byte_data1) or (not byte_data2) : break
+
+        EntityNBT[byte_data1.decode("utf-8")] = nbt.read_from_nbt_file(byte_data2).get_tag()
+InitEntityNBT()
+
+def GenerateEntity(id:str, pos:Tuple[int, int, int], name:str=None) -> Union[nbt.TAG_Compound, None] :
+    id = id if id.startswith("minecraft:") else f"minecraft:{id}"
+    if id not in EntityNBT : return None
+  
+    NBTdata = EntityNBT[id].copy()
+    NBTdata["UniqueID"] = nbt.TAG_Long(random.randint(-2**63, -2**61))
+    for i in range(3) : NBTdata["Pos"][i] = nbt.TAG_Float(pos[i])
     if isinstance(name, str) : NBTdata["CustomName"] = nbt.TAG_String(name)
 
     return NBTdata
@@ -296,7 +295,10 @@ class Codecs :
                 BDX.const_str.append(state_str)
             
             s_posx, s_posy, s_posz = 0, 0, 0
-            for index, (block_index, (pos_x, pos_y, pos_z)) in Generator :
+            for index, (block_index, (pos_x, pos_y, pos_z)) in Generator :                
+                if block_index < 0 : continue
+                if IgnoreAir and self.block_palette[block_index].name == "minecraft:air" : continue
+
                 if pos_x != s_posx : 
                     pos_sub = pos_x - s_posx
                     append_function(AddXValue() if pos_sub == 1 else AddInt32XValue(pos_sub))
@@ -309,9 +311,7 @@ class Codecs :
                     pos_sub = pos_z - s_posz
                     append_function(AddZValue() if pos_sub == 1 else AddInt32ZValue(pos_sub))
                     s_posz = pos_z
-                
-                if block_index < 0 : continue
-                if IgnoreAir and self.block_palette[block_index].name == "minecraft:air" : continue
+
                 if index in self.block_nbt : append_function(
                     PlaceBlockWithNBTData(2*block_index, 2*block_index+1, self.block_nbt[index]) )
                 else : append_function( PlaceBlockWithBlockStates(2*block_index, 2*block_index+1) )
@@ -549,17 +549,23 @@ class Codecs :
                     except : continue
                     nbtstr = urllib.parse.unquote(BlockJsonData['blockCompleteNBT'])
 
+                    m1 = CommandMatch.search(nbtstr)
+                    m2 = CustomNameMatch.search(nbtstr)
+                    m3 = AutoMatch.search(nbtstr)
+                    m4 = TickDelayMatch.search(nbtstr)
+                    m5 = VersionMatch.search(nbtstr)
+
                     node = nbt.NBT_Builder()
                     CommandBlockNbt = node.compound(
                         id = node.string("CommandBlock"),
-                        Command = node.string(CommandMatch.search(nbtstr).group()),
-                        CustomName = node.string(CustomNameMatch.search(nbtstr).group()),
+                        Command = node.string(m1.group() if m1 else ""),
+                        CustomName = node.string(m2.group() if m2 else ""),
                         ExecuteOnFirstTick = node.byte(1),
-                        auto = node.byte(int( AutoMatch.search(nbtstr).group() )),
-                        TickDelay = node.int(int( TickDelayMatch.search(nbtstr).group() )),
+                        auto = node.byte(int( m3.group() if m3 else 0 )),
+                        TickDelay = node.int(int( m4.group() if m4 else 0 )),
                         conditionalMode = node.byte(block_obj.states["conditional_bit"]),
                         TrackOutput = node.byte(1),
-                        Version = node.int(int( VersionMatch.search(nbtstr).group() )),
+                        Version = node.int(int( m5.group() if m5 else 19 )),
                     ).build()
                     StructureObject.set_blockNBT(posx, posy, posz, CommandBlockNbt)
 
@@ -659,19 +665,25 @@ class Codecs :
                     try : BlockJsonData = json.loads(block[-1])
                     except : continue
                     nbtstr = urllib.parse.unquote(BlockJsonData['blockCompleteNBT'])
+                    
+                    m1 = CommandMatch.search(nbtstr)
+                    m2 = CustomNameMatch.search(nbtstr)
+                    m3 = AutoMatch.search(nbtstr)
+                    m4 = TickDelayMatch.search(nbtstr)
+                    m5 = VersionMatch.search(nbtstr)
 
                     if block_obj.name.endswith("command_block") : 
                         node = nbt.NBT_Builder()
                         CommandBlockNbt = node.compound(
                             id = node.string("CommandBlock"),
-                            Command = node.string(CommandMatch.search(nbtstr).group()),
-                            CustomName = node.string(CustomNameMatch.search(nbtstr).group()),
+                            Command = node.string(m1.group() if m1 else ""),
+                            CustomName = node.string(m2.group() if m2 else ""),
                             ExecuteOnFirstTick = node.byte(1),
-                            auto = node.byte(int( AutoMatch.search(nbtstr).group() )),
-                            TickDelay = node.int(int( TickDelayMatch.search(nbtstr).group() )),
+                            auto = node.byte(int( m3.group() if m3 else 0 )),
+                            TickDelay = node.int(int( m4.group() if m4 else 0 )),
                             conditionalMode = node.byte(block_obj.states["conditional_bit"]),
                             TrackOutput = node.byte(1),
-                            Version = node.int(int( VersionMatch.search(nbtstr).group() )),
+                            Version = node.int(int( m5.group() if m5 else 19 )),
                         ).build()
                         StructureObject.set_blockNBT(posx, posy, posz, CommandBlockNbt)
                     else :
@@ -683,7 +695,8 @@ class Codecs :
 
             for entity in Struct1.entities :
                 posx, posy, posz = entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]
-                StructureObject.entity_nbt.append( GenerateEntity( entity[4], (posx, posy, posz), entity[3]) )
+                EntityNBT = GenerateEntity( entity[4], (posx, posy, posz), entity[3] )
+                if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
 
         def encode(self, Writer:Union[str, io.TextIOBase]):
             IgnoreAir, self = self.IgnoreAir, self.Common
@@ -788,19 +801,25 @@ class Codecs :
                     try : BlockJsonData = json.loads(block[-1])
                     except : continue
                     nbtstr = urllib.parse.unquote(BlockJsonData['blockCompleteNBT'])
+                    
+                    m1 = CommandMatch.search(nbtstr)
+                    m2 = CustomNameMatch.search(nbtstr)
+                    m3 = AutoMatch.search(nbtstr)
+                    m4 = TickDelayMatch.search(nbtstr)
+                    m5 = VersionMatch.search(nbtstr)
 
                     if block_obj.name.endswith("command_block") : 
                         node = nbt.NBT_Builder()
                         CommandBlockNbt = node.compound(
                             id = node.string("CommandBlock"),
-                            Command = node.string(CommandMatch.search(nbtstr).group()),
-                            CustomName = node.string(CustomNameMatch.search(nbtstr).group()),
+                            Command = node.string(m1.group() if m1 else ""),
+                            CustomName = node.string(m2.group() if m2 else ""),
                             ExecuteOnFirstTick = node.byte(1),
-                            auto = node.byte(int( AutoMatch.search(nbtstr).group() )),
-                            TickDelay = node.int(int( TickDelayMatch.search(nbtstr).group() )),
+                            auto = node.byte(int( m3.group() if m3 else 0 )),
+                            TickDelay = node.int(int( m4.group() if m4 else 0 )),
                             conditionalMode = node.byte(block_obj.states["conditional_bit"]),
                             TrackOutput = node.byte(1),
-                            Version = node.int(int( VersionMatch.search(nbtstr).group() )),
+                            Version = node.int(int( m5.group() if m5 else 19 )),
                         ).build()
                         StructureObject.set_blockNBT(posx, posy, posz, CommandBlockNbt)
                     else :
@@ -812,7 +831,8 @@ class Codecs :
 
             for entity in Struct1.entities :
                 posx, posy, posz = entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]
-                StructureObject.entity_nbt.append( GenerateEntity( entity[4], (posx, posy, posz), entity[3]) )
+                EntityNBT = GenerateEntity( entity[4], (posx, posy, posz), entity[3])
+                if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
 
         def encode(self, Writer:Union[str, io.TextIOBase]):
             IgnoreAir, self = self.IgnoreAir, self.Common
@@ -1311,9 +1331,10 @@ class Codecs :
                 if "Items" in NBT_Object :
                     data_list[0] = 4
                     data_list.append([])
-                    for Item in NBT_Object["Items"] :
+                    for SlotID, Item in enumerate(NBT_Object["Items"]) : 
+                        if "Slot" in Item : SlotID = Item["Slot"].value
                         data_list[-1].append({"ns":Item["Name"].value,
-                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":Item["Slot"].value})
+                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":SlotID})
                 elif BlockID.endswith("command_block") :
                     data_list[0] = 1
                     data_list.append({
@@ -1395,6 +1416,7 @@ class Codecs :
 
             for entity in Struct1.entities :
                 entityNBT = GenerateEntity(entity[4], (entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]))
+                if not entityNBT : continue
                 entityNBT["Item"]["Name"] = nbt.TAG_String("minecraft:" + TranslateReverse.get(entity[3], "stone"))
                 StructureObject.entity_nbt.append(entityNBT)
 
@@ -1437,9 +1459,10 @@ class Codecs :
                 NBT_Object = self.block_nbt[index]
                 if "Items" in NBT_Object :
                     data_list.append([])
-                    for Item in NBT_Object["Items"] :
+                    for SlotID, Item in enumerate(NBT_Object["Items"]) : 
+                        if "Slot" in Item : SlotID = Item["Slot"].value
                         data_list[-1].append({"ns":Item["Name"].value,
-                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":Item["Slot"].value})
+                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":SlotID})
                 elif BlockID.endswith("command_block") :
                     data_list.append({
                         "auto":bool(NBT_Object["auto"].value),
@@ -1515,6 +1538,7 @@ class Codecs :
 
             for entity in Struct1.entities :
                 entityNBT = GenerateEntity(entity[4], (entity[0], entity[1], entity[2]))
+                if not entityNBT : continue
                 entityNBT["Item"]["Name"] = nbt.TAG_String("minecraft:" + TranslateReverse.get(entity[3], "stone"))
                 StructureObject.entity_nbt.append(entityNBT)
 
@@ -1556,9 +1580,10 @@ class Codecs :
                 NBT_Object = self.block_nbt[index]
                 if "Items" in NBT_Object :
                     data_list.append([])
-                    for Item in NBT_Object["Items"] :
+                    for SlotID, Item in enumerate(NBT_Object["Items"]) : 
+                        if "Slot" in Item : SlotID = Item["Slot"].value
                         data_list[-1].append({"ns":Item["Name"].value,
-                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":Item["Slot"].value})
+                        "aux":Item["Damage"].value,"num":Item["Count"].value,"slot":SlotID})
                 elif BlockID.endswith("command_block") :
                     data_list.append({
                         "auto":bool(NBT_Object["auto"].value),
@@ -1803,7 +1828,8 @@ class Codecs :
                     if "en" in data_obj :
                         entity_id = data_obj["en"]
                         for posx,posy,posz in zip(data_obj["x"], data_obj["y"], data_obj["z"]) :
-                            StructureObject.entity_nbt.append(GenerateEntity(entity_id, (posx, posy, posz)))
+                            EntityNBT = GenerateEntity(entity_id, (posx, posy, posz))
+                            if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     elif "n" in data_obj :
                         iter1 = data_obj.get("a", itertools.repeat(0))
                         if isinstance(iter1, int) : iter1 = itertools.repeat(iter1)
@@ -1930,7 +1956,7 @@ class Codecs :
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
                 CommandBlockNBT["TickDelay"] = nbt.TAG_Int(data[1])
                 CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
-                CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3])
+                CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3] if len(data) > 3 else "")
                 CommandBlockNBT["Version"] = nbt.TAG_Int(38 if ExecuteTest.match(CommandStr) else 19)
                 return CommandBlockNBT
 
@@ -1942,8 +1968,8 @@ class Codecs :
                     nbtdata = data_obj[5] if len(data_obj) > 5 else []
 
                     if id.__class__ is str :
-                        StructureObject.entity_nbt.append( GenerateEntity(id, 
-                        (chunk_x+Pos1, Pos2, chunk_z+Pos3), datavar) )
+                        EntityNBT = GenerateEntity(id, (chunk_x+Pos1, Pos2, chunk_z+Pos3), datavar)
+                        if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
                         block_obj = Block(Struct1.block_palette[id], datavar)
                         nbt_iter = [None] * len(Pos1) ; nbt_iter[0:len(nbtdata)] = nbtdata
@@ -2002,9 +2028,10 @@ class Codecs :
                     block_data_list[BlockHash][-1].append([])
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
-                        for item in NBT_Obj["Items"] : block_data_list[BlockHash][-1][-1].append(
-                            [item["Name"].value, item["Damage"].value, item["Count"].value, item["Slot"].value]
-                        )
+                        for SlotID, item in enumerate(NBT_Obj["Items"]) : 
+                            if "Slot" in item : SlotID = item["Slot"].value
+                            block_data_list[BlockHash][-1][-1].append(
+                                [item["Name"].value, item["Damage"].value, item["Count"].value, SlotID] )
 
             for entity in self.entity_nbt :
                 EntityID = entity["identifier"].value
@@ -2073,7 +2100,7 @@ class Codecs :
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
                 CommandBlockNBT["TickDelay"] = nbt.TAG_Int(data[1])
                 CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
-                CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3])
+                CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3] if len(data) > 3 else "")
                 CommandBlockNBT["Version"] = nbt.TAG_Int(38 if ExecuteTest.match(CommandStr) else 19)
                 return CommandBlockNBT
 
@@ -2084,8 +2111,9 @@ class Codecs :
                     nbtdata = data_obj[5] if len(data_obj) > 5 else []
 
                     if id.__class__ is str :
-                        StructureObject.entity_nbt.append( GenerateEntity(id, 
-                        (Pos1, Pos2, Pos3), datavar) )
+                        print(data_obj)
+                        EntityNBT = GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
+                        if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
                         block_obj = Block(Struct1.block_palette[id], datavar)
                         nbt_iter = [None] * len(Pos1) ; nbt_iter[0:len(nbtdata)] = nbtdata
@@ -2144,9 +2172,10 @@ class Codecs :
                     block_data_list[BlockHash][-1].append([])
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
-                        for item in NBT_Obj["Items"] : block_data_list[BlockHash][-1][-1].append(
-                            [item["Name"].value, item["Damage"].value, item["Count"].value, item["Slot"].value]
-                        )
+                        for SlotID, item in enumerate(NBT_Obj["Items"]) : 
+                            if "Slot" in item : SlotID = item["Slot"].value
+                            block_data_list[BlockHash][-1][-1].append(
+                                [item["Name"].value, item["Damage"].value, item["Count"].value, SlotID] )
 
             for entity in self.entity_nbt :
                 EntityID = entity["identifier"].value
@@ -2218,7 +2247,7 @@ class Codecs :
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
                 CommandBlockNBT["TickDelay"] = nbt.TAG_Int(data[1])
                 CommandBlockNBT["auto"] = nbt.TAG_Byte(data[2])
-                CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3])
+                CommandBlockNBT["CustomName"] = nbt.TAG_String(data[3] if len(data) > 3 else "")
                 CommandBlockNBT["Version"] = nbt.TAG_Int(38 if ExecuteTest.match(CommandStr) else 19)
                 return CommandBlockNBT
 
@@ -2229,8 +2258,8 @@ class Codecs :
                     nbtdata = data_obj[5] if len(data_obj) > 5 else []
 
                     if id.__class__ is str :
-                        StructureObject.entity_nbt.append( GenerateEntity(id, 
-                        (Pos1, Pos2, Pos3), datavar) )
+                        EntityNBT = GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
+                        if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
                         block_obj = Block(Struct1.block_palette[id], datavar)
                         nbt_iter = [None] * len(Pos1) ; nbt_iter[0:len(nbtdata)] = nbtdata
@@ -2289,9 +2318,10 @@ class Codecs :
                     block_data_list[BlockHash][-1].append([])
                     if index in self.block_nbt : 
                         NBT_Obj = self.block_nbt[index]
-                        for item in NBT_Obj["Items"] : block_data_list[BlockHash][-1][-1].append(
-                            [item["Name"].value, item["Damage"].value, item["Count"].value, item["Slot"].value]
-                        )
+                        for SlotID, item in enumerate(NBT_Obj["Items"]) : 
+                            if "Slot" in item : SlotID = item["Slot"].value
+                            block_data_list[BlockHash][-1][-1].append(
+                                [item["Name"].value, item["Damage"].value, item["Count"].value, SlotID] )
 
             for entity in self.entity_nbt :
                 EntityID = entity["identifier"].value

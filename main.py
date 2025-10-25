@@ -109,10 +109,8 @@ class control_windows :
         self.change_hight_component_list = [] #可变高度组件列表
         self.paset_thread_time:int = 0  #输入降频计时
         self.tutorial_mode:bool = False  #是否在教程模式
-        self.platform:Literal["windows","android"] = None #系统名称
-        system_info = platform.uname()
-        if system_info.system.lower() == 'windows' : self.platform = 'windows'
-        elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : self.platform = 'android'
+        self.platform:Literal["windows", "android"] = app_constants.SoftwarePlatform #系统名称
+
 
         Announcement = app_tk_frame.Announcement(self)
         Announcement.pack()
@@ -132,9 +130,11 @@ class control_windows :
             e.x_root, e.y_root-self.display_frame["right_click_menu"].winfo_reqheight()))
 
 
-    def creat_windows(self):
+    def creat_windows(self) :
         self.button_bar = app_tk_frame.Bottom_Bar(self)
         self.button_bar.pack(side="bottom")
+        self.expend_pack_showtips = tkinter.Label(self.window, text="进入拓展包后，点击下方“拓展”字体\n即可返回“拓展包管理”界面", 
+            fg="#7685F7", font=app_tk_frame.tk_tool.get_default_font(10))
         self.display_frame["right_click_menu"] = app_tk_frame.Global_Right_Click_Menu(self.window)
 
         self.display_frame["welcome_screen"] = app_tk_frame.Welcome_Screen(self)
@@ -210,14 +210,14 @@ class control_windows :
                 self.display_frame[self.now_display_frame].pack_forget()
             self.now_display_frame = ""
             return None
-        
-        if name == "mcworld_reader" :
-            tkinter.messagebox.showerror("Error", "正在开发，敬请期待")
-            return None
+
+        if name == "choose_expand" and self.now_display_frame == "expand_pack" : pass
+        elif name == "choose_expand" and "expand_pack" in self.display_frame: name = "expand_pack"
+        else : pass
 
         if name not in self.display_frame or name == self.now_display_frame: return None
         if self.now_display_frame != "" : self.display_frame[self.now_display_frame].pack_forget()
-
+        
         if "expand_pack" in (self.now_display_frame, name) :
             test_flag = False
             for uuid,data in self.expand_pack_open_list.items() : #判断隶属的拓展包
@@ -233,17 +233,11 @@ class control_windows :
                 if hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
                 if hasattr(data["object"],"exit_method") : data["object"].exit_method()
 
-        if name == "choose_expand" and self.now_display_frame == "expand_pack" :
-            self.display_frame[name].pack()
-            self.now_display_frame = name
-        elif name == "choose_expand" and "expand_pack" in self.display_frame:
-            self.display_frame["expand_pack"].pack()
-            self.now_display_frame = "expand_pack"
-        else : 
-            self.display_frame[name].pack()
-            self.now_display_frame = name
+        self.display_frame[name].pack()
+        self.now_display_frame = name
+        if name == "choose_expand" : self.expend_pack_showtips.pack(side="bottom")
+        else : self.expend_pack_showtips.pack_forget()
         self.focus_input = None
-
 
     def game_ready_or_run(self) :
         for i in self.button_bar.menu_list[0:4] : self.button_bar.itemconfig(i, fill="white")

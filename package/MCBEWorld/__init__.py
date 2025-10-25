@@ -1,7 +1,9 @@
 """
 # 基岩版存档读取模块
-* 可用枚举**DimensionID**: DimensionID.Overworld = 0   
-DimensionID.Nether = 1 DimensionID.TheEnd = 2  
+* 可用枚举**DimensionID**:  
+DimensionID.Overworld = 0   
+DimensionID.Nether = 1  
+DimensionID.TheEnd = 2  
 -----------------------
 * 可用模块**BaseType**: 物品，实体，方块，区块的基类实现模块
 -----------------------

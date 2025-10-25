@@ -128,6 +128,7 @@ class Structure :
     * 可用魔法方法 **\_\_contains__**  : 判断结构名是否存在于存档中
     -----------------------
     * 可用方法 **clear**  : 清空存档内的所有结构(谨慎调用)
+    * 可用方法 **getAll** : 根据名字获取存档内的结构数据
     * 可用方法 **get**    : 根据名字获取存档内的结构数据
     * 可用方法 **set**    : 根据名字向存档内写入结构数据
     * 可用方法 **delete** : 根据名字删除存档内的结构(谨慎调用)
@@ -162,6 +163,9 @@ class Structure :
         for name in name_list : 
             key = ("structuretemplate_%s" % name).encode("utf-8")
             self.__leveldb.delete(key)
+
+    def getAll(self) -> List[str] :
+        return list(self)
 
     def get(self, name:str) -> bytes :
         key = ("structuretemplate_%s" % name).encode("utf-8")
