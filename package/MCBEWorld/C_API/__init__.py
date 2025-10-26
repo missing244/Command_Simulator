@@ -69,19 +69,19 @@ def chunk_parser(bytes1:bytes, array1:array.array, block_use_bit:int) -> None :
     """
     解析区块数据
     """
-    MCBEWorld_C_API.chunk_parser(bytes1, array1, block_use_bit)
+    MCBEWorld_C_API.chunk_parser(block_use_bit, array1, bytes1)
 
 def chunk_serialize(array1:array.array, block_count:int) -> bytes :
     """
     序列化区块数据
     """
-    return MCBEWorld_C_API.chunk_serialize(array1, block_count)
+    return MCBEWorld_C_API.chunk_serialize(block_count, array1)
 
 def is_chunk_key(key_bytes:bytes, dimension:int) -> Union[Literal[False], tuple] :
     """
     序列化区块数据
     """
-    return MCBEWorld_C_API.is_chunk_key(key_bytes, dimension)
+    return MCBEWorld_C_API.is_chunk_key(dimension, key_bytes)
 
 def StructureOperatePosRange(startX:int, startZ:int, endX:int, endZ:int) -> \
     Iterable[Tuple[int, int, int, int]] :
