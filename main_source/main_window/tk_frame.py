@@ -627,7 +627,7 @@ class BE_Structure_Tool(tkinter.Frame) :
     def __init__(self, main_win, **karg) -> None :
         os.makedirs(self.base_path, exist_ok=True)
         if main_win.platform == "android" :
-            try : os.makedirs(self.base_path, exist_ok=True)
+            try : os.makedirs(self.android_outside_storage, exist_ok=True)
             except : pass
 
         super().__init__(main_win.window, **karg)
@@ -1244,7 +1244,7 @@ class BE_World_Tool(tkinter.Frame) :
             real_path = os.path.join(inside_path, i)
             dir_name = i.replace(inside_path, "", 1) + "(内部)"
             world_list[dir_name] = {"real_path":real_path, "outside":False}
-        
+
         if self.main_win.platform == "android" :
             try :
                 outside_path = os.path.join(self.android_outside_storage, "")
@@ -1267,6 +1267,10 @@ class BE_World_Tool(tkinter.Frame) :
 
     def __init__(self, main_win, **karg) -> None :
         from package.MCBEWorld import World
+        if main_win.platform == "android" :
+            try : os.makedirs(self.android_outside_storage, exist_ok=True)
+            except : pass
+
         super().__init__(main_win.window, **karg)
         self.world_list: Dict[str, Dict[Literal["real_path", "outside"], Union[str, bool]]] = {}
         self.main_win = main_win
@@ -1275,7 +1279,7 @@ class BE_World_Tool(tkinter.Frame) :
         self.split_size = [99999, 99999, 99999]
         self.enable_split = tkinter.IntVar(main_win.window, 0)
         self.codecs = BE_Structure_Tool.__get_codecs__()
-    
+
         def OpenWorld() :
             if not self.search_result.curselection() :
                 tkinter.messagebox.showerror("Error", "没有在列表框中\n选中世界")
@@ -1303,7 +1307,8 @@ class BE_World_Tool(tkinter.Frame) :
             ReadTips.pack()
             tkinter.Label(ReadTips, text="初次使用请先阅读",fg='red', font=tk_tool.get_default_font(12)).pack(side='left')
             tkinter.Button(ReadTips, height=1,text=tk_tool.platform_string("使用说明"),font=tk_tool.get_default_font(9), bg="#fdd142",
-                command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), self.add_tips()]).pack(side='left')
+                command=lambda:[FeedbackScreen.pack(), MainScreen.pack_forget(), MainScreen_1.pack_forget(),
+                self.add_tips()]).pack(side='left')
             tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
 
             MainScreen = tkinter.Frame(self) 
@@ -1544,13 +1549,13 @@ class BE_World_Tool(tkinter.Frame) :
 
             tkinter.Label(FeedbackScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
             self.back_button = tkinter.Button(FeedbackScreen, height=1,text=" 返回上一页 ",font=tk_tool.get_default_font(13), bg="#9ae9d1",
-                command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack()])
+                command=lambda:[FeedbackScreen.pack_forget(), MainScreen_1.pack() if self.NowOpenWorld else MainScreen.pack()])
             self.back_button.pack()
 
 
     def start_thread(self, mode:int, *args) :
         tkinter.messagebox.showinfo("Info", "运行中如果将此APP变为后台\n安卓系统会暂停APP运行\n程序运行也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
-        self.back_button.config(state=tkinter.DISABLED)
+        #self.back_button.config(state=tkinter.DISABLED)
         if mode == 1 : threading.Thread(target=self.explot_mcs).start()
         if mode == 2 : threading.Thread(target=self.transfer_mcs).start()
         if mode == 3 : threading.Thread(target=self.creat_commonstructure, args=(args[0], args[1])).start()
@@ -1608,7 +1613,7 @@ class BE_World_Tool(tkinter.Frame) :
 
         Struct1 = CommonStructure()
         self.NowOpenWorld.export_CommonStructure(Struct1, self.dimension_choose.current(), start, end, Callback)
-        
+
         if self.world_list[self.NowOpenWorldDirName]["outside"] : save_root_path = os.path.join(self.android_outside_storage, "result")
         else : save_root_path = os.path.join(self.base_path, "result")
         choose_trans_mode = self.codecs[self.transfor_choose.get()]
