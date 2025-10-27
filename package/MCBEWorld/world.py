@@ -276,7 +276,7 @@ class World :
         CommonStructure.__init__([j-i+1 for i,j in zip(startPos, endPos)])
         SizeX, SizeY, SizeZ = CommonStructure.size
         BlockIndex:array.array = CommonStructure.block_index
-        BlockPalette:Dict[int, nbt.TAG_Compound] = CommonStructure.block_palette
+        BlockPalette:list = CommonStructure.block_palette
         BlockNBTDict:Dict[int, nbt.TAG_Compound] = CommonStructure.block_nbt
         MiddleArray = array.array("H", b"\x00\x00"*32767)
 
@@ -299,7 +299,8 @@ class World :
                 BlockNBTDict[NBTPointer] = BlockNBT.to_nbt()
             if CallbackFunc : CallbackFunc(processID, IterLen)
         
-        BlockPalette.extend(CommonStructure.BLOCKTYPE(j.Identifier, j.States) for j in BlockPaletteMiddleList)
+        BlockPaletteEnd = list(CommonStructure.BLOCKTYPE(j.Identifier, j.States) for j in BlockPaletteMiddleList)
+        BlockPalette.__init__(BlockPaletteEnd)
 
 
     def chunk_pos_iter(self, dimension:int) -> Iterable[Tuple[int, int]] :
