@@ -1555,7 +1555,7 @@ class BE_World_Tool(tkinter.Frame) :
 
     def start_thread(self, mode:int, *args) :
         tkinter.messagebox.showinfo("Info", "运行中如果将此APP变为后台\n安卓系统会暂停APP运行\n程序运行也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
-        #self.back_button.config(state=tkinter.DISABLED)
+        self.back_button.config(state=tkinter.DISABLED)
         if mode == 1 : threading.Thread(target=self.explot_mcs).start()
         if mode == 2 : threading.Thread(target=self.transfer_mcs).start()
         if mode == 3 : threading.Thread(target=self.creat_commonstructure, args=(args[0], args[1])).start()
@@ -1624,11 +1624,15 @@ class BE_World_Tool(tkinter.Frame) :
 
         self.input_box.insert(tkinter.END, "正在生成结构文件%s...\n" % save_file_name)
         self.input_box.see(tkinter.END)
-        BE_Structure_Tool.generate_file(self.enable_split.get(), self.transfor_choose.current(), self.split_size,
+        try :
+            BE_Structure_Tool.generate_file(self.enable_split.get(), self.transfor_choose.current(), self.split_size,
             Struct1, save_file_name, save_split_file_dir, save_file_path, choose_trans_mode, self.input_box)
-
-        self.input_box.insert(tkinter.END, "结构文件%s已生成完毕\n" % save_file_name)
-        self.input_box.see(tkinter.END)
+        except : 
+            self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
+            self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
+        else :
+            self.input_box.insert(tkinter.END, "结构文件%s已生成完毕\n" % save_file_name)
+            self.input_box.see(tkinter.END)
         self.back_button.config(state=tkinter.NORMAL)
 
 
