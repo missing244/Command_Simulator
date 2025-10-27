@@ -25,7 +25,7 @@
 ## 依赖软件
 ### Android
 * [MT管理器](https://mt2.cn/download/)
-* [Pydroid 3](https://wwop.lanzoul.com/id23d0qq8vah)，蓝奏云密码1234
+* [Pydroid 3](https://wwop.lanzoup.com/iA8rP39i20jc)，蓝奏云密码1234
 ### Windows 7-8
 * [Python 3.8.0](https://wwop.lanzoul.com/ijGLp2wl7exa)，蓝奏云密码1234，如已安装3.8以上版本请忽略
 ### Windows 10-11
