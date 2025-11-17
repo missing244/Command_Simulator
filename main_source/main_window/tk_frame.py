@@ -1270,10 +1270,16 @@ class BE_World_Tool(tkinter.Frame) :
             self.copy_mcs2world_list.delete(0, tkinter.END)
             for dir, data in world_list.items() :
                 real_path = data["real_path"]
-                if os.path.isdir(real_path) and GetWorldEdtion(real_path) : 
+                try :
+                    world_test = os.path.isdir(real_path) and GetWorldEdtion(real_path)
+                    zip_test = zipfile.is_zipfile(real_path)
+                except :
+                    world_test = False
+                    zip_test = False
+                if world_test : 
                     self.search_result.insert(tkinter.END, dir)
                     if self.NowOpenWorldDirName != dir : self.copy_mcs2world_list.insert(tkinter.END, dir)
-                if zipfile.is_zipfile(real_path) : self.search_result.insert(0, dir)
+                if zip_test : self.search_result.insert(0, dir)
             self.world_list = world_list
 
     def __init__(self, main_win, **karg) -> None :
