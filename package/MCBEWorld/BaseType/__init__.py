@@ -11,6 +11,7 @@
 * 类**ChunkType**                 : 区块对象
 --------------------------------------------------------------------------------------------
 * 常量**NoneItemNBT**             : ID为空的物品nbt对象，使用时请注意调用copy方法
+* 常量**OldVersionRunTimeBlock**  : 1.0到1.2版本数字ID到英文ID映射列表
 --------------------------------------------------------------------------------------------
 * 函数**NBTtoEntity**               : 通过NBT自动识别生成对应实体对象
 * 函数**GenerateChunkLevelDBKey**   : 通过维度、坐标、操作码生成LevelDB键名
@@ -23,7 +24,7 @@ class ValueError(Exception) : pass
 
 from .ItemType import ItemType, NoneItemNBT
 from .EntityType import EntityType, ItemEntityType, MobType, PlayerType, NBTtoEntity
-from .BlockType import BlockPermutationType, BlockNbtType
+from .BlockType import BlockPermutationType, BlockNbtType, OldVersionRunTimeBlock
 from .ChunkType import SubChunkType, ChunkType, GenerateChunkLevelDBKey, GenerateSuperflatSubChunk
 from .OtherType import Scoreboard, Map, Structure, TickingArea
 

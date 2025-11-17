@@ -5,7 +5,6 @@ import re,time,random,json,traceback
 from urllib import parse,request
 from typing import Union,List
 from html.parser import HTMLParser
-from .lanzou import fetch_direct_link
 
 class MyHTMLParser(HTMLParser):
     def __init__(self):

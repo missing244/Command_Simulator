@@ -22,7 +22,7 @@ def GetWorldEdtion(path:str) :
         if byte1 == Encrypt_Header : return "Netease"
         else : return "Bedrock"
 
-def GetWorldEncryptKey(path:str) :
+def GetWorldEncryptKey(path:str) -> bytes :
     """
     获取文件路径对应的存档加密密钥
     * 返回 int : 此存档的数字密钥
@@ -30,11 +30,15 @@ def GetWorldEncryptKey(path:str) :
     """
     db_file_path = os.path.join(path, "db", "CURRENT")
     if not os.path.isfile(db_file_path) : return None
+    MANIFEST_name = [i for i in os.listdir(os.path.join(path, "db")) if i.startswith("MANIFEST")]
+    if not MANIFEST_name : return None
+    KeyBytes1:bytes = MANIFEST_name[0].encode("utf-8") + b"\x0a"
+
     with open(db_file_path, "rb") as CURRENT :
-        KeyBytes = CURRENT.read(12)
-        if KeyBytes[0:4] != Encrypt_Header : return None
-        SECRET_KEY = bytes( (i^j for i,j in zip(b"MANIFEST", KeyBytes[4:])) )
-        return int.from_bytes(SECRET_KEY, byteorder="big")
+        if CURRENT.read(4) != Encrypt_Header : return None
+        KeyBytes2 = CURRENT.read()
+        SECRET_KEY = C_API.cycle_xor(KeyBytes1, KeyBytes2)
+        return SECRET_KEY
 
 
 class World :
@@ -48,7 +52,7 @@ class World :
     * 可用属性 **world_name**         : 世界名字（字符串）
     * 可用属性 **world_nbt**          : level.dat的nbt对象
     * 可用属性 **world_db**           : leveldb数据库
-    * 可用属性 **encrypt_key**        : leveldb数据库加密int密钥（网易使用）
+    * 可用属性 **encrypt_key**        : leveldb数据库加密bytes密钥（网易使用）
     * 可用属性 **StructureManager**   : MCStructure结构管理器(BaseType.Structure)
     -----------------------
     * 可用方法 **close** : 保存世界并释放资源，传参encryption可以控制是否启用加密
@@ -56,8 +60,7 @@ class World :
     * 可用方法 **export_CommonStructure** : 通过CommonStructure对象将存档写出至结构对象
     """
 
-    def __netease_encrypt__(self, db_path:str, key:int) : 
-        key_bytes = key.to_bytes(8, signed=False)
+    def __netease_encrypt__(self, db_path:str, key_bytes:bytes) :
         name_list = os.listdir(db_path)
         if "CURRENT" in name_list : name_list.remove("CURRENT")
         name_list.insert(0, "CURRENT")
@@ -69,12 +72,12 @@ class World :
             if read_file.read(4) == Encrypt_Header : read_file.close() ; continue
             bytes1 = read_file.read()
             read_file.close()
+            if name == "CURRENT" : bytes1 += b"\x0a"
             with open(path, "wb") as f : 
                 f.write( Encrypt_Header )
                 f.write( C_API.cycle_xor(bytes1, key_bytes) )
 
-    def __netease_decrypt__(self, db_path:str, key:int) :
-        key_bytes = key.to_bytes(8, byteorder="big", signed=False)
+    def __netease_decrypt__(self, db_path:str, key_bytes:bytes) :
         name_list = os.listdir(db_path)
         if "CURRENT" in name_list : name_list.remove("CURRENT")
         name_list.append("CURRENT")
@@ -100,7 +103,7 @@ class World :
             raise TypeError(f"不正确的 world_nbt 类型 ({value.__class__})")
         elif name == "world_name" and not isinstance(value, str) : 
             raise TypeError(f"不正确的 world_name 类型 ({value.__class__})")
-        elif name == "encrypt_key" and not isinstance(value, (int, type(None))) : 
+        elif name == "encrypt_key" and not isinstance(value, (bytes, type(None))) : 
             raise TypeError(f"不正确的 encrypt_key 类型 ({value.__class__})")
         elif name == "world_db" and hasattr(self, name) : 
             raise RuntimeError("不允许修改 world_db 属性")
@@ -108,8 +111,8 @@ class World :
             raise RuntimeError("不允许修改 MCStructure 属性")
         else : 
             if name == "encrypt_key" and value is not None:
-                if not(0 <= value <= (2**64)-1) : raise ValueError("encrypt_key 应为非负数且不超过8字节整数最大值")
-                self.__runtime_cache["encrypt_key"] = value
+                if value.__len__() != 16 : raise ValueError("encrypt_key 应为16字节长度")
+                self.__runtime_cache["encrypt_key"] = base64.b64encode(value).decode("utf-8")
             super().__setattr__(name, value)
 
 
@@ -131,7 +134,7 @@ class World :
         
         encrypt_key = GetWorldEncryptKey(world_path) if GetWorldEdtion(world_path) == "Netease" else None
         if encrypt_key is not None : self.__netease_decrypt__(world_database_path, encrypt_key)
-        
+
 
         with open(os.path.join(world_path, "level.dat"), "rb") as level_dat_file :
             data_version = int.from_bytes(level_dat_file.read(4), "little")
@@ -142,17 +145,26 @@ class World :
         self.__close = False
         self.__world_path = world_path
         self.__data_version = data_version
-        with open(runtime_cache_path, "rb") as f : self.__runtime_cache = json.load(fp=f)
+        with open(runtime_cache_path, "rb") as f : 
+            try : self.__runtime_cache = json.load(fp=f)
+            except : self.__runtime_cache = {"encrypt_key": None}
+
+        if "encrypt_key" not in self.__runtime_cache : self.__runtime_cache["encrypt_key"] = None
         if self.__runtime_cache["encrypt_key"] is None and encrypt_key is None : self.__runtime_cache["encrypt_key"] = None
         if self.__runtime_cache["encrypt_key"] is not None and encrypt_key is None : pass
-        if self.__runtime_cache["encrypt_key"] is None and encrypt_key is not None : self.__runtime_cache["encrypt_key"] = encrypt_key
-        if self.__runtime_cache["encrypt_key"] is not None and encrypt_key is not None : self.__runtime_cache["encrypt_key"] = encrypt_key
-        with open(runtime_cache_path, "w", encoding="utf-8") as f : json.dump(self.__runtime_cache, fp=f)
+        if encrypt_key is not None : 
+            encrypt_key_base64 = base64.b64encode(encrypt_key)
+            self.__runtime_cache["encrypt_key"] = encrypt_key_base64.decode("utf-8")
+        with open(runtime_cache_path, "w+", encoding="utf-8") as f : json.dump(self.__runtime_cache, fp=f)
 
-        self.encrypt_key = self.__runtime_cache["encrypt_key"]
-        self.world_nbt = world_nbt
+        self.world_nbt:nbt.TAG_Compound = world_nbt
         self.world_db = MinecraftLevelDB(world_database_path, create_if_missing=True)
         self.StructureManager = BaseType.Structure(self.world_db)
+        self.encrypt_key:bytes = None
+
+        if isinstance(self.__runtime_cache["encrypt_key"], str) : 
+            self.encrypt_key = base64.b64decode( self.__runtime_cache["encrypt_key"].encode('utf-8') )
+
 
     @property
     def world_name(self):
@@ -192,18 +204,32 @@ class World :
         BlockPalette:List[BaseType.BlockPermutationType] = []
         SizeX, SizeY, SizeZ = CommonStructure.size
         BlockIndex:array.array = CommonStructure.block_index
+        BlockLogDict:Dict[int, int] = CommonStructure.contain_index
         BlockNBTTable:Dict[int, nbt.TAG_Compound] = CommonStructure.block_nbt
         BlockPalette.extend(BaseType.BlockPermutationType(j.name, j.states) for j in CommonStructure.block_palette)
         MiddleArray = array.array("H", b"\x00\x00"*len(BlockPalette))
-        
+
         if  (dimension == 0 and ( not(-64 <= startPos[1] < 320) or not(-64 <= startPos[1]+SizeY < 320) )) or \
             (dimension == 1 and ( not(0 <= startPos[1] < 256) or not(0 <= startPos[1]+SizeY < 256) )) or \
             (dimension == 2 and ( not(0 <= startPos[1] < 256) or not(0 <= startPos[1]+SizeY < 256) )) :
             raise ValueError("结构放置超出世界有效高度范围")
         
         Iter1 = C_API.StructureOperatePosRange(startPos[0], startPos[2], startPos[0]+SizeX, startPos[2]+SizeZ)
+        WaterLogChunkDict: Dict[Tuple[int, int], List[int]] = {}
         SubChunkDict:Dict[int, BaseType.SubChunkType] = {}
         IterLen = len(Iter1)
+
+        for block_log_index, block_index in BlockLogDict.items() :
+            BlockLogPosX = (block_log_index // (SizeY * SizeZ)) + startPos[0]
+            remain = block_log_index % (SizeY * SizeZ)
+            BlockLogPosY = (remain // SizeZ) + startPos[1]
+            BlockLogPosZ = (remain % SizeZ) + startPos[2]
+            ChunkPosTuple = (BlockLogPosX//16, BlockLogPosZ//16)
+
+            if ChunkPosTuple not in WaterLogChunkDict : WaterLogChunkDict[ChunkPosTuple] = []
+            NewInt = ((BlockLogPosX % 16) << 36) + ((BlockLogPosZ % 16) << 32) + \
+                ((BlockLogPosY + 2048) << 16) + block_index
+            WaterLogChunkDict[ChunkPosTuple].append(NewInt)
 
         for processID, (x1, z1, x2, z2) in enumerate(Iter1, start=1) :
             ChunkKey = BaseType.GenerateChunkLevelDBKey(dimension, x1//16, z1//16)
@@ -215,17 +241,33 @@ class World :
                 elif layer != -4 : SubChunkDict[layer] = BaseType.SubChunkType()
             if startPos[1]//16 == -4 and (-4 not in SubChunkDict) : 
                 SubChunkDict[-4] = BaseType.GenerateSuperflatSubChunk()
-            
+
             C_API.import_CommonStructure_to_chunk(
                 startPos[0], startPos[1], startPos[2], SizeX, SizeY, SizeZ,
                 x1, startPos[1], z1, x2, startPos[1]+SizeY, z2, 
                 SubChunkDict, BlockIndex, BlockPalette, MiddleArray)
             
+            ChunkPosTuple = (x1//16, z1//16)
+            for NewInt in WaterLogChunkDict.get(ChunkPosTuple, ()) :
+                BlockLogIndex = NewInt & 0b11111111_11111111
+                BlockLogPosY = ((NewInt >> 16) & 0b11111111_11111111) - 2048
+                BlockLogPosZ = (NewInt >> 32) & 0b1111
+                BlockLogPosX = (NewInt >> 36)
+                SubChunkLayer = BlockLogPosY // 16
+                BlockPointer = BlockLogPosX * 256 + BlockLogPosZ * 16 + (BlockLogPosY % 16)
+                SubChunkObject = SubChunkDict[SubChunkLayer]
+                BlockObject = BlockPalette[BlockLogIndex]
+                try : ContainBlockIndex = SubChunkObject.ContainBlockPalette.index(BlockObject)
+                except : 
+                    ContainBlockIndex = len(SubChunkObject.ContainBlockPalette)
+                    SubChunkObject.ContainBlockPalette.append(BlockObject)
+                SubChunkObject.ContainBlockIndex[BlockPointer] = ContainBlockIndex
+
             for layer in range(startPos[1]//16, (startPos[1]+SizeY-1)//16+1) :
                 SubChunkKey = b"%s/%s" % (ChunkKey, layer.to_bytes(1, "little", signed=True))
                 SubChunkData = SubChunkDict[layer].to_bytes(layer)
                 self.world_db.put(SubChunkKey, SubChunkData)
-
+                
             self.world_db.put(ChunkKey+b',', (41).to_bytes(1, "little"))
             self.world_db.put(ChunkKey+b'6', b"\x02\x00\x00\x00")
             SubChunkDict.clear()
@@ -276,19 +318,25 @@ class World :
         CommonStructure.__init__([j-i+1 for i,j in zip(startPos, endPos)])
         SizeX, SizeY, SizeZ = CommonStructure.size
         BlockIndex:array.array = CommonStructure.block_index
+        BlockLogDict:Dict[int, int] = CommonStructure.contain_index
         BlockPalette:list = CommonStructure.block_palette
         BlockNBTDict:Dict[int, nbt.TAG_Compound] = CommonStructure.block_nbt
-        MiddleArray = array.array("H", b"\x00\x00"*32767)
 
+        MiddleArray1 = array.array("H", b"\x00\x00"*32767)
+        MiddleArray2 = array.array("H", b"\x00\x00"*32767)
         BlockPaletteMiddleList:List[BaseType.BlockPermutationType] = [BaseType.BlockPermutationType("air")]
         Iter1 = C_API.StructureOperatePosRange(startPos[0], startPos[2], endPos[0]+1, endPos[2]+1)
         IterLen = len(Iter1)
         for processID, (x1, z1, x2, z2) in enumerate(Iter1, start=1) :
-            ChunkObj = BaseType.ChunkType.from_leveldb(self.world_db, dimension, x1//16, z1//16)
+            #-224 -80 -208 -64 print( x1, z1, x2, z2 )
+            ChunkObj = self.get_chunk(dimension, x1//16, z1//16)
+            if not ChunkObj : continue
+
             C_API.export_chunk_to_CommonStructure(
                 startPos[0], startPos[1], startPos[2], SizeX, SizeY, SizeZ, 
                 x1, startPos[1], z1, x2, endPos[1]+1, z2,
-                ChunkObj.SubChunks, BlockIndex, BlockPaletteMiddleList, MiddleArray)
+                ChunkObj.SubChunks, BlockIndex, BlockLogDict, 
+                BlockPaletteMiddleList, MiddleArray1, MiddleArray2)
 
             for BlockNBT in ChunkObj.BlockEntities :
                 if  not(startPos[0] <= BlockNBT.x <= endPos[0]) or \
@@ -299,7 +347,7 @@ class World :
                 BlockNBTDict[NBTPointer] = BlockNBT.to_nbt()
             if CallbackFunc : CallbackFunc(processID, IterLen)
         
-        BlockPaletteEnd = list(CommonStructure.BLOCKTYPE(j.Identifier, j.States) for j in BlockPaletteMiddleList)
+        BlockPaletteEnd = list(CommonStructure.BLOCKTYPE(j.Identifier, j.States, j.Waterlogged) for j in BlockPaletteMiddleList)
         BlockPalette.__init__(BlockPaletteEnd)
 
 
@@ -309,7 +357,7 @@ class World :
             if Test1 : yield Test1
     
     def chunk_exists(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> bool :
-        key = BaseType.GenerateChunkLevelDBKey(dimension, chunk_pos_x, chunk_pos_z, 44)
+        key = BaseType.GenerateChunkLevelDBKey(dimension, chunk_pos_x, chunk_pos_z, 54)
         return key in self.world_db
 
     def get_chunk(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> Union[BaseType.ChunkType, None] : 

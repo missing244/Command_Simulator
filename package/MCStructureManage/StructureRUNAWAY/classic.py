@@ -170,7 +170,7 @@ class Kbdx :
         else : _file = buffer
         
         _file.write( len(self.blocks).to_bytes(4, byteorder="little") )
-        S1 = struct.Struct(f'<iiiQ')
+        S1 = struct.Struct(f'<iiiII')
         for i in self.blocks : _file.write( S1.pack(*i) )
 
         Json1 = {'BlockEntityData': list(self.block_nbt)}

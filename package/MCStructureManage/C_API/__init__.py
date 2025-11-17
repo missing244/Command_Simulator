@@ -94,3 +94,9 @@ def split_commonstructure(input_index:array.array, output_index:array.array,
     CommonStructure裁切函数
     """
     MCBEStructure_C_API.split_commonstructure(input_index, output_index, Size, StartPos, EndPos)
+
+def handling_waterlog(blockIndex_array:array.array, water_log:dict, block_palette:list, size:array.array) -> bool :
+    """
+    CommonStructure含水方块状态同步至含水属性
+    """
+    MCBEStructure_C_API.handling_waterlog(blockIndex_array, water_log, list(block_palette), size)

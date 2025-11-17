@@ -1,9 +1,40 @@
-from .. import nbt
+from .. import nbt, MCBELab
 from . import ModifyError, ValueError
 from typing import Tuple,List,Union,Dict,Literal,Optional
 import types, ctypes, json, re, traceback
 
-
+OldVersionRunTimeBlock = ["air", "stone", "grass_block", "dirt", "cobblestone", "oak_planks", "oak_sapling", "bedrock", 
+    "flowing_water", "water", "flowing_lava", "lava", "sand", "gravel", "gold_ore", "iron_ore", "coal_ore", "oak_log", 
+    "oak_leaves", "sponge", "glass", "lapis_ore", "lapis_block", "dispenser", "sandstone", "noteblock", "bed", "golden_rail", 
+    "detector_rail", "sticky_piston", "web", "short_grass", "deadbush", "piston", "piston_arm_collision", "white_wool", "element_0", 
+    "dandelion", "poppy", "brown_mushroom", "red_mushroom", "gold_block", "iron_block", "smooth_stone_double_slab", "smooth_stone_slab", 
+    "brick_block", "tnt", "bookshelf", "mossy_cobblestone", "obsidian", "torch", "fire", "mob_spawner", "oak_stairs", "chest", 
+    "redstone_wire", "diamond_ore", "diamond_block", "crafting_table", "wheat", "farmland", "furnace", "lit_furnace", "standing_sign", 
+    "wooden_door", "ladder", "rail", "stone_stairs", "wall_sign", "lever", "stone_pressure_plate", "iron_door", "wooden_pressure_plate", 
+    "redstone_ore", "lit_redstone_ore", "unlit_redstone_torch", "redstone_torch", "stone_button", "snow_layer", "ice", "snow", "cactus", 
+    "clay", "reeds", "jukebox", "oak_fence", "pumpkin", "netherrack", "soul_sand", "glowstone", "portal", "lit_pumpkin", "cake", 
+    "unpowered_repeater", "powered_repeater", "invisible_bedrock", "trapdoor", "infested_stone", "stone_bricks", "brown_mushroom_block", 
+    "red_mushroom_block", "iron_bars", "glass_pane", "melon_block", "pumpkin_stem", "melon_stem", "vine", "oak_fence_gate", "brick_stairs", 
+    "stone_brick_stairs", "mycelium", "waterlily", "nether_brick", "nether_brick_fence", "nether_brick_stairs", "nether_wart", "enchanting_table", 
+    "brewing_stand", "cauldron", "end_portal", "end_portal_frame", "end_stone", "dragon_egg", "redstone_lamp", "lit_redstone_lamp", "dropper", 
+    "activator_rail", "cocoa", "sandstone_stairs", "emerald_ore", "ender_chest", "tripwire_hook", "trip_wire", "emerald_block", "spruce_stairs", 
+    "birch_stairs", "jungle_stairs", "command_block", "beacon", "cobblestone_wall", "flower_pot", "carrots", "potatoes", "wooden_button", 
+    "skeleton_skull", "anvil", "trapped_chest", "light_weighted_pressure_plate", "heavy_weighted_pressure_plate", "unpowered_comparator", 
+    "powered_comparator", "daylight_detector", "redstone_block", "quartz_ore", "hopper", "quartz_block", "quartz_stairs", "oak_double_slab", 
+    "oak_slab", "white_terracotta", "white_stained_glass_pane", "acacia_leaves", "acacia_log", "acacia_stairs", "dark_oak_stairs", "slime", 
+    "glow_stick", "iron_trapdoor", "prismarine", "sea_lantern", "hay_block", "white_carpet", "hardened_clay", "coal_block", "packed_ice", 
+    "sunflower", "standing_banner", "wall_banner", "daylight_detector_inverted", "red_sandstone", "red_sandstone_stairs", 
+    "red_sandstone_double_slab", "red_sandstone_slab", "spruce_fence_gate", "birch_fence_gate", "jungle_fence_gate", "dark_oak_fence_gate", 
+    "acacia_fence_gate", "repeating_command_block", "chain_command_block", "hard_glass_pane", "hard_white_stained_glass_pane", "chemical_heat", 
+    "spruce_door", "birch_door", "jungle_door", "acacia_door", "dark_oak_door", "grass_path", "frame", "chorus_flower", "purpur_block", 
+    "colored_torch_red", "purpur_stairs", "colored_torch_blue", "undyed_shulker_box", "end_bricks", "frosted_ice", "end_rod", "end_gateway", 
+    "allow", "deny", "border_block", "magma", "nether_wart_block", "red_nether_brick", "bone_block", "structure_void", "white_shulker_box", 
+    "purple_glazed_terracotta", "white_glazed_terracotta", "orange_glazed_terracotta", "magenta_glazed_terracotta", "light_blue_glazed_terracotta", 
+    "yellow_glazed_terracotta", "lime_glazed_terracotta", "pink_glazed_terracotta", "gray_glazed_terracotta", "silver_glazed_terracotta", 
+    "cyan_glazed_terracotta", "chalkboard", "blue_glazed_terracotta", "brown_glazed_terracotta", "green_glazed_terracotta", "red_glazed_terracotta", 
+    "black_glazed_terracotta", "white_concrete", "white_concrete_powder", "compound_creator", "underwater_torch", "chorus_plant", 
+    "white_stained_glass", "camera", "podzol", "beetroot", "stonecutter", "glowingobsidian", "netherreactor", "info_update", "info_update2", 
+    "moving_block", "observer", "structure_block", "hard_glass", "hard_white_stained_glass", "reserved6"]
 
 SpaceMatch = re.compile('[ ]{0,}')
 KeyMatch   = re.compile('"(\\\\.|[^\\\\"]){0,}"')
@@ -63,6 +94,7 @@ class BlockPermutationType :
     ## 基岩版方块预设类
     * 属性**Identifier**        : 方块英文ID **(str)**
     * 属性**States**            : 方块状态 **(Dict[str, Union[str, bool, int]])**
+    * 属性**Waterlogged**       : 方块是否含水 **(bool)**
     * 属性**Version**           : 方块数据格式版本 **(int)** 
     --------------------------------------------------------------------------------------------
     * 可用类方法**from_nbt** : 通过NBT对象生成对象
@@ -89,12 +121,13 @@ class BlockPermutationType :
         return value.__hash__()  == self.__hash
 
 
-    def __init__(self, id:str, state:Union[str, Dict[str, Union[str, bool, int]]]={}, version:int=17959425) :
-        self.Identifier:str = f"minecraft:{id}" if ":" not in id else id
-        self.States:Dict[str, Union[str, bool, int]] = types.MappingProxyType(
-            state.copy() if isinstance(state, (dict, types.MappingProxyType)) else BE_BlockStates_Parser(state) )
+    def __init__(self, id:str, state:Union[str, Dict[str, Union[str, bool, int]]]={}, waterlogged:bool=False, version:int=17959425) :
+        Identifier, States = MCBELab.TransforBlock(id, state)
+        self.Identifier:str = Identifier
+        self.States:Dict[str, Union[str, bool, int]] = types.MappingProxyType(States)
+        self.Waterlogged = waterlogged
         self.Version:int = version
-        self.__hash = (self.Identifier, *self.States.items()).__hash__()
+        self.__hash = (self.Identifier, waterlogged, *self.States.items()).__hash__()
 
 
     @classmethod

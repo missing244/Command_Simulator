@@ -18,6 +18,7 @@
 """
 
 from .. import python_nbt as nbt
+from .. import MCBELab
 
 
 

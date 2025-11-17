@@ -1,9 +1,9 @@
-from .. import nbt
-from ..C_API import chunk_parser, chunk_serialize
+from .. import nbt, MCBELab
+from ..C_API import chunk_parser, chunk_serialize, chunk_upgrade
 from . import ModifyError, ValueError
 from typing import Tuple,List,Union,Dict,Literal,Optional
 import types, ctypes, math, traceback, array, io, random
-from . import BlockPermutationType
+from . import BlockPermutationType, OldVersionRunTimeBlock
 
 DefaultChunkData = b'\x01\x00\x02\x00\x02\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' * 256
 DefaultChunkPalette = [BlockPermutationType("air"), BlockPermutationType("bedrock", {"infiniburn_bit":False}),
@@ -61,7 +61,8 @@ class SubChunkType :
         self.BlockIndex = array.array("H", b"\x00\x00"*4096)
         self.BlockPalette:List[BlockPermutationType] = [BlockPermutationType("air")]
         self.ContainBlockIndex = array.array("H", b"\x00\x00"*4096)
-        self.ContainBlockPalette:List[BlockPermutationType] = [BlockPermutationType("air")]
+        self.ContainBlockPalette:List[BlockPermutationType] = [BlockPermutationType("air"), 
+            BlockPermutationType("water", state={'liquid_depth': 0})]
 
 
     @classmethod
@@ -70,22 +71,40 @@ class SubChunkType :
         if not isinstance(bytes_io, io.BufferedIOBase) : raise TypeError("传参需要bytes或BufferedIO类")
 
         ChunkObject = cls()
-        sub_layers = bytes_io.read(3)[1]
-        LayersName = [("BlockIndex", "BlockPalette"), ("ContainBlockIndex", "ContainBlockPalette")]
-        for i in range(sub_layers) :
-            block_use_bit = bytes_io.read(1)[0] >> 1 # 字节使用的bit位数
-            if block_use_bit < 1 : continue
-            block_count_save_in_4bytes = 32 // block_use_bit # 4个字节能存储多少索引
-            read_items = math.ceil(4096 / block_count_save_in_4bytes) # 一共需要多少个int型
-            block_index_bytes = bytes_io.read(read_items*4)
-            if len(block_index_bytes) != read_items*4 : raise RuntimeError("区块数据不完整")
-            chunk_parser(block_index_bytes, getattr(ChunkObject, LayersName[i][0]), block_use_bit) #解析方块索引
+        chunk_version = bytes_io.read(1)[0]
+        #print(chunk_version)
+        if chunk_version > 0 :
+            sub_layers = bytes_io.read(2)[0]
+            LayersName = [("BlockIndex", "BlockPalette"), ("ContainBlockIndex", "ContainBlockPalette")]
+            for i in range(sub_layers) :
+                block_use_bit = bytes_io.read(1)[0] >> 1 # 字节使用的bit位数
+                if block_use_bit < 1 : continue
+                block_count_save_in_4bytes = 32 // block_use_bit # 4个字节能存储多少索引
+                read_items = math.ceil(4096 / block_count_save_in_4bytes) # 一共需要多少个int型
+                block_index_bytes = bytes_io.read(read_items*4)
+                if len(block_index_bytes) != read_items*4 : raise RuntimeError("区块数据不完整")
+                chunk_parser(block_index_bytes, getattr(ChunkObject, LayersName[i][0]), block_use_bit) #解析方块索引
 
-            block_count = int.from_bytes(bytes_io.read(4), "little")
-            BlockList = getattr(ChunkObject, LayersName[i][1])
-            BlockList.clear()
-            for j in range(block_count) : BlockList.append( 
-                BlockPermutationType.from_nbt( nbt.read_from_nbt_file(bytes_io, byteorder="little").get_tag() ) )
+                block_count = int.from_bytes(bytes_io.read(4), "little")
+                BlockList = getattr(ChunkObject, LayersName[i][1])
+                BlockList.clear()
+                for j in range(block_count) : BlockList.append( 
+                    BlockPermutationType.from_nbt( nbt.read_from_nbt_file(bytes_io, byteorder="little").get_tag() ) )
+        else :
+            block_index_bytes = bytes_io.read(4096)
+            block_data_bytes = bytes_io.read(2048)
+            if len(block_index_bytes) != 4096 : raise RuntimeError("区块数据不完整")
+            if len(block_data_bytes) != 2048 : raise RuntimeError("区块数据不完整")
+            IndexBytes = chunk_upgrade(ChunkObject.BlockIndex, block_index_bytes, block_data_bytes)
+            BlockIndexRecord = array.array("H", IndexBytes)
+            BlockPallate = [None] * max(BlockIndexRecord)
+            for i,j in enumerate(BlockIndexRecord) :
+                if not j : continue
+                NumID, DataID = i>>8, i&0b1111_1111
+                BlockID, BlockState = MCBELab.TransforBlock(OldVersionRunTimeBlock[NumID], DataID)
+                BlockPallate[j-1] = BlockPermutationType(BlockID, BlockState)
+            ChunkObject.BlockPalette.clear()
+            ChunkObject.BlockPalette.extend(BlockPallate)
 
         return ChunkObject
 
@@ -169,7 +188,8 @@ class ChunkType :
         for layer_id in range(-128, 128) : 
             chunk_key = b"%s%s" % (ChunkByteHeader, layer_id.to_bytes(1, "little", signed=True))
             try : SubChunk = SubChunkType.from_bytes( minecraft_leveldb.get(chunk_key) )
-            except : continue
+            except KeyError : continue 
+            except : traceback.print_exc() ; continue 
             else : ChunkObject.SubChunks[layer_id] = SubChunk
         #获取区块实体数据
         EntityIndexKey = b"digp" + LevelDBKey

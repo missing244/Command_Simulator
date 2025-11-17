@@ -65,6 +65,12 @@ def cycle_xor(bytes1:bytes, bytes2:bytes) -> bytes :
     """
     return MCBEWorld_C_API.cycle_xor(bytes1, bytes2)
 
+def chunk_upgrade(array1:array.array, block_index:bytes, block_data:bytes) -> bytes: 
+    """
+    将老区块格式进行升级
+    """
+    return MCBEWorld_C_API.chunk_upgrade(array1, block_index, block_data)
+
 def chunk_parser(bytes1:bytes, array1:array.array, block_use_bit:int) -> None : 
     """
     解析区块数据
@@ -103,12 +109,12 @@ def import_CommonStructure_to_chunk(startX:int, startY:int, startZ:int, SizeX:in
 
 def export_chunk_to_CommonStructure(startX:int, startY:int, startZ:int, SizeX:int, SizeY:int, SizeZ:int,
     chunkStartX:int, chunkStartY:int, chunkStartZ:int, chunkEndX:int, chunkEndY:int, chunkEndZ:int, 
-    subchunk, blockindex:array.array, blockList:list, Array:array.array) :
+    subchunk, blockindex:array.array, blocklog:dict, blockList:list, Array1:array.array, Array2:array.array) :
     """
     将区块输出进结构对象中
     """
     MCBEWorld_C_API.chunk_to_CommonStructure(startX, startY, startZ, SizeX, SizeY, SizeZ,
         chunkStartX, chunkStartY, chunkStartZ, chunkEndX, chunkEndY, chunkEndZ, 
-        subchunk, blockindex, blockList, Array)
+        subchunk, blockindex, blocklog, blockList, Array1, Array2)
 
 

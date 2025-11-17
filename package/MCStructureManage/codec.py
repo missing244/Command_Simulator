@@ -1,43 +1,12 @@
-from . import nbt
-from .block import Block, GetNbtID, JE_Transfor_BE_Block
-from .block import GenerateContainerNBT, GenerateSignNBT, GenerateCommandBlockNBT
+from . import nbt, MCBELab
+from .block import Block
 from .__private import TypeCheckList, BiList
 from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 
 from typing import Union,Dict,Tuple,Literal,List
-import abc, re, io, json, array, itertools, urllib.parse, random, os, math, zipfile, traceback, zlib
+import abc, re, io, json, array, itertools, urllib.parse, os, math, zipfile, traceback, zlib
 ExecuteTest = re.compile("[ ]*?/?[ ]*?execute[ ]*?(as|at|align|anchored|facing|in|positioned|rotated|if|unless|run)")
-CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
-Translate = json.load(fp=open(os.path.join(CurrentPath, "res", "translate.json"), "r", encoding="utf-8"))
-EntityNBT:Dict[str, nbt.TAG_Compound] = {}
-def InitEntityNBT() :
-    import gzip
-    NBTGzipFile = gzip.GzipFile(os.path.join(CurrentPath, "res", "entityNBT.gzip"), "rb")
-    while 1 :
-        byte_len1 = NBTGzipFile.read(4)
-        byte_len2 = NBTGzipFile.read(4)
-        if (not byte_len1) or (not byte_len2) : break
-
-        byte_len1 = int.from_bytes(byte_len1, "big")
-        byte_len2 = int.from_bytes(byte_len2, "big")
-        byte_data1 = NBTGzipFile.read(byte_len1)
-        byte_data2 = NBTGzipFile.read(byte_len2)
-        if (not byte_data1) or (not byte_data2) : break
-
-        EntityNBT[byte_data1.decode("utf-8")] = nbt.read_from_nbt_file(byte_data2).get_tag()
-InitEntityNBT()
-
-def GenerateEntity(id:str, pos:Tuple[int, int, int], name:str=None) -> Union[nbt.TAG_Compound, None] :
-    id = id if id.startswith("minecraft:") else f"minecraft:{id}"
-    if id not in EntityNBT : return None
-  
-    NBTdata = EntityNBT[id].copy()
-    NBTdata["UniqueID"] = nbt.TAG_Long(random.randint(-2**63, -2**61))
-    for i in range(3) : NBTdata["Pos"][i] = nbt.TAG_Float(pos[i])
-    if isinstance(name, str) : NBTdata["CustomName"] = nbt.TAG_String(name)
-
-    return NBTdata
 
 
 class Codecs :
@@ -227,7 +196,7 @@ class Codecs :
                 block = Block(BlockID, Data)
                 StructureObject.set_block(x, y, z, block)
                 
-                ContainerNbt = GenerateContainerNBT(block.name)
+                ContainerNbt = MCBELab.GenerateBlockEntityNBT(block.name)
                 if not ContainerNbt : return None
 
                 node = nbt.NBT_Builder()
@@ -245,7 +214,7 @@ class Codecs :
                 block = Block(ConstStr[Oper.blockConstantStringID], Oper.blockData)
                 StructureObject.set_block(x, y, z, block)
 
-                ContainerNbt = GenerateContainerNBT(block.name)
+                ContainerNbt = MCBELab.GenerateBlockEntityNBT(block.name)
                 if not ContainerNbt : return None
 
                 node = nbt.NBT_Builder()
@@ -383,7 +352,7 @@ class Codecs :
             else : return False
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
-            from .C_API import codecs_parser_schematic
+            from .C_API import codecs_parser_schematic, handling_waterlog
             SCHMATIC = StructureSCHEMATIC.Schematic.from_buffer(Reader)
 
             StructureObject = self.Common
@@ -392,9 +361,8 @@ class Codecs :
 
             NBTBlockBit = array.array("B", b"\x00"*256)
             for index, blockname in enumerate(RunTimeBlock) : 
-                if GenerateContainerNBT(blockname) : NBTBlockBit[index] = 1
-                elif GenerateSignNBT(blockname) : NBTBlockBit[index] = 2
-                elif GenerateCommandBlockNBT(blockname) : NBTBlockBit[index] = 3
+                UID = MCBELab.GetNbtUID(blockname)
+                if UID : NBTBlockBit[index] = UID
 
             BlockPaletteArray = array.array("H", b"\x00\x00"*65536)
             NBTDict = codecs_parser_schematic(SCHMATIC.block_index, SCHMATIC.block_data, 
@@ -408,11 +376,10 @@ class Codecs :
 
             for key, value in NBTDict.items() :
                 block = StructureObject.block_palette[StructureObject.block_index[key]]
-                if value == 1 : StructureObject.block_nbt[key] = GenerateContainerNBT(block.name)
-                elif value == 2 : StructureObject.block_nbt[key] = GenerateSignNBT(block.name)
-                elif value == 3 : StructureObject.block_nbt[key] = GenerateCommandBlockNBT(block.name)
+                StructureObject.block_nbt[key] = MCBELab.GenerateBlockEntityNBT(block.name)
 
-        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+        def encode(self, Writer:Union[str, io.BufferedIOBase]) :
+            raise RuntimeError(f"{Writer} 并不支持序列化数据对象")
             IgnoreAir, self = self.IgnoreAir, self.Common
             SCHMATIC = StructureSCHEMATIC.Schematic()
             for i in range(3) : 
@@ -449,28 +416,30 @@ class Codecs :
             else : return False
 
         def operation_structure(self, Schma_File:StructureSCHEM.Schem_V1) :
-            from .C_API import codecs_parser_schem
+            from .C_API import codecs_parser_schem, handling_waterlog
             StructureObject = self.Common
             StructureObject.__init__( Schma_File.size )
 
             blocks:List[Block] = [None] * len(Schma_File.block_palette)
-            for index, block in Schma_File.block_palette.items() : blocks[index] = JE_Transfor_BE_Block(block)
+            for index, block in Schma_File.block_palette.items() : 
+                block_data = MCBELab.JE_Transfor_BE_Block(block)
+                blocks[index] = Block(block_data[0], block_data[1], block_data[2])
             StructureObject.block_palette.__init__(blocks)
 
             NBTBlockBit = array.array("B", b"\x00"*len(StructureObject.block_palette))
             for index, block in enumerate(StructureObject.block_palette) : 
-                if GenerateContainerNBT(block.name) : NBTBlockBit[index] = 1
-                elif GenerateSignNBT(block.name) : NBTBlockBit[index] = 2
-                elif GenerateCommandBlockNBT(block.name) : NBTBlockBit[index] = 3
+                UID = MCBELab.GetNbtUID(block.name)
+                if UID : NBTBlockBit[index] = UID
             
             NBTDict = codecs_parser_schem(Schma_File.block_index, StructureObject.block_index,
                 NBTBlockBit, Schma_File.size)
             for key, value in NBTDict.items() :
                 block = StructureObject.block_palette[StructureObject.block_index[key]]
-                if value == 1 : StructureObject.block_nbt[key] = GenerateContainerNBT(block.name)
-                elif value == 2 : StructureObject.block_nbt[key] = GenerateSignNBT(block.name)
-                elif value == 3 : StructureObject.block_nbt[key] = GenerateCommandBlockNBT(block.name)
+                StructureObject.block_nbt[key] = MCBELab.GenerateBlockEntityNBT(block.name)
 
+            if handling_waterlog(StructureObject.block_index, StructureObject.contain_index,
+                StructureObject.block_palette, StructureObject.size) :
+                StructureObject.block_palette.append( Block("water") )
 
             """
                 O_X, O_Y, O_Z = Schma_File.size
@@ -479,7 +448,7 @@ class Codecs :
                     block_index |= 0b0111_1111 & index_data
                     if index_data >= 0 :
                         StructureObject.set_block(pos_x, pos_y, pos_z, block_index)
-                        nbtdata = GenerateContainerNBT(blocks[block_index].name)
+                        nbtdata = MCBELab.GenerateContainerNBT(blocks[block_index].name)
                         if nbtdata : StructureObject.set_blockNBT(pos_x, pos_y, pos_z, nbtdata)
                         block_index = 0
                         pos_x += 1
@@ -695,7 +664,7 @@ class Codecs :
 
             for entity in Struct1.entities :
                 posx, posy, posz = entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]
-                EntityNBT = GenerateEntity( entity[4], (posx, posy, posz), entity[3] )
+                EntityNBT = MCBELab.GenerateEntity( entity[4], (posx, posy, posz), entity[3] )
                 if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
 
         def encode(self, Writer:Union[str, io.TextIOBase]):
@@ -831,7 +800,7 @@ class Codecs :
 
             for entity in Struct1.entities :
                 posx, posy, posz = entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]
-                EntityNBT = GenerateEntity( entity[4], (posx, posy, posz), entity[3])
+                EntityNBT = MCBELab.GenerateEntity( entity[4], (posx, posy, posz), entity[3])
                 if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
 
         def encode(self, Writer:Union[str, io.TextIOBase]):
@@ -1087,7 +1056,7 @@ class Codecs :
                     if block[-1].__class__ is not str : continue
                     if block[5] != "nbt" : continue
 
-                    NbtName = GetNbtID(block_obj.name)
+                    NbtName = MCBELab.GetNbtID(block_obj.name)
                     if not NbtName : continue
                     SNBT = nbt.read_from_snbt_file( io.StringIO(block[6]) ).get_tag()
                     SNBT["id"] = nbt.TAG_String(NbtName)
@@ -1180,7 +1149,7 @@ class Codecs :
                     if block[-1].__class__ is not str : continue
                     if block[5] != "nbt" : continue
 
-                    NbtName = GetNbtID(block_obj.name)
+                    NbtName = MCBELab.GetNbtID(block_obj.name)
                     if not NbtName : continue
                     SNBT = nbt.read_from_snbt_file( io.StringIO(block[6]) ).get_tag()
                     SNBT["id"] = nbt.TAG_String(NbtName)
@@ -1288,7 +1257,7 @@ class Codecs :
                     StructureObject.set_block(posx, posy, posz, Block(CommandBlockGangBan[datavar], blockindex))
                     StructureObject.set_blockNBT(posx, posy, posz, BlockData)
                 elif datatype == 4 : 
-                    Contanier = GenerateContainerNBT( Struct1.block_palette[blockindex] )
+                    Contanier = MCBELab.GenerateBlockEntityNBT( Struct1.block_palette[blockindex] )
                     if Contanier is None : continue
                     for item in blocknbt :
                         if None in set(item.values()) : continue
@@ -1374,7 +1343,7 @@ class Codecs :
             StructureObject.block_palette.append( Block("minecraft:air") )
 
             pos_cache, real_pos = [0, 0, 0], [0, 0, 0]
-            TranslateReverse = {j:i for i,j in Translate["Item"].items()}
+            TranslateReverse = {j:i for i,j in MCBELab.ItemTranslateData.items()}
             CommandBlockGangBan = ["minecraft:command_block", "minecraft:repeating_command_block", 
                 "minecraft:chain_command_block"]
             for block in Struct1.blocks :
@@ -1400,7 +1369,7 @@ class Codecs :
                 else : 
                     StructureObject.set_block(*real_pos, Block(Struct1.block_palette[block[3]], block[4]))
                     if block[-1].__class__ is list :
-                        Contanier = GenerateContainerNBT( Struct1.block_palette[block[3]] )
+                        Contanier = MCBELab.GenerateBlockEntityNBT( Struct1.block_palette[block[3]] )
                         if Contanier is None : continue
                         for item in block[-1] :
                             if None in set(item.values()) : continue
@@ -1415,7 +1384,7 @@ class Codecs :
                         StructureObject.set_blockNBT(*real_pos, Contanier)
 
             for entity in Struct1.entities :
-                entityNBT = GenerateEntity(entity[4], (entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]))
+                entityNBT = MCBELab.GenerateEntity(entity[4], (entity[0]-PosStart[0], entity[1]-PosStart[1], entity[2]-PosStart[2]))
                 if not entityNBT : continue
                 entityNBT["Item"]["Name"] = nbt.TAG_String("minecraft:" + TranslateReverse.get(entity[3], "stone"))
                 StructureObject.entity_nbt.append(entityNBT)
@@ -1434,10 +1403,10 @@ class Codecs :
                 data_list = [entity["Pos"][0].value, entity["Pos"][1].value, entity["Pos"][2].value, None, None]
                 if entity["identifier"].value == "minecraft:item" :
                     ItemName = entity["Item"]["Name"].value.replace("minecraft:", "", 1)
-                    data_list[3], data_list[4] = Translate["Item"].get(ItemName, "石头"), "minecraft:item"
+                    data_list[3], data_list[4] = MCBELab.ItemTranslateData.get(ItemName, "石头"), "minecraft:item"
                 else : 
                     EntityName = entity["identifier"].value.replace("minecraft:", "", 1)
-                    data_list[3], data_list[4] = Translate["Entity"].get(EntityName, ""), entity["identifier"].value
+                    data_list[3], data_list[4] = MCBELab.EntityTranslateData.get(EntityName, ""), entity["identifier"].value
                 Struct1.entities.append(data_list)
 
             pos_cache = [0, 0, 0]
@@ -1498,7 +1467,7 @@ class Codecs :
 
             pos_cache = [0, 0, 0]
             O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
-            TranslateReverse = {j:i for i,j in Translate["Item"].items()}
+            TranslateReverse = {j:i for i,j in MCBELab.ItemTranslateData.items()}
             CommandBlockGangBan = ["minecraft:command_block", "minecraft:repeating_command_block", 
                 "minecraft:chain_command_block"]
             for block in Struct1.blocks :
@@ -1522,7 +1491,7 @@ class Codecs :
                 else : 
                     StructureObject.set_block(posx, posy, posz, Block(Struct1.block_palette[block[3]], block[4]))
                     if block[-1].__class__ is list :
-                        Contanier = GenerateContainerNBT( Struct1.block_palette[block[3]] )
+                        Contanier = MCBELab.GenerateBlockEntityNBT( Struct1.block_palette[block[3]] )
                         if Contanier is None : continue
                         for item in block[-1] :
                             if None in set(item.values()) : continue
@@ -1537,7 +1506,7 @@ class Codecs :
                         StructureObject.set_blockNBT(posx, posy, posz, Contanier)
 
             for entity in Struct1.entities :
-                entityNBT = GenerateEntity(entity[4], (entity[0], entity[1], entity[2]))
+                entityNBT = MCBELab.GenerateEntity(entity[4], (entity[0], entity[1], entity[2]))
                 if not entityNBT : continue
                 entityNBT["Item"]["Name"] = nbt.TAG_String("minecraft:" + TranslateReverse.get(entity[3], "stone"))
                 StructureObject.entity_nbt.append(entityNBT)
@@ -1555,10 +1524,10 @@ class Codecs :
                 data_list = [entity["Pos"][0].value, entity["Pos"][1].value, entity["Pos"][2].value, None, None]
                 if entity["identifier"].value == "minecraft:item" :
                     ItemName = entity["Item"]["Name"].value.replace("minecraft:", "", 1)
-                    data_list[3], data_list[4] = Translate["Item"].get(ItemName, "石头"), "minecraft:item"
+                    data_list[3], data_list[4] = MCBELab.ItemTranslateData.get(ItemName, "石头"), "minecraft:item"
                 else : 
                     EntityName = entity["identifier"].value.replace("minecraft:", "", 1)
-                    data_list[3], data_list[4] = Translate["Entity"].get(EntityName, ""), entity["identifier"].value
+                    data_list[3], data_list[4] = MCBELab.EntityTranslateData.get(EntityName, ""), entity["identifier"].value
                 Struct1.entities.append(data_list)
 
             pos_cache = [0, 0, 0]
@@ -1794,7 +1763,7 @@ class Codecs :
                     NBT_obj = nbt.read_from_snbt_file( io.StringIO(Nbtdata["e"]) )
                     StructureObject.set_blockNBT(x, y, z, NBT_obj.get_tag())
                 else :
-                    CommandBlockNBT = GenerateCommandBlockNBT("command_block")
+                    CommandBlockNBT = MCBELab.GenerateBlockEntityNBT("command_block")
                     if CommandBlockNBT is None : return None
                     CommandStr = data[0] if isinstance(data[0], str) else ""
                     CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
@@ -1809,7 +1778,7 @@ class Codecs :
                     NBT_obj = nbt.read_from_snbt_file( io.StringIO(Nbtdata["e"]) )
                     StructureObject.set_blockNBT(x, y, z, NBT_obj.get_tag())
                 else : 
-                    ContanierNBT = GenerateContainerNBT( block_id )
+                    ContanierNBT = MCBELab.GenerateBlockEntityNBT( block_id )
                     if ContanierNBT is None : return None
                     for item in data.get("d", []) :
                         itemID = item["name"] if item["name"].startswith("minecraft:") else "minecraft:%s"%item["name"]
@@ -1828,7 +1797,7 @@ class Codecs :
                     if "en" in data_obj :
                         entity_id = data_obj["en"]
                         for posx,posy,posz in zip(data_obj["x"], data_obj["y"], data_obj["z"]) :
-                            EntityNBT = GenerateEntity(entity_id, (posx, posy, posz))
+                            EntityNBT = MCBELab.GenerateEntity(entity_id, (posx, posy, posz))
                             if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     elif "n" in data_obj :
                         iter1 = data_obj.get("a", itertools.repeat(0))
@@ -1929,7 +1898,7 @@ class Codecs :
             StructureObject.block_palette.append( Block("minecraft:air") )
 
             def Container(id:str, data:List[Tuple[str, int, int, int]]) :
-                ContanierNBT = GenerateContainerNBT( id )
+                ContanierNBT = MCBELab.GenerateBlockEntityNBT( id )
                 if ContanierNBT is None : return None
                 for item in data :
                     itemID = item[0] if item[0].startswith("minecraft:") else "minecraft:%s"%item[0]
@@ -1943,14 +1912,14 @@ class Codecs :
                 return ContanierNBT
 
             def Sign(id:str, data:str) :
-                SignNBT = GenerateSignNBT(id)
+                SignNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if SignNBT is None : return None
                 
                 SignNBT["FrontText"]["Text"] = nbt.TAG_String(data)
                 return SignNBT
 
             def Command(id:str, data:Tuple[str, int, int, str]) :
-                CommandBlockNBT = GenerateCommandBlockNBT(id)
+                CommandBlockNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
@@ -1968,7 +1937,7 @@ class Codecs :
                     nbtdata = data_obj[5] if len(data_obj) > 5 else []
 
                     if id.__class__ is str :
-                        EntityNBT = GenerateEntity(id, (chunk_x+Pos1, Pos2, chunk_z+Pos3), datavar)
+                        EntityNBT = MCBELab.GenerateEntity(id, (chunk_x+Pos1, Pos2, chunk_z+Pos3), datavar)
                         if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
                         block_obj = Block(Struct1.block_palette[id], datavar)
@@ -2074,7 +2043,7 @@ class Codecs :
             StructureObject.block_palette.append( Block("minecraft:air") )
 
             def Container(id:str, data:List[Tuple[str, int, int, int]]) :
-                ContanierNBT = GenerateContainerNBT( id )
+                ContanierNBT = MCBELab.GenerateBlockEntityNBT( id )
                 if ContanierNBT is None : return None
                 for item in data :
                     itemID = item[0] if item[0].startswith("minecraft:") else "minecraft:%s"%item[0]
@@ -2088,13 +2057,13 @@ class Codecs :
                 return ContanierNBT
 
             def Sign(id:str, data:str) :
-                SignNBT = GenerateSignNBT(id)
+                SignNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if SignNBT is None : return None
                 SignNBT["FrontText"]["Text"] = nbt.TAG_String(data)
                 return SignNBT
 
             def Command(id:str, data:Tuple[str, int, int, str]) :
-                CommandBlockNBT = GenerateCommandBlockNBT(id)
+                CommandBlockNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
@@ -2111,8 +2080,7 @@ class Codecs :
                     nbtdata = data_obj[5] if len(data_obj) > 5 else []
 
                     if id.__class__ is str :
-                        print(data_obj)
-                        EntityNBT = GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
+                        EntityNBT = MCBELab.GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
                         if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
                         block_obj = Block(Struct1.block_palette[id], datavar)
@@ -2221,7 +2189,7 @@ class Codecs :
             StructureObject.block_palette.append( Block("minecraft:air") )
 
             def Container(id:str, data:List[Tuple[str, int, int, int]]) :
-                ContanierNBT = GenerateContainerNBT( id )
+                ContanierNBT = MCBELab.GenerateBlockEntityNBT( id )
                 if ContanierNBT is None : return None
                 for item in data :
                     itemID = item[0] if item[0].startswith("minecraft:") else "minecraft:%s"%item[0]
@@ -2235,13 +2203,13 @@ class Codecs :
                 return ContanierNBT
 
             def Sign(id:str, data:str) :
-                SignNBT = GenerateSignNBT(id)
+                SignNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if SignNBT is None : return None
                 SignNBT["FrontText"]["Text"] = nbt.TAG_String(data)
                 return SignNBT
 
             def Command(id:str, data:Tuple[str, int, int, str]) :
-                CommandBlockNBT = GenerateCommandBlockNBT(id)
+                CommandBlockNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
                 CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
@@ -2258,7 +2226,7 @@ class Codecs :
                     nbtdata = data_obj[5] if len(data_obj) > 5 else []
 
                     if id.__class__ is str :
-                        EntityNBT = GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
+                        EntityNBT = MCBELab.GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
                         if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
                         block_obj = Block(Struct1.block_palette[id], datavar)

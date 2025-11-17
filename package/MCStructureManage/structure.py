@@ -1,9 +1,9 @@
 from . import nbt, Block
-from .block import GetNbtID, GenerateCommandBlockNBT, GenerateContainerNBT, GenerateSignNBT
+from . import MCBELab
 from .__private import TypeCheckList, BiList
 from io import IOBase
-from typing import Union,List,Dict,Tuple,Literal,TypedDict
-import array, math
+from typing import Union,List,Dict,Tuple
+import array
 
 
 class CommonStructure :
@@ -35,7 +35,7 @@ class CommonStructure :
     * Coder注意事项1 : 部分属性均不可直接修改，请调用对象方法进行修改，以避免数据不正确
     """
 
-    BLOCKTYPE = Block                                                                  #公开该结构的使用方块对象类
+    BLOCKTYPE = Block  #公开该结构的使用方块对象类
     
     def __init__(self, size:Tuple[int, int, int] = (0, 0, 0)) :
         Volume = size[0] * size[1] * size[2]
@@ -96,18 +96,13 @@ class CommonStructure :
         if block.__class__ is int : 
             self.block_index[index] = block 
             Block_ID = self.block_palette[block].name
-            NBT_ID_NAME = GetNbtID(Block_ID)
         else : 
             self.block_index[index] = self.block_palette.append(block)
             Block_ID = block.name
-            NBT_ID_NAME = GetNbtID(Block_ID)
 
-        if not NBT_ID_NAME : return None
-        if NBT_ID_NAME == "CommandBlock" : NBTFunc = GenerateCommandBlockNBT
-        elif NBT_ID_NAME == "HangingSign" : NBTFunc = GenerateSignNBT
-        elif NBT_ID_NAME == "Sign" : NBTFunc = GenerateSignNBT
-        else : NBTFunc = GenerateContainerNBT
-        self.block_nbt[index] = NBTFunc(Block_ID)
+        NBTObj = MCBELab.GenerateBlockEntityNBT(Block_ID)
+        if not NBTObj : return None
+        self.block_nbt[index] = NBTObj
 
     def get_blockNBT(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, nbt.TAG_Compound] :
         index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
@@ -156,6 +151,15 @@ class CommonStructure :
                 and start_pos[2] <= blockZ <= end_pos[2]) : continue
             NewCommonStructure.set_blockNBT(blockX-start_pos[0], blockY-start_pos[1],
                 blockZ-start_pos[2], blockNBT.copy())
+            
+        for contains_index, contains_block_index in self.contain_index.items() :
+            blockX = contains_index // (sizeY * sizeZ)
+            blockY = (contains_index % (sizeY * sizeZ)) // sizeZ
+            blockZ = (contains_index % (sizeY * sizeZ)) % sizeZ
+            if  not(start_pos[0] <= blockX <= end_pos[0] and start_pos[1] <= blockY <= end_pos[1]
+                and start_pos[2] <= blockZ <= end_pos[2]) : continue
+            index = ((blockX-start_pos[0]) * self.size[1] + (blockY-start_pos[1])) * self.size[2] + (blockZ-start_pos[2])
+            NewCommonStructure.contain_index[index] = contains_block_index
 
         return NewCommonStructure
 
