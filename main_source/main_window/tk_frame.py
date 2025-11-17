@@ -86,7 +86,7 @@ class Bottom_Bar(tkinter.Canvas) :
         self.coords(text_id_4, int(canvas_width*0.87), canvas_height//2)
         self.menu_list = [text_id_0, text_id_1, text_id_2, text_id_3, text_id_4]
 
-    def update_menu_text(self,e:tkinter.Event) -> None:
+    def update_menu_text(self, e:tkinter.Event) -> None :
         test_pass = False
         for text_id_1 in self.menu_list :
             x1,y1,x2,y2 = self.bbox(text_id_1)
@@ -102,6 +102,13 @@ class Bottom_Bar(tkinter.Canvas) :
             break
         [self.itemconfig(text_id_2, fill="white") for text_id_2 in self.menu_list if (
         test_pass and text_id_1 != text_id_2 and text_id_2 != self.menu_list[-1])]
+
+    def inter_expand_pack(self) :
+        self.itemconfig(self.menu_list[2], text="返回")
+        self.after(10, lambda: self.itemconfig(self.menu_list[2], fill="#00ff00") )
+    
+    def exit_expand_pack(self) :
+        self.itemconfig(self.menu_list[2], text="拓展")
 
 
 class Bottom_Bar_Menu(tkinter.Menu) :
@@ -818,12 +825,13 @@ class BE_Structure_Tool(tkinter.Frame) :
 
                 try : int(e.widget.get())
                 except :
-                    str1 = e.widget.get()
+                    str1:str = e.widget.get()
                     e.widget.delete(0, "end")
-                    str1 = "".join(i for i in str1 if i in "0123456789")
-                    if not str1 : return None
-                    e.widget.insert("end", str1)
-                    Var = int(str1)
+                    str2 = ("-" if str1.startswith("-") else "") + "".join(i for i in str1 if i in "0123456789")
+                    if not str2 : return None
+                    e.widget.insert("end", str2)
+                    if str2.startswith("-") and len(str2) == 1 : Var = 0
+                    else : Var = int(str2)
                 else : Var = int(e.widget.get())
                 if list_index+sub_index >= len(self.merge_info) : return None
                 self.merge_info[list_index+sub_index][pos_index] = Var
@@ -1053,10 +1061,10 @@ class BE_Structure_Tool(tkinter.Frame) :
             "情绪json TimeBuilderJson",
             "",
             "",
-            "内部路径：",
+            "内部文件解析路径：",
             "<<Button_Copy_Inside_Path>>",
             "",
-            "外部路径：",
+            "外部文件解析路径：",
             "<<Button_Copy_Outside_Path>>",
             "",
             "",
@@ -1077,6 +1085,9 @@ class BE_Structure_Tool(tkinter.Frame) :
             "如果发现有文件无法被读取，且确定是结构文件，可以点击",
             "→→ 设置-联系作者-交流群 ←←",
             "在交流群中与作者进行技术交流，litematic文件暂时不会支持",
+            "",
+            "",
+            "免责声明：命令模拟器开发者不对文件来源负责，文件来源请用户自行解决。",
             "",
         ]
         
@@ -1252,7 +1263,7 @@ class BE_World_Tool(tkinter.Frame) :
                     real_path = os.path.join(outside_path, i)
                     dir_name = i.replace(inside_path, "", 1) + "(外部)"
                     world_list[dir_name] = {"real_path":real_path, "outside":True}
-            except : pass
+            except : traceback.print_exc()
 
         if set(world_list) != set(self.world_list) : 
             self.search_result.delete(0, tkinter.END)
@@ -1262,11 +1273,11 @@ class BE_World_Tool(tkinter.Frame) :
                 if os.path.isdir(real_path) and GetWorldEdtion(real_path) : 
                     self.search_result.insert(tkinter.END, dir)
                     if self.NowOpenWorldDirName != dir : self.copy_mcs2world_list.insert(tkinter.END, dir)
-                data["is_world"] = False
+                if zipfile.is_zipfile(real_path) : self.search_result.insert(0, dir)
             self.world_list = world_list
 
     def __init__(self, main_win, **karg) -> None :
-        from package.MCBEWorld import World
+        from package.MCBEWorld import World, GetWorldEdtion
         if main_win.platform == "android" :
             try : os.makedirs(self.android_outside_storage, exist_ok=True)
             except : pass
@@ -1279,13 +1290,42 @@ class BE_World_Tool(tkinter.Frame) :
         self.split_size = [99999, 99999, 99999]
         self.enable_split = tkinter.IntVar(main_win.window, 0)
         self.codecs = BE_Structure_Tool.__get_codecs__()
+        PosPattern = re.compile(r'@\[(-?\d+),(-?\d+),(-?\d+)\]~\[(-?\d+),(-?\d+),(-?\d+)\]')
 
-        def OpenWorld() :
+        def Unzip_file() :
             if not self.search_result.curselection() :
                 tkinter.messagebox.showerror("Error", "没有在列表框中\n选中世界")
                 return None
-            MainScreen.pack_forget(); MainScreen_1.pack()
+            Key:str = self.search_result.get( self.search_result.curselection()[0] )
+            Path = self.world_list[Key]["real_path"]
+            NewName = ".".join( Key.split(".")[:-1] ) + "_UZip"
+            if not zipfile.is_zipfile( Path ) :
+                tkinter.messagebox.showerror("Error", "此文件不是压缩文件")
+                return None
+
+            ZipFile1 = zipfile.ZipFile(self.world_list[Key]["real_path"], "r")
+            Inside_Dir = False
+            for zip_path in ZipFile1.namelist() :
+                if not zip_path.endswith("level.dat") : continue
+                if "".join(os.path.split(zip_path)) != "level.dat" : Inside_Dir = True
+                break
+            
+            if Inside_Dir : NewDirPath = os.path.realpath( os.path.join(Path, "..") )
+            else : NewDirPath = os.path.realpath( os.path.join(Path, "..", NewName) )
+            os.makedirs( NewDirPath, exist_ok=True )
+            ZipFile1.extractall( NewDirPath )
+            ZipFile1.close()
+            tkinter.messagebox.showinfo("Info", "解压已完成\n请在列表框内寻找被解压的文件")
+
+        def OpenWorld() :
+            if not self.search_result.curselection() :
+                tkinter.messagebox.showerror("Error", "没有在列表框中选中世界")
+                return None
             Key = self.search_result.get( self.search_result.curselection()[0] )
+            if not GetWorldEdtion(self.world_list[Key]["real_path"]) :
+                tkinter.messagebox.showerror("Error", "选择的文件不是世界存档")
+                return None
+            MainScreen.pack_forget(); MainScreen_1.pack()
             self.NowOpenWorld = World( self.world_list[Key]["real_path"] )
             self.NowOpenWorldDirName = Key
             self.open_title.config( text="已打开世界：%s" % Key )
@@ -1293,6 +1333,11 @@ class BE_World_Tool(tkinter.Frame) :
             self.mcs_list.delete(0, tkinter.END)
             self.mcs_list.insert(tkinter.END, *[i for i in self.NowOpenWorld.StructureManager])
             self.world_list.clear()
+            
+            [ i.delete(0, "end") for i in (StartX, StartY, StartZ, EndX, EndY, EndZ) ]
+            Pos:List[List[str]] = PosPattern.findall(Key)
+            if Pos : [ i.insert("end", j) for i,j in zip( (StartX, StartY, StartZ, EndX, EndY, EndZ), Pos[0] ) ]
+            #[ i.insert("end", j) for i,j in zip( (StartX, StartY, StartZ, EndX, EndY, EndZ), [-300, 3, 180, 290, 250, -160] ) ]
 
         def CloseAndSave() :
             MainScreen.pack(); MainScreen_1.pack_forget()
@@ -1334,17 +1379,18 @@ class BE_World_Tool(tkinter.Frame) :
             self.FileInfo2 = tkinter.Label(SubScreen_1, text="世界名：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
             self.FileInfo3 = tkinter.Label(SubScreen_1, text="世界类型：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
             self.FileInfo4 = tkinter.Label(SubScreen_1, text="MCS结构：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
-            self.FileInfo5 = tkinter.Label(SubScreen_1, text="加密密钥：", fg='black',font=tk_tool.get_default_font(10), width=26, height=1, anchor='w')
             self.FileInfo1.grid(row=1, column=0)
             self.FileInfo2.grid(row=2, column=0)
             self.FileInfo3.grid(row=3, column=0)
             self.FileInfo4.grid(row=4, column=0)
-            self.FileInfo5.grid(row=5, column=0)
+            tkinter.Label(SubScreen_1, text="  ", font=tk_tool.get_default_font(5), height=1).grid(row=5, column=0)
 
             frame_m4 = tkinter.Frame(MainScreen)
-            tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(5), height=1).pack()
-            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("打开世界提取结构"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
-                command=OpenWorld).pack()
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("解压ZIP"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
+                command=Unzip_file).pack(side="left")
+            tkinter.Label(frame_m4, text="  ", font=tk_tool.get_default_font(5), height=1).pack(side="left")
+            tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("打开世界"),font=tk_tool.get_default_font(10), bg="#9ae9d1",
+                command=OpenWorld).pack(side="left")
             frame_m4.pack()
 
         if "进入世界界面" :
@@ -1503,7 +1549,6 @@ class BE_World_Tool(tkinter.Frame) :
             EndY.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
             EndZ.bind("<FocusIn>",lambda a : self.main_win.set_focus_input(a))
             frame_m10.pack()
-            [ i.insert("end", "0") for i in (StartX, StartY, StartZ, EndX, EndY, EndZ) ]
 
             tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
             self.transfor_choose = ttk.Combobox(SubScreen_13, font=tk_tool.get_default_font(10), width=22, state='readonly', justify='center')
@@ -1622,7 +1667,7 @@ class BE_World_Tool(tkinter.Frame) :
         save_split_file_dir = os.path.join( save_root_path, save_file_name+"(分割)" )
         save_file_path = os.path.join( save_root_path, save_file_name + choose_trans_mode[0] )
 
-        self.input_box.insert(tkinter.END, "正在生成结构文件%s...\n" % save_file_name)
+        self.input_box.insert(tkinter.END, "\n正在生成结构文件%s...\n" % save_file_name)
         self.input_box.see(tkinter.END)
         try :
             BE_Structure_Tool.generate_file(self.enable_split.get(), self.transfor_choose.current(), self.split_size,
@@ -1631,7 +1676,7 @@ class BE_World_Tool(tkinter.Frame) :
             self.input_box.insert( tkinter.END, "转换发生错误，有疑问可询问开发者\n" )
             self.input_box.insert( tkinter.END, traceback.format_exc() + "\n\n" )
         else :
-            self.input_box.insert(tkinter.END, "结构文件%s已生成完毕\n" % save_file_name)
+            self.input_box.insert(tkinter.END, "\n结构文件 %s 已生成完毕。\n" % save_file_name)
             self.input_box.see(tkinter.END)
         self.back_button.config(state=tkinter.NORMAL)
 
@@ -1640,14 +1685,12 @@ class BE_World_Tool(tkinter.Frame) :
         self.input_box.delete("0.0", tkinter.END)
 
         Tips = [
-            "本工具用于读取存档文件夹中的结构内容，"
-            "zip文件与mcworld文件请先自行解压出存档文件夹。",
-            "合法的存档：进入首层文件夹后应存在level.dat与db文件夹。",
+            "本工具用于读取存档文件夹中的结构内容，支持zip文件与mcworld文件。",
             "",
-            "内部路径：",
+            "内部文件解析路径：",
             "<<Button_Copy_Inside_Path>>",
             "",
-            "外部路径：",
+            "外部文件解析路径：",
             "<<Button_Copy_Outside_Path>>",
             "",
             "",
@@ -1665,6 +1708,8 @@ class BE_World_Tool(tkinter.Frame) :
             "",
             "选区导出：指定存档内的起始和结束位置，起始和结束位置的方块都将会被导出至目标文件格式。",
             "",
+            "",
+            "免责声明：命令模拟器开发者不对文件来源负责，文件来源请用户自行解决。",
             "",
         ]
         
@@ -1691,27 +1736,31 @@ class BE_World_Tool(tkinter.Frame) :
         
         dir_name = self.search_result.get(Selector[0])
         dir_path = self.world_list[dir_name]["real_path"]
-        try :  WorldObject = World(dir_path)
+        try : 
+            if zipfile.is_zipfile(dir_path) :
+                self.FileInfo1.config(text="文件夹：%s" % dir_name)
+                self.FileInfo2.config(text="世界名：需解压Zip")
+                self.FileInfo3.config(text="世界类型：需解压Zip")
+                self.FileInfo4.config(text="MCS结构：需解压Zip")
+            else : WorldObject = World(dir_path)
         except PermissionError :
             self.FileInfo1.config(text="文件名：%s" % dir_name)
             self.FileInfo2.config(text="结世界名：文件权限不足")
             self.FileInfo3.config(text="世界类型：文件权限不足")
             self.FileInfo4.config(text="MCS结构：文件权限不足")
-            self.FileInfo5.config(text="加密密钥：文件权限不足")
         except :
             self.FileInfo1.config(text="文件夹：%s" % dir_name)
             self.FileInfo2.config(text="世界名：解析失败")
             self.FileInfo3.config(text="世界类型：解析失败")
             self.FileInfo4.config(text="MCS结构：解析失败")
-            self.FileInfo5.config(text="加密密钥：解析失败")
         else : 
+            if zipfile.is_zipfile(dir_path) : return None
             try : WorldName = WorldObject.world_nbt["LevelName"].value
             except : WorldName = "我的世界"
             self.FileInfo1.config(text="文件夹：%s" % dir_name)
             self.FileInfo2.config(text="世界名：%s" % WorldName)
-            self.FileInfo3.config(text="世界类型：%s" % 'Bedrock' if WorldObject.encrypt_key is None else 'Netease')
+            self.FileInfo3.config(text="世界类型：%s" % ('Bedrock' if WorldObject.encrypt_key is None else 'Netease'))
             self.FileInfo4.config(text="MCS结构：%s" % len( WorldObject.StructureManager ))
-            self.FileInfo5.config(text="加密密钥：%s" % WorldObject.encrypt_key)
 
     def transfor_setting(self, toplevel:tkinter.Toplevel) :
         parent_window = toplevel.master
@@ -2598,6 +2647,5 @@ class Log_Display(tkinter.Frame) :
     
     def copy_clipboard(self) :
         tk_tool.copy_to_clipboard(self.input_box4.get("0.0", "end")[:-1])
-
 
 

@@ -779,6 +779,10 @@
     "damage_max": null,
     "can_enchant": []
   },
+  "minecraft:camel_husk_spawn_egg": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:camel_spawn_egg": {
     "damage_max": null,
     "can_enchant": []
@@ -3926,6 +3930,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:netherite_horse_armor": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:netherite_ingot": {
     "damage_max": null,
     "can_enchant": []
@@ -4314,6 +4322,10 @@
     "can_enchant": []
   },
   "minecraft:paper": {
+    "damage_max": null,
+    "can_enchant": []
+  },
+  "minecraft:parched_spawn_egg": {
     "damage_max": null,
     "can_enchant": []
   },
