@@ -3679,7 +3679,7 @@
         "0b1110": {"ground_sign_direction": 14},
         "0b1111": {"ground_sign_direction": 15}
     },
-    "minecraft:double_stone_block_slab": {
+    "minecraft:double_stone_slab": {
         "default": {"stone_slab_type": "smooth_stone","top_slot_bit": false},
         "support_value": {"stone_slab_type": ["smooth_stone","sandstone","wood","cobblestone","brick","stone_brick","quartz","nether_brick"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type": "smooth_stone","top_slot_bit": false},
@@ -3699,7 +3699,7 @@
         "0b1110": {"stone_slab_type": "quartz","top_slot_bit": true},
         "0b1111": {"stone_slab_type": "nether_brick","top_slot_bit": true}
     },
-    "minecraft:stone_block_slab": {
+    "minecraft:stone_slab": {
         "default": {"stone_slab_type": "smooth_stone","top_slot_bit": false},
         "support_value": {"stone_slab_type": ["smooth_stone","sandstone","wood","cobblestone","brick","stone_brick","quartz","nether_brick"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type": "smooth_stone","top_slot_bit": false},
@@ -3751,7 +3751,7 @@
         "0b1100": {"wood_type": "acacia","top_slot_bit": true},
         "0b1101": {"wood_type": "dark_oak","top_slot_bit": true}
     },
-    "minecraft:double_stone_block_slab2": {
+    "minecraft:double_stone_slab2": {
         "default": {"stone_slab_type_2": "red_sandstone","top_slot_bit": false},
         "support_value": {"stone_slab_type_2": ["red_sandstone","purpur","prismarine_rough","prismarine_dark","prismarine_brick","mossy_cobblestone","smooth_sandstone","red_nether_brick"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type_2": "red_sandstone","top_slot_bit": false},
@@ -3771,7 +3771,7 @@
         "0b1110": {"stone_slab_type_2": "smooth_sandstone","top_slot_bit": true},
         "0b1111": {"stone_slab_type_2": "red_nether_brick","top_slot_bit": true}
     },
-    "minecraft:stone_block_slab2": {
+    "minecraft:stone_slab2": {
         "default": {"stone_slab_type_2": "red_sandstone","top_slot_bit": false},
         "support_value": {"stone_slab_type_2": ["red_sandstone","purpur","prismarine_rough","prismarine_dark","prismarine_brick","mossy_cobblestone","smooth_sandstone","red_nether_brick"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type_2": "red_sandstone","top_slot_bit": false},
@@ -3791,7 +3791,7 @@
         "0b1110": {"stone_slab_type_2": "smooth_sandstone","top_slot_bit": true},
         "0b1111": {"stone_slab_type_2": "red_nether_brick","top_slot_bit": true}
     },
-    "minecraft:double_stone_block_slab3": {
+    "minecraft:double_stone_slab3": {
         "default": {"stone_slab_type_3": "end_stone_brick","top_slot_bit": false},
         "support_value": {"stone_slab_type_3": ["end_stone_brick","smooth_red_sandstone","polished_andesite","andesite","diorite","polished_diorite","granite","polished_granite"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type_3": "end_stone_brick","top_slot_bit": false},
@@ -3811,7 +3811,7 @@
         "0b1110": {"stone_slab_type_3": "granite","top_slot_bit": true},
         "0b1111": {"stone_slab_type_3": "polished_granite","top_slot_bit": true}
     },
-    "minecraft:stone_block_slab3": {
+    "minecraft:stone_slab3": {
         "default": {"stone_slab_type_3": "end_stone_brick","top_slot_bit": false},
         "support_value": {"stone_slab_type_3": ["end_stone_brick","smooth_red_sandstone","polished_andesite","andesite","diorite","polished_diorite","granite","polished_granite"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type_3": "end_stone_brick","top_slot_bit": false},
@@ -3831,7 +3831,7 @@
         "0b1110": {"stone_slab_type_3": "granite","top_slot_bit": true},
         "0b1111": {"stone_slab_type_3": "polished_granite","top_slot_bit": true}
     },
-    "minecraft:double_stone_block_slab4": {
+    "minecraft:double_stone_slab4": {
         "default": {"stone_slab_type_4": "mossy_stone_brick","top_slot_bit": false},
         "support_value": {"stone_slab_type_4": ["mossy_stone_brick","smooth_quartz","stone","cut_sandstone","cut_red_sandstone"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type_4": "mossy_stone_brick","top_slot_bit": false},
@@ -3845,7 +3845,7 @@
         "0b1011": {"stone_slab_type_4": "cut_sandstone","top_slot_bit": true},
         "0b1100": {"stone_slab_type_4": "cut_red_sandstone","top_slot_bit": true}
     },
-    "minecraft:stone_block_slab4": {
+    "minecraft:stone_slab4": {
         "default": {"stone_slab_type_4": "mossy_stone_brick","top_slot_bit": false},
         "support_value": {"stone_slab_type_4": ["mossy_stone_brick","smooth_quartz","stone","cut_sandstone","cut_red_sandstone"],"top_slot_bit": [false,true]},
         "0b0": {"stone_slab_type_4": "mossy_stone_brick","top_slot_bit": false},

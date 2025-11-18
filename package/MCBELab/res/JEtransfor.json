@@ -162,7 +162,7 @@
         "minecraft:soul_wall_torch": {"name": "minecraft:soul_torch"},
         "minecraft:spawner": {"name": "minecraft:mob_spawner"},
         "minecraft:spruce_sign": {"name": "minecraft:spruce_standing_sign"},
-        "minecraft:stone_slab": {"name": "minecraft:stone_block_slab4"},
+        "minecraft:stone_slab": {"name": "minecraft:stone_slab4"},
         "minecraft:stonecutter": {"name": "minecraft:stonecutter_block"},
         "minecraft:sugar_cane": {"name": "minecraft:reeds"},
         "minecraft:tall_seagrass": {"name": "minecraft:seagrass"},
