@@ -60,6 +60,7 @@ SpecialStates = {"direction":{"south":0, "west":1, "north":2, "east":3},
 def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str, Union[bool, int, str]]] :
     if id.endswith("seaLantern") : id = "sea_lantern"
     BlockID = f"minecraft:{id}" if ":" not in id else id
+    BlockID = OldBlockData["block_id"].get(BlockID, BlockID)
 
     if BlockID in BlockState and value.__class__ is int :
         NewBlockID = BlockID

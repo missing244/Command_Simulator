@@ -89,6 +89,36 @@ class Schem_V1 :
         else : _file = buffer
         nbt.write_to_nbt_file(_file, NBT, zip_mode="gzip" ,byteorder="big")
 
+class Schem_V2(Schem_V1) :
+    """
+    Schem 结构文件对象
+    -----------------------
+    * 管理 .schem 为后缀的大端gzip压缩的nbt文件
+    * 方块按照 yzx 顺序进行储存（x坐标变化最频繁）
+    * 此对象并不能完整保留所有储存的数据
+    -----------------------
+    * 可用属性 size : 结构长宽高(x, y, z)
+    * 可用属性 block_index : 方块索引列表（数量与结构体积相同）
+    * 可用属性 block_palette : 方块列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO]) :
+        NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
+
+        StructureObject = cls()
+        StructureObject.size[0] = NBT["Width"].value
+        StructureObject.size[1] = NBT["Height"].value
+        StructureObject.size[2] = NBT["Length"].value
+        StructureObject.block_index = NBT['Blocks']['Data'].value
+        StructureObject.block_palette.update((j.value, i) for i,j in NBT['Blocks']['Palette'].items())
+        StructureObject.block_nbt.extend(NBT['Blocks'].get("BlockEntities", []))
+
+        return StructureObject
+
 
 """
 Schematic -> <'TAG_Compound'
@@ -114,7 +144,7 @@ Schematic -> <'TAG_Compound'
     >
 >
 """
-class Schem_V2(Schem_V1) :
+class Schem_V3(Schem_V1) :
     """
     Schem 结构文件对象
     -----------------------

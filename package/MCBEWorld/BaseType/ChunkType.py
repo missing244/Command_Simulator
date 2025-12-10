@@ -72,9 +72,24 @@ class SubChunkType :
 
         ChunkObject = cls()
         chunk_version = bytes_io.read(1)[0]
-        #print(chunk_version)
-        if chunk_version > 0 :
-            sub_layers = bytes_io.read(2)[0]
+        if chunk_version == 0 :
+            block_index_bytes = bytes_io.read(4096)
+            block_data_bytes = bytes_io.read(2048)
+            if len(block_index_bytes) != 4096 : raise RuntimeError("区块数据不完整")
+            if len(block_data_bytes) != 2048 : raise RuntimeError("区块数据不完整")
+            IndexBytes = chunk_upgrade(ChunkObject.BlockIndex, block_index_bytes, block_data_bytes)
+            BlockIndexRecord = array.array("H", IndexBytes)
+            BlockPallate = [None] * max(BlockIndexRecord)
+            for i,j in enumerate(BlockIndexRecord) :
+                if not j : continue
+                NumID, DataID = i>>8, i&0b1111_1111
+                BlockID, BlockState = MCBELab.TransforBlock(OldVersionRunTimeBlock[NumID], DataID)
+                BlockPallate[j-1] = BlockPermutationType(BlockID, BlockState)
+            ChunkObject.BlockPalette.clear()
+            ChunkObject.BlockPalette.extend(BlockPallate)
+        elif chunk_version >= 8 :
+            if chunk_version > 8 : sub_layers = bytes_io.read(2)[0]
+            else : sub_layers = bytes_io.read(1)[0]
             LayersName = [("BlockIndex", "BlockPalette"), ("ContainBlockIndex", "ContainBlockPalette")]
             for i in range(sub_layers) :
                 block_use_bit = bytes_io.read(1)[0] >> 1 # 字节使用的bit位数
@@ -90,21 +105,6 @@ class SubChunkType :
                 BlockList.clear()
                 for j in range(block_count) : BlockList.append( 
                     BlockPermutationType.from_nbt( nbt.read_from_nbt_file(bytes_io, byteorder="little").get_tag() ) )
-        else :
-            block_index_bytes = bytes_io.read(4096)
-            block_data_bytes = bytes_io.read(2048)
-            if len(block_index_bytes) != 4096 : raise RuntimeError("区块数据不完整")
-            if len(block_data_bytes) != 2048 : raise RuntimeError("区块数据不完整")
-            IndexBytes = chunk_upgrade(ChunkObject.BlockIndex, block_index_bytes, block_data_bytes)
-            BlockIndexRecord = array.array("H", IndexBytes)
-            BlockPallate = [None] * max(BlockIndexRecord)
-            for i,j in enumerate(BlockIndexRecord) :
-                if not j : continue
-                NumID, DataID = i>>8, i&0b1111_1111
-                BlockID, BlockState = MCBELab.TransforBlock(OldVersionRunTimeBlock[NumID], DataID)
-                BlockPallate[j-1] = BlockPermutationType(BlockID, BlockState)
-            ChunkObject.BlockPalette.clear()
-            ChunkObject.BlockPalette.extend(BlockPallate)
 
         return ChunkObject
 

@@ -56,6 +56,7 @@
         "minecraft:end_stone_bricks": {"name": "minecraft:end_bricks"},
         "minecraft:flowering_azalea_leaves": {"name": "minecraft:azalea_leaves_flowered"},
         "minecraft:frogspawn": {"name": "minecraft:frog_spawn"},
+        "minecraft:grass": {"name": "minecraft:short_grass"},
         "minecraft:gray_banner": {"name": "minecraft:standing_banner"},
         "minecraft:gray_bed": {"name": "minecraft:bed"},
         "minecraft:gray_wall_banner": {"name": "minecraft:wall_banner"},
@@ -226,6 +227,10 @@
         },
         "tall_seagrass$":{
             "half": {"BEstate":"sea_grass_type", "lower":"double_bot", "upper":"double_top"}
+        },
+        "lever$":{
+            "facing": {"BEstate":"lever_direction", "north":"north", "south":"south", "west":"west", "east":"east"},
+            "face": {"BEstate":"lever_direction", "floor":"up_east_west", "ceiling":"down_east_west"}
         }
     },
     "State":{

@@ -134,7 +134,9 @@ class BlockPermutationType :
     def from_nbt(cls, nbt_data:nbt.TAG_Compound) :
         if not isinstance(nbt_data, nbt.TAG_Compound) or not nbt_data.get("name", "") : return None
         Identifier = nbt_data["name"].value
-        States = dict( nbt_data.get("states", dict()).value.items() )
+        if "states" in nbt_data : States = dict( nbt_data.get("states", dict()).value.items() )
+        elif "val" in nbt_data : States = MCBELab.TransforBlock(Identifier, nbt_data["val"].value)[1]
+        else : States = {}
         Version = nbt_data.get("version", ctypes.c_int32(17959425)).value
         
         for i,j in States.items() :

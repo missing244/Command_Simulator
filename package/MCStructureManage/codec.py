@@ -410,8 +410,7 @@ class Codecs :
             if DataType != "nbt" : return False
 
             NBT = Data
-            if "Version" in NBT and NBT["Version"].value <= 2 and \
-                "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
+            if "Version" in NBT and "Width" in NBT and "Height" in NBT and 'Length' in NBT and \
                 "BlockData" in NBT and 'Palette' in NBT : return True
             else : return False
 
@@ -471,14 +470,29 @@ class Codecs :
             if DataType != "nbt" : return False
 
             NBT = Data
-            if "Schematic" not in NBT : return False
-            if "Version" in NBT["Schematic"] and NBT["Schematic"]["Version"].value == 3 and \
-                "Width" in NBT["Schematic"] and "Height" in NBT["Schematic"] and 'Length' in NBT["Schematic"] and \
-                "Blocks" in NBT["Schematic"] : return True
+            if "Version" in NBT and "Width" in NBT and "Height" in NBT and \
+                'Length' in NBT and "Blocks" in NBT : return True
             else : return False
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
             Schma_File = StructureSCHEM.Schem_V2.from_buffer(Reader)
+            self.operation_structure(Schma_File)
+
+    class SCHEM_V3(SCHEM_V1) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+
+            NBT = Data
+            if "Schematic" not in NBT : return False
+            if "Version" in NBT["Schematic"] and "Width" in NBT["Schematic"] and "Height" in NBT["Schematic"] and \
+                'Length' in NBT["Schematic"] and "Blocks" in NBT["Schematic"] : return True
+            else : return False
+
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
+            Schma_File = StructureSCHEM.Schem_V3.from_buffer(Reader)
             self.operation_structure(Schma_File)
 
     class MIANYANG_V1(CodecsBase) :
@@ -2552,7 +2566,7 @@ SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWA
     Codecs.MIANYANG_V1, Codecs.MIANYANG_V2, Codecs.MIANYANG_V3, Codecs.GANGBAN_V1, Codecs.GANGBAN_V2,
     Codecs.GANGBAN_V3, Codecs.GANGBAN_V4, Codecs.GANGBAN_V5, Codecs.GANGBAN_V6, Codecs.GANGBAN_V7, 
     Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, Codecs.FUHONG_V5, 
-    Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2]
+    Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2, Codecs.SCHEM_V3]
 
 def registerCodecs(CodecsType:type) :
     if Codecs.CodecsBase not in CodecsType.mro() :

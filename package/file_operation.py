@@ -1,7 +1,23 @@
 __version__ = (1, 0, 0)
 
-import os
-from typing import List,Tuple,Literal,Union
+import os, subprocess, platform, io, shutil, sys
+import builtins
+import importlib.util
+import importlib.machinery
+from types import ModuleType
+from pathlib import Path
+from contextlib import contextmanager
+from typing import List,Tuple,Literal,Union,Generator
+
+
+def GetPlatform() :
+  result = subprocess.run("getprop ro.build.version.release", shell=True, capture_output=True, text=True)
+  system_info = platform.uname()
+  if system_info.system.lower() == 'windows' : return 'windows'
+  elif system_info.system.lower() == 'android' : return 'android'
+  elif result.returncode == 0 : return 'android'
+  elif system_info.system.lower() == 'linux' and system_info.machine == "x86_64" : return 'linux_amd64'
+  elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : return 'linux_arm64'
 
 
 def is_file(path:str) :
@@ -45,11 +61,11 @@ def move_all_file(start:str,end:str):
             except : pass
 
 def delete_all_file(path1:str):
-        file1 = search_file(path1)
-        for group1 in file1 :
-            if group1[0] == "file" : os.remove(group1[2])
-            try : os.removedirs(group1[1])
-            except : pass
+    file1 = search_file(path1)
+    for group1 in file1 :
+        if group1[0] == "file" : os.remove(group1[2])
+        try : os.removedirs(group1[1])
+        except : pass
 
 def copy_all_file(start:str,end:str):
         file1 = search_file(start)
@@ -91,3 +107,57 @@ def file_in_path(path:str):
         for base,_,file_list in rp_file_list :
             for obj3 in file_list : text_list_1.append( os.path.join( base, obj3 ) )
         return text_list_1
+
+
+
+class PathSandBox :
+    
+    def __init__(self, sandboxName:str) :
+        self.__platfrom = GetPlatform()
+        self.internal_path = os.path.join("functionality", sandboxName)
+        self.outside_path = os.path.join("/storage/emulated/0/Documents/Pydroid3/Command_Simulator", sandboxName)
+        self.make_dir("all")
+    
+    def path_exist(self, path_type:Literal["internal", "outside", "all"], local_path:str) :
+        if path_type == "internal" or path_type == "all" : 
+            local_path_0 = os.path.join(self.internal_path, local_path)
+            return os.path.exists( local_path_0 )
+        elif path_type == "outside" or path_type == "all" : 
+            local_path_0 = os.path.join(self.outside_path, local_path)
+            return self.__platfrom == "android" and os.path.exists( local_path_0 )
+
+    def delete_path(self, path_type:Literal["internal", "outside", "all"], local_path:str) :
+        if path_type == "internal" or path_type == "all" :
+            _path = os.path.join(self.internal_path, local_path)
+            if os.path.isfile(_path) : os.remove(_path)
+            elif os.path.isdir(_path) : delete_all_file(_path)
+        if (path_type == "outside" or path_type == "all") and self.__platfrom == "android" : 
+            _path = os.path.join(self.outside_path, local_path)
+            if os.path.isfile(_path) : os.remove(_path)
+            elif os.path.isdir(_path) : delete_all_file(_path)
+
+    def list_dirs(self, path_type:Literal["internal", "outside", "all"], local_path:str) -> Generator[
+        Tuple[Literal["internal", "outside"], Literal["file", "dir"], str], None, None] :
+        list1, list2 = [], []
+        if path_type == "internal" or path_type == "all" : list1.append("internal") ; list2.append(self.internal_path)
+        elif path_type == "outside" or path_type == "all" : list1.append("outside") ; list2.append(self.outside_path)
+        for path_type, path in zip( list1, list2 ) :
+            local_path_0 = os.path.join(path, local_path)
+            if not os.path.exists( local_path_0 ) : continue
+            for file_name in os.listdir( local_path_0 ) :
+                file_path = os.path.join(local_path_0, file_name)
+                if is_dir( file_path ) : yield (path_type, "dir", os.path.join(local_path, file_name) )
+                else : yield (path_type, "file", os.path.join(local_path, file_name) )
+
+    def make_dir(self, path_type:Literal["internal", "outside", "all"], local_path:str="") :
+        if path_type == "internal" or path_type == "all" :
+            os.makedirs( os.path.join(self.internal_path, local_path), exist_ok=True)
+        if (path_type == "outside" or path_type == "all") and self.__platfrom == "android" : 
+            try : os.makedirs( os.path.join(self.outside_path, local_path), exist_ok=True)
+            except : pass
+
+    def file_operate(self, path_type:Literal["internal", "outside"], local_path:str, *arg, **karg) -> io.IOBase:
+        if path_type == "internal" : return open( os.path.join(self.internal_path, local_path), *arg, **karg)
+        elif path_type == "outside" : return open( os.path.join(self.outside_path, local_path), *arg, **karg)
+
+

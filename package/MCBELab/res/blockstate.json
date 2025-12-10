@@ -2428,14 +2428,14 @@
     "minecraft:glow_frame": {
         "default": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
         "support_value": {"facing_direction": [0,1,5,4,3,2],"item_frame_map_bit": [false,true],"item_frame_photo_bit": [false,true]},
-        "0b0": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
-        "0b1": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
-        "0b10": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
-        "0b11": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
-        "0b100": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
-        "0b101": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
-        "0b110": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false},
-        "0b111": {"facing_direction": 0,"item_frame_map_bit": false,"item_frame_photo_bit": false}
+        "0b0": {"facing_direction": 5,"item_frame_map_bit": false,"item_frame_photo_bit": false},
+        "0b1": {"facing_direction": 4,"item_frame_map_bit": false,"item_frame_photo_bit": false},
+        "0b10": {"facing_direction": 3,"item_frame_map_bit": false,"item_frame_photo_bit": false},
+        "0b11": {"facing_direction": 2,"item_frame_map_bit": false,"item_frame_photo_bit": false},
+        "0b100": {"facing_direction": 5,"item_frame_map_bit": false,"item_frame_photo_bit": false},
+        "0b101": {"facing_direction": 4,"item_frame_map_bit": false,"item_frame_photo_bit": false},
+        "0b110": {"facing_direction": 3,"item_frame_map_bit": false,"item_frame_photo_bit": false},
+        "0b111": {"facing_direction": 2,"item_frame_map_bit": false,"item_frame_photo_bit": false}
     },
     "minecraft:jigsaw": {
         "default": {"facing_direction": 0,"rotation": false},
