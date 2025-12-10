@@ -274,7 +274,7 @@ def mode_using(main_win, focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry]
             if isinstance(focus_input, tkinter.Text) : c1['module'].Copy_event(focus_input)
         else :
             focus_input.event_generate("<<Cut>>")
-            focus_input.event_generate("<ButtonRelease>")
+            focus_input.event_generate("<ButtonRelease>", state=256)
     elif mode == "copy" : 
         c1 = main_win.get_display_expand_pack()
         if c1 is not None and hasattr(c1['module'], "Copy_event") :
@@ -292,7 +292,7 @@ def mode_using(main_win, focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry]
                 if len(item.getText()) : focus_input.insert(tkinter.INSERT,item.getText())
                 else : focus_input.event_generate("<<Paste>>")
         else : focus_input.event_generate("<<Paste>>")
-        focus_input.event_generate("<ButtonRelease>")
+        focus_input.event_generate("<ButtonRelease>", state=256)
     elif mode == "paste_object" :
         try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
         except : pass
@@ -304,17 +304,17 @@ def mode_using(main_win, focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry]
     elif mode == "undo" : 
         try : focus_input.edit_undo()
         except : pass
-        focus_input.event_generate("<ButtonRelease>")
+        focus_input.event_generate("<ButtonRelease>", state=256)
     elif mode == "redo" : 
         try : focus_input.edit_redo()
         except : pass
-        focus_input.event_generate("<ButtonRelease>")
+        focus_input.event_generate("<ButtonRelease>", state=256)
     elif mode == "return" : 
         if not(isinstance(focus_input,tkinter.Entry) or isinstance(focus_input,ttk.Entry)) : 
             try : focus_input.delete(tkinter.SEL_FIRST, tkinter.SEL_LAST)
             except : pass
             focus_input.insert(tkinter.INSERT,"\n")
-        focus_input.event_generate("<ButtonRelease>")
+        focus_input.event_generate("<ButtonRelease>", state=256)
     elif mode == "clear_all" : 
         focus_input.event_generate("<<SelectAll>>")
         focus_input.event_generate("<<Clear>>")

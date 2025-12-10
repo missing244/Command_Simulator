@@ -2641,15 +2641,19 @@ class Log_Display(tkinter.Frame) :
 
     def set_log(self, error_msg:str, log:str, save_path:str=None) :
         self.last_frame_name = self.main_win.now_display_frame
+        self.input_box4.insert("end", time.strftime('%Y-%m-%d %H:%M:%S')+"\n")
         self.input_box4.insert("end", error_msg+"\n")
         self.input_box4.insert("end", log)
         self.input_box4.insert("end", "\n\n\n")
         self.main_win.set_display_frame("log_display")
+        self.input_box4.see("end")
         tkinter.messagebox.showerror("Error", error_msg)
 
 
     def back_to_frame(self) :
-        self.main_win.set_display_frame(self.last_frame_name)
+        self.pack_forget()
+        self.main_win.display_frame["choose_expand"].pack()
+        self.main_win.now_display_frame = "choose_expand"
     
     def copy_clipboard(self) :
         tk_tool.copy_to_clipboard(self.input_box4.get("0.0", "end")[:-1])
