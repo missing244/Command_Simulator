@@ -524,7 +524,8 @@ class Codecs :
                 o_x, o_z = chunk["startX"]-PosStart[0], chunk["startZ"]-PosStart[2]
                 for block in chunk["blocks"] :
                     posx, posy, posz = o_x + block[2], block[3] - PosStart[1], o_z + block[4]
-                    block_obj = Block(Struct1.block_palette[block[0]], block[1])
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Struct1.block_palette[block[0]], block[1])
+                    block_obj = Block(Ra_ID, Ra_State)
                     StructureObject.set_block(posx, posy, posz, block_obj)
 
                     if block[-1].__class__ is not str : continue
@@ -641,7 +642,8 @@ class Codecs :
                 o_x, o_z = chunk["startX"]-PosStart[0], chunk["startZ"]-PosStart[2]
                 for block in chunk["blocks"] :
                     posx, posy, posz = o_x + block[2], block[3] - PosStart[1], o_z + block[4]
-                    block_obj = Block(Struct1.block_palette[block[0]], block[1])
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Struct1.block_palette[block[0]], block[1])
+                    block_obj = Block(Ra_ID, Ra_State)
                     StructureObject.set_block(posx, posy, posz, block_obj)
 
                     if block[-1].__class__ is not str : continue
@@ -777,7 +779,8 @@ class Codecs :
                 o_x, o_z = chunk["startX"]-PosStart[0], chunk["startZ"]-PosStart[2]
                 for block in chunk["blocks"] :
                     posx, posy, posz = o_x + block[2], block[3] - PosStart[1], o_z + block[4]
-                    block_obj = Block(Struct1.block_palette[block[0]], block[1])
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Struct1.block_palette[block[0]], block[1])
+                    block_obj = Block(Ra_ID, Ra_State)
                     StructureObject.set_block(posx, posy, posz, block_obj)
 
                     if block[-1].__class__ is not str : continue
@@ -904,7 +907,9 @@ class Codecs :
 
             O_X, O_Y, O_Z = Struct1.origin[0], Struct1.origin[1], Struct1.origin[2]
             for block in Struct1.blocks :
-                block_obj = Block(Struct1.block_palette[block["id"]], block.get("aux", 0))
+                Ra_ID, Ra_State = Struct1.block_palette[block["id"]], block.get("aux", 0)
+                Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                block_obj = Block(Ra_ID, Ra_State)
                 posx, posy, posz = block["p"][0] - O_X, block["p"][1] - O_Y, block["p"][2] - O_Z
                 StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -912,14 +917,14 @@ class Codecs :
                 node = nbt.NBT_Builder()
                 BlockData = node.compound(
                     id = node.string("CommandBlock"),
-                    Command = node.string(block["cmds"]["cmd"]),
-                    CustomName = node.string(block["cmds"]["name"]),
+                    Command = node.string(block["cmds"].get("cmd", "")),
+                    CustomName = node.string(block["cmds"].get("name", "")),
                     ExecuteOnFirstTick = node.byte(1),
-                    auto = node.byte(block["cmds"]["on"]),
-                    TickDelay = node.int(block["cmds"]["tick"]),
-                    TrackOutput = node.byte(block["cmds"]["should"]),
+                    auto = node.byte(block["cmds"].get("on", 1)),
+                    TickDelay = node.int(block["cmds"].get("tick", 0)),
+                    TrackOutput = node.byte(block["cmds"].get("should", 1)),
                     conditionalMode = node.byte(block_obj.states["conditional_bit"]),
-                    Version = node.int(38 if ExecuteTest.match(block["cmds"]["cmd"]) else 19),
+                    Version = node.int(38 if ExecuteTest.match(block["cmds"].get("cmd", "")) else 19),
                 ).build()
                 StructureObject.set_blockNBT(posx, posy, posz, BlockData)
 
@@ -984,7 +989,9 @@ class Codecs :
             O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
 
             for block in Struct1.blocks :
-                block_obj = Block(Struct1.block_palette[block["id"]], block.get("aux", 0))
+                Ra_ID, Ra_State = Struct1.block_palette[block["id"]], block.get("aux", 0)
+                Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                block_obj = Block(Ra_ID, Ra_State)
                 posx, posy, posz = block["p"][0] - O_X, block["p"][1] - O_Y, block["p"][2] - O_Z
                 StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -992,14 +999,14 @@ class Codecs :
                 node = nbt.NBT_Builder()
                 BlockData = node.compound(
                     id = node.string("CommandBlock"),
-                    Command = node.string(block["cmds"]["cmd"]),
-                    CustomName = node.string(block["cmds"]["name"]),
+                    Command = node.string(block["cmds"].get("cmd", "")),
+                    CustomName = node.string(block["cmds"].get("name", "")),
                     ExecuteOnFirstTick = node.byte(1),
-                    auto = node.byte(block["cmds"]["on"]),
-                    TickDelay = node.int(block["cmds"]["tick"]),
-                    TrackOutput = node.byte(block["cmds"]["should"]),
+                    auto = node.byte(block["cmds"].get("on", 1)),
+                    TickDelay = node.int(block["cmds"].get("tick", 0)),
+                    TrackOutput = node.byte(block["cmds"].get("should", 1)),
                     conditionalMode = node.byte(block_obj.states["conditional_bit"]),
-                    Version = node.int(38 if ExecuteTest.match(block["cmds"]["cmd"]) else 19),
+                    Version = node.int(38 if ExecuteTest.match(block["cmds"].get("cmd", "")) else 19),
                 ).build()
                 StructureObject.set_blockNBT(posx, posy, posz, BlockData)
 
@@ -1063,7 +1070,8 @@ class Codecs :
             for chunk in Struct1.chunks :
                 o_x, o_y, o_z = chunk["grids"]["x"]-O_X, O_Y, chunk["grids"]["z"]-O_Z
                 for block in chunk["data"] :
-                    block_obj = Block(Struct1.block_palette[block[0]], block[1])
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Struct1.block_palette[block[0]], block[1])
+                    block_obj = Block(Ra_ID, Ra_State)
                     posx, posy, posz = block[2] + o_x, block[3] - o_y, block[4] + o_z
                     StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -1156,7 +1164,8 @@ class Codecs :
             for chunk in Struct1.chunks :
                 o_x, o_y, o_z = chunk["grids"]["x"]-O_X, O_Y, chunk["grids"]["z"]-O_Z
                 for block in chunk["data"] :
-                    block_obj = Block(Struct1.block_palette[block[0]], block[1])
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Struct1.block_palette[block[0]], block[1])
+                    block_obj = Block(Ra_ID, Ra_State)
                     posx, posy, posz = block[2] + o_x, block[3] - o_y, block[4] + o_z
                     StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -1249,24 +1258,26 @@ class Codecs :
             while Pointer < blocklen :
                 datatype, blockindex, datavar = blockdata[Pointer], blockdata[Pointer+4], blockdata[Pointer+5]
                 posx, posy, posz = blockdata[Pointer+1], blockdata[Pointer+2], blockdata[Pointer+3]
-                if datatype != 1 : StructureObject.set_block(posx, posy, posz, Block(Struct1.block_palette[blockindex], datavar))
+                if datatype != 1 : 
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Struct1.block_palette[blockindex], datavar)
+                    StructureObject.set_block(posx, posy, posz, Block(Ra_ID, Ra_State))
                 Pointer += 6
                 if datatype == 3 : continue
 
-                blocknbt =  blockdata[Pointer]
+                blocknbt = blockdata[Pointer]
                 Pointer += 1
                 if datatype == 1 :
                     node = nbt.NBT_Builder()
                     BlockData = node.compound(
                         id = node.string("CommandBlock"),
-                        Command = node.string(blocknbt["cmd"]),
-                        CustomName = node.string(blocknbt["name"]),
+                        Command = node.string(blocknbt.get("cmd", "")),
+                        CustomName = node.string(blocknbt.get("name", "")),
                         ExecuteOnFirstTick = node.byte(1),
-                        auto = node.byte(blocknbt["auto"]),
-                        TickDelay = node.int(blocknbt["delay"]),
+                        auto = node.byte(blocknbt.get("auto", 1)),
+                        TickDelay = node.int(blocknbt.get("delay", 0)),
                         TrackOutput = node.byte(1),
-                        conditionalMode = node.byte(blocknbt["condition"]),
-                        Version = node.int(38 if ExecuteTest.match(blocknbt["cmd"]) else 19),
+                        conditionalMode = node.byte(blocknbt.get("condition", 0)),
+                        Version = node.int(38 if ExecuteTest.match(blocknbt.get("cmd", "")) else 19),
                     ).build()
                     StructureObject.set_block(posx, posy, posz, Block(CommandBlockGangBan[datavar], blockindex))
                     StructureObject.set_blockNBT(posx, posy, posz, BlockData)
@@ -1274,12 +1285,13 @@ class Codecs :
                     Contanier = MCBELab.GenerateBlockEntityNBT( Struct1.block_palette[blockindex] )
                     if Contanier is None : continue
                     for item in blocknbt :
+                        if "ns" not in item or "slot" not in item : continue
                         if None in set(item.values()) : continue
                         itemID = item["ns"] if item["ns"].startswith("minecraft:") else "minecraft:" + item["ns"]
                         Contanier["Items"].append(nbt.TAG_Compound({
                             "Name": nbt.TAG_String(itemID),
-                            "Count": nbt.TAG_Byte(item["num"]),
-                            "Damage": nbt.TAG_Short(item["aux"]),
+                            "Count": nbt.TAG_Byte(item.get("num", 1)),
+                            "Damage": nbt.TAG_Short(item.get("aux", 0)),
                             "Slot": nbt.TAG_Byte(item["slot"]),
                             "Block": Block(itemID, 0).to_nbt()
                         }))
@@ -1370,28 +1382,31 @@ class Codecs :
                     BlockData = node.compound(
                         id = node.string("CommandBlock"),
                         Command = node.string(block[-1]["cmd"]),
-                        CustomName = node.string(block[-1]["name"]),
+                        CustomName = node.string(block[-1].get("name", "")),
                         ExecuteOnFirstTick = node.byte(1),
-                        auto = node.byte(block[-1]["auto"]),
-                        TickDelay = node.int(block[-1]["delay"]),
+                        auto = node.byte(block[-1].get("auto", 1)),
+                        TickDelay = node.int(block[-1].get("delay", 0)),
                         TrackOutput = node.byte(1),
-                        conditionalMode = node.byte(block[-1]["condition"]),
+                        conditionalMode = node.byte(block[-1].get("condition", 0)),
                         Version = node.int(38 if ExecuteTest.match(block[-1]["cmd"]) else 19),
                     ).build()
                     StructureObject.set_block(*real_pos, Block(CommandBlockGangBan[block[4]], block[3]))
                     StructureObject.set_blockNBT(*real_pos, BlockData)
                 else : 
-                    StructureObject.set_block(*real_pos, Block(Struct1.block_palette[block[3]], block[4]))
+                    Ra_ID, Ra_State = Struct1.block_palette[block[3]], block[4]
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                    StructureObject.set_block(*real_pos, Block(Ra_ID, Ra_State))
                     if block[-1].__class__ is list :
                         Contanier = MCBELab.GenerateBlockEntityNBT( Struct1.block_palette[block[3]] )
                         if Contanier is None : continue
                         for item in block[-1] :
+                            if "ns" not in item or "slot" not in item : continue
                             if None in set(item.values()) : continue
                             itemID = item["ns"] if item["ns"].startswith("minecraft:") else "minecraft:" + item["ns"]
                             Contanier["Items"].append(nbt.TAG_Compound({
                                 "Name": nbt.TAG_String(itemID),
-                                "Count": nbt.TAG_Byte(item["num"]),
-                                "Damage": nbt.TAG_Short(item["aux"]),
+                                "Count": nbt.TAG_Byte(item.get("num", 1)),
+                                "Damage": nbt.TAG_Short(item.get("aux", 0)),
                                 "Slot": nbt.TAG_Byte(item["slot"]),
                                 "Block": Block(itemID, 0).to_nbt()
                             }))
@@ -1492,18 +1507,20 @@ class Codecs :
                     BlockData = node.compound(
                         id = node.string("CommandBlock"),
                         Command = node.string(block[-1]["cmd"]),
-                        CustomName = node.string(block[-1]["name"]),
+                        CustomName = node.string(block[-1].get("name", "")),
                         ExecuteOnFirstTick = node.byte(1),
-                        auto = node.byte(block[-1]["auto"]),
-                        TickDelay = node.int(block[-1]["delay"]),
+                        auto = node.byte(block[-1].get("auto", 1)),
+                        TickDelay = node.int(block[-1].get("delay", 0)),
                         TrackOutput = node.byte(1),
-                        conditionalMode = node.byte(block[-1]["condition"]),
+                        conditionalMode = node.byte(block[-1].get("condition", 0)),
                         Version = node.int(38 if ExecuteTest.match(block[-1]["cmd"]) else 19),
                     ).build()
                     StructureObject.set_block(posx, posy, posz, Block(CommandBlockGangBan[block[4]], block[3]))
                     StructureObject.set_blockNBT(posx, posy, posz, BlockData)
                 else : 
-                    StructureObject.set_block(posx, posy, posz, Block(Struct1.block_palette[block[3]], block[4]))
+                    Ra_ID, Ra_State = Struct1.block_palette[block[3]], block[4]
+                    Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                    StructureObject.set_block(posx, posy, posz, Block(Ra_ID, Ra_State))
                     if block[-1].__class__ is list :
                         Contanier = MCBELab.GenerateBlockEntityNBT( Struct1.block_palette[block[3]] )
                         if Contanier is None : continue
@@ -1512,8 +1529,8 @@ class Codecs :
                             itemID = item["ns"] if item["ns"].startswith("minecraft:") else "minecraft:" + item["ns"]
                             Contanier["Items"].append(nbt.TAG_Compound({
                                 "Name": nbt.TAG_String(itemID),
-                                "Count": nbt.TAG_Byte(item["num"]),
-                                "Damage": nbt.TAG_Short(item["aux"]),
+                                "Count": nbt.TAG_Byte(item.get("num", 1)),
+                                "Damage": nbt.TAG_Short(item.get("aux", 0)),
                                 "Slot": nbt.TAG_Byte(item["slot"]),
                                 "Block": Block(itemID, 0).to_nbt()
                             }))
@@ -1603,7 +1620,9 @@ class Codecs :
             O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
 
             for block in Struct1.blocks :
-                block_obj = Block(block["name"], block.get("aux", 0))
+                Ra_ID, Ra_State = block["name"], block.get("aux", 0)
+                Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                block_obj = Block(Ra_ID, Ra_State)
                 posx, posy, posz = block["x"] - O_X, block["y"] - O_Y, block["z"] - O_Z
                 StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -1650,7 +1669,9 @@ class Codecs :
             block_palette = {j:i for i,j in Struct1.block_palette.items()}
 
             for block in Struct1.blocks :
-                block_obj = Block(block_palette[block[3]], block[4])
+                Ra_ID, Ra_State = block_palette[block[3]], block[4]
+                Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                block_obj = Block(Ra_ID, Ra_State)
                 posx, posy, posz = block[0] - O_X, block[1] - O_Y, block[2] - O_Z
                 StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -1660,14 +1681,14 @@ class Codecs :
                 if snbt["id"].endswith("command_block") :
                     BlockData = node.compound(
                         id = node.string("CommandBlock"),
-                        Command = node.string(snbt["Command"]),
-                        CustomName = node.string(snbt["CustomName"]),
+                        Command = node.string(snbt.get("Command", "")),
+                        CustomName = node.string(snbt.get("CustomName", "")),
                         ExecuteOnFirstTick = node.byte(1),
-                        auto = node.byte(not snbt["redstone"]),
-                        TickDelay = node.int(snbt["TickDelay"]),
+                        auto = node.byte(not snbt.get("redstone", 0)),
+                        TickDelay = node.int(snbt.get("TickDelay", 1)),
                         TrackOutput = node.byte(1),
-                        conditionalMode = node.byte(snbt["isConditional"]),
-                        Version = node.int(38 if ExecuteTest.match(snbt["Command"]) else 19),
+                        conditionalMode = node.byte(snbt.get("isConditional", 0)),
+                        Version = node.int(38 if ExecuteTest.match(snbt.get("Command", "")) else 19),
                     ).build()
                     StructureObject.set_blockNBT(posx, posy, posz, BlockData)
 
@@ -1728,7 +1749,9 @@ class Codecs :
             O_X, O_Y, O_Z = PosStart[0], PosStart[1], PosStart[2]
 
             for block in Struct1.blocks :
-                block_obj = Block(block["name"], block.get("aux", 0))
+                Ra_ID, Ra_State = block["name"], block.get("aux", 0)
+                Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                block_obj = Block(Ra_ID, Ra_State)
                 posx, posy, posz = block["x"][0] - O_X, block["y"][0] - O_Y, block["z"][0] - O_Z
                 StructureObject.set_block(posx, posy, posz, block_obj)
 
@@ -1774,11 +1797,12 @@ class Codecs :
 
             def Command(x:int, y:int, z:int, block_id:str, data:Union[Dict[Literal["b", "e"], str], Tuple[str, int, int, str]]) :
                 if data.__class__ is dict :
+                    if "e" not in Nbtdata : return None
                     NBT_obj = nbt.read_from_snbt_file( io.StringIO(Nbtdata["e"]) )
                     StructureObject.set_blockNBT(x, y, z, NBT_obj.get_tag())
                 else :
+                    if len(data) < 4 : return None
                     CommandBlockNBT = MCBELab.GenerateBlockEntityNBT("command_block")
-                    if CommandBlockNBT is None : return None
                     CommandStr = data[0] if isinstance(data[0], str) else ""
                     CommandBlockNBT["Command"] = nbt.TAG_String(CommandStr)
                     CommandBlockNBT["TickDelay"] = nbt.TAG_Int(data[1])
@@ -1789,17 +1813,20 @@ class Codecs :
 
             def Container(x:int, y:int, z:int, block_id:str, data:Union[Dict[Literal["b", "e"], str], Dict[Literal["d"], List[dict]]]) :
                 if "e" in data :
+                    if "e" not in Nbtdata : return None
                     NBT_obj = nbt.read_from_snbt_file( io.StringIO(Nbtdata["e"]) )
                     StructureObject.set_blockNBT(x, y, z, NBT_obj.get_tag())
                 else : 
                     ContanierNBT = MCBELab.GenerateBlockEntityNBT( block_id )
                     if ContanierNBT is None : return None
                     for item in data.get("d", []) :
+                        if item.__class__ is not dict : continue
+                        if "name" not in item or "slot" not in item : continue
                         itemID = item["name"] if item["name"].startswith("minecraft:") else "minecraft:%s"%item["name"]
                         ContanierNBT["Items"].append(nbt.TAG_Compound({
                             "Name": nbt.TAG_String(itemID),
-                            "Count": nbt.TAG_Byte(item["count"]),
-                            "Damage": nbt.TAG_Short(item["damage"]),
+                            "Count": nbt.TAG_Byte(item.get("count", 1)),
+                            "Damage": nbt.TAG_Short(item.get("damage", 1)),
                             "Slot": nbt.TAG_Byte(item["slot"]),
                             "Block": Block(itemID, 0).to_nbt()
                         }))
@@ -1821,7 +1848,9 @@ class Codecs :
                         else : iter2 = itertools.repeat(None)
                         for posx,posy,posz,datavar,Nbtdata in zip(data_obj["x"], data_obj["y"], data_obj["z"], iter1, iter2) :
                             posx, posy, posz = posx-PosStart[0], posy-PosStart[1], posz-PosStart[2]
-                            block_obj = Block(data_obj["n"], datavar)
+                            Ra_ID, Ra_State = data_obj["n"], datavar
+                            Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                            block_obj = Block(Ra_ID, Ra_State)
                             StructureObject.set_block(posx, posy, posz, block_obj)
                             if Nbtdata is None : continue
                             if data_obj["n"].endswith("command_block") : Command(posx, posy, posz, block_obj.name, Nbtdata)
@@ -1915,6 +1944,7 @@ class Codecs :
                 ContanierNBT = MCBELab.GenerateBlockEntityNBT( id )
                 if ContanierNBT is None : return None
                 for item in data :
+                    if item.__class__ is not list or len(item) < 4 : continue
                     itemID = item[0] if item[0].startswith("minecraft:") else "minecraft:%s"%item[0]
                     ContanierNBT["Items"].append(nbt.TAG_Compound({
                         "Name": nbt.TAG_String(itemID),
@@ -1933,6 +1963,7 @@ class Codecs :
                 return SignNBT
 
             def Command(id:str, data:Tuple[str, int, int, str]) :
+                if data.__class__ is not list or len(data) < 4 : return None
                 CommandBlockNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
@@ -1954,7 +1985,9 @@ class Codecs :
                         EntityNBT = MCBELab.GenerateEntity(id, (chunk_x+Pos1, Pos2, chunk_z+Pos3), datavar)
                         if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
-                        block_obj = Block(Struct1.block_palette[id], datavar)
+                        Ra_ID, Ra_State = Struct1.block_palette[id], datavar
+                        Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                        block_obj = Block(Ra_ID, Ra_State)
                         nbt_iter = [None] * len(Pos1) ; nbt_iter[0:len(nbtdata)] = nbtdata
                         if block_obj.name.endswith("command_block") : NBTFunc = Command
                         elif block_obj.name.endswith("hanging_sign") : NBTFunc = Sign
@@ -2060,6 +2093,7 @@ class Codecs :
                 ContanierNBT = MCBELab.GenerateBlockEntityNBT( id )
                 if ContanierNBT is None : return None
                 for item in data :
+                    if item.__class__ is not list or len(item) < 4 : continue
                     itemID = item[0] if item[0].startswith("minecraft:") else "minecraft:%s"%item[0]
                     ContanierNBT["Items"].append(nbt.TAG_Compound({
                         "Name": nbt.TAG_String(itemID),
@@ -2077,6 +2111,7 @@ class Codecs :
                 return SignNBT
 
             def Command(id:str, data:Tuple[str, int, int, str]) :
+                if data.__class__ is not list or len(data) < 4 : return None
                 CommandBlockNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
@@ -2097,7 +2132,9 @@ class Codecs :
                         EntityNBT = MCBELab.GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
                         if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
-                        block_obj = Block(Struct1.block_palette[id], datavar)
+                        Ra_ID, Ra_State = Struct1.block_palette[id], datavar
+                        Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                        block_obj = Block(Ra_ID, Ra_State)
                         nbt_iter = [None] * len(Pos1) ; nbt_iter[0:len(nbtdata)] = nbtdata
                         if block_obj.name.endswith("command_block") : NBTFunc = Command
                         elif block_obj.name.endswith("hanging_sign") : NBTFunc = Sign
@@ -2206,6 +2243,7 @@ class Codecs :
                 ContanierNBT = MCBELab.GenerateBlockEntityNBT( id )
                 if ContanierNBT is None : return None
                 for item in data :
+                    if item.__class__ is not list or len(item) < 4 : continue
                     itemID = item[0] if item[0].startswith("minecraft:") else "minecraft:%s"%item[0]
                     ContanierNBT["Items"].append(nbt.TAG_Compound({
                         "Name": nbt.TAG_String(itemID),
@@ -2223,6 +2261,7 @@ class Codecs :
                 return SignNBT
 
             def Command(id:str, data:Tuple[str, int, int, str]) :
+                if data.__class__ is not list or len(data) < 4 : return None
                 CommandBlockNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
@@ -2243,7 +2282,9 @@ class Codecs :
                         EntityNBT = MCBELab.GenerateEntity(id, (Pos1, Pos2, Pos3), datavar)
                         if EntityNBT : StructureObject.entity_nbt.append(EntityNBT)
                     else :
-                        block_obj = Block(Struct1.block_palette[id], datavar)
+                        Ra_ID, Ra_State = Struct1.block_palette[id], datavar
+                        Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                        block_obj = Block(Ra_ID, Ra_State)
                         nbt_iter = [None] * len(Pos1) ; nbt_iter[0:len(nbtdata)] = nbtdata
                         if block_obj.name.endswith("command_block") : NBTFunc = Command
                         elif block_obj.name.endswith("hanging_sign") : NBTFunc = Sign
@@ -2396,7 +2437,9 @@ class Codecs :
 
             block_list = [None] * len(Struct1.blocks)
             for index, block in enumerate(Struct1.blocks) :
-                block_list[index] = Block(block["name"], block["aux"])
+                Ra_ID, Ra_State = block["name"], block["aux"]
+                Ra_ID, Ra_State = MCBELab.RunawayDataValueTransforBlock(Ra_ID, Ra_State)
+                block_list[index] = Block(Ra_ID, Ra_State)
             StructureObject.block_palette.__init__([Block("minecraft:air")] + block_list)
 
             start_x, start_y, start_z = PosStart
@@ -2605,4 +2648,6 @@ def getStructureType(IO_Byte_Path: Union[str, bytes, io.IOBase]) :
             if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
             return class_obj
     if isinstance(IO_Byte_Path, io.IOBase) : IO_Byte_Path.seek(0)
+
+
 

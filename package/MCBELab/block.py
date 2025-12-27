@@ -6,6 +6,7 @@ import re, os, json
 CurrentPath = os.path.realpath(os.path.join(__file__, os.pardir))
 BlockState = json.load(fp=open(os.path.join(CurrentPath, "res", "blockstate.json"), "r", encoding="utf-8"))
 OldBlockData = json.load(fp=open(os.path.join(CurrentPath, "res", "flatten.json"), "r", encoding="utf-8"))
+RunAwayDataValue = json.load(fp=open(os.path.join(CurrentPath, "res", "RA_Datavalue.json"), "r", encoding="utf-8"))
 JEtransfor = json.load(fp=open(os.path.join(CurrentPath, "res", "JEtransfor.json"), "r", encoding="utf-8"))
 RuntimeID_to_Block = ["air", "stone", "grass", "dirt", "cobblestone", "planks", "sapling",
     "bedrock", "flowing_water", "water", "flowing_lava", "lava", "sand", "gravel", "gold_ore",
@@ -139,6 +140,33 @@ def BlockTransforRunaway(id:str, states:Dict[str, Union[bool, int, str]]) -> str
         str1 = f"{str1}.{state}"
 
     return str1
+
+def RunawayDataValueTransforBlock(id:str, dataValue:int) :
+    id = f"minecraft:{id}" if ":" not in id else id
+    Binary_Key = bin(dataValue)
+
+    BlockID = id
+    Block_State = {}
+
+    RegExpDict = {i:re.compile(i) for i in RunAwayDataValue["RegExp"].keys()}
+    ReTestSuccessKey = None
+    for reKey, reObj in RegExpDict.items() :
+        if not reObj.search(BlockID) : continue
+        ReTestSuccessKey = reKey
+        break
+
+    if ReTestSuccessKey and Binary_Key in RunAwayDataValue["RegExp"][ReTestSuccessKey] :
+        Block_State.update( RunAwayDataValue["RegExp"][ReTestSuccessKey][Binary_Key] )
+        #print(1)
+    elif BlockID in RunAwayDataValue["Custom"] and Binary_Key in RunAwayDataValue["Custom"][BlockID] :
+        Block_State.update( RunAwayDataValue["Custom"][BlockID][Binary_Key] )
+        #print(2)
+    elif BlockID in BlockState : 
+        Block_State.update( BlockState[BlockID].get(Binary_Key, {}) )
+        #print(3)
+    else : pass #print(4)
+
+    return (BlockID, Block_State)
 
 
 

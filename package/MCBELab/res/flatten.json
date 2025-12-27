@@ -249,7 +249,7 @@
         "minecraft:tulip_orange" : {"block_id":"minecraft:red_flower","block_data":{"flower_type": "tulip_orange"}},
         "minecraft:tulip_white" : {"block_id":"minecraft:red_flower","block_data":{"flower_type": "tulip_white"}},
         "minecraft:tulip_pink" : {"block_id":"minecraft:red_flower","block_data":{"flower_type": "tulip_pink"}},
-        "minecraft:oxeye" : {"block_id":"minecraft:red_flower","block_data":{"flower_type": "oxeye"}},
+        "minecraft:oxeye_daisy" : {"block_id":"minecraft:red_flower","block_data":{"flower_type": "oxeye"}},
         "minecraft:cornflower" : {"block_id":"minecraft:red_flower","block_data":{"flower_type": "cornflower"}},
         "minecraft:lily_of_the_valley" : {"block_id":"minecraft:red_flower","block_data":{"flower_type": "lily_of_the_valley"}},
 
@@ -421,7 +421,9 @@
         "minecraft:prismarine_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "prismarine","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
         "minecraft:red_sandstone_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "red_sandstone","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
         "minecraft:red_nether_brick_wall": {"block_id":"minecraft:cobblestone_wall","block_data":{"wall_block_type": "red_nether_brick","wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true}},
-
+        
+        "minecraft:wet_sponge": {"block_id":"minecraft:sponge","block_data":{"sponge_type": "wet"}},
+        "minecraft:sponge": {"block_id":"minecraft:sponge","block_data":{"sponge_type": "dry"}},
 
         "minecraft:tube_coral_wall_fan": {"block_id":"minecraft:coral_fan_hang","block_data":{"coral_hang_type_bit": false,"dead_bit": false,"coral_direction": 0}},
         "minecraft:brain_coral_wall_fan": {"block_id":"minecraft:coral_fan_hang","block_data":{"coral_hang_type_bit": true,"dead_bit": false,"coral_direction": 0}},
@@ -433,9 +435,7 @@
         "minecraft:dead_fire_coral_wall_fan": {"block_id":"minecraft:coral_fan_hang2","block_data":{"coral_hang_type_bit": true,"dead_bit": true,"coral_direction": 0}},
         "minecraft:horn_coral_wall_fan": {"block_id":"minecraft:coral_fan_hang3","block_data":{"coral_hang_type_bit": false,"dead_bit": false,"coral_direction": 0}},
         "minecraft:dead_horn_coral_wall_fan": {"block_id":"minecraft:coral_fan_hang3","block_data":{"coral_hang_type_bit": false,"dead_bit": true,"coral_direction": 0}},
-        
-        "minecraft:wet_sponge": {"block_id":"minecraft:sponge","block_data":{"sponge_type": "wet"}},
-        "minecraft:sponge": {"block_id":"minecraft:sponge","block_data":{"sponge_type": "dry"}},
+
         
         "minecraft:iron_chain": {"block_id":"minecraft:chain","block_data":{}}
     },

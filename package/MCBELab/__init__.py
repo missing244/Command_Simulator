@@ -15,7 +15,8 @@
 
 from .. import python_nbt as nbt
 
-from .block import TransforBlock, TransforDatavalue, RunawayTransforBlock, BlockTransforRunaway, JE_Transfor_BE_Block
+from .block import TransforBlock, TransforDatavalue, RunawayTransforBlock
+from .block import BlockTransforRunaway, JE_Transfor_BE_Block, RunawayDataValueTransforBlock
 from .block_entity import GetNbtUID, GetNbtID, GenerateBlockEntityNBT
 from .entity import GenerateEntity
 from .translate import ItemTranslateData, BlockTranslateData, EntityTranslateData

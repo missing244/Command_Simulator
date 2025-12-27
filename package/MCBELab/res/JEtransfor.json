@@ -234,7 +234,7 @@
         }
     },
     "State":{
-        "hinge": {"door_hinge_bit": null},
+        "hinge": {"door_hinge_bit": {"left":false, "right":true}},
         "open": {"open_bit": null},
         "in_wall": {"in_wall_bit": null},
         "attached": {"attached_bit": null},
