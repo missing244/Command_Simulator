@@ -695,7 +695,6 @@ class BE_Structure_Tool(tkinter.Frame) :
                 SubScreen_0.pack()
                 self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )
                 self.search_result.config(selectmode=tkinter.MULTIPLE)
-                self.search_result.select_clear(0, "end")
 
             def Click_McworldMerge() :
                 SubScreen_1.pack_forget()
@@ -705,7 +704,6 @@ class BE_Structure_Tool(tkinter.Frame) :
                 SubScreen_0.pack()
                 self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )
                 self.search_result.config(selectmode=tkinter.MULTIPLE)
-                self.search_result.select_clear(0, "end")
 
             tkinter.Label(MainScreen, text=" ",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
             frame_m4 = tkinter.Frame(MainScreen)

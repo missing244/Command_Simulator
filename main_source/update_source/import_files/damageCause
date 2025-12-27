@@ -14,9 +14,6 @@
   "contact": {
     "modify_in_tick": false
   },
-  "dehydration": {
-    "modify_in_tick": false
-  },
   "drowning": {
     "modify_in_tick": false
   },
