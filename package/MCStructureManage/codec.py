@@ -3,7 +3,7 @@ from .block import Block
 from .__private import TypeCheckList, BiList
 from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
-
+from ..Py_module import msgpack
 from typing import Union,Dict,Tuple,Literal,List
 import abc, re, io, json, array, itertools, urllib.parse, os, math, zipfile, traceback, zlib
 ExecuteTest = re.compile("[ ]*?/?[ ]*?execute[ ]*?(as|at|align|anchored|facing|in|positioned|rotated|if|unless|run)")
@@ -40,6 +40,7 @@ class Codecs :
     * 可用类 QINGXU_V1: 解析/生成 情绪 json结构文件的编解码器
     * 可用类 FunctionCommand: 生成 函数命令 zip文件的编码器
     * 可用类 TextCommand: 生成 文本命令 txt文件的编码器
+    * 可用类 Msgpack: 解析/生成 msgpack 文件的编解码器
     """
 
     class CodecsBase(abc.ABC) :
@@ -2603,13 +2604,55 @@ class Codecs :
                 if command.__class__ is str : _file.write(f"/{command}")
                 else : _file.write( "".join(f"/{i}" for i in command) )
 
+    class Msgpack(CodecsBase):
 
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+            try:
+                Data.seek(0)
+                msgpack.unpackb(Data.read())
+                return True
+            except:
+                return False
 
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
+            if isinstance(Reader, str):
+                with open(Reader, "rb") as f:
+                    data = f.read()
+            elif isinstance(Reader, bytes):
+                data = Reader
+            else:
+                data = Reader.read()
+
+            unpacked = msgpack.unpackb(data)
+            json_path = Reader.rsplit('.', 1)[0] + '.json' if isinstance(Reader, str) else 'output.json'
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(unpacked, f, ensure_ascii=False, indent=2)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            if isinstance(Writer, str):
+                if not Writer.endswith('.msgpack'):
+                    Writer = Writer.rsplit('.', 1)[0] + '.msgpack'
+                json_path = Writer.rsplit('.', 1)[0] + '.json'
+            else:
+                json_path = 'input.json'
+
+            with open(json_path, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+            packed = msgpack.packb(json_data)
+
+            if isinstance(Writer, str):
+                with open(Writer, 'wb') as f:
+                    f.write(packed)
+            else:
+                Writer.write(packed)
 SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
     Codecs.MIANYANG_V1, Codecs.MIANYANG_V2, Codecs.MIANYANG_V3, Codecs.GANGBAN_V1, Codecs.GANGBAN_V2,
     Codecs.GANGBAN_V3, Codecs.GANGBAN_V4, Codecs.GANGBAN_V5, Codecs.GANGBAN_V6, Codecs.GANGBAN_V7, 
     Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, Codecs.FUHONG_V5, 
-    Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2, Codecs.SCHEM_V3]
+    Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2, Codecs.SCHEM_V3,Codecs.Msgpack]
 
 def registerCodecs(CodecsType:type) :
     if Codecs.CodecsBase not in CodecsType.mro() :
