@@ -1,8 +1,7 @@
 from typing import Literal,Union,List,Dict,Tuple,Iterable
 import os,io,gzip,base64,json,sys,array,time
 from . import nbt, BaseType
-from . import C_API
-from .C_leveldb import LevelDB as MinecraftLevelDB
+from . import C_API, LevelDB as MinecraftLevelDB
 
 LevelDatFileDefaultData = b'H4sIAF2d12gC/31Wz29bRRCejZNiOz+bphQJKUK+IKGoKC2qqkg9EJdUFU4TJaEtIGSt31vbq+x7+9jd58RUFRcOPXDhAAfEH8KVezkj9YzohSMSByTCN++9xGnVYsmWZ3Z2duab+Wa3QUTPG0RNovo8bWqbqJ2Rck7HikgsU1ulQbltmfkDu+P0QKckVqlt0752iYp3jQx965KOjQ5VDHWAPdWadFv3+zrKTRgLnFBfpC1YPrDOxB05Vs7/RY9aPT6tq+PWxvpaq2fgomuKxdbG548qRSoT1dpoJTpVkZP9sNFTscNCa60V2TwN2Pt47bXGsXZhYnntfywHTnp/3ukXay2VRjbW6aALQLy2aWvjxlrLB5dHIXeqa7MAJYJNc2PWWkec3MS0Vf27mlkfuuvd9Zutx00xT1vWReoOjj8YZ4pqdTr9zzjVGnRHpcrJYN0U47ZEd9MRILVufL/09watX12/efX6NTFHnQ/vbTor40j6IFCs8/LdohRiukkdSLsMbFz76bchsdsGddRImXs4eo7+ePLd8x+/+f3nH55//23tEnV0ooOKi1qVFX/Ie1658unJ169Z+Yz3NFZpW6c6yZO2TTIZdM+ottGIq0qmNgMrTnwZ31WafMQibaN5dFY0BEMkxOWXVVWKtVm6p8JQuf1IGlXnWBdYg4IcVuf8jTMA9Wm3MrS1K2fiS5jVsArY9mQa22Rfqfjjjvjg2bN/rosl2s/kUXp//b42Rg7gm2oXSl2JUSWUsFRCgQQi2kcRsaeKqMGHTNOBTtSTS2XOtTkqAKwsin5YpoebnVfE12yQ7Gmjg1ZeNEmGIKPDxPa8QIuVUokTFDPUy7WJBcKPrXUeefkjHaIhts7UqW/G+xmy/PVp55a4wCJanuBUpz7IYiuh13Q6yg23JmpIokFGD4YhLUwvUCLH2EdimphRQkyRzUgs4Jc5lAYJLUKpLVGmXKI95+eLFiwSf5PKYHdfWmQIRJ2CMiqzLtBMg46kOazCfXqL50pP+oJOZ6i9Jy5Sz6a5byPB8FHKASOD88qiLqxcpsgmCQAppoLNQ5aDSCsvaL0qXQj0ZKX3lVcxPUtR7hyKcqCjw1/EWfPGNpbjAqJoHDFg81DBTIcxxleGqjShwAxVARs5kNjqBANVS4xb5TnA0gZVsEmqpQDm6EeLmGwQhT+uNxsWRZiFImijKvcLEI+UZFpUEUDjbGEcywSNKEAIFec7/b5yRdRvsRhJHmpb2IkRd5onNWdJHaN06NY0eDDxnNRFpVw394znKnk5UnEX7TXsBjsYYHP3nC1xX/WlMVUILAGDU2mO+k6pr07l2gr18zTigCrgDc+ZpXfh5goNpd9UKu2AGyq+m7YdYtajYk5gqbyQNtVQjrR1u5JBPrewp7zNMYjLhQUC9nngXAsGElpA+y1nq3vtQCVo0AAQL1X6wmyiXoJ6H8ga9Yk/dfE2dC+Y7RT3RemRG+JQqUyfTnfRuEwGFN8BYzBIgd+rRuQ7+E5VI3JmYcLBCZXmJ0qeLTfen6LaRTLn5vNtlYXhEtu+qH+g40p/GXw+rhCPhuCuUekgDE9OiNsMXTdwWvVxggAeKXeKNE4NyouLOVifpgwvCJjXKBtlzFsHN5Mo64XMAco/BdUWIfKwZS54JndB/FVy6ssc7eHbNtN4a6BWeyqxI2nAYq7bClVUqYh6nBkbK44KpI2rDPrw18NWbievHJq1PczTQyYsRvxATfNZS+SH9qhnXQz2gRFRYLqzLsLIxCMA9QOrLhaqmHmVKO/RpFDWC2WQA88cLeLZ5kmMe6kQnIx17osyIrAgXeDy4kl1NptWMOKOmXCcot8rs44Z7ICJX2blOS2wbNtLHneOz9tJMXSnF6l4euyz5zY/X/494VLhklgoV7qZNTrCTUH0HzLTYe3vCQAA'
 Encrypt_Header = b"\x80\x1d\x30\x01"
@@ -357,8 +356,11 @@ class World :
             if Test1 : yield Test1
     
     def chunk_exists(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> bool :
-        key = BaseType.GenerateChunkLevelDBKey(dimension, chunk_pos_x, chunk_pos_z, 54)
-        return key in self.world_db
+        key1 = BaseType.GenerateChunkLevelDBKey(dimension, chunk_pos_x, chunk_pos_z, 54)
+        if key1 in self.world_db : return True
+        key2 = BaseType.GenerateChunkLevelDBKey(dimension, chunk_pos_x, chunk_pos_z, 44)
+        if key2 in self.world_db : return True
+        return False
 
     def get_chunk(self, dimension:int, chunk_pos_x:int, chunk_pos_z:int) -> Union[BaseType.ChunkType, None] : 
         if not self.chunk_exists(dimension, chunk_pos_x, chunk_pos_z) : return None

@@ -3,7 +3,7 @@ from .block import Block
 from .__private import TypeCheckList, BiList
 from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
-from ..Py_module import msgpack
+
 from typing import Union,Dict,Tuple,Literal,List
 import abc, re, io, json, array, itertools, urllib.parse, os, math, zipfile, traceback, zlib
 ExecuteTest = re.compile("[ ]*?/?[ ]*?execute[ ]*?(as|at|align|anchored|facing|in|positioned|rotated|if|unless|run)")
@@ -40,7 +40,6 @@ class Codecs :
     * 可用类 QINGXU_V1: 解析/生成 情绪 json结构文件的编解码器
     * 可用类 FunctionCommand: 生成 函数命令 zip文件的编码器
     * 可用类 TextCommand: 生成 文本命令 txt文件的编码器
-    * 可用类 Msgpack: 解析/生成 msgpack 文件的编解码器
     """
 
     class CodecsBase(abc.ABC) :
@@ -68,11 +67,11 @@ class Codecs :
         @classmethod
         def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
             DataType:Literal["nbt", "json", "bytes"]) :
-            from . import C_brotli
+            from . import brotli
             if DataType != "bytes" : return False
 
             if Data.read(3) != b'BD@' : return False
-            try : a = C_brotli.decompress(Data.read())[0:4]
+            try : a = brotli.decompress(Data.read())[0:4]
             except : return False
 
             if a != b'BDX\0' : return False
@@ -430,7 +429,7 @@ class Codecs :
             for index, block in enumerate(StructureObject.block_palette) : 
                 UID = MCBELab.GetNbtUID(block.name)
                 if UID : NBTBlockBit[index] = UID
-            
+
             NBTDict = codecs_parser_schem(Schma_File.block_index, StructureObject.block_index,
                 NBTBlockBit, Schma_File.size)
             for key, value in NBTDict.items() :
@@ -495,6 +494,92 @@ class Codecs :
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
             Schma_File = StructureSCHEM.Schem_V3.from_buffer(Reader)
             self.operation_structure(Schma_File)
+
+    class LITEMATIC_V1(CodecsBase) :
+        
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+            NBT = Data
+
+            if "Version" in NBT and 'Regions' in NBT : return True
+            else : return False
+
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]) :
+            from .C_API import codecs_parser_litematic, handling_waterlog
+            LiteNBT = nbt.read_from_nbt_file(Reader, "gzip", "big").get_tag()
+            Regions:Dict[str, nbt.TAG_Compound] = LiteNBT["Regions"]
+            StructureObject = self.Common
+            
+            #计算所有区域合并后的最小最大坐标
+            PosListMin, PosListMax = {"x":[], "y":[], "z":[]}, {"x":[], "y":[], "z":[]}
+            for Region, PosType in itertools.product(Regions.values(), "xyz") :
+                pos1 = Region["Position"][PosType].value 
+                pos2 = Region["Size"][PosType].value
+                if pos2 < 0 : 
+                    pos3 = pos1 + pos2
+                    pos1 -= 1
+                    pos1, pos3 = pos3, pos1
+                else : pos3 = pos1 + pos2 - 1
+                PosListMin[PosType].append(pos1)
+                PosListMax[PosType].append(pos3)
+            for key, val in PosListMin.items() : PosListMin[key] = min(val)
+            for key, val in PosListMax.items() : PosListMax[key] = max(val)
+            StructureObject.__init__( [PosListMax[key]-PosListMin[key]+1 for key in "xyz"] )
+            StructureObject.block_palette.append( Block("air") )
+            
+            #计算区域的最小坐标点，方块调色板，方块数组
+            OriginX, OriginY, OriginZ = PosListMin["x"], PosListMin["y"], PosListMin["z"]
+            RegionOrigin:List[int] = []
+            RegionSize:List[int] = []
+            for Region, PosType in itertools.product(Regions.values(), "xyz") :
+                if PosType == "x" : RegionOrigin.clear()
+                pos1 = Region["Position"][PosType].value 
+                pos2 = Region["Size"][PosType].value
+                if pos2 < 0 : pos1 = pos1 + pos2
+                RegionOrigin.append(pos1)
+                RegionSize.append( abs(pos2) )
+                if PosType != "z" : continue
+
+                IndexMap = array.array("H", b"\x00\x00"*len(Region['BlockStatePalette']))
+                for index, JE_Block in enumerate(Region['BlockStatePalette']) :
+                    JE_Block_ID = JE_Block["Name"].value
+                    JE_Block_State = {}
+                    for key, val in JE_Block.get("Properties", {}).items() :
+                        if val.value == "true" : JE_Block_State[key] = True
+                        elif val.value == "false" : JE_Block_State[key] = False
+                        else : JE_Block_State[key] = val.value
+                    BE_Block = MCBELab.JE_Transfor_BE_Block(JE_Block_ID, JE_Block_State)
+                    IndexMap[index] = StructureObject.block_palette.append( Block(*BE_Block) )
+
+                NBTBlockBit = array.array("B", b"\x00"*len(StructureObject.block_palette))
+                for index, block in enumerate(StructureObject.block_palette) : 
+                    UID = MCBELab.GetNbtUID(block.name)
+                    if UID : NBTBlockBit[index] = UID
+
+                bits_per_block = max(2, math.ceil(math.log2( len(IndexMap) )))
+
+                NBTDict = codecs_parser_litematic(
+                    IndexMap, NBTBlockBit, Region["BlockStates"].value, StructureObject.block_index, 
+                    OriginX, OriginY, OriginZ,
+                    StructureObject.size[0], StructureObject.size[1], StructureObject.size[2],
+                    RegionOrigin[0], RegionOrigin[1], RegionOrigin[2],
+                    RegionSize[0], RegionSize[1], RegionSize[2],
+                    bits_per_block)
+
+                #print( max(StructureObject.block_index), len(StructureObject.block_palette) )
+
+                for key, value in NBTDict.items() :
+                    block = StructureObject.block_palette[StructureObject.block_index[key]]
+                    StructureObject.block_nbt[key] = MCBELab.GenerateBlockEntityNBT(block.name)
+
+                if handling_waterlog(StructureObject.block_index, StructureObject.contain_index,
+                    StructureObject.block_palette, StructureObject.size) :
+                    StructureObject.block_palette.append( Block("water") )
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]) :
+            raise RuntimeError(f"{Writer} 并不支持序列化数据对象")
 
     class MIANYANG_V1(CodecsBase) :
 
@@ -2604,55 +2689,14 @@ class Codecs :
                 if command.__class__ is str : _file.write(f"/{command}")
                 else : _file.write( "".join(f"/{i}" for i in command) )
 
-    class Msgpack(CodecsBase):
 
-        @classmethod
-        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
-            DataType:Literal["nbt", "json", "bytes"]) :
-            if DataType != "bytes" : return False
-            try:
-                Data.seek(0)
-                msgpack.unpackb(Data.read())
-                return True
-            except:
-                return False
 
-        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]):
-            if isinstance(Reader, str):
-                with open(Reader, "rb") as f:
-                    data = f.read()
-            elif isinstance(Reader, bytes):
-                data = Reader
-            else:
-                data = Reader.read()
-
-            unpacked = msgpack.unpackb(data)
-            json_path = Reader.rsplit('.', 1)[0] + '.json' if isinstance(Reader, str) else 'output.json'
-            with open(json_path, 'w', encoding='utf-8') as f:
-                json.dump(unpacked, f, ensure_ascii=False, indent=2)
-
-        def encode(self, Writer:Union[str, io.BufferedIOBase]):
-            if isinstance(Writer, str):
-                if not Writer.endswith('.msgpack'):
-                    Writer = Writer.rsplit('.', 1)[0] + '.msgpack'
-                json_path = Writer.rsplit('.', 1)[0] + '.json'
-            else:
-                json_path = 'input.json'
-
-            with open(json_path, 'r', encoding='utf-8') as f:
-                json_data = json.load(f)
-            packed = msgpack.packb(json_data)
-
-            if isinstance(Writer, str):
-                with open(Writer, 'wb') as f:
-                    f.write(packed)
-            else:
-                Writer.write(packed)
 SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
     Codecs.MIANYANG_V1, Codecs.MIANYANG_V2, Codecs.MIANYANG_V3, Codecs.GANGBAN_V1, Codecs.GANGBAN_V2,
     Codecs.GANGBAN_V3, Codecs.GANGBAN_V4, Codecs.GANGBAN_V5, Codecs.GANGBAN_V6, Codecs.GANGBAN_V7, 
     Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, Codecs.FUHONG_V5, 
-    Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2, Codecs.SCHEM_V3,Codecs.Msgpack]
+    Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2, Codecs.SCHEM_V3, 
+    Codecs.LITEMATIC_V1]
 
 def registerCodecs(CodecsType:type) :
     if Codecs.CodecsBase not in CodecsType.mro() :

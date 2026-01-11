@@ -19,6 +19,7 @@
 
 from .. import python_nbt as nbt
 from .. import MCBELab
+from ..Py_module import C_brotli as brotli
 
 
 

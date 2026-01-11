@@ -1,5 +1,5 @@
 from .. import nbt
-from ..C_leveldb import LevelDB
+from .. import LevelDB
 from . import ModifyError, ValueError
 from typing import Tuple,List,Union,Dict,Literal,Generator,Any
 import io, random, array, copy, traceback

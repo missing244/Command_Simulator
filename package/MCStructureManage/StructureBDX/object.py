@@ -1,6 +1,6 @@
 from ..__private import TypeCheckList
 from . import operation as OperationCode
-from .. import C_brotli as brotli
+from .. import brotli
 from typing import Union,Literal,List,Callable,Generator,Tuple
 import io, os, traceback, json
 

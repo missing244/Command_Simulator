@@ -17,6 +17,7 @@ class DimensionID :
     Nether = 1
     TheEnd = 2
 from .. import python_nbt as nbt
+from ..Py_module.C_leveldb import LevelDB
 from .. import MCBELab
 from . import BaseType
 from .world import World, GetWorldEdtion, GetWorldEncryptKey

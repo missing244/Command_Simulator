@@ -240,9 +240,11 @@ def JE_BlockStates_Parser(s:str) :
     return StateSave
 
 IdentifierAndStateSeacher = {i:re.compile(i) for i in JEtransfor["IdentifierAndState"].keys()}
-def JE_Transfor_BE_Block(id:str) -> Tuple[str, dict, bool]: 
-    start1 = id.find("[") if id.find("[") >= 0 else len(id)
-    JE_ID, JE_State = id[:start1], JE_BlockStates_Parser(id[start1:])
+def JE_Transfor_BE_Block(id:str, states:dict=None) -> Tuple[str, dict, bool]: 
+    if isinstance(states, dict) : JE_ID, JE_State = id, states
+    else :
+        start1 = id.find("[") if id.find("[") >= 0 else len(id)
+        JE_ID, JE_State = id[:start1], JE_BlockStates_Parser(id[start1:])
     JE_waterlog = True if JE_State.get("waterlogged", False) else False
 
     #处理方块ID差异
