@@ -37,6 +37,8 @@
 * Android系统：通过MT管理器，将下载的文件移动到/storage/emulated/0/Android/data/ru.iiec.pydroid3/files/路径下进行解压，然后通过Pydroid 3打开main.py文件启动。[寻找main.py文件教程](https://github.com/missing244/Command_Simulator/blob/main/%E5%90%AF%E5%8A%A8%E6%96%B9%E6%B3%95.jpg)
 ## 可二次开发的第三方模块
 * **MCCommandParser**：实现了Minecraft基岩版命令的语法检查，通过树结构构造语法解析的拆词器
+* **MCBELab**：实现了将方块实体格式转换至MCBE1.18.30内部数据的兼容
+* **MCBEWorld**：实现了MCBE的LevelDB存档格式读写操作的模块
 * **MCStructureManage**：实现了Minecraft基岩版流通的结构文件的解析与转换
 * **python_nbt**：实现了NBT数据的序列化与反序列化
 ## 致谢名单
