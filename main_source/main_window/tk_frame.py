@@ -23,7 +23,7 @@ class Announcement(tkinter.Frame) :
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
         frame_m10 = tkinter.Frame(self)
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
-        self.Announce_InputBox = tkinter.Text(frame_m10,show=None,height=19,width=26,font=tk_tool.get_default_font(10),yscrollcommand=sco1.set)
+        self.Announce_InputBox = tkinter.Text(frame_m10,show=None,height=21,width=26,font=tk_tool.get_default_font(10),yscrollcommand=sco1.set)
         self.Announce_InputBox.grid()
         self.Announce_InputBox.insert(tkinter.END,"正在获取推送....")
         self.Announce_InputBox.tag_config("text_red",foreground="red")
@@ -32,7 +32,7 @@ class Announcement(tkinter.Frame) :
         sco1.config(command=self.Announce_InputBox.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
         frame_m10.pack()
-        tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(4)).pack()
+        tkinter.Label(self, text="         ", font=tk_tool.get_default_font(6)).pack()
 
         frame_m0 = tkinter.Frame(self)
         self.jump_to_web = tkinter.Button(frame_m0, text='了解更多..', bg='purple' ,fg='white',font=tk_tool.get_default_font(11), width=10, height=1)
@@ -1282,6 +1282,7 @@ class BE_World_Tool(tkinter.Frame) :
 
     def __init__(self, main_win, **karg) -> None :
         from package.MCBEWorld import World, GetWorldEdtion
+        os.makedirs(self.base_path, exist_ok=True)
         if main_win.platform == "android" :
             try : os.makedirs(self.android_outside_storage, exist_ok=True)
             except : pass
@@ -1661,7 +1662,12 @@ class BE_World_Tool(tkinter.Frame) :
             self.input_box.see(tkinter.END)
 
         Struct1 = CommonStructure()
-        self.NowOpenWorld.export_CommonStructure(Struct1, self.dimension_choose.current(), start, end, Callback)
+        try : self.NowOpenWorld.export_CommonStructure(Struct1, self.dimension_choose.current(), start, end, Callback)
+        except : 
+            self.input_box.insert(tkinter.END, "导出发生错误：\n")
+            self.input_box.insert(tkinter.END, traceback.format_exc()+"\n")
+            self.input_box.see(tkinter.END)
+        
 
         if self.world_list[self.NowOpenWorldDirName]["outside"] : save_root_path = os.path.join(self.android_outside_storage, "result")
         else : save_root_path = os.path.join(self.base_path, "result")
@@ -2239,9 +2245,9 @@ class Choose_Expand(tkinter.Frame) :
         tkinter.Button(frame_m6,text='启动',font=tk_tool.get_default_font(12),bg='pink',width=5, height=1,
                        command=lambda:self.on_expand_enable(False)).pack(side='left')
         frame_m6.pack()
-        
+
         threading.Thread(target=self.flash_expand_pack_list).start()
-        main_win.add_can_change_hight_component([self.expand_select, a1,c1,c1,c1,frame_m6])
+        main_win.add_can_change_hight_component([self.expand_select, a1,c1,c1,c1, frame_m6, self.main_win.expend_pack_showtips])
         #self.add_can_change_hight_component([self.expand_select,a1,8,frame_m5,8,10,frame_m6])
 
 
@@ -2627,6 +2633,7 @@ class Log_Display(tkinter.Frame) :
         sco2.grid(row=1,column=0,sticky=tkinter.E+tkinter.W)
         frame_m10.pack()
 
+        tkinter.Label(self, height=1, text="         ", font=tk_tool.get_default_font(3), fg="red").pack()
         frame_0 = tkinter.Frame(self)
         tkinter.Button(frame_0,text='返回界面',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
             self.back_to_frame).pack(side=tkinter.LEFT)
@@ -2642,7 +2649,7 @@ class Log_Display(tkinter.Frame) :
         self.input_box4.insert("end", time.strftime('%Y-%m-%d %H:%M:%S')+"\n")
         self.input_box4.insert("end", error_msg+"\n")
         self.input_box4.insert("end", log)
-        self.input_box4.insert("end", "\n\n\n")
+        self.input_box4.insert("end", "\n")
         self.main_win.set_display_frame("log_display")
         self.input_box4.see("end")
         tkinter.messagebox.showerror("Error", error_msg)
