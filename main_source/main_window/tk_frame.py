@@ -625,8 +625,7 @@ class BE_Structure_Tool(tkinter.Frame) :
             "GangBan_V5 Json文件": (".json", Codecs.GANGBAN_V5), "GangBan_V6 Json文件": (".json", Codecs.GANGBAN_V6), 
             "GangBan_V7 reb文件（最新）": (".reb", Codecs.GANGBAN_V7), 
             "RunAway Json文件": (".json", Codecs.RUNAWAY), "万花筒 Kbdx文件": (".kbdx", Codecs.KBDX),
-            "FuHong_V3 Json文件": (".json", Codecs.FUHONG_V3), "FuHong_V4 Json文件": (".json", Codecs.FUHONG_V4), 
-            "FuHong_V5 fhbuild文件（最新）": (".fhbuild", Codecs.FUHONG_V5), 
+            "FuHong_V3 Json文件": (".json", Codecs.FUHONG_V3), "FuHong_V4 fhbuild文件（最新）": (".json", Codecs.FUHONG_V4), 
             "QingXu_V1 Json文件": (".json", Codecs.QINGXU_V1), 
             "TimeBuilder_V1 Json文件": (".json", Codecs.TIMEBUILDER_V1), 
             "MC函数 Zip文件": (".zip", Codecs.FunctionCommand), "MC命令 Txt文件": (".txt", Codecs.TextCommand)}
@@ -1082,7 +1081,6 @@ class BE_Structure_Tool(tkinter.Frame) :
             "",
             "如果发现有文件无法被读取，且确定是结构文件，可以点击",
             "→→ 设置-联系作者-交流群 ←←",
-            "在交流群中与作者进行技术交流，litematic文件暂时不会支持",
             "",
             "",
             "免责声明：命令模拟器开发者不对文件来源负责，文件来源请用户自行解决。",
