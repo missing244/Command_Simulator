@@ -284,6 +284,7 @@ class FuHong_V3 :
     def __init__(self) :
         self.chunks: List[BUILD_FORMAT_V3] = TypeCheckList().setChecker(dict)
         self.block_palette: List[str] = TypeCheckList().setChecker(str)
+        self.block_calculation_pos = True
 
     def __setattr__(self, name, value) :
         if not hasattr(self, name) : super().__setattr__(name, value)
@@ -299,7 +300,7 @@ class FuHong_V3 :
 
         def pos_iter() :
             for i in self.chunks : 
-                s_x, s_z = i["startX"], i["startZ"]
+                s_x, s_z = i.get("startX", 0), i.get("startZ", 0)
                 for j in i["block"] : 
                     if j[0].__class__ is not int : continue
                     for posx, posy, posz in zip(j[2], j[3], j[4]) : yield (posx+s_x, posy, posz+s_z)
@@ -324,6 +325,7 @@ class FuHong_V3 :
         StructureObject = cls()
         Json1:FILEFORMAT_V3 = json.load(fp=_file)
         
+        StructureObject.block_calculation_pos = Json1.get("BlockCalculationPos", False)
         super(TypeCheckList, StructureObject.chunks).extend(Json1["FuHongBuild"])
         super(TypeCheckList, StructureObject.block_palette).extend(Json1["BlocksList"])
 
@@ -359,97 +361,7 @@ class FuHong_V3 :
         if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
         json.dump(Json1, _file, separators=(',', ':'))
 
-
-class FuHong_V4 :
-    """
-    由 FuHong 开发的结构文件对象
-    -----------------------
-    * 以 .json 为后缀的json格式文件
-    -----------------------
-    * 可用属性 chunks : 区块储存列表
-    * 可用属性 block_palette : 方块储存列表
-    -----------------------
-    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
-    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
-    """
-
-
-    def __init__(self) :
-        self.chunks: List[BUILD_FORMAT_V3] = TypeCheckList().setChecker(dict)
-        self.block_palette: List[str] = TypeCheckList().setChecker(str)
-
-    def __setattr__(self, name, value) :
-        if not hasattr(self, name) : super().__setattr__(name, value)
-        elif isinstance(value, type(getattr(self, name))) : super().__setattr__(name, value)
-        else : raise Exception("无法修改 %s 属性" % name)
-
-    def __delattr__(self, name) :
-        raise Exception("无法删除任何属性")
-
-
-    def get_volume(self) :
-        origin_min, origin_max, = [0, 0, 0], [0, 0, 0]
-
-        def pos_iter() :
-            for i in self.chunks : 
-                for j in i["block"] : 
-                    if j[0].__class__ is not int : continue
-                    for posx, posy, posz in zip(j[2], j[3], j[4]) : yield (posx, posy, posz)
-        for i in range(3) : origin_min[i] = min(j[i] for j in pos_iter())
-        for i in range(3) : origin_max[i] = max(j[i] for j in pos_iter())
-
-        return origin_min, origin_max
-
-    def error_check(self) :
-        for chunk in self.chunks :
-            if not isinstance(chunk.get("block", None), list) : raise Exception("区块数据缺少或存在错误的 block 参数")
-
-
-    @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
-        if isinstance(buffer,str) : _file = open(buffer, "rb")
-        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
-        else : _file = buffer
-
-        StructureObject = cls()
-        Json1:FILEFORMAT_V3 = json.load(fp=_file)
-        
-        super(TypeCheckList, StructureObject.chunks).extend(Json1["FuHongBuild"])
-        super(TypeCheckList, StructureObject.block_palette).extend(Json1["BlocksList"])
-
-        return StructureObject
-
-    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
-        import time, random
-        self.error_check()
-
-        Json1:FILEFORMAT_V3 = { 
-            "Build_Info":{
-                "Version": 20250529,
-                "UserInfo": "用户名称:FuHong§f 用户称号:分期用户 用户版本:17.3-20250328",
-                "PlayerInfo": "玩家名称:ComFHawa 游戏模式:1 玩家自身坐标:X:0 Y:-0 Z:0",
-                "WorldInfo": "世界名称:我的世界1 世界种子:%s 世界时间:5000 时间随机刻速度:1" % random.randint(-2**48, 2**48),
-                "Export_Mode": "导出模式:命令导出",
-                "FormatInfo": "format info last update:%s author:FuHong" % time.strftime("%Y%m%d", time.localtime()),
-                "ExportTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                "ExportEndTime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                "BlocksQuantity": "%s" % len(self.chunks)
-            },
-            "FuHongBuild":list(self.chunks),
-            "BlocksList": list(self.block_palette),
-            "TimeUsed":"1ms"
-        }
-
-        if isinstance(buffer, str) : 
-            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
-            os.makedirs(base_path, exist_ok=True)
-            _file = open(buffer, "w+", encoding="utf-8")
-        else : _file = buffer
-
-        if not isinstance(_file, TextIOBase) : raise TypeError("buffer 参数需要文本缓冲区类型")
-        json.dump(Json1, _file, separators=(',', ':'))
-
-class FuHong_V5(FuHong_V4) : 
+class FuHong_V4(FuHong_V3) : 
     """
     由 FuHong 开发的结构文件对象
     -----------------------
@@ -472,7 +384,7 @@ class FuHong_V5(FuHong_V4) :
         IO1 = StringIO( C_API.fuhong_v5_decrypt( zlib.decompress(_file.read()) ) )
 
         Struct1 = cls()
-        Struct2 = FuHong_V4.from_buffer(IO1)
+        Struct2 = FuHong_V3.from_buffer(IO1)
         Struct1.chunks = Struct2.chunks
         Struct1.block_palette = Struct2.block_palette
 
