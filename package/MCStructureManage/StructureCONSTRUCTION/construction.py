@@ -49,6 +49,45 @@ class Construction :
             return buffer.read()
         raise TypeError(f"{buffer} 不是可读取对象")
 
+
+    @classmethod
+    def _open_reader(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
+        if isinstance(buffer, str) :
+            return open(buffer, "rb"), True
+        if isinstance(buffer, bytes) :
+            return io.BytesIO(buffer), True
+        if isinstance(buffer, io.IOBase) :
+            if buffer.seekable() : buffer.seek(0)
+            return buffer, False
+        raise TypeError(f"{buffer} 不是可读取对象")
+
+    @classmethod
+    def _read_range(cls, reader:io.IOBase, start:int, length:int, error_text:str) -> bytes :
+        if start < 0 or length < 0 : raise ValueError(error_text)
+        reader.seek(start)
+        data = reader.read(length)
+        if not isinstance(data, (bytes, bytearray)) or len(data) != length :
+            raise ValueError(error_text)
+        return bytes(data)
+
+    @classmethod
+    def _read_file_layout(cls, reader:io.IOBase) -> Tuple[int, int, int] :
+        file_size = reader.seek(0, io.SEEK_END)
+        min_size = len(cls.MAGIC) * 2 + 5
+        if file_size < min_size : raise ValueError("Construction文件长度无效")
+
+        head = cls._read_range(reader, 0, len(cls.MAGIC) + 1, "Construction头部损坏")
+        if head[:len(cls.MAGIC)] != cls.MAGIC : raise ValueError("不是合法的 Construction 文件")
+        if head[len(cls.MAGIC)] != 0 : raise ValueError("Construction头部版本非法")
+
+        tail_magic = cls._read_range(reader, file_size - len(cls.MAGIC), len(cls.MAGIC), "Construction尾部损坏")
+        if tail_magic != cls.MAGIC : raise ValueError("Construction尾部标识无效")
+
+        metadata_end = file_size - len(cls.MAGIC) - 4
+        metadata_start = struct.unpack(">I", cls._read_range(reader, metadata_end, 4, "Construction元数据索引损坏"))[0]
+        if not (0 <= metadata_start < metadata_end) : raise ValueError("Construction元数据偏移无效")
+        return file_size, metadata_start, metadata_end
+
     @classmethod
     def _write_bytes(cls, buffer:Union[str, FileIO, BytesIO], data:bytes) :
         if isinstance(buffer, str) :
@@ -74,16 +113,19 @@ class Construction :
 
     @classmethod
     def verify(cls, buffer:Union[str, bytes, FileIO, BytesIO]) -> bool :
-        data = cls._read_bytes(buffer)
-        if len(data) < len(cls.MAGIC) * 2 + 5 : return False
-        if data[:len(cls.MAGIC)] != cls.MAGIC : return False
-        if data[len(cls.MAGIC)] != 0 : return False
-        if data[-len(cls.MAGIC):] != cls.MAGIC : return False
-
-        metadata_end = len(data) - len(cls.MAGIC) - 4
-        metadata_start = struct.unpack(">I", data[-(len(cls.MAGIC)+4):-len(cls.MAGIC)])[0]
-        if not (0 <= metadata_start < metadata_end) : return False
-        return True
+        reader, need_close = None, False
+        try :
+            reader, need_close = cls._open_reader(buffer)
+            if not reader.seekable() :
+                reader = io.BytesIO(reader.read())
+                need_close = True
+            cls._read_file_layout(reader)
+            return True
+        except : return False
+        finally :
+            if need_close and reader is not None :
+                try : reader.close()
+                except : pass
 
     @classmethod
     def _decompress_bytes(cls, data:bytes) -> bytes :
@@ -222,115 +264,124 @@ class Construction :
             raise ValueError("NBT 根标签不是 TAG_Compound")
         return root
 
+
     @classmethod
     def from_buffer(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
-        file_bytes = cls._read_bytes(buffer)
-        if not cls.verify(file_bytes) : raise ValueError("不是合法的 Construction 文件")
+        reader, need_close = cls._open_reader(buffer)
+        try :
+            if not reader.seekable() :
+                reader = io.BytesIO(reader.read())
+                need_close = True
 
-        metadata_end = len(file_bytes) - len(cls.MAGIC) - 4
-        metadata_start = struct.unpack(">I", file_bytes[-(len(cls.MAGIC)+4):-len(cls.MAGIC)])[0]
-        metadata = cls._decompress_bytes(file_bytes[metadata_start:metadata_end])
-        metadata_nbt = cls._to_root_compound(metadata)
+            file_size, metadata_start, metadata_end = cls._read_file_layout(reader)
+            metadata = cls._decompress_bytes(cls._read_range(
+                reader, metadata_start, metadata_end - metadata_start, "Construction元数据损坏"))
+            metadata_nbt = cls._to_root_compound(metadata)
 
-        if "section_index_table" not in metadata_nbt or not isinstance(metadata_nbt["section_index_table"], nbt.TAG_ByteArray) :
-            raise ValueError("Construction 缺少 section_index_table")
-        if "block_palette" not in metadata_nbt or not isinstance(metadata_nbt["block_palette"], nbt.TAG_List) :
-            raise ValueError("Construction 缺少 block_palette")
+            if "section_index_table" not in metadata_nbt or not isinstance(metadata_nbt["section_index_table"], nbt.TAG_ByteArray) :
+                raise ValueError("Construction 缺少 section_index_table")
+            if "block_palette" not in metadata_nbt or not isinstance(metadata_nbt["block_palette"], nbt.TAG_List) :
+                raise ValueError("Construction 缺少 block_palette")
 
-        selection_boxes = []
-        if "selection_boxes" in metadata_nbt and isinstance(metadata_nbt["selection_boxes"], nbt.TAG_IntArray) :
-            selection_boxes = [int(v) for v in metadata_nbt["selection_boxes"].get_value()]
+            selection_boxes = []
+            if "selection_boxes" in metadata_nbt and isinstance(metadata_nbt["selection_boxes"], nbt.TAG_IntArray) :
+                selection_boxes = [int(v) for v in metadata_nbt["selection_boxes"].get_value()]
 
-        section_list = cls._parse_section_index_table(metadata_nbt["section_index_table"])
-        min_x, min_y, min_z, max_x, max_y, max_z = cls._parse_bounds(selection_boxes, section_list)
-        size_x, size_y, size_z = max_x - min_x, max_y - min_y, max_z - min_z
+            section_list = cls._parse_section_index_table(metadata_nbt["section_index_table"])
+            min_x, min_y, min_z, max_x, max_y, max_z = cls._parse_bounds(selection_boxes, section_list)
+            size_x, size_y, size_z = max_x - min_x, max_y - min_y, max_z - min_z
 
-        obj = cls()
-        obj.size = array.array("i", [size_x, size_y, size_z])
-        obj.origin = array.array("i", [min_x, min_y, min_z])
-        obj.block_index = array.array("i", [0] * (size_x * size_y * size_z))
+            obj = cls()
+            obj.size = array.array("i", [size_x, size_y, size_z])
+            obj.origin = array.array("i", [min_x, min_y, min_z])
+            obj.block_index = array.array("i", [0] * (size_x * size_y * size_z))
 
-        for palette_entry in metadata_nbt["block_palette"] :
-            if not isinstance(palette_entry, nbt.TAG_Compound) :
-                obj.block_palette.append({"namespace":"minecraft", "blockname":"unknown", "properties":{}})
-                continue
+            for palette_entry in metadata_nbt["block_palette"] :
+                if not isinstance(palette_entry, nbt.TAG_Compound) :
+                    obj.block_palette.append({"namespace":"minecraft", "blockname":"unknown", "properties":{}})
+                    continue
 
-            namespace = "minecraft"
-            blockname = "unknown"
-            properties = {}
+                namespace = "minecraft"
+                blockname = "unknown"
+                properties = {}
 
-            if "namespace" in palette_entry and isinstance(palette_entry["namespace"], nbt.TAG_String) :
-                namespace = palette_entry["namespace"].get_value() or "minecraft"
-            if "blockname" in palette_entry and isinstance(palette_entry["blockname"], nbt.TAG_String) :
-                blockname = palette_entry["blockname"].get_value() or "unknown"
-            if "properties" in palette_entry and isinstance(palette_entry["properties"], nbt.TAG_Compound) :
-                for k, v in palette_entry["properties"].items() :
-                    value = cls._tag_to_value(v)
-                    if isinstance(value, (bool, int, str)) : properties[k] = value
+                if "namespace" in palette_entry and isinstance(palette_entry["namespace"], nbt.TAG_String) :
+                    namespace = palette_entry["namespace"].get_value() or "minecraft"
+                if "blockname" in palette_entry and isinstance(palette_entry["blockname"], nbt.TAG_String) :
+                    blockname = palette_entry["blockname"].get_value() or "unknown"
+                if "properties" in palette_entry and isinstance(palette_entry["properties"], nbt.TAG_Compound) :
+                    for k, v in palette_entry["properties"].items() :
+                        value = cls._tag_to_value(v)
+                        if isinstance(value, (bool, int, str)) : properties[k] = value
 
-            obj.block_palette.append({
-                "namespace": namespace,
-                "blockname": blockname,
-                "properties": properties,
-            })
+                obj.block_palette.append({
+                    "namespace": namespace,
+                    "blockname": blockname,
+                    "properties": properties,
+                })
 
-        if len(obj.block_palette) == 0 :
-            obj.block_palette.append({"namespace":"minecraft", "blockname":"air", "properties":{}})
+            if len(obj.block_palette) == 0 :
+                obj.block_palette.append({"namespace":"minecraft", "blockname":"air", "properties":{}})
 
-        y_z_size = size_y * size_z
-        for start_x, start_y, start_z, shape_x, shape_y, shape_z, data_start, data_length in section_list :
-            if shape_x <= 0 or shape_y <= 0 or shape_z <= 0 : continue
-            if data_start < 0 or data_length <= 0 or data_start + data_length > len(file_bytes) : continue
+            y_z_size = size_y * size_z
+            for start_x, start_y, start_z, shape_x, shape_y, shape_z, data_start, data_length in section_list :
+                if shape_x <= 0 or shape_y <= 0 or shape_z <= 0 : continue
+                if data_start < 0 or data_length <= 0 or data_start + data_length > file_size : continue
 
-            section_data = cls._decompress_bytes(file_bytes[data_start:data_start+data_length])
-            try : section_nbt = cls._to_root_compound(section_data)
-            except : continue
+                section_data = cls._decompress_bytes(cls._read_range(
+                    reader, data_start, data_length, "Construction区块数据损坏"))
+                try : section_nbt = cls._to_root_compound(section_data)
+                except : continue
 
-            blocks = cls._parse_section_blocks(section_nbt)
-            if blocks :
-                max_count = shape_x * shape_y * shape_z
-                section_y_z_size = shape_y * shape_z
-                for ptr, palette_index in enumerate(blocks) :
-                    if ptr >= max_count : break
-                    palette_index = cls._safe_int(palette_index)
-                    if not (0 <= palette_index < len(obj.block_palette)) : palette_index = 0
+                blocks = cls._parse_section_blocks(section_nbt)
+                if blocks :
+                    max_count = shape_x * shape_y * shape_z
+                    section_y_z_size = shape_y * shape_z
+                    for ptr, palette_index in enumerate(blocks) :
+                        if ptr >= max_count : break
+                        palette_index = cls._safe_int(palette_index)
+                        if not (0 <= palette_index < len(obj.block_palette)) : palette_index = 0
 
-                    local_x = ptr // section_y_z_size
-                    local_y = (ptr % section_y_z_size) // shape_z
-                    local_z = ptr % shape_z
+                        local_x = ptr // section_y_z_size
+                        local_y = (ptr % section_y_z_size) // shape_z
+                        local_z = ptr % shape_z
 
-                    world_x = start_x + local_x - min_x
-                    world_y = start_y + local_y - min_y
-                    world_z = start_z + local_z - min_z
+                        world_x = start_x + local_x - min_x
+                        world_y = start_y + local_y - min_y
+                        world_z = start_z + local_z - min_z
+                        if not (0 <= world_x < size_x and 0 <= world_y < size_y and 0 <= world_z < size_z) : continue
+
+                        index = (world_x * size_y + world_y) * size_z + world_z
+                        obj.block_index[index] = palette_index
+
+                if "block_entities" not in section_nbt or not isinstance(section_nbt["block_entities"], nbt.TAG_List) :
+                    continue
+
+                for block_entity in section_nbt["block_entities"] :
+                    if not isinstance(block_entity, nbt.TAG_Compound) : continue
+                    if not("x" in block_entity and "y" in block_entity and "z" in block_entity) : continue
+                    if not isinstance(block_entity["x"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
+                    if not isinstance(block_entity["y"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
+                    if not isinstance(block_entity["z"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
+
+                    world_x = block_entity["x"].get_value() - min_x
+                    world_y = block_entity["y"].get_value() - min_y
+                    world_z = block_entity["z"].get_value() - min_z
                     if not (0 <= world_x < size_x and 0 <= world_y < size_y and 0 <= world_z < size_z) : continue
 
-                    index = (world_x * size_y + world_y) * size_z + world_z
-                    obj.block_index[index] = palette_index
+                    if "nbt" in block_entity and isinstance(block_entity["nbt"], nbt.TAG_Compound) :
+                        entity_nbt = block_entity["nbt"].copy()
+                    else :
+                        entity_nbt = nbt.TAG_Compound()
 
-            if "block_entities" not in section_nbt or not isinstance(section_nbt["block_entities"], nbt.TAG_List) :
-                continue
+                    index = (world_x * y_z_size + world_y * size_z + world_z)
+                    obj.block_nbt[index] = entity_nbt
 
-            for block_entity in section_nbt["block_entities"] :
-                if not isinstance(block_entity, nbt.TAG_Compound) : continue
-                if not("x" in block_entity and "y" in block_entity and "z" in block_entity) : continue
-                if not isinstance(block_entity["x"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
-                if not isinstance(block_entity["y"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
-                if not isinstance(block_entity["z"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
-
-                world_x = block_entity["x"].get_value() - min_x
-                world_y = block_entity["y"].get_value() - min_y
-                world_z = block_entity["z"].get_value() - min_z
-                if not (0 <= world_x < size_x and 0 <= world_y < size_y and 0 <= world_z < size_z) : continue
-
-                if "nbt" in block_entity and isinstance(block_entity["nbt"], nbt.TAG_Compound) :
-                    entity_nbt = block_entity["nbt"].copy()
-                else :
-                    entity_nbt = nbt.TAG_Compound()
-
-                index = (world_x * y_z_size + world_y * size_z + world_z)
-                obj.block_nbt[index] = entity_nbt
-
-        return obj
+            return obj
+        finally :
+            if need_close :
+                try : reader.close()
+                except : pass
 
     @classmethod
     def _split_block_id(cls, block_id:str) -> Tuple[str, str] :

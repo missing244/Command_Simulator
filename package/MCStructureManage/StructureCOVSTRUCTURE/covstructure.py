@@ -51,6 +51,27 @@ class CovStructure :
             return str(data)
         raise TypeError(f"{buffer} 不是可读取对象")
 
+
+    @classmethod
+    def _load_json(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
+        if isinstance(buffer, bytes) :
+            return json.loads(buffer.decode("utf-8", "ignore"))
+
+        if isinstance(buffer, str) :
+            with open(buffer, "r", encoding="utf-8") as f :
+                return json.load(f)
+
+        if isinstance(buffer, io.IOBase) :
+            if buffer.seekable() : buffer.seek(0)
+            if isinstance(buffer, io.TextIOBase) :
+                return json.load(buffer)
+            data = buffer.read()
+            if isinstance(data, bytes) :
+                return json.loads(data.decode("utf-8", "ignore"))
+            return json.loads(str(data))
+
+        raise TypeError(f"{buffer} 不是可读取对象")
+
     @classmethod
     def _write_text(cls, buffer:Union[str, FileIO, BytesIO], data:str) :
         if isinstance(buffer, str) :
@@ -141,7 +162,7 @@ class CovStructure :
     @classmethod
     def verify(cls, buffer:Union[str, bytes, FileIO, BytesIO]) -> bool :
         try :
-            data = json.loads(cls._read_text(buffer))
+            data = cls._load_json(buffer)
         except :
             return False
 
@@ -158,7 +179,7 @@ class CovStructure :
 
     @classmethod
     def from_buffer(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
-        data = json.loads(cls._read_text(buffer))
+        data = cls._load_json(buffer)
         if not isinstance(data, dict) : raise ValueError("CovStructure根对象不是json对象")
 
         size = data.get("size", data.get("dimensions", None))

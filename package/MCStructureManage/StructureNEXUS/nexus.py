@@ -48,6 +48,25 @@ class Nexus :
     def __delattr__(self, name) :
         raise Exception("无法删除任何属性")
 
+
+    @classmethod
+    def _open_reader(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
+        if isinstance(buffer, str) :
+            return open(buffer, "rb"), True
+        if isinstance(buffer, bytes) :
+            return io.BytesIO(buffer), True
+        if isinstance(buffer, io.IOBase) :
+            if buffer.seekable() : buffer.seek(0)
+            return buffer, False
+        raise TypeError(f"{buffer} 不是可读取对象")
+
+    @classmethod
+    def _read_exact(cls, reader:io.IOBase, size:int, error_text:str) -> bytes :
+        data = reader.read(size)
+        if not isinstance(data, (bytes, bytearray)) or len(data) != size :
+            raise ValueError(error_text)
+        return bytes(data)
+
     @classmethod
     def _read_bytes(cls, buffer:Union[str, bytes, FileIO, BytesIO]) -> bytes :
         if isinstance(buffer, str) :
@@ -101,42 +120,49 @@ class Nexus :
 
     @classmethod
     def verify(cls, buffer:Union[str, bytes, FileIO, BytesIO]) -> bool :
-        data = cls._read_bytes(buffer)
-        if len(data) < 8 : return False
-        if data[:4] != cls.MAGIC : return False
-        if data[4] != cls.VERSION : return False
-        return True
+        reader, need_close = None, False
+        try :
+            reader, need_close = cls._open_reader(buffer)
+            head = cls._read_exact(reader, 8, "Nexus文件长度无效")
+            if head[:4] != cls.MAGIC : return False
+            if head[4] != cls.VERSION : return False
+            return True
+        except : return False
+        finally :
+            if need_close and reader is not None :
+                try : reader.close()
+                except : pass
 
     @classmethod
     def from_buffer(cls, buffer:Union[str, bytes, FileIO, BytesIO], password:str="") :
-        data = cls._read_bytes(buffer)
-        if len(data) < 8 : raise ValueError("Nexus文件长度无效")
-        if data[:4] != cls.MAGIC : raise ValueError("不是Nexus文件")
+        reader, need_close = cls._open_reader(buffer)
+        try :
+            head = cls._read_exact(reader, 8, "Nexus文件长度无效")
+            if head[:4] != cls.MAGIC : raise ValueError("不是Nexus文件")
 
-        version, flags, compression = data[4], data[5], data[6]
-        if version != cls.VERSION : raise ValueError("Nexus版本不受支持")
+            version, flags, compression = head[4], head[5], head[6]
+            if version != cls.VERSION : raise ValueError("Nexus版本不受支持")
 
-        ptr = 8
-        author = ""
-        if flags & cls.FLAG_AUTHOR :
-            if ptr + 2 > len(data) : raise ValueError("Nexus作者字段损坏")
-            author_len = struct.unpack("<H", data[ptr:ptr+2])[0]
-            ptr += 2
-            if ptr + author_len > len(data) : raise ValueError("Nexus作者字段损坏")
-            author = data[ptr:ptr+author_len].decode("utf-8", "replace")
-            ptr += author_len
+            author = ""
+            if flags & cls.FLAG_AUTHOR :
+                author_len = struct.unpack("<H", cls._read_exact(reader, 2, "Nexus作者字段损坏"))[0]
+                author = cls._read_exact(reader, author_len, "Nexus作者字段损坏").decode("utf-8", "replace")
 
-        if flags & cls.FLAG_PASSWORD :
-            if ptr + 48 > len(data) : raise ValueError("Nexus密码字段损坏")
-            salt = data[ptr:ptr+16]
-            digest = data[ptr+16:ptr+48]
-            ptr += 48
+            if flags & cls.FLAG_PASSWORD :
+                password_blob = cls._read_exact(reader, 48, "Nexus密码字段损坏")
+                salt = password_blob[:16]
+                digest = password_blob[16:48]
 
-            if not password : raise ValueError("该Nexus文件需要密码")
-            calc = hashlib.sha256(salt + password.encode("utf-8")).digest()
-            if not hmac.compare_digest(calc, digest) : raise ValueError("Nexus密码错误")
+                if not password : raise ValueError("该Nexus文件需要密码")
+                calc = hashlib.sha256(salt + password.encode("utf-8")).digest()
+                if not hmac.compare_digest(calc, digest) : raise ValueError("Nexus密码错误")
 
-        payload = data[ptr:]
+            payload = reader.read()
+        finally :
+            if need_close :
+                try : reader.close()
+                except : pass
+
         if compression == cls.COMP_NONE :
             pass
         elif compression == cls.COMP_BROTLI :

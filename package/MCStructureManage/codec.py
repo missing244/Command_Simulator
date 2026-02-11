@@ -17,7 +17,7 @@ class Codecs :
     * 通过 Codecs.XXXX 调用指定的编解码器
     ---------------------------------
     * 可用类 BDX: 解析/生成 bdx 文件的编解码器
-    * 可用类 AXIOM_BP: 解析/生成 axiom_bp 文件的编解码器
+    * 可用类 AXIOM_BP: 解析 axiom_bp 文件的解码器（编码禁用）
     * 可用类 CONSTRUCTION: 解析/生成 construction 文件的编解码器
     * 可用类 BDS: 解析/生成 bds 文件的编解码器
     * 可用类 COVSTRUCTURE: 解析/生成 covstructure 文件的编解码器
@@ -313,8 +313,8 @@ class Codecs :
             StructureObject.__init__(Struct1.size)
             StructureObject.origin = Struct1.origin
             StructureObject.block_index = Struct1.block_index
-            StructureObject.block_nbt = Struct1.block_nbt
-            StructureObject.entity_nbt = Struct1.entity_nbt
+            StructureObject.block_nbt = {}
+            StructureObject.entity_nbt = TypeCheckList().setChecker(nbt.TAG_Compound)
 
             block_list = [None] * len(Struct1.block_palette)
             for index, block in enumerate(Struct1.block_palette) :
@@ -340,30 +340,7 @@ class Codecs :
             StructureObject.block_palette.__init__(block_list)
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]):
-            self = self.Common
-            Struct1 = StructureAXIOM_BP.AxiomBP()
-
-            Struct1.size = array.array("i", self.size)
-            Struct1.origin = array.array("i", self.origin)
-            Struct1.block_index = array.array("i", self.block_index)
-            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
-            Struct1.entity_nbt = TypeCheckList(i.copy() for i in self.entity_nbt).setChecker(nbt.TAG_Compound)
-
-            for block in self.block_palette :
-                state = dict(block.states)
-                je_name = block.name
-                je_props = {}
-                for k, v in state.items() :
-                    if isinstance(v, bool) : je_props[k] = "true" if v else "false"
-                    elif isinstance(v, (int, float)) : je_props[k] = str(v)
-                    else : je_props[k] = str(v)
-
-                Struct1.block_palette.append({
-                    "Name" : je_name,
-                    "Properties" : je_props
-                })
-
-            Struct1.save_as(Writer)
+            raise RuntimeError("AXIOM_BP 不支持编码")
 
     class CONSTRUCTION(CodecsBase) :
 

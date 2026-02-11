@@ -87,11 +87,30 @@ class NexusNP :
         name = name.lower().strip()
         return name in ("air", "minecraft:air", "minecraft:void_air", "minecraft:cave_air")
 
+
+    @classmethod
+    def _unpack_msgpack(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
+        if isinstance(buffer, bytes) :
+            return msgpack.unpackb(buffer, raw=False, strict_map_key=False)
+
+        if isinstance(buffer, str) :
+            with open(buffer, "rb") as f :
+                if hasattr(msgpack, "unpack") :
+                    return msgpack.unpack(f, raw=False, strict_map_key=False)
+                return msgpack.unpackb(f.read(), raw=False, strict_map_key=False)
+
+        if isinstance(buffer, io.IOBase) :
+            if buffer.seekable() : buffer.seek(0)
+            if hasattr(msgpack, "unpack") :
+                return msgpack.unpack(buffer, raw=False, strict_map_key=False)
+            return msgpack.unpackb(buffer.read(), raw=False, strict_map_key=False)
+
+        raise TypeError(f"{buffer} 不是可读取对象")
+
     @classmethod
     def verify(cls, buffer:Union[str, bytes, FileIO, BytesIO]) -> bool :
         try :
-            data = cls._read_bytes(buffer)
-            obj = msgpack.unpackb(data, raw=False, strict_map_key=False)
+            obj = cls._unpack_msgpack(buffer)
         except :
             return False
 
@@ -103,8 +122,7 @@ class NexusNP :
 
     @classmethod
     def from_buffer(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
-        data = cls._read_bytes(buffer)
-        obj = msgpack.unpackb(data, raw=False, strict_map_key=False)
+        obj = cls._unpack_msgpack(buffer)
         if not isinstance(obj, list) or len(obj) < 1 or not isinstance(obj[0], list) :
             raise ValueError("NexusNP文件结构无效")
 

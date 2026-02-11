@@ -16,11 +16,11 @@ class AxiomBP :
     * 可用属性 origin : 结构原点坐标(16对齐)
     * 可用属性 block_index : 方块索引列表
     * 可用属性 block_palette : 调色盘对象列表（Java Name/Properties）
-    * 可用属性 block_nbt : 以方块索引和nbt对象组成的字典
-    * 可用属性 entity_nbt : 实体对象列表
+    * 可用属性 block_nbt : 不支持（始终为空）
+    * 可用属性 entity_nbt : 不支持（始终为空）
     -----------------------
     * 可用类方法 from_buffer : 通过路径、字节数组或缓冲区生成对象
-    * 可用方法 save_as : 通过路径或缓冲区保存对象数据
+    * 可用方法 save_as : 不支持（编码禁用）
     """
 
     MAGIC = 0x0AE5BB36
@@ -42,6 +42,35 @@ class AxiomBP :
 
     def __delattr__(self, name) :
         raise Exception("无法删除任何属性")
+
+
+    @classmethod
+    def _open_reader(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
+        if isinstance(buffer, str) :
+            return open(buffer, "rb"), True
+        if isinstance(buffer, bytes) :
+            return io.BytesIO(buffer), True
+        if isinstance(buffer, io.IOBase) :
+            if buffer.seekable() : buffer.seek(0)
+            return buffer, False
+        raise TypeError(f"{buffer} 不是可读取对象")
+
+    @classmethod
+    def _read_exact(cls, reader:io.IOBase, size:int, error_text:str) -> bytes :
+        data = reader.read(size)
+        if not isinstance(data, (bytes, bytearray)) or len(data) != size :
+            raise ValueError(error_text)
+        return bytes(data)
+
+    @classmethod
+    def _read_i32be_stream(cls, reader:io.IOBase) -> int :
+        return struct.unpack(">i", cls._read_exact(reader, 4, "AxiomBP文件不完整"))[0]
+
+    @classmethod
+    def _read_byte_array_stream(cls, reader:io.IOBase) -> bytes :
+        arr_len = cls._read_i32be_stream(reader)
+        if arr_len < 0 : raise ValueError("AxiomBP字节数组长度非法")
+        return cls._read_exact(reader, arr_len, "AxiomBP字节数组越界")
 
     @classmethod
     def _read_bytes(cls, buffer:Union[str, bytes, FileIO, BytesIO]) -> bytes :
@@ -90,24 +119,25 @@ class AxiomBP :
 
     @classmethod
     def verify(cls, buffer:Union[str, bytes, FileIO, BytesIO]) -> bool :
+        reader, need_close = None, False
         try :
-            data = cls._read_bytes(buffer)
-            if len(data) < 16 : return False
-
-            magic, offset = cls._read_i32be(data, 0)
+            reader, need_close = cls._open_reader(buffer)
+            magic = cls._read_i32be_stream(reader)
             if magic != cls.MAGIC : return False
 
-            _, offset = cls._read_byte_array(data, offset)
-            _, offset = cls._read_byte_array(data, offset)
-            block_len, offset = cls._read_i32be(data, offset)
-            if block_len < 0 : return False
-            if offset + block_len != len(data) : return False
-
-            block_data = data[offset:offset+block_len]
+            cls._read_byte_array_stream(reader)
+            cls._read_byte_array_stream(reader)
+            block_data = cls._read_byte_array_stream(reader)
             if len(block_data) == 0 : return False
+            if reader.read(1) : return False
+
             root_nbt = nbt.read_from_nbt_file(io.BytesIO(gzip.decompress(block_data)), byteorder="big").get_tag()
             return isinstance(root_nbt, nbt.TAG_Compound) and isinstance(root_nbt.get("BlockRegion", None), nbt.TAG_List)
         except : return False
+        finally :
+            if need_close and reader is not None :
+                try : reader.close()
+                except : pass
 
     @classmethod
     def _tag_to_value(cls, tag_obj):
@@ -203,15 +233,19 @@ class AxiomBP :
 
     @classmethod
     def from_buffer(cls, buffer:Union[str, bytes, FileIO, BytesIO]) :
-        file_bytes = cls._read_bytes(buffer)
-        if not cls.verify(file_bytes) : raise ValueError("不是合法的AxiomBP文件")
+        reader, need_close = cls._open_reader(buffer)
+        try :
+            magic = cls._read_i32be_stream(reader)
+            if magic != cls.MAGIC : raise ValueError("不是合法的AxiomBP文件")
 
-        offset = 0
-        _, offset = cls._read_i32be(file_bytes, offset)
-        _, offset = cls._read_byte_array(file_bytes, offset)
-        _, offset = cls._read_byte_array(file_bytes, offset)
-        block_len, offset = cls._read_i32be(file_bytes, offset)
-        block_gzip = file_bytes[offset:offset+block_len]
+            cls._read_byte_array_stream(reader)
+            cls._read_byte_array_stream(reader)
+            block_gzip = cls._read_byte_array_stream(reader)
+            if reader.read(1) : raise ValueError("AxiomBP文件存在多余尾部数据")
+        finally :
+            if need_close :
+                try : reader.close()
+                except : pass
 
         block_nbt = cls._to_root_compound(gzip.decompress(block_gzip))
         regions = block_nbt.get("BlockRegion", None)
@@ -310,26 +344,8 @@ class AxiomBP :
                 index = (gx * size_y + gy) * size_z + gz
                 obj.block_index[index] = region_palette[p]
 
-        if "BlockEntities" in block_nbt and isinstance(block_nbt["BlockEntities"], nbt.TAG_List) :
-            size_y, size_z = obj.size[1], obj.size[2]
-            for block_entity in block_nbt["BlockEntities"] :
-                if not isinstance(block_entity, nbt.TAG_Compound) : continue
-                if not ("x" in block_entity and "y" in block_entity and "z" in block_entity) : continue
-                if not isinstance(block_entity["x"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
-                if not isinstance(block_entity["y"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
-                if not isinstance(block_entity["z"], (nbt.TAG_Byte, nbt.TAG_Short, nbt.TAG_Int, nbt.TAG_Long)) : continue
-
-                gx = block_entity["x"].get_value() - obj.origin[0]
-                gy = block_entity["y"].get_value() - obj.origin[1]
-                gz = block_entity["z"].get_value() - obj.origin[2]
-                if not (0 <= gx < obj.size[0] and 0 <= gy < obj.size[1] and 0 <= gz < obj.size[2]) : continue
-
-                index = (gx * size_y + gy) * size_z + gz
-                obj.block_nbt[index] = block_entity.copy()
-
-        if "Entities" in block_nbt and isinstance(block_nbt["Entities"], nbt.TAG_List) :
-            for entity in block_nbt["Entities"] :
-                if isinstance(entity, nbt.TAG_Compound) : obj.entity_nbt.append(entity.copy())
+        obj.block_nbt.clear()
+        obj.entity_nbt.clear()
 
         return obj
 
@@ -361,127 +377,4 @@ class AxiomBP :
         return self._nbt_to_bytes(meta, byteorder="big")
 
     def save_as(self, buffer:Union[str, FileIO, BytesIO]) :
-        size_x, size_y, size_z = [int(v) for v in self.size]
-        if size_x <= 0 or size_y <= 0 or size_z <= 0 :
-            raise ValueError("size 不是合法结构尺寸")
-
-        volume = size_x * size_y * size_z
-        if len(self.block_index) != volume :
-            raise ValueError("block_index 长度与结构体积不一致")
-
-        if len(self.block_palette) == 0 :
-            self.block_palette.append({"Name":"minecraft:air", "Properties":{}})
-
-        for i, idx in enumerate(self.block_index) :
-            if not (0 <= idx < len(self.block_palette)) : self.block_index[i] = 0
-
-        start_x, start_y, start_z = [int(v) for v in self.origin]
-        end_x, end_y, end_z = start_x + size_x - 1, start_y + size_y - 1, start_z + size_z - 1
-
-        start_rx, start_ry, start_rz = self._floor_div(start_x, 16), self._floor_div(start_y, 16), self._floor_div(start_z, 16)
-        end_rx, end_ry, end_rz = self._floor_div(end_x, 16), self._floor_div(end_y, 16), self._floor_div(end_z, 16)
-
-        root = nbt.TAG_Compound()
-        root["DataVersion"] = nbt.TAG_Int(self.JAVA_DATA_VERSION)
-        root["BlockRegion"] = nbt.TAG_List(type=nbt.TAG_Compound)
-        root["BlockEntities"] = nbt.TAG_List(type=nbt.TAG_Compound)
-        root["Entities"] = nbt.TAG_List(type=nbt.TAG_Compound)
-
-        non_air = 0
-        for ry in range(start_ry, end_ry + 1) :
-            for rz in range(start_rz, end_rz + 1) :
-                for rx in range(start_rx, end_rx + 1) :
-                    local_indices = [0] * 4096
-                    region_palette:List[Dict[str, dict]] = []
-                    palette_map:Dict[int, int] = {}
-
-                    def add_region_palette(global_idx:int) -> int :
-                        if global_idx in palette_map : return palette_map[global_idx]
-                        palette_map[global_idx] = len(region_palette)
-                        palette_data = self.block_palette[global_idx]
-                        region_palette.append({
-                            "Name": str(palette_data.get("Name", "minecraft:air")),
-                            "Properties": dict(palette_data.get("Properties", {}) if isinstance(palette_data.get("Properties", {}), dict) else {})
-                        })
-                        return palette_map[global_idx]
-
-                    add_region_palette(0)
-                    region_world_x, region_world_y, region_world_z = rx * 16, ry * 16, rz * 16
-                    for ly in range(16) :
-                        world_y = region_world_y + ly
-                        for lz in range(16) :
-                            world_z = region_world_z + lz
-                            for lx in range(16) :
-                                world_x = region_world_x + lx
-                                block_pos_idx = ly * 256 + lz * 16 + lx
-
-                                if not (start_x <= world_x <= end_x and start_y <= world_y <= end_y and start_z <= world_z <= end_z) :
-                                    local_indices[block_pos_idx] = 0
-                                    continue
-
-                                gx, gy, gz = world_x - start_x, world_y - start_y, world_z - start_z
-                                global_index = (gx * size_y + gy) * size_z + gz
-                                gpal = int(self.block_index[global_index])
-                                if gpal != 0 : non_air += 1
-                                local_indices[block_pos_idx] = add_region_palette(gpal)
-
-                    packed = self._pack_block_indices(local_indices, len(region_palette))
-                    palette_tag = nbt.TAG_List(type=nbt.TAG_Compound)
-                    for pal in region_palette :
-                        entry = nbt.TAG_Compound()
-                        entry["Name"] = nbt.TAG_String(pal["Name"] if ":" in pal["Name"] else "minecraft:" + pal["Name"])
-
-                        props = pal.get("Properties", {})
-                        if isinstance(props, dict) and len(props) > 0 :
-                            props_tag = nbt.TAG_Compound()
-                            for k, v in props.items() :
-                                if not isinstance(k, str) : continue
-                                if isinstance(v, bool) : props_tag[k] = nbt.TAG_String("true" if v else "false")
-                                else : props_tag[k] = nbt.TAG_String(str(v).lower() if isinstance(v, (int, float)) else str(v))
-                            if len(props_tag) : entry["Properties"] = props_tag
-                        palette_tag.append(entry)
-
-                    bs = nbt.TAG_Compound()
-                    bs["palette"] = palette_tag
-                    bs["data"] = nbt.TAG_LongArray(array.array("q", packed))
-
-                    region = nbt.TAG_Compound()
-                    region["BlockStates"] = bs
-                    region["X"] = nbt.TAG_Int(rx)
-                    region["Y"] = nbt.TAG_Int(ry)
-                    region["Z"] = nbt.TAG_Int(rz)
-                    root["BlockRegion"].append(region)
-
-        for index, be in self.block_nbt.items() :
-            if not isinstance(index, int) : continue
-            if not isinstance(be, nbt.TAG_Compound) : continue
-            if not (0 <= index < len(self.block_index)) : continue
-
-            gx = index // (size_y * size_z)
-            gy = (index % (size_y * size_z)) // size_z
-            gz = index % size_z
-            world_x, world_y, world_z = start_x + gx, start_y + gy, start_z + gz
-
-            be_copy = be.copy()
-            be_copy["x"] = nbt.TAG_Int(world_x)
-            be_copy["y"] = nbt.TAG_Int(world_y)
-            be_copy["z"] = nbt.TAG_Int(world_z)
-            root["BlockEntities"].append(be_copy)
-
-        for entity in self.entity_nbt :
-            if isinstance(entity, nbt.TAG_Compound) : root["Entities"].append(entity.copy())
-
-        block_data = gzip.compress(self._nbt_to_bytes(root, byteorder="big"))
-        contains_air = non_air < volume
-        target_name = buffer if isinstance(buffer, str) else "AxiomStructure.bp"
-        metadata = self._build_metadata(target_name, non_air, contains_air)
-
-        output = io.BytesIO()
-        output.write(struct.pack(">i", self.MAGIC))
-        output.write(struct.pack(">i", len(metadata)))
-        output.write(metadata)
-        output.write(struct.pack(">i", 0))
-        output.write(struct.pack(">i", len(block_data)))
-        output.write(block_data)
-
-        self._write_bytes(buffer, output.getvalue())
+        raise RuntimeError("AxiomBP 不支持编码")
