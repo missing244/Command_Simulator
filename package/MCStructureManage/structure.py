@@ -62,7 +62,7 @@ class CommonStructure :
 
 
     @classmethod
-    def from_buffer(cls, Reader:Union[str, bytes, IOBase], Decoder=None) :
+    def from_buffer(cls, Reader:Union[str, bytes, IOBase], Decoder=None, **DecoderKwargs) :
         from . import Codecs, getStructureType
 
         if Decoder is not None and Codecs.CodecsBase not in Decoder.mro() : 
@@ -73,15 +73,15 @@ class CommonStructure :
 
         Common = cls()
         Decoder = CodecsType if Decoder is None else Decoder
-        Decoder(Common).decode(Reader)
+        Decoder(Common, **DecoderKwargs).decode(Reader)
         return Common
 
-    def save_as(self, Writer:Union[str, IOBase], Encoder, IgnoreAir:bool=True) :
+    def save_as(self, Writer:Union[str, IOBase], Encoder, IgnoreAir:bool=True, **EncoderKwargs) :
         """
         * 使用json格式输出时，Writer一定为字符串缓冲区或带有编码的文件缓冲区
         * IgnoreAir参数，不在mcstructure和schematic文件中生效
         """
-        Encoder(self, IgnoreAir).encode(Writer)
+        Encoder(self, IgnoreAir, **EncoderKwargs).encode(Writer)
 
 
     def get_block(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, Block] :

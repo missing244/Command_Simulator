@@ -1,8 +1,9 @@
 from . import nbt, MCBELab
 from .block import Block
 from .__private import TypeCheckList, BiList
-from . import StructureBDX, StructureMCS, StructureSCHEM
-from . import StructureRUNAWAY, StructureSCHEMATIC
+from . import StructureAXIOM_BP, StructureBDS, StructureBDX, StructureCONSTRUCTION
+from . import StructureCOVSTRUCTURE, StructureIBIMPORT, StructureMCFUNZIP, StructureMCS, StructureNEXUS
+from . import StructureNEXUS_NP, StructureRUNAWAY, StructureSCHEM, StructureSCHEMATIC
 
 from typing import Union,Dict,Tuple,Literal,List
 import abc, re, io, json, array, itertools, urllib.parse, os, math, zipfile, traceback, zlib
@@ -16,6 +17,12 @@ class Codecs :
     * 通过 Codecs.XXXX 调用指定的编解码器
     ---------------------------------
     * 可用类 BDX: 解析/生成 bdx 文件的编解码器
+    * 可用类 AXIOM_BP: 解析/生成 axiom_bp 文件的编解码器
+    * 可用类 CONSTRUCTION: 解析/生成 construction 文件的编解码器
+    * 可用类 BDS: 解析/生成 bds 文件的编解码器
+    * 可用类 COVSTRUCTURE: 解析/生成 covstructure 文件的编解码器
+    * 可用类 NEXUS_NP: 解析/生成 nexus_np 文件的编解码器
+    * 可用类 NEXUS: 解析/生成 nexus 文件的编解码器
     * 可用类 MCSTRUCTURE: 解析/生成 mcstructure 文件的编解码器
     * 可用类 SCHEMATIC: 解析/生成 schematic 文件的编解码器
     * 可用类 SCHEM_V1: 解析/生成 schem 文件的编解码器
@@ -38,16 +45,19 @@ class Codecs :
     * 可用类 FUHONG_V4: 解析/生成 FUHONG json结构文件的编解码器
     * 可用类 FUHONG_V5: 解析/生成 FUHONG json结构文件的编解码器
     * 可用类 QINGXU_V1: 解析/生成 情绪 json结构文件的编解码器
+    * 可用类 MCFUNZIP: 生成 mcfunzip 文件的编码器（解码禁用）
+    * 可用类 IBIMPORT: 生成 ibimport 文件的编码器（解码禁用）
     * 可用类 FunctionCommand: 生成 函数命令 zip文件的编码器
     * 可用类 TextCommand: 生成 文本命令 txt文件的编码器
     """
 
     class CodecsBase(abc.ABC) :
 
-        def __init__(self, Common, IgnoreAir:bool=True):
+        def __init__(self, Common, IgnoreAir:bool=True, **CodecKwargs):
             from . import CommonStructure
             self.Common:CommonStructure = Common
             self.IgnoreAir:bool = IgnoreAir
+            self.CodecKwargs:dict = CodecKwargs
 
         @abc.abstractmethod
         def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
@@ -286,6 +296,356 @@ class Codecs :
                 else : append_function( PlaceBlockWithBlockStates(2*block_index, 2*block_index+1) )
 
             BDX.save_as(Writer)
+
+    class AXIOM_BP(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+            try : return StructureAXIOM_BP.AxiomBP.verify(Data)
+            except : return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureAXIOM_BP.AxiomBP.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.__init__(Struct1.size)
+            StructureObject.origin = Struct1.origin
+            StructureObject.block_index = Struct1.block_index
+            StructureObject.block_nbt = Struct1.block_nbt
+            StructureObject.entity_nbt = Struct1.entity_nbt
+
+            block_list = [None] * len(Struct1.block_palette)
+            for index, block in enumerate(Struct1.block_palette) :
+                java_name = block.get("Name", "minecraft:air")
+                java_props = block.get("Properties", {})
+                if not isinstance(java_props, dict) : java_props = {}
+
+                parsed_props = {}
+                for k, v in java_props.items() :
+                    if not isinstance(k, str) : continue
+                    if isinstance(v, str) :
+                        if v == "true" : parsed_props[k] = True
+                        elif v == "false" : parsed_props[k] = False
+                        else : parsed_props[k] = v
+                    else : parsed_props[k] = str(v)
+
+                try :
+                    be_block = MCBELab.JE_Transfor_BE_Block(java_name, parsed_props)
+                    block_list[index] = Block(*be_block)
+                except :
+                    block_list[index] = Block("minecraft:air")
+
+            StructureObject.block_palette.__init__(block_list)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            self = self.Common
+            Struct1 = StructureAXIOM_BP.AxiomBP()
+
+            Struct1.size = array.array("i", self.size)
+            Struct1.origin = array.array("i", self.origin)
+            Struct1.block_index = array.array("i", self.block_index)
+            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
+            Struct1.entity_nbt = TypeCheckList(i.copy() for i in self.entity_nbt).setChecker(nbt.TAG_Compound)
+
+            for block in self.block_palette :
+                state = dict(block.states)
+                je_name = block.name
+                je_props = {}
+                for k, v in state.items() :
+                    if isinstance(v, bool) : je_props[k] = "true" if v else "false"
+                    elif isinstance(v, (int, float)) : je_props[k] = str(v)
+                    else : je_props[k] = str(v)
+
+                Struct1.block_palette.append({
+                    "Name" : je_name,
+                    "Properties" : je_props
+                })
+
+            Struct1.save_as(Writer)
+
+    class CONSTRUCTION(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+            try : return StructureCONSTRUCTION.Construction.verify(Data)
+            except : return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureCONSTRUCTION.Construction.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.__init__(Struct1.size)
+            StructureObject.origin = Struct1.origin
+            StructureObject.block_index = Struct1.block_index
+            StructureObject.block_nbt = Struct1.block_nbt
+
+            block_list = [None] * len(Struct1.block_palette)
+            for index, block in enumerate(Struct1.block_palette) :
+                namespace = block.get("namespace", "minecraft")
+                blockname = block.get("blockname", "unknown")
+                properties = block.get("properties", {})
+                if not isinstance(properties, dict) : properties = {}
+                if "__version__" in properties : del properties["__version__"]
+
+                block_id = f"{namespace}:{blockname}" if ":" not in blockname else blockname
+                try : block_list[index] = Block(block_id, properties)
+                except : block_list[index] = Block(block_id, {})
+            StructureObject.block_palette.__init__(block_list)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            self = self.Common
+            Struct1 = StructureCONSTRUCTION.Construction()
+
+            Struct1.size = array.array("i", self.size)
+            Struct1.origin = array.array("i", self.origin)
+            Struct1.block_index = array.array("i", self.block_index)
+            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
+
+            for block in self.block_palette :
+                namespace, blockname = (block.name.split(":", 1) if ":" in block.name else ("minecraft", block.name))
+                Struct1.block_palette.append({
+                    "namespace" : namespace,
+                    "blockname" : blockname,
+                    "properties" : dict(block.states)
+                })
+
+            Struct1.save_as(Writer)
+
+    class BDS(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+            try : return StructureBDS.BDS.verify(Data)
+            except : return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureBDS.BDS.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.__init__(Struct1.size)
+            StructureObject.origin = Struct1.origin
+            StructureObject.block_index = Struct1.block_index
+            StructureObject.block_nbt = Struct1.block_nbt
+
+            block_list = [None] * len(Struct1.block_palette)
+            for index, block in enumerate(Struct1.block_palette) :
+                name = block.get("name", "minecraft:air")
+                states = block.get("states", {})
+                data_value = block.get("data", 0)
+                states_string = block.get("states_string", "")
+
+                try :
+                    if isinstance(states, dict) and states : block_list[index] = Block(name, states)
+                    elif isinstance(states_string, str) and states_string : block_list[index] = Block(name, states_string)
+                    else : block_list[index] = Block(name, data_value)
+                except :
+                    try : block_list[index] = Block(name, {})
+                    except : block_list[index] = Block("minecraft:air", {})
+            StructureObject.block_palette.__init__(block_list)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            self = self.Common
+            Struct1 = StructureBDS.BDS()
+
+            Struct1.size = array.array("i", self.size)
+            Struct1.origin = array.array("i", self.origin)
+            Struct1.block_index = array.array("i", self.block_index)
+            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
+
+            for block in self.block_palette :
+                data_value = 0
+                if isinstance(getattr(block, "dataValue", None), (tuple, list)) and len(block.dataValue) > 1 :
+                    data_value = int(block.dataValue[1])
+                Struct1.block_palette.append({
+                    "name" : block.name,
+                    "states" : dict(block.states),
+                    "data" : data_value,
+                    "states_string" : ""
+                })
+
+            Struct1.save_as(Writer)
+
+    class COVSTRUCTURE(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            if not isinstance(Data, dict) : return False
+
+            size = Data.get("size", Data.get("dimensions", None))
+            if not (isinstance(size, list) and len(size) >= 3) : return False
+
+            if "structure" in Data and isinstance(Data["structure"], dict) :
+                struct_obj = Data["structure"]
+                return ("block_indices" in struct_obj or "blocks" in struct_obj)
+
+            return ("block_indices" in Data or "blocks" in Data)
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureCOVSTRUCTURE.CovStructure.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.__init__(Struct1.size)
+            StructureObject.origin = Struct1.origin
+            StructureObject.block_index = Struct1.block_index
+            StructureObject.block_nbt = Struct1.block_nbt
+            StructureObject.entity_nbt = Struct1.entity_nbt
+
+            block_list = [None] * len(Struct1.block_palette)
+            for index, block in enumerate(Struct1.block_palette) :
+                name = block.get("name", "minecraft:air")
+                states = block.get("states", {})
+                data_value = block.get("data", 0)
+                states_string = block.get("states_string", "")
+
+                try :
+                    if isinstance(states, dict) and states : block_list[index] = Block(name, states)
+                    elif isinstance(states_string, str) and states_string : block_list[index] = Block(name, states_string)
+                    else : block_list[index] = Block(name, data_value)
+                except :
+                    try : block_list[index] = Block(name, {})
+                    except : block_list[index] = Block("minecraft:air", {})
+            StructureObject.block_palette.__init__(block_list)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            self = self.Common
+            Struct1 = StructureCOVSTRUCTURE.CovStructure()
+
+            Struct1.size = array.array("i", self.size)
+            Struct1.origin = array.array("i", self.origin)
+            Struct1.block_index = array.array("i", self.block_index)
+            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
+            Struct1.entity_nbt = TypeCheckList(i.copy() for i in self.entity_nbt).setChecker(nbt.TAG_Compound)
+
+            for block in self.block_palette :
+                data_value = 0
+                if isinstance(getattr(block, "dataValue", None), (tuple, list)) and len(block.dataValue) > 1 :
+                    data_value = int(block.dataValue[1])
+                Struct1.block_palette.append({
+                    "name" : block.name,
+                    "states" : dict(block.states),
+                    "data" : data_value,
+                    "version" : 17959425
+                })
+
+            Struct1.save_as(Writer)
+
+    class NEXUS_NP(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+            try : return StructureNEXUS_NP.NexusNP.verify(Data)
+            except : return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureNEXUS_NP.NexusNP.from_buffer(Reader)
+
+            StructureObject = self.Common
+            StructureObject.__init__(Struct1.size)
+            StructureObject.origin = Struct1.origin
+            StructureObject.block_index = Struct1.block_index
+            StructureObject.block_nbt = Struct1.block_nbt
+
+            block_list = [None] * len(Struct1.block_palette)
+            for index, block in enumerate(Struct1.block_palette) :
+                name = block.get("name", "minecraft:air")
+                states = block.get("states", {})
+                data_value = block.get("data", 0)
+                states_string = block.get("states_string", "")
+
+                try :
+                    if isinstance(states, dict) and states : block_list[index] = Block(name, states)
+                    elif isinstance(states_string, str) and states_string : block_list[index] = Block(name, states_string)
+                    else : block_list[index] = Block(name, data_value)
+                except :
+                    try : block_list[index] = Block(name, {})
+                    except : block_list[index] = Block("minecraft:air", {})
+            StructureObject.block_palette.__init__(block_list)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            self = self.Common
+            Struct1 = StructureNEXUS_NP.NexusNP()
+
+            Struct1.size = array.array("i", self.size)
+            Struct1.origin = array.array("i", self.origin)
+            Struct1.block_index = array.array("i", self.block_index)
+            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
+
+            for block in self.block_palette :
+                data_value = 0
+                if isinstance(getattr(block, "dataValue", None), (tuple, list)) and len(block.dataValue) > 1 :
+                    data_value = int(block.dataValue[1])
+                Struct1.block_palette.append({
+                    "name" : block.name,
+                    "states" : dict(block.states),
+                    "data" : data_value,
+                    "states_string" : ""
+                })
+
+            Struct1.save_as(Writer)
+
+
+    class NEXUS(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "bytes" : return False
+            try : return StructureNEXUS.Nexus.verify(Data)
+            except : return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            password = self.CodecKwargs.get("password", "")
+            if not isinstance(password, str) : password = str(password)
+            Struct1 = StructureNEXUS.Nexus.from_buffer(Reader, password=password)
+
+            StructureObject = self.Common
+            StructureObject.__init__(Struct1.size)
+            StructureObject.origin = Struct1.origin
+            StructureObject.block_index = Struct1.block_index
+            StructureObject.entity_nbt = Struct1.entity_nbt
+            StructureObject.block_nbt = Struct1.block_nbt
+
+            for key, value in StructureObject.block_nbt.items() :
+                if "block_entity_data" not in value : continue
+                StructureObject.block_nbt[key] = value["block_entity_data"]
+
+            block_list = [None] * len(Struct1.block_palette)
+            for index, block in enumerate(Struct1.block_palette) :
+                name = block["name"].value
+                state = {i:(bool(j.value) if isinstance(j, nbt.TAG_Byte) else j.value) for i,j in block["states"].items()}
+                block_list[index] = Block(name, state)
+            StructureObject.block_palette.__init__(block_list)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            Common = self.Common
+            password = self.CodecKwargs.get("password", "")
+            author = self.CodecKwargs.get("author", "")
+            compression = self.CodecKwargs.get("compression", StructureNEXUS.Nexus.COMP_BROTLI)
+
+            if not isinstance(password, str) : password = str(password)
+            if not isinstance(author, str) : author = str(author)
+            try : compression = int(compression)
+            except : compression = StructureNEXUS.Nexus.COMP_BROTLI
+
+            Struct1 = StructureNEXUS.Nexus()
+            Struct1.size = array.array("i", Common.size)
+            Struct1.origin = array.array("i", Common.origin)
+            Struct1.block_index = array.array("i", Common.block_index)
+            Struct1.block_palette = TypeCheckList(i.to_nbt() for i in Common.block_palette).setChecker(nbt.TAG_Compound)
+            Struct1.entity_nbt = TypeCheckList(i.copy() for i in Common.entity_nbt).setChecker(nbt.TAG_Compound)
+            Struct1.block_nbt = {k:nbt.TAG_Compound({"block_entity_data":v.copy()}) for k,v in Common.block_nbt.items()}
+
+            Struct1.save_as(Writer, password=password, author=author, compression=compression)
 
     class MCSTRUCTURE(CodecsBase) :
 
@@ -2340,6 +2700,71 @@ class Codecs :
 
             Struct1.save_as(Writer)
 
+
+    class MCFUNZIP(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            raise RuntimeError(f"{Reader} 不支持通过 MCFUNZIP 解析为结构")
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureMCFUNZIP.MCFunZip()
+
+            Struct1.size = array.array("i", self.size)
+            Struct1.origin = array.array("i", self.origin)
+            Struct1.block_index = array.array("i", self.block_index)
+            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
+
+            for block in self.block_palette :
+                data_value = 0
+                if isinstance(getattr(block, "dataValue", None), (tuple, list)) and len(block.dataValue) > 1 :
+                    data_value = int(block.dataValue[1])
+                Struct1.block_palette.append({
+                    "name" : block.name,
+                    "states" : dict(block.states),
+                    "data" : data_value,
+                    "states_string" : ""
+                })
+
+            Struct1.save_as(Writer, ignore_air=IgnoreAir)
+
+    class IBIMPORT(CodecsBase) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            raise RuntimeError(f"{Reader} 不支持通过 IBIMPORT 解析为结构")
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            IgnoreAir, self = self.IgnoreAir, self.Common
+            Struct1 = StructureIBIMPORT.IBImport()
+
+            Struct1.size = array.array("i", self.size)
+            Struct1.origin = array.array("i", self.origin)
+            Struct1.block_index = array.array("i", self.block_index)
+            Struct1.block_nbt = {k:v.copy() for k,v in self.block_nbt.items()}
+
+            for block in self.block_palette :
+                data_value = 0
+                if isinstance(getattr(block, "dataValue", None), (tuple, list)) and len(block.dataValue) > 1 :
+                    data_value = int(block.dataValue[1])
+                Struct1.block_palette.append({
+                    "name" : block.name,
+                    "states" : dict(block.states),
+                    "data" : data_value,
+                    "states_string" : ""
+                })
+
+            Struct1.save_as(Writer, ignore_air=IgnoreAir)
+
     class FunctionCommand(CodecsBase) :
 
         @staticmethod
@@ -2501,7 +2926,8 @@ class Codecs :
 
 
 
-SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
+SupportCodecs = [Codecs.BDX, Codecs.AXIOM_BP, Codecs.CONSTRUCTION, Codecs.BDS, Codecs.COVSTRUCTURE,
+    Codecs.NEXUS_NP, Codecs.NEXUS, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
     Codecs.MIANYANG_V1, Codecs.MIANYANG_V2, Codecs.MIANYANG_V3, Codecs.GANGBAN_V1, Codecs.GANGBAN_V2,
     Codecs.GANGBAN_V3, Codecs.GANGBAN_V4, Codecs.GANGBAN_V5, Codecs.GANGBAN_V6, Codecs.GANGBAN_V7, 
     Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, #Codecs.FUHONG_V5, 

@@ -2,6 +2,14 @@
     MC基岩版结构管理模块
     ---------------------------------
     * 可用模块 StructureBDX: 解析bdx文件的模块
+    * 可用模块 StructureAXIOM_BP: 解析axiom_bp文件的模块
+    * 可用模块 StructureCONSTRUCTION: 解析construction文件的模块
+    * 可用模块 StructureBDS: 解析bds文件的模块
+    * 可用模块 StructureCOVSTRUCTURE: 解析covstructure文件的模块
+    * 可用模块 StructureNEXUS_NP: 解析nexus_np文件的模块
+    * 可用模块 StructureNEXUS: 解析nexus文件的模块
+    * 可用模块 StructureMCFUNZIP: 生成mcfunzip文件的模块（仅编码）
+    * 可用模块 StructureIBIMPORT: 生成ibimport文件的模块（仅编码）
     * 可用模块 StructureMCS: 解析mcstructure文件的模块
     * 可用模块 StructureSCHEM: 解析schem文件的模块
     * 可用模块 StructureSCHEMATIC: 解析schematic文件的模块
@@ -23,7 +31,9 @@ from ..Py_module import C_brotli as brotli
 
 
 
-from . import StructureBDX, StructureMCS, StructureSCHEM
+from . import StructureBDX, StructureAXIOM_BP, StructureBDS, StructureCONSTRUCTION
+from . import StructureCOVSTRUCTURE, StructureIBIMPORT, StructureMCFUNZIP, StructureMCS
+from . import StructureNEXUS, StructureNEXUS_NP, StructureSCHEM
 from . import StructureRUNAWAY, StructureSCHEMATIC
 from .block import Block
 from .codec import Codecs, getStructureType, registerCodecs
