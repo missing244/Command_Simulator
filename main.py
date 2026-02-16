@@ -35,6 +35,8 @@ if True : #启用软件前的加载项目
     def http_server_create(server_class=http.server.HTTPServer, handler_class=http.server.SimpleHTTPRequestHandler):
         from urllib import parse
         class http_Resquest(handler_class) :
+            def log_message(self, format, *args):
+                return None
 
             def do_GET(self):
                 url_obj = parse.urlparse(self.path)
@@ -61,13 +63,25 @@ if True : #启用软件前的加载项目
 
             def do_POST(self):
                 self.send_response(200)
-                self.send_header('Content-type', 'application/json')
                 self.send_header('Content-Encoding', 'gzip')
-                self.end_headers()
-                datas = self.rfile.read(int(self.headers['content-length']))
-                respones = debug_windows.post_data(datas, debug_windows.user_manager.save_data['install_pack_list'])
-                self.wfile.write(gzip.compress(json.dumps(respones,separators=(',', ':'),
-                    default=Minecraft_BE.DataSave.encoding).encode('utf-8')))
+                client_post_data = self.rfile.read(int(self.headers['content-length']))
+                try : client_post_json = json.loads(client_post_data)
+                except : client_post_json = {}
+
+                if "operation" in client_post_json :
+                    ResponesData = debug_windows.post_data(client_post_json)
+                else : ResponesData = {"state": 1 , "msg": "传输数据不合法"}
+                
+                if isinstance(ResponesData, bytes) : 
+                    self.send_header('Content-type', 'application/octet-stream')
+                    self.end_headers()
+                    self.wfile.write( gzip.compress(ResponesData) )
+                else : 
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write( 
+                    gzip.compress( json.dumps(ResponesData, separators=(',', ':'),
+                    default=Minecraft_BE.DataSave.encoding).encode('utf-8')) )
 
         server_address = ('', 32323)
         http_Resquest = functools.partial(http_Resquest, directory="local_server")
@@ -133,8 +147,8 @@ class control_windows :
     def creat_windows(self) :
         self.button_bar = app_tk_frame.Bottom_Bar(self)
         self.button_bar.pack(side="bottom")
-        self.expend_pack_showtips = tkinter.Label(self.window, text="进入拓展包后，点击下方“拓展”字体\n即可返回“拓展包管理”界面", 
-            fg="#7685F7", font=app_tk_frame.tk_tool.get_default_font(10))
+        self.expend_pack_showtips = tkinter.Label(self.window, text="进入拓展包后，点击下方“返回”字体\n即可返回“拓展包管理”界面", 
+            fg="#6376FF", font=app_tk_frame.tk_tool.get_default_font(10))
         self.display_frame["right_click_menu"] = app_tk_frame.Global_Right_Click_Menu(self.window)
 
         self.display_frame["welcome_screen"] = app_tk_frame.Welcome_Screen(self)
@@ -227,11 +241,13 @@ class control_windows :
             if test_flag and self.now_display_frame == "expand_pack" and name != "expand_pack" : #退出拓展包界面
                 right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
                 while right_click_menu.item_counter : right_click_menu.remove_item()
-                if hasattr(data["object"],"exit_method") : data["object"].exit_method()
+                if hasattr(data["object"], "exit_method") : data["object"].exit_method()
+                self.button_bar.exit_expand_pack()
             if test_flag and self.now_display_frame != "expand_pack" and name == "expand_pack" :  #进入拓展包界面
                 right_click_menu:app_tk_frame.Global_Right_Click_Menu = self.display_frame["right_click_menu"]
                 if hasattr(data["module"], "Menu_set") : data["module"].Menu_set(right_click_menu)
-                if hasattr(data["object"],"exit_method") : data["object"].exit_method()
+                if hasattr(data["object"], "exit_method") : data["object"].exit_method()
+                self.button_bar.inter_expand_pack()
 
         self.display_frame[name].pack()
         self.now_display_frame = name
@@ -278,7 +294,7 @@ class control_windows :
         self.display_frame["log_display"].set_log(*arg, **karg)
 
 
-    def get_expand_pack_class_object(self,uuid:str) -> object :
+    def get_expand_pack_class_object(self, uuid:str) -> object :
         a = self.expand_pack_open_list.get(uuid, None)
         if a is None : return None
         return a.get('object')
@@ -336,35 +352,44 @@ class control_windows :
             time.sleep(0.5)
 
 
-    def post_data(self, data_1:bytes, pack_list:dict) :
-        post_json = json.loads(data_1.decode('utf-8'))
-        
-        operation_json = {
+    def post_data(self, post_json:dict) :
+        operation_mode = {
             "expand_pack_run": self.post_to_expand_pack,
+            "structure_render": self.post_to_structureReader
         }
-        
-        if ("operation" not in post_json) : return {"state": 1 , "msg": "传输数据不合法"}
-        if (post_json["operation"] not in operation_json) : return {"state": 2 , "msg": "指定操作不合法"}
-        if (post_json["operation"] == "expand_pack_run") and ("pack_id" not in post_json) : return {"state": 1 , "msg": "传输数据不合法"}
-        if (post_json["operation"] == "expand_pack_run" and post_json["pack_id"] not in pack_list) : return {"state": 3 , "msg": "无效的拓展包ID"}
-        if (post_json["operation"] == "expand_pack_run" and post_json["pack_id"] not in self.expand_pack_open_list) : return {"state": 4 , "msg": "指定的拓展包未启动"}
 
-        try : return operation_json[post_json["operation"]](post_json)
+        OperationMode = post_json.get("operation", None)
+        if (OperationMode not in operation_mode) : return {"state": 2 , "msg": "指定操作不合法"}
+
+        try : return operation_mode[OperationMode](post_json)
         except :
             traceback.print_exc()
             return {"state" : 5 , "msg" : traceback.format_exc()}
 
     def post_to_expand_pack(self, post_json:dict) : 
+        pack_list = self.user_manager.save_data['install_pack_list']
+        if "pack_id" not in post_json : return {"state": 1 , "msg": "传输数据不合法"}
+        if post_json["pack_id"] not in pack_list : return {"state": 3 , "msg": "无效的拓展包ID"}
+        if post_json["pack_id"] not in self.expand_pack_open_list : return {"state": 4 , "msg": "指定的拓展包未启动"}
         if not hasattr(self.expand_pack_open_list[post_json["pack_id"]]['object'],"do_POST") : 
             return {"state" : 6 , "msg" : "拓展包并没有指定Post处理方法"}
         return self.expand_pack_open_list[post_json["pack_id"]]['object'].do_POST(post_json)
 
-
+    def post_to_structureReader(self, post_json:dict) :
+        BindViewObject:app_tk_frame.__StructureView__ = self.display_frame["structure_transfor"].view_object
+        if BindViewObject is None : return {"state": 2 , "msg": "结构对象暂未加载"}
+        if post_json.get("process", None) == "getSizePalette" :
+            return {"size":BindViewObject.getSize(), "palette":BindViewObject.getPalette()}
+        if post_json.get("process", None) == "getIndexData" :
+            if not isinstance(post_json.get("index", None), int) : return {"state": 1 , "msg": "传输数据不合法(posX非整数)"}
+            if not isinstance(post_json.get("read", None), int) : return {"state": 1 , "msg": "传输数据不合法(posZ非整数)"}
+            if post_json.get("index", -1) < 0 : return {"state": 1 , "msg": "传输数据不合法(index < 0)"}
+            if post_json.get("read", -1) < 0 : return {"state": 1 , "msg": "传输数据不合法(read < 0)"}
+            return BindViewObject.getIndexData(post_json["index"], post_json["read"])
 
 
 
 debug_windows = control_windows()
 threading.Thread(target=debug_windows.all_time_loop_event).start()
 debug_windows.window.mainloop()
-
 # //[a-zA-Z \\+->:_.'\\",~0-9()]{0,}   update_pack\bedrock_edition\**\**\**.json

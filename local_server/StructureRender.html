@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>可视化模型</title>
+        <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1.0" />
+	</head>
+
+    <body>
+		<div id="masterDOM" style="position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; overflow: hidden;">
+		<canvas id="threejs" style="width: 100%; height: 100%;"></canvas>
+		</div> 
+    </body>
+
+    <script type="module">
+		import * as THREE from "./js/three.module.js";
+		import {FirstPersonControls} from './js/FirstPersonControls.js';
+		import {Block, Structure, DisplayManager} from "./js/MinecraftRender/__init__.js";
+        
+
+
+		const masterDOM = document.querySelector( '#masterDOM' ) //获取画布父类DOM对象
+		const canvas = document.querySelector( '#threejs' )      //获取画布DOM对象
+
+		//创建WebGL对象，透视相机对象，第一人称交互逻辑，显示逻辑
+		const renderer = new THREE.WebGLRenderer( {antialias: true, canvas} )
+		const camera = new THREE.PerspectiveCamera( 75, canvas.innerWidth/canvas.innerHeight, 0.1, 2000 );
+		const controls = new FirstPersonControls(masterDOM, camera, canvas);
+		const displayManager = new DisplayManager(renderer, camera)
+
+		displayManager.scene.add(new THREE.AxesHelper(390));            //在3D场景中添加坐标轴
+		displayManager.scene.add(new THREE.AmbientLight(0xfaffff));     //在3D场景中添加柔和白光
+		displayManager.scene.background = new THREE.Color('lightblue'); //在3D场景中设置背景颜色
+		displayManager.renderDistance = 8
+
+        controls.addEventListener( 'change', displayManager.requestRender() )  //订阅第一人称交互事件并更新渲染信息
+		setInterval(() => controls.dispatchEvent( {type: 'change'} ), 1000);   //人为触发一次交互事件并更新渲染
+
+        setTimeout( () => {
+            const request_url = 'http://localhost:32323'
+            const xhr = new XMLHttpRequest();
+            xhr.responseType = "arraybuffer"
+            xhr.timeout = 10000;
+            xhr.ontimeout = () => alert("服务器请求已超时\n请将命令模拟器设为小窗模式\n并重新刷新网页")
+
+            let StructureObject = new Structure([1, 1, 1])
+            let Size = [1, 1, 1]
+            let Palette = []
+            let ConnentDone = false
+            
+
+            const GetResponseData = (xhr) => {
+                const contentType = xhr.getResponseHeader('Content-Type') || '';
+                const uint8Array = xhr.response
+                let processedResponse = null
+                
+                if (contentType.includes('application/json')) {
+                    const text = new TextDecoder().decode(uint8Array);
+                    processedResponse = JSON.parse(text);
+                } else if (contentType.includes('application/octet-stream')) {
+                    processedResponse = uint8Array;
+                }
+                return processedResponse
+            }
+            const GetSizeAndPalette = () => new Promise((resolve, reject) => {
+                const req_json = {"operation":"structure_render", "process":"getSizePalette"}
+                xhr.open('POST', request_url, true);
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const Json1 = GetResponseData(xhr)
+                        if (Json1.state > 0) reject( new Error(Json1["msg"]) )
+                        resolve(Json1)
+                    } else reject( new Error("http获取失败: XhrState -> " + xhr.status) )
+                }
+                xhr.send(JSON.stringify(req_json));
+            })
+            const GetIndexData = (index, readCount, maxIndex) => {
+                new Promise((resolve, reject) => {
+                    const req_json = {"operation":"structure_render", "process":"getIndexData", "index":index, "read":readCount}
+                    xhr.open('POST', request_url, true);
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            const Arraybuffer = new Uint16Array(GetResponseData(xhr))
+                            if (Arraybuffer.state !== undefined && Arraybuffer.state > 0) reject( new Error(Json1["msg"]) )
+                            resolve(Arraybuffer)
+                        } else reject( new Error("http获取失败: XhrState -> " + xhr.status) )
+                    }
+                    xhr.send(JSON.stringify(req_json));
+                }).then(result => {
+                    StructureObject.blockIndex.set(result, index)
+
+                    index += readCount
+                    if (index < maxIndex) GetIndexData(index, readCount, maxIndex)
+                    else ConnentDone = true
+
+                    if (ConnentDone) displayManager.structure = StructureObject
+                }).catch(error => {
+                    alert('服务器通信失败:\n' + error.message);
+                })
+            }
+
+            GetSizeAndPalette().then(result => {
+                Size[0] = result["size"][0]
+                Size[1] = result["size"][1]
+                Size[2] = result["size"][2]
+                Palette = result["palette"]
+
+                StructureObject.reset(Size)
+                Palette.forEach( (item) => {
+				    StructureObject.blockPlatte.push( 
+                    new Block(item["identifier"], item["states"]) )
+                })
+
+                camera.position.x = 0;
+                camera.position.y = StructureObject.size[1] / 2;
+                camera.position.z = 0;
+                camera.lookAt(1, 0, 1);
+
+                GetIndexData(0, 128*128*384, Size[0]*Size[1]*Size[2])
+            }).catch(error => {
+                alert('服务器通信失败:\n' + error.message);
+            })
+        }, 1000)
+
+	</script>
+
+</html>
