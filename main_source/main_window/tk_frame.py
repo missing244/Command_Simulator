@@ -11,7 +11,21 @@ import package.file_operation as FileOperation
 import package.connent_API as connent_API
 
 import main_source.bedrock_edition as Minecraft_BE
+class __StructureView__ :
 
+    def __init__(self, Struct:"CommonStructure"):
+        from package.MCStructureManage import CommonStructure
+        self.Common:CommonStructure = Struct
+
+    def getSize(self) -> List[int] :
+        return list(self.Common.size)
+
+    def getPalette(self) -> List[Dict] :
+        return [{"identifier":obj.name, "states":dict(obj.states)} 
+            for obj in self.Common.block_palette]
+ 
+    def getIndexData(self, index:int, read:int) -> bytes :
+        return self.Common.block_index[index : index+read].tobytes()
 
 class Announcement(tkinter.Frame) :
 
@@ -625,7 +639,7 @@ class BE_Structure_Tool(tkinter.Frame) :
             "GangBan_V5 Json文件": (".json", Codecs.GANGBAN_V5), "GangBan_V6 Json文件": (".json", Codecs.GANGBAN_V6), 
             "GangBan_V7 reb文件（最新）": (".reb", Codecs.GANGBAN_V7), 
             "RunAway Json文件": (".json", Codecs.RUNAWAY), "万花筒 Kbdx文件": (".kbdx", Codecs.KBDX),
-            "FuHong_V3 Json文件": (".json", Codecs.FUHONG_V3), "FuHong_V4 fhbuild文件（最新）": (".json", Codecs.FUHONG_V4), 
+            "FuHong_V3 Json文件": (".json", Codecs.FUHONG_V3), "FuHong_V4 fhbuild文件（最新）": (".fhbuild", Codecs.FUHONG_V4), 
             "QingXu_V1 Json文件": (".json", Codecs.QINGXU_V1), 
             "TimeBuilder_V1 Json文件": (".json", Codecs.TIMEBUILDER_V1), 
             "MC函数 Zip文件": (".zip", Codecs.FunctionCommand), "MC命令 Txt文件": (".txt", Codecs.TextCommand)}
@@ -645,6 +659,7 @@ class BE_Structure_Tool(tkinter.Frame) :
         self.split_size = [99999, 99999, 99999]
         self.merge_page = 0
         self.merge_info: List[Tuple[str, int, int, int]] = []
+        self.view_object:__StructureView__ = None
         self.codecs = self.__get_codecs__()
 
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
@@ -876,9 +891,12 @@ class BE_Structure_Tool(tkinter.Frame) :
 
         SubScreen_0 = tkinter.Frame(MainScreen)
         SubScreen_0.pack()
-        tkinter.Label(SubScreen_0, height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
-        tkinter.Button(SubScreen_0, height=1,text="<<返回主界面",font=tk_tool.get_default_font(13),bg="orange",
-            command=lambda:self.main_win.set_display_frame("welcome_screen")).pack()
+        tkinter.Label(SubScreen_0, height=1,text="         ",font=tk_tool.get_default_font(5)).grid(row=0, column=0)
+        tkinter.Button(SubScreen_0, height=1,text="<<返回主界面",font=tk_tool.get_default_font(11),bg="orange",
+            command=lambda:self.main_win.set_display_frame("welcome_screen")).grid(row=1, column=0)
+        tkinter.Label(SubScreen_0, height=1,text="  ",font=tk_tool.get_default_font(5)).grid(row=1, column=1)
+        tkinter.Button(SubScreen_0, height=1,text="启用结构预览",font=tk_tool.get_default_font(11),bg="#ff7fa9",
+            command=self.show_WebGL_view).grid(row=1, column=2)
         
         if "FeedbackScreen" :
             FeedbackScreen = tkinter.Frame(self) 
@@ -1117,6 +1135,9 @@ class BE_Structure_Tool(tkinter.Frame) :
         Selector:tuple = Widget.curselection()
         if not Selector : return None
         
+        self.view_object = None
+        gc.collect()
+
         self.FileInfo1.config(text="文件名：(正在解析)")
         file_name = self.search_result.get(Selector[0])
         file_path = self.file_list[file_name]["real_path"]
@@ -1151,8 +1172,15 @@ class BE_Structure_Tool(tkinter.Frame) :
             self.FileInfo4.config(text="空气方块数：%s" % AirCount)
             self.FileInfo5.config(text="非空气方块数：%s" % (Size[0]*Size[1]*Size[2]-AirCount))
             self.FileInfo6.config(text="方块NBT数：%s" % len(Structure1.block_nbt))
-        
+            self.view_object = __StructureView__(Structure1)
+
         self.can_readFile = True
+
+    def show_WebGL_view(self) :
+        if not self.view_object : tkinter.messagebox.showerror("Error", "无解析的结构")
+        if not self.can_readFile : tkinter.messagebox.showerror("Error", "请等待结构解析完成")
+        if (not self.view_object) or (not self.can_readFile) : return None
+        webbrowser.open_new("http://localhost:32323/StructureRender.html")
 
 
     def merge_ready(self) :
@@ -1667,7 +1695,8 @@ class BE_World_Tool(tkinter.Frame) :
             self.input_box.see(tkinter.END)
         
 
-        if self.world_list[self.NowOpenWorldDirName]["outside"] : save_root_path = os.path.join(self.android_outside_storage, "result")
+        if self.world_list[self.NowOpenWorldDirName]["outside"] : 
+            save_root_path = os.path.join(self.android_outside_storage, "result")
         else : save_root_path = os.path.join(self.base_path, "result")
         choose_trans_mode = self.codecs[self.transfor_choose.get()]
 
