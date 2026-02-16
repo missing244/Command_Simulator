@@ -245,6 +245,7 @@ def JE_Transfor_BE_Block(id:str, states:dict=None) -> Tuple[str, dict, bool]:
     else :
         start1 = id.find("[") if id.find("[") >= 0 else len(id)
         JE_ID, JE_State = id[:start1], JE_BlockStates_Parser(id[start1:])
+    JE_ID = f"minecraft:{JE_ID}" if ":" not in JE_ID else JE_ID
     JE_waterlog = True if JE_State.get("waterlogged", False) else False
 
     #处理方块ID差异

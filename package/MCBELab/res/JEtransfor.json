@@ -163,7 +163,7 @@
         "minecraft:soul_wall_torch": {"name": "minecraft:soul_torch"},
         "minecraft:spawner": {"name": "minecraft:mob_spawner"},
         "minecraft:spruce_sign": {"name": "minecraft:spruce_standing_sign"},
-        "minecraft:stone_slab": {"name": "minecraft:stone_slab4"},
+        "minecraft:stone_slab": {"name": "minecraft:normal_stone_slab"},
         "minecraft:stonecutter": {"name": "minecraft:stonecutter_block"},
         "minecraft:sugar_cane": {"name": "minecraft:reeds"},
         "minecraft:tall_seagrass": {"name": "minecraft:seagrass"},
@@ -287,7 +287,8 @@
             "direction":{"south":0, "west":1, "north":2, "east":3},
             "weirdo_direction": {"north":3, "south":2, "west":1, "east":0},
             "facing_direction": {"north":2, "south":3, "west":4, "east":5, "up":1, "down":0},
-            "coral_direction": {"north":2, "south":3, "west":4, "east":5, "up":1, "down":0}
+            "coral_direction": {"north":2, "south":3, "west":4, "east":5, "up":1, "down":0},
+            "torch_facing_direction": {"north":"north", "south":"south", "west":"west", "east":"east"}
         },
         "stage": {
             "age_bit": {"0":false, "1":true},

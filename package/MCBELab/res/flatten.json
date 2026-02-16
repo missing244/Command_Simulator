@@ -179,12 +179,12 @@
         "minecraft:polished_diorite" : {"block_id":"minecraft:stone","block_data":{"stone_type": "diorite_smooth"}},
         "minecraft:polished_granite" : {"block_id":"minecraft:stone","block_data":{"stone_type": "granite_smooth"}},
 
-        "minecraft:oak_planks" : {"block_id":"minecraft:planks","block_data":{"stone_type": "oak"}},
-        "minecraft:spruce_planks" : {"block_id":"minecraft:planks","block_data":{"stone_type": "spruce"}},
-        "minecraft:birch_planks" : {"block_id":"minecraft:planks","block_data":{"stone_type": "birch"}},
-        "minecraft:jungle_planks" : {"block_id":"minecraft:planks","block_data":{"stone_type": "jungle"}},
-        "minecraft:acacia_planks" : {"block_id":"minecraft:planks","block_data":{"stone_type": "acacia"}},
-        "minecraft:dark_oak_planks" : {"block_id":"minecraft:planks","block_data":{"stone_type": "dark_oak"}},
+        "minecraft:oak_planks" : {"block_id":"minecraft:planks","block_data":{"wood_type": "oak"}},
+        "minecraft:spruce_planks" : {"block_id":"minecraft:planks","block_data":{"wood_type": "spruce"}},
+        "minecraft:birch_planks" : {"block_id":"minecraft:planks","block_data":{"wood_type": "birch"}},
+        "minecraft:jungle_planks" : {"block_id":"minecraft:planks","block_data":{"wood_type": "jungle"}},
+        "minecraft:acacia_planks" : {"block_id":"minecraft:planks","block_data":{"wood_type": "acacia"}},
+        "minecraft:dark_oak_planks" : {"block_id":"minecraft:planks","block_data":{"wood_type": "dark_oak"}},
 
         "minecraft:grass_block" : {"block_id":"minecraft:grass","block_data":{}},
         
@@ -347,7 +347,7 @@
         
         "minecraft:mossy_stone_brick_double_slab":{"block_id":"minecraft:double_stone_slab4","block_data":{"stone_slab_type_4": "mossy_stone_brick","top_slot_bit": false}},
         "minecraft:smooth_quartz_double_slab":{"block_id":"minecraft:double_stone_slab4","block_data":{"stone_slab_type_4": "smooth_quartz","top_slot_bit": false}},
-        "minecraft:stone_double_slab":{"block_id":"minecraft:double_stone_slab4","block_data":{"stone_slab_type_4": "stone","top_slot_bit": false}},
+        "minecraft:normal_stone_double_slab":{"block_id":"minecraft:double_stone_slab4","block_data":{"stone_slab_type_4": "stone","top_slot_bit": false}},
         "minecraft:cut_sandstone_double_slab":{"block_id":"minecraft:double_stone_slab4","block_data":{"stone_slab_type_4": "cut_sandstone","top_slot_bit": false}},
         "minecraft:cut_red_sandstone_double_slab":{"block_id":"minecraft:double_stone_slab4","block_data":{"stone_slab_type_4": "cut_red_sandstone","top_slot_bit": false}},
 
@@ -379,7 +379,6 @@
         "minecraft:chiseled_sandstone": {"block_id":"minecraft:sandstone","block_data":{"sand_stone_type": "heiroglyphs"}},
         "minecraft:cut_sandstone": {"block_id":"minecraft:sandstone","block_data":{"sand_stone_type": "cut"}},
         "minecraft:smooth_sandstone": {"block_id":"minecraft:sandstone","block_data":{"sand_stone_type": "smooth"}},
-
 
         "minecraft:anvil": {"block_id":"minecraft:anvil","block_data":{"damage":"undamaged","direction":0}},
         "minecraft:chipped_anvil": {"block_id":"minecraft:anvil","block_data":{"damage":"slightly_damaged","direction":0}},
@@ -437,7 +436,10 @@
         "minecraft:dead_horn_coral_wall_fan": {"block_id":"minecraft:coral_fan_hang3","block_data":{"coral_hang_type_bit": false,"dead_bit": true,"coral_direction": 0}},
 
         
-        "minecraft:iron_chain": {"block_id":"minecraft:chain","block_data":{}}
+        "minecraft:iron_chain": {"block_id":"minecraft:chain","block_data":{}},
+
+
+        "mushroom_stem":{"block_id":"minecraft:red_mushroom_block","block_data":{"huge_mushroom_bits":15}}
     },
     "block_state": {
         "minecraft:vertical_half":{

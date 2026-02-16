@@ -314,7 +314,7 @@ class World :
         for i,j,k in zip(range(3), startPos, endPos) :
             if j > k : startPos[i], endPos[i] = endPos[i], startPos[i]
 
-        CommonStructure.__init__([j-i+1 for i,j in zip(startPos, endPos)])
+        CommonStructure.__init__([j-i+1 for i,j in zip(startPos, endPos)], True)
         SizeX, SizeY, SizeZ = CommonStructure.size
         BlockIndex:array.array = CommonStructure.block_index
         BlockLogDict:Dict[int, int] = CommonStructure.contain_index

@@ -4578,7 +4578,7 @@
         "0b11": {"explode_bit": true,"allow_underwater_bit": true}
     },
     "minecraft:torch": {
-        "default": {"torch_facing_direction": "west"},
+        "default": {"torch_facing_direction": "unknown"},
         "support_value": {"torch_facing_direction": ["unknown","west","east","north","south","top"]},
         "0b0": {"torch_facing_direction": "unknown"},
         "0b1": {"torch_facing_direction": "west"},
@@ -4588,7 +4588,7 @@
         "0b101": {"torch_facing_direction": "top"}
     },
     "minecraft:redstone_torch": {
-        "default": {"torch_facing_direction": "west"},
+        "default": {"torch_facing_direction": "unknown"},
         "support_value": {"torch_facing_direction": ["unknown","west","east","north","south","top"]},
         "0b0": {"torch_facing_direction": "unknown"},
         "0b1": {"torch_facing_direction": "west"},
@@ -4598,7 +4598,7 @@
         "0b101": {"torch_facing_direction": "top"}
     },
     "minecraft:soul_torch": {
-        "default": {"torch_facing_direction": "west"},
+        "default": {"torch_facing_direction": "unknown"},
         "support_value": {"torch_facing_direction": ["unknown","west","east","north","south","top"]},
         "0b0": {"torch_facing_direction": "unknown"},
         "0b1": {"torch_facing_direction": "west"},
@@ -4608,7 +4608,7 @@
         "0b101": {"torch_facing_direction": "top"}
     },
     "minecraft:unlit_redstone_torch": {
-        "default": {"torch_facing_direction": "west"},
+        "default": {"torch_facing_direction": "unknown"},
         "support_value": {"torch_facing_direction": ["unknown","west","east","north","south","top"]},
         "0b0": {"torch_facing_direction": "unknown"},
         "0b1": {"torch_facing_direction": "west"},
