@@ -64,11 +64,11 @@
     ],
     "accept_item" : {
         "slot.armor.chest" : ["minecraft:leather_chestplate","minecraft:chainmail_chestplate","minecraft:iron_chestplate",
-        "minecraft:diamond_chestplate","minecraft:netherite_chestplate","minecraft:golden_chestplate"],
+        "minecraft:diamond_chestplate","minecraft:netherite_chestplate","minecraft:golden_chestplate","minecraft:copper_chestplate"],
         "slot.armor.legs" : ["minecraft:leather_leggings","minecraft:chainmail_leggings","minecraft:iron_leggings",
-        "minecraft:diamond_leggings","minecraft:netherite_leggings","minecraft:golden_leggings"],
+        "minecraft:diamond_leggings","minecraft:netherite_leggings","minecraft:golden_leggings","minecraft:copper_leggings"],
         "slot.armor.feet" : ["minecraft:leather_boots","minecraft:chainmail_boots","minecraft:iron_boots",
-        "minecraft:diamond_boots","minecraft:netherite_boots","minecraft:golden_boots"]
+        "minecraft:diamond_boots","minecraft:netherite_boots","minecraft:golden_boots","minecraft:copper_boots"]
     }
 
 }

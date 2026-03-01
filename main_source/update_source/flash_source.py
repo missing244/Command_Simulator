@@ -149,7 +149,7 @@ class bedrock_id_info :
         }
     }
 
-    tick_damage = ["suicide","override"]
+    tick_damage = ["suicide", "override"]
 
     def get_item_damage(self,item_name:str) :
         if item_name in self.damage_item : return self.damage_item[item_name]

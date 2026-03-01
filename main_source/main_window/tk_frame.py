@@ -11,6 +11,7 @@ import package.file_operation as FileOperation
 import package.connent_API as connent_API
 
 import main_source.bedrock_edition as Minecraft_BE
+
 class __StructureView__ :
 
     def __init__(self, Struct:"CommonStructure"):
@@ -26,6 +27,7 @@ class __StructureView__ :
  
     def getIndexData(self, index:int, read:int) -> bytes :
         return self.Common.block_index[index : index+read].tobytes()
+
 
 class Announcement(tkinter.Frame) :
 
@@ -397,7 +399,7 @@ class Find_Minecraft_ID(tkinter.Frame) :
         sco1 = tkinter.Scrollbar(frame_m10,orient='vertical')
         sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
         self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
-            height=16,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
+            height=18,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
         self.search_result.grid(row=0,column=0)
         sco1.config(command=self.search_result.yview)
         sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
@@ -639,7 +641,8 @@ class BE_Structure_Tool(tkinter.Frame) :
             "GangBan_V5 Json文件": (".json", Codecs.GANGBAN_V5), "GangBan_V6 Json文件": (".json", Codecs.GANGBAN_V6), 
             "GangBan_V7 reb文件（最新）": (".reb", Codecs.GANGBAN_V7), 
             "RunAway Json文件": (".json", Codecs.RUNAWAY), "万花筒 Kbdx文件": (".kbdx", Codecs.KBDX),
-            "FuHong_V3 Json文件": (".json", Codecs.FUHONG_V3), "FuHong_V4 fhbuild文件（最新）": (".fhbuild", Codecs.FUHONG_V4), 
+            "FuHong_V3 Json文件": (".json", Codecs.FUHONG_V3), "FuHong_V4 fhbuild文件": (".fhbuild", Codecs.FUHONG_V4), 
+            "FuHong_V6 json文件（最新）": (".json", Codecs.FUHONG_V6), 
             "QingXu_V1 Json文件": (".json", Codecs.QINGXU_V1), 
             "TimeBuilder_V1 Json文件": (".json", Codecs.TIMEBUILDER_V1), 
             "MC函数 Zip文件": (".zip", Codecs.FunctionCommand), "MC命令 Txt文件": (".txt", Codecs.TextCommand)}
@@ -673,6 +676,9 @@ class BE_Structure_Tool(tkinter.Frame) :
         def set_ListBox_focus() :
             for i in self.choose_index : self.search_result.select_set(i)
 
+        def set_choose_index() :
+            self.choose_index = self.search_result.curselection()
+
         if "结构列表" :
             MainScreen = tkinter.Frame(self) 
             MainScreen.pack()
@@ -681,7 +687,8 @@ class BE_Structure_Tool(tkinter.Frame) :
             sco2 = tkinter.Scrollbar(frame_m10,orient="horizontal")
             self.search_result = tkinter.Listbox(frame_m10,font=tk_tool.get_default_font(10),selectmode=tkinter.SINGLE,
                 height=9,width=26,yscrollcommand=sco1.set,xscrollcommand=sco2.set)
-            self.search_result.bind("<ButtonRelease-1>", self.test_can_readFile)
+            self.search_result.bind("<ButtonRelease-1>", lambda e:[
+                set_choose_index(), self.test_can_readFile(e)])
             self.search_result.grid(row=0,column=0)
             sco1.config(command=self.search_result.yview)
             sco1.grid(row=0,column=1,sticky=tkinter.N+tkinter.S)
@@ -696,8 +703,8 @@ class BE_Structure_Tool(tkinter.Frame) :
                 SubScreen_3.pack_forget()
                 SubScreen_0.pack_forget(), 
                 SubScreen_0.pack()
-                self.search_result.bind("<ButtonRelease-1>", lambda e:[self.test_can_readFile(e),
-                    self.set_choose_index()] )
+                self.search_result.bind("<ButtonRelease-1>", lambda e:[
+                    set_choose_index(), self.test_can_readFile(e)] )
                 self.search_result.config(selectmode=tkinter.SINGLE)
                 self.search_result.select_clear(0, "end")
             
@@ -707,7 +714,7 @@ class BE_Structure_Tool(tkinter.Frame) :
                 SubScreen_3.pack_forget()
                 SubScreen_0.pack_forget()
                 SubScreen_0.pack()
-                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )
+                self.search_result.bind("<ButtonRelease-1>", lambda e:set_choose_index() )
                 self.search_result.config(selectmode=tkinter.MULTIPLE)
 
             def Click_McworldMerge() :
@@ -716,7 +723,7 @@ class BE_Structure_Tool(tkinter.Frame) :
                 SubScreen_3.pack()
                 SubScreen_0.pack_forget()
                 SubScreen_0.pack()
-                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )
+                self.search_result.bind("<ButtonRelease-1>", lambda e:set_choose_index() )
                 self.search_result.config(selectmode=tkinter.MULTIPLE)
 
             tkinter.Label(MainScreen, text=" ",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
@@ -877,7 +884,7 @@ class BE_Structure_Tool(tkinter.Frame) :
             frame_m4 = tkinter.Frame(SubScreen_3_1)
             tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("返回"),font=tk_tool.get_default_font(10),bg="#00FF88",
                 command=lambda:[SubScreen_3_1.pack_forget(), MainScreen.pack(), 
-                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() ) ]).pack(side="left")
+                self.search_result.bind("<ButtonRelease-1>", lambda e:set_choose_index() ) ]).pack(side="left")
             tkinter.Label(frame_m4, height=1,text=" ",font=tk_tool.get_default_font(8)).pack(side="left")
             tkinter.Button(frame_m4, height=1,text=tk_tool.platform_string("<"),font=tk_tool.get_default_font(10),bg="#00FFF7",
                 command=lambda:self.merge_page_set(-1)).pack(side="left")
@@ -911,7 +918,7 @@ class BE_Structure_Tool(tkinter.Frame) :
             tkinter.Label(FeedbackScreen, text="",fg='black',font=tk_tool.get_default_font(1), width=15, height=1).pack()
             self.back_button = tkinter.Button(FeedbackScreen, height=1,text=" 返回上一页 ",font=tk_tool.get_default_font(12), bg="#9ae9d1",
                 command=lambda:[FeedbackScreen.pack_forget(), MainScreen.pack(), 
-                self.search_result.bind("<ButtonRelease-1>", lambda e:self.set_choose_index() )  ])
+                self.search_result.bind("<ButtonRelease-1>", lambda e:set_choose_index() )  ])
             self.back_button.pack()
 
 
@@ -1118,9 +1125,6 @@ class BE_Structure_Tool(tkinter.Frame) :
                 if index < len(Tips)-1 and Tips[index+1].startswith("<<") :
                     self.input_box.insert(tkinter.END, Object)
                 else : self.input_box.insert(tkinter.END, Object+"\n")
-        
-    def set_choose_index(self) :
-        self.choose_index = self.search_result.curselection()
 
 
     def test_can_readFile(self, event:tkinter.Event) :
@@ -1177,10 +1181,10 @@ class BE_Structure_Tool(tkinter.Frame) :
         self.can_readFile = True
 
     def show_WebGL_view(self) :
-        if not self.view_object : tkinter.messagebox.showerror("Error", "无解析的结构")
+        if not self.view_object : tkinter.messagebox.showerror("Error", "无解析的结构\n请在结构详情界面\n点击一个结构进行解析")
         if not self.can_readFile : tkinter.messagebox.showerror("Error", "请等待结构解析完成")
         if (not self.view_object) or (not self.can_readFile) : return None
-        webbrowser.open_new("http://localhost:32323/StructureRender.html")
+        webbrowser.open_new("http://localhost:32323?render=StructureRender")
 
 
     def merge_ready(self) :
@@ -1320,6 +1324,7 @@ class BE_World_Tool(tkinter.Frame) :
         self.NowOpenWorldDirName:str = None
         self.split_size = [99999, 99999, 99999]
         self.enable_split = tkinter.IntVar(main_win.window, 0)
+        self.view_object:__StructureView__ = None
         self.codecs = BE_Structure_Tool.__get_codecs__()
         PosPattern = re.compile(r'@\[(-?\d+),(-?\d+),(-?\d+)\]~\[(-?\d+),(-?\d+),(-?\d+)\]')
 
@@ -1525,7 +1530,7 @@ class BE_World_Tool(tkinter.Frame) :
                 command=start_transfer_mcs).pack()
 
         if "导出结构" : 
-            def start_creat_CommonStructure() :
+            def start_creat_CommonStructure(render:bool) :
                 try : int(StartX.get())
                 except : tkinter.messagebox.showerror("Error", "起始X坐标格式错误") ; return None
                 try : int(StartY.get())
@@ -1538,17 +1543,17 @@ class BE_World_Tool(tkinter.Frame) :
                 except : tkinter.messagebox.showerror("Error", "结束Y坐标格式错误") ; return None
                 try : int(EndZ.get())
                 except : tkinter.messagebox.showerror("Error", "结束Z坐标格式错误") ; return None
-                if self.transfor_choose.current() == 0 :
+                if not render and self.transfor_choose.current() == 0 :
                     tkinter.messagebox.showerror("Error", "未选择导出格式") ; return None
                 self.input_box.delete("0.0", tkinter.END)
                 FeedbackScreen.pack()
                 MainScreen_1.pack_forget()
                 InputList = [int(i.get()) for i in (StartX, StartY, StartZ, EndX, EndY, EndZ) ]
-                self.start_thread(3, [InputList[i] for i in range(0, 3)], [InputList[i] for i in range(3, 6)])
+                self.start_thread(3 if render else 4, [InputList[i] for i in range(0, 3)], [InputList[i] for i in range(3, 6)])
 
             SubScreen_13 = tkinter.Frame(MainScreen_1)
             tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
-            tkinter.Label(SubScreen_13, text="选择导出维度",fg='black',font=tk_tool.get_default_font(11), width=15, height=1).pack()
+            tkinter.Label(SubScreen_13, text="选择渲染/导出维度",fg='black',font=tk_tool.get_default_font(11), width=15, height=1).pack()
             self.dimension_choose = ttk.Combobox(SubScreen_13, font=tk_tool.get_default_font(10), width=22, state='readonly', justify='center')
             self.dimension_choose["value"] = ["主世界", "地狱", "末地"]
             self.dimension_choose.current(0)
@@ -1597,8 +1602,11 @@ class BE_World_Tool(tkinter.Frame) :
             tkinter.Button(frame_m4, text=tk_tool.platform_string("设置"),font=tk_tool.get_default_font(10), bg="#61eaff",
                 command=lambda:self.transfor_setting(tkinter.Toplevel(main_win.window))).pack(side="left")
             tkinter.Label(frame_m4, text="     ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
-            tkinter.Button(frame_m4, text=tk_tool.platform_string("确认导出"),font=tk_tool.get_default_font(10),
-                bg="#61eaff", command=start_creat_CommonStructure).pack(side="left")
+            tkinter.Button(frame_m4, text=tk_tool.platform_string("预览"),font=tk_tool.get_default_font(10),
+                bg="#ff7fa9", command=lambda:start_creat_CommonStructure(True)).pack(side="left")
+            tkinter.Label(frame_m4, text="     ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
+            tkinter.Button(frame_m4, text=tk_tool.platform_string("导出"),font=tk_tool.get_default_font(10),
+                bg="#50ffc2", command=lambda:start_creat_CommonStructure(False)).pack(side="left")
             frame_m4.pack()
 
         CloseWorld = tkinter.Frame(MainScreen_1)
@@ -1634,7 +1642,8 @@ class BE_World_Tool(tkinter.Frame) :
         self.back_button.config(state=tkinter.DISABLED)
         if mode == 1 : threading.Thread(target=self.explot_mcs).start()
         if mode == 2 : threading.Thread(target=self.transfer_mcs).start()
-        if mode == 3 : threading.Thread(target=self.creat_commonstructure, args=(args[0], args[1])).start()
+        if mode == 3 : threading.Thread(target=self.render_commonstructure, args=(args[0], args[1])).start()
+        if mode == 4 : threading.Thread(target=self.creat_commonstructure, args=(args[0], args[1])).start()
 
     def explot_mcs(self) :
         choose_index = self.mcs_list.curselection()
@@ -1715,6 +1724,33 @@ class BE_World_Tool(tkinter.Frame) :
         else :
             self.input_box.insert(tkinter.END, "\n结构文件 %s 已生成完毕。\n" % save_file_name)
             self.input_box.see(tkinter.END)
+        self.back_button.config(state=tkinter.NORMAL)
+
+    def render_commonstructure(self, start:Tuple[int, int, int], end:Tuple[int, int, int]) :
+        from package.MCStructureManage import CommonStructure
+        ProcessSet = set()
+        self.view_object = None
+        gc.collect()
+
+        def Callback(v1, v2) :
+            Process = int( v1 / v2 * 100 )
+            if Process in ProcessSet : return None
+            ProcessSet.add(Process)
+            self.input_box.insert(tkinter.END, "正在生成结构对象(%s%%)...\n" % Process)
+            self.input_box.see(tkinter.END)
+
+        Struct1 = CommonStructure()
+        try : self.NowOpenWorld.export_CommonStructure(Struct1, self.dimension_choose.current(), start, end, Callback)
+        except : 
+            self.input_box.insert(tkinter.END, "导出发生错误：\n")
+            self.input_box.insert(tkinter.END, traceback.format_exc()+"\n")
+            self.input_box.see(tkinter.END)
+        else :
+            self.input_box.insert(tkinter.END, "\n结构已生成完毕，即将载入渲染。\n")
+            self.input_box.see(tkinter.END)
+            self.view_object = __StructureView__(Struct1)
+            time.sleep(2)
+            webbrowser.open_new("http://localhost:32323?render=WorldRender")
         self.back_button.config(state=tkinter.NORMAL)
 
 
@@ -1845,7 +1881,7 @@ class BE_World_Tool(tkinter.Frame) :
         FeedBack.pack()
         tkinter.Label(toplevel, text=" ", fg='black', font=tk_tool.get_default_font(3), width=15, height=1).pack()
         tkinter.Button(toplevel, height=1,text=" 保存设置 ",font=tk_tool.get_default_font(10), bg="#6eee70", command=test_value).pack()
-
+        
 
 class Game_Ready(tkinter.Frame) :
 

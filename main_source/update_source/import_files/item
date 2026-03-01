@@ -2442,6 +2442,10 @@
       "unbreaking"
     ]
   },
+  "minecraft:golden_dandelion": {
+    "damage_max": null,
+    "can_enchant": []
+  },
   "minecraft:golden_helmet": {
     "damage_max": 77,
     "can_enchant": [
