@@ -269,6 +269,10 @@ def JE_Transfor_BE_Block(id:str, states:dict=None) -> Tuple[str, dict, bool]:
         if str(JE_State[je_state]) not in be_state_data : continue
         if be_state_data["BEstate"] not in BE_State : continue
 
+        if Marcher1 == "_button$" and str(JE_State.get("face", None)) in {"floor", "ceiling"} : 
+            BE_State[be_state_data["BEstate"]] = be_state_data[str(JE_State[je_state])]
+            break
+
         if Marcher1 == "_slab$" and str(JE_State[je_state]) == "double" : pass
         else : BE_State[be_state_data["BEstate"]] = be_state_data[str(JE_State[je_state])]
         del JE_State[je_state]

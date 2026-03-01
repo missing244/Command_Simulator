@@ -582,6 +582,7 @@ class Codecs :
                     block = StructureObject.block_palette[StructureObject.block_index[key]]
                     StructureObject.block_nbt[key] = MCBELab.GenerateBlockEntityNBT(block.name)
 
+                #print(StructureObject.contain_index)
                 if handling_waterlog(StructureObject.block_index, StructureObject.contain_index,
                     StructureObject.block_palette, StructureObject.size) :
                     StructureObject.block_palette.append( Block("water") )
@@ -2070,10 +2071,12 @@ class Codecs :
             Json1 = Data
             
             if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
-                isinstance(Json1.get("FuHongBuild", None), list) : return True
+                isinstance(Json1.get("FuHongBuild", None), list) and \
+                isinstance(Json1.get("Build_Info", None), dict) and \
+                Json1["Build_Info"].get("ConvertVersion", 5) != 6 : return True
             return False
 
-        def __decode__(self, Struct1:Union[StructureRUNAWAY.FuHong_V3, StructureRUNAWAY.FuHong_V4]) :
+        def __decode__(self, Struct1:Union[StructureRUNAWAY.FuHong_V3, StructureRUNAWAY.FuHong_V4, StructureRUNAWAY.FuHong_V6]) :
             PosStart, PosEnd = Struct1.get_volume()
 
             StructureObject = self.Common
@@ -2143,7 +2146,7 @@ class Codecs :
                             NBT_obj = NBTFunc(block_obj.name, blockdata)
                             StructureObject.set_blockNBT(posx,posy,posz, NBT_obj)
 
-        def __encode__(self, Struct1:Union[StructureRUNAWAY.FuHong_V3, StructureRUNAWAY.FuHong_V4]) :
+        def __encode__(self, Struct1:Union[StructureRUNAWAY.FuHong_V3, StructureRUNAWAY.FuHong_V4, StructureRUNAWAY.FuHong_V6]) :
             IgnoreAir, self = self.IgnoreAir, self.Common
 
             Generator = zip(range(len(self.block_index)), self.block_index, itertools.product(
@@ -2156,7 +2159,7 @@ class Codecs :
                 BlockID, BlockState, DataValue = block.name, block.states, block.dataValue[1]
                 if IgnoreAir and BlockID == "minecraft:air" : continue
 
-                chunk_pos = (posx//16*16, posz//16*16)
+                chunk_pos = (posx//32*32, posz//32*32)
                 if chunk_pos not in ChunkCache : ChunkCache[chunk_pos] = {"block":{}, "entity":[]}
                 block_data_list = ChunkCache[chunk_pos]["block"]
                 BlockHash = (BlockID, DataValue)
@@ -2195,7 +2198,7 @@ class Codecs :
                 EntityName = entity.get("CustomName", nbt.TAG_String()).value
                 posx, posy, posz = entity["Pos"][0].value, entity["Pos"][1].value, entity["Pos"][2].value
 
-                chunk_pos = (posx//16*16, posz//16*16)
+                chunk_pos = (posx//32*32, posz//32*32)
                 if chunk_pos not in ChunkCache : ChunkCache[chunk_pos] = {"block":{}, "entity":[]}
                 block_data_list = ChunkCache[chunk_pos]["entity"]
                 block_data_list.append( [EntityID, EntityName, posx-chunk_pos[0], 
@@ -2239,6 +2242,29 @@ class Codecs :
 
         def encode(self, Writer):
             Struct1 = StructureRUNAWAY.FuHong_V4()
+            self.__encode__(Struct1)
+            Struct1.save_as(Writer)
+
+    class FUHONG_V6(FUHONG_V3) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "json" : return False
+            Json1 = Data
+            
+            if isinstance(Json1, dict) and isinstance(Json1.get("BlocksList", None), list) and \
+                isinstance(Json1.get("FuHongBuild", None), list) and \
+                isinstance(Json1.get("Build_Info", None), dict) and \
+                Json1["Build_Info"].get("ConvertVersion", 5) == 6 : return True
+            return False
+
+        def decode(self, Reader:Union[str, bytes, io.IOBase]):
+            Struct1 = StructureRUNAWAY.FuHong_V6.from_buffer(Reader)
+            self.__decode__(Struct1)
+
+        def encode(self, Writer):
+            Struct1 = StructureRUNAWAY.FuHong_V6()
             self.__encode__(Struct1)
             Struct1.save_as(Writer)
 
@@ -2512,7 +2538,7 @@ class Codecs :
 SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
     Codecs.MIANYANG_V1, Codecs.MIANYANG_V2, Codecs.MIANYANG_V3, Codecs.GANGBAN_V1, Codecs.GANGBAN_V2,
     Codecs.GANGBAN_V3, Codecs.GANGBAN_V4, Codecs.GANGBAN_V5, Codecs.GANGBAN_V6, Codecs.GANGBAN_V7, 
-    Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, #Codecs.FUHONG_V5, 
+    Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, Codecs.FUHONG_V6, 
     Codecs.QINGXU_V1, Codecs.TIMEBUILDER_V1, Codecs.SCHEM_V1, Codecs.SCHEM_V2, Codecs.SCHEM_V3, 
     Codecs.LITEMATIC_V1, Codecs.JAVASTRUCTURE]
 

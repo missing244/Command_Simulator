@@ -7675,11 +7675,11 @@
 
     "minecraft:tuff_brick_double_slab":{
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:tuff_brick_slab":{
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:tuff_brick_stairs": {
         "default": {"weirdo_direction": 0,"upside_down_bit": false},
@@ -7692,11 +7692,11 @@
     
     "minecraft:tuff_double_slab":{
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:tuff_slab":{
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:tuff_stairs": {
         "default": {"weirdo_direction": 0,"upside_down_bit": false},
@@ -7713,11 +7713,11 @@
     },
     "minecraft:polished_tuff_double_slab":{
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:polished_tuff_slab": {
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:polished_tuff_wall": {
         "default": {"wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true},
@@ -7837,11 +7837,11 @@
     },
     "minecraft:pale_oak_double_slab": {
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:pale_oak_slab": {
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     
     "minecraft:resin_brick_stairs": {
@@ -7850,11 +7850,11 @@
     },
     "minecraft:resin_brick_double_slab": {
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:resin_brick_slab": {
         "default": {"minecraft:vertical_half": "buttom"},
-        "support_value": {"minecraft:vertical_half": ["bottom", "​top"]}
+        "support_value": {"minecraft:vertical_half": ["bottom", "top"]}
     },
     "minecraft:resin_brick_wall": {
         "default": {"wall_connection_type_east": "none","wall_connection_type_north": "none","wall_connection_type_south": "none","wall_connection_type_west": "none","wall_post_bit": true},

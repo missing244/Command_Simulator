@@ -2,6 +2,7 @@
 #
 # Distributed under MIT license.
 # See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
+import traceback
 
 def GetPlatform() :
     import subprocess, typing, platform
@@ -56,7 +57,9 @@ def init() :
 
     with open(target_abi, "rb") as f1 :
         with open(target_path, "wb") as f2 : f2.write( f1.read() )
-init()
+
+try : init()
+except : traceback.print_exc()
 
 try : from . import _brotli
 except : import Command_Simulator_C_API._brotli as _brotli

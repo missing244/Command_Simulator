@@ -1,3 +1,5 @@
+import traceback
+
 def GetPlatform() :
     import subprocess, typing, platform
     SoftwarePlatform: typing.Literal["windows_amd64", "android", "linux_amd64", "linux_arm64"] = None
@@ -54,7 +56,9 @@ def init() :
 
     with open(target_abi, "rb") as f1 :
         with open(target_path, "wb") as f2 : f2.write( f1.read() )
-init()
+
+try : init()
+except : traceback.print_exc()
 
 
 try : from . import _leveldb

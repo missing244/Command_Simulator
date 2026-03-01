@@ -813,13 +813,18 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.END_NODE
         )
     ),
-    # playsound ✓ V
-    BaseMatch.Char("Command","place").set_version(1,21,50,"min").add_leaves(
+    # place ✓ V
+    BaseMatch.Char("Command","place").set_version(1,21,70,"min").add_leaves(
         BaseMatch.Char("PlaceType", "structure").add_leaves(
             *SpecialMatch.String_Tree("Structure",
                 *SpecialMatch.Pos_Tree(
                     BaseMatch.Enum("IgnoreStartHeight", "true", "false").add_leaves(
-                        BaseMatch.Enum("KeepJigsaw", "true", "false").add_leaves(BaseMatch.END_NODE),
+                        BaseMatch.Enum("KeepJigsaw", "true", "false").add_leaves(
+                            BaseMatch.Enum("IncludeEntities", "true", "false").add_leaves(
+                                BaseMatch.Enum("LiquidSettings", "apply_waterlogging", "ignore_waterlogging").add_leaves(BaseMatch.END_NODE),
+                                BaseMatch.END_NODE
+                            ),
+                            BaseMatch.END_NODE),
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.END_NODE
@@ -832,7 +837,13 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 *SpecialMatch.String_Tree("JigsawTarget",
                     BaseMatch.Int("MaxDepth", min_value=1, max_value=7).add_leaves(
                         *SpecialMatch.Pos_Tree(
-                            BaseMatch.Enum("KeepJigsaw", "true", "false").add_leaves(BaseMatch.END_NODE),
+                            BaseMatch.Enum("KeepJigsaw", "true", "false").add_leaves(
+                                BaseMatch.Enum("IncludeEntities", "true", "false").add_leaves(
+                                    BaseMatch.Enum("LiquidSettings", "apply_waterlogging", "ignore_waterlogging").add_leaves(BaseMatch.END_NODE),
+                                    BaseMatch.END_NODE
+                                ),
+                                BaseMatch.END_NODE
+                            ),
                             BaseMatch.END_NODE
                         ),
                         BaseMatch.END_NODE

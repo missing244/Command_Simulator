@@ -1,3 +1,6 @@
+import array, traceback
+from typing import List, Tuple, Dict
+
 def GetPlatform() :
     import subprocess, typing, platform
     SoftwarePlatform: typing.Literal["windows_amd64", "android", "linux_amd64", "linux_arm64"] = None
@@ -52,12 +55,12 @@ def init() :
 
     with open(target_abi, "rb") as f1 :
         with open(target_path, "wb") as f2 : f2.write( f1.read() )
-init()
+
+try : init()
+except : traceback.print_exc()
 
 try : from . import MCBEStructure_C_API
 except : import Command_Simulator_C_API.MCBEStructure_C_API as MCBEStructure_C_API
-import array
-from typing import List, Tuple, Dict
 
 def fuhong_v5_decrypt(bytes1:bytes) -> str : 
     """
@@ -114,6 +117,6 @@ def handling_waterlog(blockIndex_array:array.array, water_log:dict, block_palett
     """
     CommonStructure含水方块状态同步至含水属性
     """
-    MCBEStructure_C_API.handling_waterlog(blockIndex_array, water_log, list(block_palette), size)
+    return MCBEStructure_C_API.handling_waterlog(blockIndex_array, water_log, list(block_palette), size)
 
 

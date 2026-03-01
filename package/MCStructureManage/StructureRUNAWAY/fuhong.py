@@ -326,7 +326,7 @@ class FuHong_V3 :
         StructureObject = cls()
         Json1:FILEFORMAT_V3 = json.load(fp=_file)
         
-        StructureObject.block_calculation_pos = Json1.get("BlockCalculationPos", False)
+        StructureObject.block_calculation_pos = bool( Json1.get("BlockCalculationPos", False) )
         super(TypeCheckList, StructureObject.chunks).extend(Json1["FuHongBuild"])
         super(TypeCheckList, StructureObject.block_palette).extend(Json1["BlocksList"])
 
@@ -348,8 +348,8 @@ class FuHong_V3 :
                 "TimeConsuming": "耗时:1ms",
                 "BlocksQuantity": "%s" % len(self.chunks)},
             "FuHongBuild":list(self.chunks),
-            "BlockCalculationPos": True,
             "BlocksList": list(self.block_palette),
+            "BlockCalculationPos": True,
             "TimeUsed":"1ms"
         }
 
@@ -405,6 +405,67 @@ class FuHong_V4(FuHong_V3) :
         data = zlib.compress( C_API.fuhong_v5_encrypt( IO1.getvalue() ) )
 
         _file.write(data)
+
+class FuHong_V6(FuHong_V3) : 
+    """
+    由 FuHong 开发的结构文件对象
+    -----------------------
+    * 以 .json 为后缀的json格式文件
+    -----------------------
+    * 可用属性 chunks : 区块储存列表
+    * 可用属性 block_palette : 方块储存列表
+    -----------------------
+    * 可用类方法 from_buffer : 通过路径、字节数字 或 流式缓冲区 生成对象
+    * 可用方法 save_as : 通过路径 或 流式缓冲区 保存对象数据
+    """
+    
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+        if isinstance(buffer,str) : _file = open(buffer, "rb")
+        elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
+        else : _file = buffer
+
+        Struct1 = cls()
+        Struct2 = FuHong_V3.from_buffer(_file)
+        Struct1.chunks = Struct2.chunks
+        Struct1.block_palette = Struct2.block_palette
+
+        return Struct1
+
+    def save_as(self, buffer:Union[str, FileIO, StringIO]) :
+        import time
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "w", encoding="utf-8")
+        else : _file = buffer
+
+        Json1:FILEFORMAT_V3 = { 
+            "FuHongBuild":list(self.chunks),
+            "BlocksList": list(self.block_palette),
+            "toobtotalBlocks": 1,
+            "BlockCalculationPos": True,
+            "TimeUsed":"1ms",
+            "Build_Info":{
+                "Version": 20260221,
+                "UserName": "CommandSimulator",
+                "ToolVersion": "2.3.0",
+                "PlayerName": "CommandSimulator",
+                "Export_Mode": "命令导出",
+                "ExportOption": [True, True, True, True],
+                "TimeConsuming": "耗时:1ms",
+                "Pos": {"x":0, "y":0, "z":0},
+                "Time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())},
+        }
+
+        BlockCount = 0
+        for chunk in self.chunks :
+            for block in chunk["block"] :
+                if (not block) or (block[0].__class__ is str) : continue
+                BlockCount += block[2].__len__()
+        Json1["toobtotalBlocks"] = BlockCount
+
+        json.dump(Json1, _file, separators=(',', ':'))
 
 
 
