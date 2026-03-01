@@ -42,18 +42,31 @@ if True : #启用软件前的加载项目
                 url_obj = parse.urlparse(self.path)
                 if url_obj.path == "/" and url_obj.query != "" :
                     query_components = parse.parse_qs(url_obj.query)
-                    if "pack" not in query_components or "page" not in query_components : return None
-                    if query_components['pack'][0] not in debug_windows.expand_pack_open_list : return None
-                    
-                    pack_dir_name = debug_windows.expand_pack_open_list[query_components['pack'][0]]["dir_name"]
-                    if query_components["page"][0] == "index" :
+                    pack_dir_name = None
+
+                    if not( ("render" in query_components) or (
+                        "pack" in query_components and "page" in query_components) 
+                    ) : return None
+                    if 'pack' in query_components :
+                        if query_components['pack'][0] not in debug_windows.expand_pack_open_list : return None
+                        else : pack_dir_name = debug_windows.expand_pack_open_list[query_components['pack'][0]]["dir_name"]
+
+                    if query_components.get("page", [None])[0] == "index" :
                         path1 = os.path.join("expand_pack", pack_dir_name, "index.html")
                         if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
                         send_bytes = file_IO.read_a_file(path1, "readbyte")
-                    elif query_components["page"][0] == "help" :
+                    elif query_components.get("page", [None])[0] == "help" :
                         path1 = os.path.join("expand_pack", pack_dir_name, "help.html")
                         if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
                         send_bytes = file_IO.read_a_file(path1, "readbyte")
+                    elif query_components.get("render", [None])[0] == "StructureRender" :
+                        path1 = os.path.join("local_server", "StructureRender.html")
+                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
+                        send_bytes = file_IO.read_a_file(path1, "readbyte").replace(b"%Type%", b"structure_render")
+                    elif query_components.get("render", [None])[0] == "WorldRender" :
+                        path1 = os.path.join("local_server", "StructureRender.html")
+                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
+                        send_bytes = file_IO.read_a_file(path1, "readbyte").replace(b"%Type%", b"world_render")
 
                     self.send_response(200)
                     self.send_header('Content-type', 'texthtml')
@@ -62,8 +75,6 @@ if True : #启用软件前的加载项目
                 else : super().do_GET()
 
             def do_POST(self):
-                self.send_response(200)
-                self.send_header('Content-Encoding', 'gzip')
                 client_post_data = self.rfile.read(int(self.headers['content-length']))
                 try : client_post_json = json.loads(client_post_data)
                 except : client_post_json = {}
@@ -72,6 +83,8 @@ if True : #启用软件前的加载项目
                     ResponesData = debug_windows.post_data(client_post_json)
                 else : ResponesData = {"state": 1 , "msg": "传输数据不合法"}
                 
+                self.send_response(200)
+                self.send_header('Content-Encoding', 'gzip')
                 if isinstance(ResponesData, bytes) : 
                     self.send_header('Content-type', 'application/octet-stream')
                     self.end_headers()
@@ -175,7 +188,7 @@ class control_windows :
 
         self.user_manager.save_data["open_app_count"] += 1
         if self.user_manager.save_data["open_app_count"] == 1 :
-            yesorno = tkinter.messagebox.askquestion("question", "看起来您是第一次打开\n需要熟悉软件如何使用吗？\n(新用户请务必点击确定！)")
+            yesorno = tkinter.messagebox.askquestion("question", "看起来您是第一次使用\n需要熟悉软件如何使用吗？\n(新用户请务必点击确定！)")
             if self.platform == "android" and yesorno == "yes" : app_function.Beginner_Tutorial(self, False)
             elif self.platform == "windows" and yesorno == "yes" : webbrowser.open("http://localhost:32323/tutorial/Instructions.html")
 
@@ -355,7 +368,8 @@ class control_windows :
     def post_data(self, post_json:dict) :
         operation_mode = {
             "expand_pack_run": self.post_to_expand_pack,
-            "structure_render": self.post_to_structureReader
+            "structure_render": lambda e: self.post_to_structureReader("structure", e),
+            "world_render": lambda e: self.post_to_structureReader("world", e)
         }
 
         OperationMode = post_json.get("operation", None)
@@ -375,8 +389,11 @@ class control_windows :
             return {"state" : 6 , "msg" : "拓展包并没有指定Post处理方法"}
         return self.expand_pack_open_list[post_json["pack_id"]]['object'].do_POST(post_json)
 
-    def post_to_structureReader(self, post_json:dict) :
-        BindViewObject:app_tk_frame.__StructureView__ = self.display_frame["structure_transfor"].view_object
+    def post_to_structureReader(self, type:Literal["structure", "world"], post_json:dict) :
+        BindViewObject:app_tk_frame.__StructureView__ = None
+        if type == "structure" : BindViewObject = self.display_frame["structure_transfor"].view_object
+        elif type == "world" : BindViewObject = self.display_frame["mcworld_reader"].view_object
+
         if BindViewObject is None : return {"state": 2 , "msg": "结构对象暂未加载"}
         if post_json.get("process", None) == "getSizePalette" :
             return {"size":BindViewObject.getSize(), "palette":BindViewObject.getPalette()}

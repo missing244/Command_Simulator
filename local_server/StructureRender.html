@@ -31,10 +31,10 @@
 		displayManager.scene.add(new THREE.AxesHelper(390));            //在3D场景中添加坐标轴
 		displayManager.scene.add(new THREE.AmbientLight(0xfaffff));     //在3D场景中添加柔和白光
 		displayManager.scene.background = new THREE.Color('lightblue'); //在3D场景中设置背景颜色
-		displayManager.renderDistance = 8
+		displayManager.renderDistance = 8                               //在3D场景中设置摄像渲染距离
 
         controls.addEventListener( 'change', displayManager.requestRender() )  //订阅第一人称交互事件并更新渲染信息
-		setInterval(() => controls.dispatchEvent( {type: 'change'} ), 1000);   //人为触发一次交互事件并更新渲染
+		setInterval(() => controls.dispatchEvent( {type: 'change'} ), 1000);   //定时触发一次交互事件并更新渲染
 
         setTimeout( () => {
             const request_url = 'http://localhost:32323'
@@ -47,6 +47,7 @@
             let Size = [1, 1, 1]
             let Palette = []
             let ConnentDone = false
+            let GetStructureType = "%Type%"
             
 
             const GetResponseData = (xhr) => {
@@ -63,7 +64,7 @@
                 return processedResponse
             }
             const GetSizeAndPalette = () => new Promise((resolve, reject) => {
-                const req_json = {"operation":"structure_render", "process":"getSizePalette"}
+                const req_json = {"operation":GetStructureType, "process":"getSizePalette"}
                 xhr.open('POST', request_url, true);
                 xhr.onload = () => {
                     if (xhr.status === 200) {
@@ -76,7 +77,7 @@
             })
             const GetIndexData = (index, readCount, maxIndex) => {
                 new Promise((resolve, reject) => {
-                    const req_json = {"operation":"structure_render", "process":"getIndexData", "index":index, "read":readCount}
+                    const req_json = {"operation":GetStructureType, "process":"getIndexData", "index":index, "read":readCount}
                     xhr.open('POST', request_url, true);
                     xhr.onload = () => {
                         if (xhr.status === 200) {
