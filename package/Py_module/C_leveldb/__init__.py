@@ -17,7 +17,28 @@ def GetPlatform() :
 
 def init() :
     import os, platform, sys, hashlib, re, zipfile, subprocess
-    LinkCommand = "aarch64-linux-android-c++ -shared build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/builder.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/c.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/db_impl.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/db_iter.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/dbformat.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/filename.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/log_reader.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/log_writer.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/memtable.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/repair.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/table_cache.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/version_edit.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/version_set.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/write_batch.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/zlib_compressor.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/zstd_compressor.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/port/port_posix.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/port/port_posix_sse.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/block.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/block_builder.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/filter_block.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/format.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/iterator.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/merger.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/table.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/table_builder.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/two_level_iterator.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/arena.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/bloom.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/cache.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/coding.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/comparator.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/crc32c.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/env.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/env_posix.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/filter_policy.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/hash.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/histogram.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/logging.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/options.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/status.o build/temp.linux-aarch64-3.9/./src/leveldb/_leveldb.o -L%s -lz -lpython%s.%s -o Linux_aarch64.pyd"
+    LinkCommand = "aarch64-linux-android-g++ -shared build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/builder.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/c.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/db_impl.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/db_iter.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/dbformat.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/filename.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/log_reader.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/log_writer.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/memtable.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/repair.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/table_cache.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/version_edit.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/version_set.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/write_batch.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/zlib_compressor.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/zstd_compressor.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/port/port_posix.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/port/port_posix_sse.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/block.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/block_builder.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/filter_block.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/format.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/iterator.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/merger.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/table.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/table_builder.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/table/two_level_iterator.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/arena.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/bloom.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/cache.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/coding.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/comparator.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/crc32c.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/env.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/env_posix.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/filter_policy.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/hash.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/histogram.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/logging.o " \
+        "build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/options.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/util/status.o " \
+        "build/temp.linux-aarch64-3.9/./src/leveldb/_leveldb.o -L%s -lz -lpython%s.%s -o Linux_aarch64.pyd"
     py_dll_name = "_leveldb.%s"
     
     SysPlatfrom = GetPlatform()
