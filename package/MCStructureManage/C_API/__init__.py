@@ -18,7 +18,8 @@ def GetPlatform() :
 
 def init() :
     import os, platform, sys, hashlib, re, zipfile, subprocess
-    LinkCommand = "aarch64-linux-android-gcc -shared build/temp.linux-aarch64-3.9/fast_api.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
+    LinkCommand = "aarch64-linux-android-gcc -shared build/temp.linux-aarch64-3.9/C_module/array.o " \
+        "build/temp.linux-aarch64-3.9/fast_api.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
     py_dll_name = "MCBEStructure_C_API.%s"
     
     base_path = os.path.realpath( os.path.join(__file__, "..") )
@@ -105,6 +106,15 @@ def codecs_parser_litematic(block_array:array.array, blockType_array:array.array
         RegionOriginX, RegionOriginY, RegionOriginZ,
         RegionSizeX, RegionSizeY, RegionSizeZ, 
         bits_per_block)
+
+def heightmap_commonstructure(input_index:array.array, output_height:array.array, 
+    output_index:array.array, shadow_index:array.array, Size:Tuple[int, int, int], 
+    AirData:array.array, MaxHeight:int) :
+    """
+    CommonStructure裁切函数
+    """
+    MCBEStructure_C_API.heightmap_commonstructure(input_index, output_height, 
+        output_index, shadow_index,  Size, AirData, MaxHeight)
 
 def split_commonstructure(input_index:array.array, output_index:array.array, 
     Size:Tuple[int, int, int], StartPos:Tuple[int, int, int], EndPos:Tuple[int, int, int]) :

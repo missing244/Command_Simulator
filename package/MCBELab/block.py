@@ -69,7 +69,9 @@ def TransforBlock(id:str, value:Union[int, str, dict]={}) -> Tuple[str, Dict[str
         return (NewBlockID, dict( sorted(NewBlockState.items()) ))
     elif BlockID in OldBlockData["block"] : 
         NewBlockID = OldBlockData["block"][BlockID]["block_id"]
-        NewBlockState = OldBlockData["block"][BlockID]["block_data"]
+        NewBlockState = {}
+        if NewBlockID in BlockState : NewBlockState.update(BlockState[NewBlockID]["default"])
+        NewBlockState.update(OldBlockData["block"][BlockID]["block_data"])
     elif BlockID in BlockState :
         NewBlockID = BlockID
         NewBlockState = BlockState[BlockID]["default"]
@@ -168,6 +170,28 @@ def RunawayDataValueTransforBlock(id:str, dataValue:int) :
 
     return (BlockID, Block_State)
 
+def UpgradeBlock(id:str, states:Dict[str, Union[bool, int, str]]) -> Tuple[str, Dict[str, Union[bool, int, str]]] :
+    if id in OldBlockData["block_id"] : id = OldBlockData["block_id"][id]
+    states = dict(states.items())
+    
+    UpgradeID, SameKey = False, []
+    for new_id, old_data in OldBlockData["block"].items() :
+        if SameKey : SameKey.clear()
+
+        if old_data["block_id"] != id : continue
+        if not old_data["block_data"] : UpgradeID = True
+        for statekey, stateval in old_data["block_data"].items() :
+            UpgradeID = False
+            if statekey not in states : continue
+            if stateval != states[statekey] : continue
+            SameKey.append(statekey)
+            UpgradeID = True
+        if not UpgradeID : continue
+        id = new_id
+        break
+    
+    for i in SameKey : del states[i]
+    return (id, states)
 
 
 SpaceMatch = re.compile('[ ]{0,}')

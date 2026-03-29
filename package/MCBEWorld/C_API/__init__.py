@@ -18,7 +18,8 @@ def GetPlatform() :
 
 def init() :
     import os, platform, sys, hashlib, re, zipfile, subprocess
-    LinkCommand = "aarch64-linux-android-gcc -shared build/temp.linux-aarch64-3.9/fast_api.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
+    LinkCommand = "aarch64-linux-android-gcc -shared build/temp.linux-aarch64-3.9/C_module/array.o " \
+        "build/temp.linux-aarch64-3.9/fast_api.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
     py_dll_name = "MCBEWorld_C_API.%s"
     
     SysPlatfrom = GetPlatform()

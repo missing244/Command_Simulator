@@ -61,11 +61,13 @@ class RunAway :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[BLOCK1] = json.load(fp=_file)
+
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[BLOCK1] = json.load(fp=_file)
 
         StructureObject = cls()
         super(TypeCheckList, StructureObject.blocks).extend(Json1)

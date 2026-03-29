@@ -68,11 +68,13 @@ class TimeBuilder_V1 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer, str) : _file = open(buffer, "rb")
         elif isinstance(buffer, bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1 = json.load(fp=_file)
+        
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1 = json.load(fp=_file)
         
         if Json1.get("version", None) != "TimeBuilder" : raise FormatError("文件缺少version参数")
 

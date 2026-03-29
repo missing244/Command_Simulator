@@ -61,11 +61,13 @@ class FuHong_V1 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[BLOCK1] = json.load(fp=_file)
+
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[BLOCK1] = json.load(fp=_file)
 
         StructureObject = cls()
         super(TypeCheckList, StructureObject.blocks).extend(Json1)
@@ -190,13 +192,14 @@ class FuHong_V2 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
         
         StructureObject = cls()
-        Json1:FILEFORMAT_V2 = json.load(fp=_file)
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:FILEFORMAT_V2 = json.load(fp=_file)
 
         super(TypeCheckList, StructureObject.chunks).extend(Json1["FuHongBuild_FinalFormat"])
 
@@ -318,13 +321,14 @@ class FuHong_V3 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
 
         StructureObject = cls()
-        Json1:FILEFORMAT_V3 = json.load(fp=_file)
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:FILEFORMAT_V3 = json.load(fp=_file)
         
         StructureObject.block_calculation_pos = bool( Json1.get("BlockCalculationPos", False) )
         super(TypeCheckList, StructureObject.chunks).extend(Json1["FuHongBuild"])
@@ -420,7 +424,7 @@ class FuHong_V6(FuHong_V3) :
     """
     
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer

@@ -14,6 +14,7 @@
     * 可用编解码器父类 Codecs.CodecsBase: 自定义解/编码器需要继承的父类
     ---------------------------------
     * 可用函数 getStructureType: 分析结构文件使用什么解码器打开（返回None或者解码器类）
+    * 可用函数 getStructureDataAndType: 分析结构文件使用什么解码器打开（返回None或者 解码数据和解码器类）
     * 可用函数 registerCodecs: 注册一个自定义的编/解码器
 """
 
@@ -26,7 +27,8 @@ from ..Py_module import C_brotli as brotli
 from . import StructureBDX, StructureMCS, StructureSCHEM
 from . import StructureRUNAWAY
 from .block import Block
-from .codec import Codecs, getStructureType, registerCodecs
+from .codec import Codecs, registerCodecs
+from .codec import getStructureType, getStructureDataAndType
 from .structure import CommonStructure
 
 

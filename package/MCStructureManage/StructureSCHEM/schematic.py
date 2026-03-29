@@ -9,7 +9,7 @@ RuntimeID_to_Block = ["air", "stone", "grass", "dirt", "cobblestone", "planks", 
 	"iron_ore", "coal_ore", "log", "leaves", "sponge", "glass", "lapis_ore", "lapis_block", 
     "dispenser", "sandstone", "noteblock", "bed", "golden_rail", "detector_rail", "sticky_piston",
 	"web", "tallgrass", "deadbush", "piston", "piston_arm_collision", "wool", "air",
-	"dandelion", "poppy", "brown_mushroom", "red_mushroom", "gold_block", "iron_block", "stone_double_slab",
+	"dandelion", "poppy", "brown_mushroom", "red_mushroom", "gold_block", "iron_block", "smooth_stone_double_slab",
 	"smooth_stone_slab", "brick_block", "tnt", "bookshelf", "mossy_cobblestone", "obsidian", "torch",
 	"fire", "monster_spawner", "oak_stairs", "chest", "redstone_wire", "diamond_ore", "diamond_block",
 	"crafting_table", "wheat", "farmland", "furnace", "lit_furnace", "standing_sign", "wooden_door",
@@ -101,8 +101,9 @@ class Schematic :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO]) :
-        NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, nbt.TAG_Compound]) :
+        if isinstance(buffer, nbt.TAG_Compound) : NBT = buffer
+        else : NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
 
         StructureObject = cls()
         StructureObject.size[0] = NBT["Width"].value

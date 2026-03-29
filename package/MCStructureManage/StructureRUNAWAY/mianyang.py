@@ -78,11 +78,13 @@ class MianYang_V1 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer, str) : _file = open(buffer, "rb")
         elif isinstance(buffer, bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:FILE_FORMAT = json.load(fp=_file)
+
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:FILE_FORMAT = json.load(fp=_file)
         
         if "chunkedBlocks" not in Json1 : raise FormatError("文件缺少chunkedBlocks参数")
         if "namespaces" not in Json1 : raise FormatError("文件缺少namespaces参数")
@@ -140,11 +142,13 @@ class MianYang_V2(MianYang_V1) :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) -> "MianYang_V2" :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) -> "MianYang_V2" :
         if isinstance(buffer, str) : _file = open(buffer, "rb")
         elif isinstance(buffer, bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:FILE_FORMAT = json.load(fp=_file)
+        
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:FILE_FORMAT = json.load(fp=_file)
         
         if "chunkedBlocks" not in Json1 : raise FormatError("文件缺少chunkedBlocks参数")
         if "namespaces" not in Json1 : raise FormatError("文件缺少namespaces参数")
@@ -203,11 +207,13 @@ class MianYang_V3(MianYang_V1) :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) -> "MianYang_V3" :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) -> "MianYang_V3" :
         if isinstance(buffer, str) : _file = open(buffer, "rb")
         elif isinstance(buffer, bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:FILE_FORMAT = json.load(fp=BytesIO( zlib.decompress(_file.read()) ))
+
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:FILE_FORMAT = json.load(fp=BytesIO( zlib.decompress(_file.read()) ))
         
         if "chunkedBlocks" not in Json1 : raise FormatError("文件缺少chunkedBlocks参数")
         if "namespaces" not in Json1 : raise FormatError("文件缺少namespaces参数")

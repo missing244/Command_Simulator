@@ -91,11 +91,13 @@ class GangBan_V1 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[Union[BLOCK, RANGE, PALETTE]] = json.load(fp=_file)
+
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[Union[BLOCK, RANGE, PALETTE]] = json.load(fp=_file)
         
         palette:PALETTE = Json1.pop()
         area_range:RANGE = Json1.pop()
@@ -193,11 +195,13 @@ class GangBan_V2 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[Union[BLOCK, PALETTE]] = json.load(fp=_file)
+
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[Union[BLOCK, PALETTE]] = json.load(fp=_file)
         
         palette:PALETTE = Json1.pop()
 
@@ -306,11 +310,13 @@ class GangBan_V3 :
     
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[Union[INFO1, str, CHUNK]] = json.load(fp=_file)
+        
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[Union[INFO1, str, CHUNK]] = json.load(fp=_file)
 
         palette:str = Json1[1]
         re1 = re.compile(r"\[(-?[0-9]+)\](.*?)\[(-?[0-9]+)\]")
@@ -373,11 +379,13 @@ class GangBan_V4(GangBan_V3) :
         self.block_palette:List[str] = TypeCheckList().setChecker(str)
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[Union[INFO2, List[str], CHUNK]] = json.load(fp=_file)
+
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[Union[INFO2, List[str], CHUNK]] = json.load(fp=_file)
 
         palette:List[str] = Json1[1]
 
@@ -482,11 +490,13 @@ class GangBan_V5 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[Union[int, List[CONTANIER], CB_DATA, AREA_SIZE, List[str]]] = json.load(fp=_file)
+        
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[Union[int, List[CONTANIER], CB_DATA, AREA_SIZE, List[str]]] = json.load(fp=_file)
 
         palette:List[str] = Json1.pop()
         area:AREA_SIZE = Json1.pop()
@@ -593,11 +603,13 @@ class GangBan_V6 :
     
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, List[str]]] = json.load(fp=_file)
+        
+        if isinstance(buffer, (list, dict)) : Json1 = _file
+        else : Json1:List[Union[AREA_ENTITY, AREA_BLOCK, AREA_SIZE, List[str]]] = json.load(fp=_file)
 
         palette:List[str] = Json1.pop()
         area:AREA_SIZE = Json1.pop()
@@ -648,11 +660,13 @@ class GangBan_V7(GangBan_V6) :
     """
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO]) :
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, StringIO, list, dict]) :
         if isinstance(buffer,str) : _file = open(buffer, "rb")
         elif isinstance(buffer,bytes) : _file = BytesIO(buffer)
         else : _file = buffer
-        buffer0 = BytesIO( zlib.decompress(_file.read()) )
+        
+        if isinstance(buffer, (list, dict)) : buffer0 = _file
+        else : buffer0 = BytesIO( zlib.decompress(_file.read()) )
         Struct1 = GangBan_V6.from_buffer(buffer0)
         
         Object = cls()

@@ -2,9 +2,25 @@ from . import nbt, Block
 from . import MCBELab
 from .__private import TypeCheckList, BiList
 from io import IOBase
-from typing import Union,List,Dict,Tuple
+from typing import Union,List,Dict,Tuple,Literal
 import array
 
+
+class HeightInfo :
+
+    def __init__(self):
+        self.size:Tuple[int, int] = (0, 0)
+        self.height_map:array.array = None
+        self.index_map:array.array = None
+        self.shadow_map:array.array = None
+
+    def get_height(self, x:int, z:int) -> int :
+        index = x * self.size[1] + z
+        return self.height_map[index]
+
+    def get_index(self, x:int, z:int) -> int :
+        index = x * self.size[1] + z
+        return self.index_map[index]
 
 class CommonStructure :
     """
@@ -37,9 +53,8 @@ class CommonStructure :
 
     BLOCKTYPE = Block  #公开该结构的使用方块对象类
     
-    def __init__(self, size:Tuple[int, int, int] = (0, 0, 0), large=False) :
+    def __init__(self, size:Tuple[int, int, int] = (0, 0, 0)) :
         Volume = size[0] * size[1] * size[2]
-        if (not large) and Volume > 2000000000 : raise MemoryError("申请内存过大无法生成结构模板")
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
         self.block_index: array.array[int] = array.array("H", bytearray(Volume*2))              #修改元素✔，赋值✘
@@ -63,17 +78,17 @@ class CommonStructure :
 
     @classmethod
     def from_buffer(cls, Reader:Union[str, bytes, IOBase], Decoder=None) :
-        from . import Codecs, getStructureType
+        from . import Codecs, getStructureDataAndType
 
         if Decoder is not None and Codecs.CodecsBase not in Decoder.mro() : 
             raise TypeError(f"{Decoder}是不受支持的解码器")
         elif Decoder is None : 
-            CodecsType = getStructureType(Reader)
+            CodecsType = getStructureDataAndType(Reader)
             if CodecsType is None : raise TypeError(f"{Reader}是不支持解析的文件或数据")
+        else : CodecsType = (Reader, Decoder)
 
         Common = cls()
-        Decoder = CodecsType if Decoder is None else Decoder
-        Decoder(Common).decode(Reader)
+        CodecsType[1](Common).decode(CodecsType[0])
         return Common
 
     def save_as(self, Writer:Union[str, IOBase], Encoder, IgnoreAir:bool=True) :
@@ -163,6 +178,28 @@ class CommonStructure :
 
         return NewCommonStructure
 
+    def height_info(self, max_height:int=2147483647) -> HeightInfo :
+        from . import C_API
+
+        input_bytes = b"\x00\x00" * (self.size[0] * self.size[2])
+        height_map = array.array("H", input_bytes)
+        index_map = array.array("H", input_bytes)
+        shadow_map = array.array("H", input_bytes)
+        air_data = array.array("B",  b"\x00"*65536)
+
+        for index, block in enumerate(self.block_palette) :
+            if block.name in MCBELab.AIR_BLOCKS : air_data[index] = 1
+        C_API.heightmap_commonstructure(self.block_index, height_map, index_map,
+            shadow_map, self.size, air_data, max_height)
+
+        result = HeightInfo()
+        result.size = (self.size[0], self.size[2])
+        result.height_map = height_map
+        result.index_map = index_map
+        result.shadow_map = shadow_map
+        return result
+
+        
     
 
 

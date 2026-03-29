@@ -249,6 +249,7 @@ def transfor_qq_share(a:str) -> str :
 
 TEST_BAIDU_URL = "https://www.baidu.com"
 APP_INFO_URL = "https://sharechain.qq.com/a28ff773d6d07e3830dc7bf54cc7a079"
+APP_SPONSER_URL = "https://ifdian.net/a/commandsimulator"
 
 AUTO_LOGIN = ["https://command.infinityfreeapp.com/app_login.php?i=1","https://commandsimulatorapi.great-site.net/app_login.php?i=1"]
 MANUAL_LOGIN = ["https://command.infinityfreeapp.com/manual_login.php?i=1","https://commandsimulatorapi.great-site.net/manual_login.php?i=1"]
@@ -259,9 +260,10 @@ UPDATE_BE_ID = "https://idlist.projectxero.top/data/beta/vanilla.zip"
 
 
 def get_online_api(json1:dict) :
-    global AUTO_LOGIN,MANUAL_LOGIN,UPDATE_EXPAND_PACK
+    global AUTO_LOGIN, MANUAL_LOGIN, UPDATE_EXPAND_PACK, APP_SPONSER_URL
 
     if "AUTO_LOGIN" in json1 : AUTO_LOGIN = json1['AUTO_LOGIN']
     if "MANUAL_LOGIN" in json1 : MANUAL_LOGIN = json1['MANUAL_LOGIN']
     if "UPDATE_EXPAND_PACK" in json1 : UPDATE_EXPAND_PACK = json1['UPDATE_EXPAND_PACK']
+    if "APP_SPONSER_URL" in json1 : APP_SPONSER_URL = json1['APP_SPONSER_URL']
 

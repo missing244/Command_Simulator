@@ -44,8 +44,9 @@ class Schem_V1 :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO]) :
-        NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, nbt.TAG_Compound]) :
+        if isinstance(buffer, nbt.TAG_Compound) : NBT = buffer
+        else : NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
 
         StructureObject = cls()
         StructureObject.size[0] = NBT["Width"].value
@@ -106,8 +107,9 @@ class Schem_V2(Schem_V1) :
     """
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO]) :
-        NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, nbt.TAG_Compound]) :
+        if isinstance(buffer, nbt.TAG_Compound) : NBT = buffer
+        else : NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
 
         StructureObject = cls()
         StructureObject.size[0] = NBT["Width"].value
@@ -161,8 +163,9 @@ class Schem_V3(Schem_V1) :
     """
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO]) :
-        NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, nbt.TAG_Compound]) :
+        if isinstance(buffer, nbt.TAG_Compound) : NBT = buffer
+        else : NBT = nbt.read_from_nbt_file(buffer, byteorder="big", zip_mode="gzip").get_tag()
         NBT = NBT["Schematic"]
 
         StructureObject = cls()

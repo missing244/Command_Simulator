@@ -71,8 +71,9 @@ class Mcstructure :
 
 
     @classmethod
-    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO]) :
-        NBT = nbt.read_from_nbt_file(buffer, byteorder="little")
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, nbt.TAG_Compound]) :
+        if isinstance(buffer, nbt.TAG_Compound) : NBT = buffer
+        else : NBT = nbt.read_from_nbt_file(buffer, byteorder="little")
 
         StructureObject = cls()
         StructureObject.size = NBT["size"].get_value()
