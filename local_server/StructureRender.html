@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-
 	<head>
+        <meta charset="UTF-8">
 		<title>可视化模型</title>
         <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1.0" />
 	</head>
@@ -35,20 +35,24 @@
 
         controls.addEventListener( 'change', displayManager.requestRender() )  //订阅第一人称交互事件并更新渲染信息
 		setInterval(() => controls.dispatchEvent( {type: 'change'} ), 1000);   //定时触发一次交互事件并更新渲染
+        
+        function HttpConnent(response_type="arraybuffer", timeout=90000) {
+            const xhr = new XMLHttpRequest();
+            xhr.responseType = response_type
+            xhr.timeout = timeout;
+            xhr.ontimeout = () => alert("服务器请求已超时\n请将命令模拟器设为小窗模式\n并重新刷新网页")
+            return xhr
+        }
 
         setTimeout( () => {
             const request_url = 'http://localhost:32323'
-            const xhr = new XMLHttpRequest();
-            xhr.responseType = "arraybuffer"
-            xhr.timeout = 10000;
-            xhr.ontimeout = () => alert("服务器请求已超时\n请将命令模拟器设为小窗模式\n并重新刷新网页")
+            const buffer_size = 128 * 128 * 384
 
             let StructureObject = new Structure([1, 1, 1])
             let Size = [1, 1, 1]
             let Palette = []
-            let ConnentDone = false
+            let ConnentDone = []
             let GetStructureType = "%Type%"
-            
 
             const GetResponseData = (xhr) => {
                 const contentType = xhr.getResponseHeader('Content-Type') || '';
@@ -65,6 +69,7 @@
             }
             const GetSizeAndPalette = () => new Promise((resolve, reject) => {
                 const req_json = {"operation":GetStructureType, "process":"getSizePalette"}
+                const xhr = HttpConnent()
                 xhr.open('POST', request_url, true);
                 xhr.onload = () => {
                     if (xhr.status === 200) {
@@ -75,9 +80,10 @@
                 }
                 xhr.send(JSON.stringify(req_json));
             })
-            const GetIndexData = (index, readCount, maxIndex) => {
+            const GetIndexData = (startIndex, readCount, index) => {
                 new Promise((resolve, reject) => {
-                    const req_json = {"operation":GetStructureType, "process":"getIndexData", "index":index, "read":readCount}
+                    const req_json = {"operation":GetStructureType, "process":"getIndexData", "index":startIndex, "read":readCount}
+                    const xhr = HttpConnent()
                     xhr.open('POST', request_url, true);
                     xhr.onload = () => {
                         if (xhr.status === 200) {
@@ -88,13 +94,9 @@
                     }
                     xhr.send(JSON.stringify(req_json));
                 }).then(result => {
-                    StructureObject.blockIndex.set(result, index)
-
-                    index += readCount
-                    if (index < maxIndex) GetIndexData(index, readCount, maxIndex)
-                    else ConnentDone = true
-
-                    if (ConnentDone) displayManager.structure = StructureObject
+                    StructureObject.blockIndex.set(result, startIndex)
+                    ConnentDone[index] = true
+                    if (ConnentDone.every(i => i)) displayManager.structure = StructureObject
                 }).catch(error => {
                     alert('服务器通信失败:\n' + error.message);
                 })
@@ -105,6 +107,7 @@
                 Size[1] = result["size"][1]
                 Size[2] = result["size"][2]
                 Palette = result["palette"]
+                const Volume = Size[0] * Size[1] * Size[2]
 
                 StructureObject.reset(Size)
                 Palette.forEach( (item) => {
@@ -116,8 +119,11 @@
                 camera.position.y = StructureObject.size[1] / 2;
                 camera.position.z = 0;
                 camera.lookAt(1, 0, 1);
-
-                GetIndexData(0, 128*128*384, Size[0]*Size[1]*Size[2])
+                
+                for (let index = 0; index<(Volume/buffer_size); index++) {
+                    ConnentDone.push(false)
+                    GetIndexData(buffer_size*index, buffer_size, index)
+                }
             }).catch(error => {
                 alert('服务器通信失败:\n' + error.message);
             })

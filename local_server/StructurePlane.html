@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>结构平面图 - 高清无损查看器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: #1e1e1e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            touch-action: none;
+        }
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #111;
+            overflow: hidden;
+            touch-action: none;
+        }
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            background: #0b0b0b;
+            touch-action: none;
+            overflow: hidden;
+        }
+        #imageCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            background: #0a0a0a;
+            cursor: grab;
+        }
+        #imageCanvas:active {
+            cursor: grabbing;
+        }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: #222;
+            color: white;
+            border-top: 1px solid #3a3a3a;
+            touch-action: pan-y;
+        }
+        .filename {
+            font-size: 0.9rem;
+            color: #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .btn-group button {
+            background: #3a3a3a;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            transition: background 0.2s;
+            touch-action: manipulation;
+            padding: 0;
+            line-height: 1;
+        }
+        .btn-group button:active {
+            background: #5a5a5a;
+            transform: scale(0.96);
+        }
+        .btn-group button svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+            display: block;
+        }
+        /* 提示信息 (可选) */
+        .quality-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.6);
+            color: #0f0;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            font-family: monospace;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="toolbar">
+        <div class="filename" id="filenameDisplay">结构平面图</div>
+        <div class="btn-group">
+            <button id="downloadBtn" title="下载原图质量PNG (无损)">
+                <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            </button>
+            <button id="resetBtn" title="重置位置/缩放">
+                <svg viewBox="0 0 24 24"><path d="M17.65 6.35A8 8 0 1 0 19 12h-2a6 6 0 1 1-2.23-4.69l2.64-2.64 1.42 1.42-3.54 3.54-3.54-3.54 1.41-1.41L16.44 5.3c.38.32.74.68 1.06 1.06z"/></svg>
+            </button>
+        </div>
+    </div>
+    <div class="canvas-wrapper">
+        <div class="quality-badge" id="qualityBadge">🔍 原始分辨率 · 无损渲染</div>
+        <canvas id="imageCanvas"></canvas>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 核心配置 ----------
+        // 占位符: 实际替换时后端会将图像Base64数据完整注入，保留原始像素信息
+        // 关键: 图片数据必须完整无损，使用最高质量编码，且canvas绘图时不做任何降采样。
+        const IMAGE_BASE64_DATA = '%ImageData%';
+        const IMAGE_NAME = '结构平面图.png';
+
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d', { 
+            alpha: false,           // 禁用alpha提升性能且避免透明混合干扰，保持背景纯黑
+            willReadFrequently: false,
+            antialias: false        // 关键: 关闭抗锯齿，避免图片模糊 (但主要模糊源于缩放插值，我们使用imageSmoothingEnabled控制)
+        });
+        
+        let image = new Image();
+        let imageNaturalWidth = 0, imageNaturalHeight = 0;
+        
+        // 视图变换参数
+        let scale = 1.0;
+        let offsetX = 0, offsetY = 0;
+        let canvasWidth = 0, canvasHeight = 0;
+        
+        // 交互状态
+        let isDragging = false;
+        let lastTouchX = 0, lastTouchY = 0;
+        let initialPinchDistance = null;
+        let initialScale = 1;
+        
+        // 标记图片是否加载完成
+        let imageLoaded = false;
+        
+        // ---------- 关键: 设置canvas上下文图像平滑为false，确保缩放绘图时无模糊 (最近邻插值，像素边缘锐利) ----------
+        function setImageSmoothing(enabled) {
+            // 为了图纸清晰，强制关闭平滑。但对于极高倍率缩放可能会锯齿，但图纸类更希望文字清晰。
+            // 用户如果希望平滑可以再议，但这里完全按照"没有像素损失"原则，关闭平滑保证每个原始像素清晰映射。
+            ctx.imageSmoothingEnabled = false;
+        }
+
+        image.onload = () => {
+            imageNaturalWidth = image.naturalWidth;
+            imageNaturalHeight = image.naturalHeight;
+            imageLoaded = true;
+            
+            // 根据canvas容器大小调整初始视图
+            resizeCanvasToDisplay();
+            fitImageToCanvas();
+            // 设置绘图平滑为false
+            setImageSmoothing(false);
+            drawImage();
+            
+            // 更新提示栏，显示原始分辨率
+            const badge = document.getElementById('qualityBadge');
+            if (badge) badge.textContent = `原始分辨率: ${imageNaturalWidth} × ${imageNaturalHeight} · 无损渲染`;
+        };
+        
+        image.onerror = () => {
+            console.error('图片加载失败');
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('图片加载失败，请检查图像数据', canvas.width/2, canvas.height/2);
+        };
+        
+        // 关键: 直接将base64数据赋值，base64由后端生成时必须完整无压缩，且保持原始图像质量
+        // 为了确保无像素损失，我们假设传入的图片数据本身就是原始PNG或无损格式。
+        image.src = IMAGE_BASE64_DATA;
+        
+        // 监听窗口大小改变，重新适配画布尺寸，但保持原图比例显示
+        window.addEventListener('resize', () => {
+            if (!imageLoaded) return;
+            resizeCanvasToDisplay();
+            // 重新适配边界，确保图片依然在视野内 (可选，但为了体验，不强制重新fit，只是保持当前偏移不超出边界)
+            clampOffsetByBounds();
+            drawImage();
+        });
+        
+        // 调整canvas元素尺寸与父容器匹配 (保留实际像素尺寸，避免CSS缩放导致模糊)
+        function resizeCanvasToDisplay() {
+            const wrapper = canvas.parentElement;
+            if (!wrapper) return;
+            const rect = wrapper.getBoundingClientRect();
+            // 设置canvas的实际像素尺寸与CSS像素尺寸一致 (避免高分屏下模糊)
+            // 关键: canvas.width/height 必须为整数且与CSS像素尺寸严格对应，保证绘图清晰
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            canvasWidth = rect.width;
+            canvasHeight = rect.height;
+            
+            // 重要: 因为canvas尺寸变化，需要重新绘制并保证图片绘制清晰
+            if (imageLoaded) {
+                // 但不需要重置缩放，只需重绘并修正边界防止图片超出太多
+                clampOffsetByBounds();
+                drawImage();
+            }
+        }
+        
+        // 边界限制 (防止图片完全移出视野)
+        function clampOffsetByBounds() {
+            if (1 || !imageLoaded || imageNaturalWidth === 0) return null;
+            const imgDisplayWidth = imageNaturalWidth * scale;
+            const imgDisplayHeight = imageNaturalHeight * scale;
+            
+            // 水平边界: 允许图片超出画布，但不能让空白区域完全占据且图片全部移出，这里限制最小offset使得图片至少有一部分可见
+            // 但为了自由拖动，不做强制居中限制，只限制极端偏移 (避免拖拽丢失)
+            const maxOffsetX = Math.max(canvasWidth, imgDisplayWidth);
+            const minOffsetX = -Math.max(0, imgDisplayWidth - canvasWidth);
+            offsetX = Math.min(maxOffsetX, Math.max(minOffsetX, offsetX));
+            
+            const maxOffsetY = Math.max(canvasHeight, imgDisplayHeight);
+            const minOffsetY = -Math.max(0, imgDisplayHeight - canvasHeight);
+            offsetY = Math.min(maxOffsetY, Math.max(minOffsetY, offsetY));
+        }
+        
+        // 适应画布 (contain 模式，完整显示且居中)
+        function fitImageToCanvas() {
+            if (!imageNaturalWidth || !imageNaturalHeight) return;
+            const wRatio = canvasWidth / imageNaturalWidth;
+            const hRatio = canvasHeight / imageNaturalHeight;
+            scale = Math.min(wRatio, hRatio);
+            // 居中显示
+            offsetX = (canvasWidth - imageNaturalWidth * scale) / 2;
+            offsetY = (canvasHeight - imageNaturalHeight * scale) / 2;
+            // 边界安全
+            clampOffsetByBounds();
+        }
+        
+        // ---------- 核心绘图函数: 确保每次绘图都关闭平滑，最大锐利度，无损表现 ----------
+        function drawImage() {
+            if (!imageLoaded || !imageNaturalWidth) {
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            
+            // 清空背景 (纯黑，无alpha)
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 保存上下文
+            ctx.save();
+            // 应用平移和缩放变换
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(scale, scale);
+            
+            // 关键: 在绘制图像前确保imageSmoothingEnabled = false，防止缩放插值模糊
+            // 注意: 当scale不为1时，关闭平滑会导致像素块状感，但对于工程图纸反而更清晰（文字边缘锐利）。
+            // 如用户需要平滑缩放可调整，但根据需求“完全没有像素损失”，关闭平滑是最接近原始像素映射的方案。
+            ctx.imageSmoothingEnabled = false;
+            
+            // 绘制原始图像 (直接使用原生尺寸绘制)
+            ctx.drawImage(image, 0, 0, imageNaturalWidth, imageNaturalHeight);
+            ctx.restore();
+        }
+        
+        // ---------- 交互: 支持鼠标拖拽，触摸拖拽，双指缩放，滚轮缩放 ----------
+        function getCanvasCoordsFromClient(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+        
+        // 鼠标/指针拖拽
+        function onPointerDown(e) {
+            e.preventDefault();
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            canvas.setPointerCapture(e.pointerId);
+            isDragging = true;
+            lastTouchX = e.clientX;
+            lastTouchY = e.clientY;
+        }
+        
+        function onPointerMove(e) {
+            e.preventDefault();
+            if (!isDragging) return;
+            const dx = e.clientX - lastTouchX;
+            const dy = e.clientY - lastTouchY;
+            if (dx !== 0 || dy !== 0) {
+                offsetX += dx;
+                offsetY += dy;
+                // 简易边界限制 (避免拖出太远)
+                clampOffsetByBounds();
+                lastTouchX = e.clientX;
+                lastTouchY = e.clientY;
+                drawImage();
+            }
+        }
+        
+        function onPointerUp(e) {
+            e.preventDefault();
+            isDragging = false;
+            canvas.releasePointerCapture(e.pointerId);
+        }
+        
+        // 滚轮缩放 (包括鼠标滚轮和触摸板双指)
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (!imageLoaded) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // 滚轮缩放因子 (向上放大，向下缩小)
+            const delta = -e.deltaY * (e.deltaMode === 0 ? 0.008 : 0.0001);
+            let zoomFactor = 1 + delta;
+            if (zoomFactor < 0.3) zoomFactor = 0.3;
+            if (zoomFactor > 3.0) zoomFactor = 3.0;
+            
+            const newScale = scale * zoomFactor;
+            if (newScale < 0.08 || newScale > 12.0) return;
+            
+            // 计算鼠标位置对应的图像坐标 (基于当前变换)
+            const imgX = (mouseX - offsetX) / scale;
+            const imgY = (mouseY - offsetY) / scale;
+            
+            scale = newScale;
+            // 重新计算偏移，使鼠标下方图像点保持不变
+            offsetX = mouseX - imgX * scale;
+            offsetY = mouseY - imgY * scale;
+            
+            clampOffsetByBounds();
+            drawImage();
+        }, { passive: false });
+        
+        // 双指触摸缩放 (pinch)
+        let initialPinchCenterX = 0;  // 新增
+        let initialPinchCenterY = 0;  // 新增
+        let initialOffsetX = 0;       // 新增
+        let initialOffsetY = 0;       // 新增
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 2) {
+                const t1 = e.touches[0];
+                const t2 = e.touches[1];
+                const dx = t1.clientX - t2.clientX;
+                const dy = t1.clientY - t2.clientY;
+
+                // 记录初始距离
+                initialPinchDistance = Math.hypot(dx, dy);
+                initialScale = scale;
+
+                // ★ 记录双指中心点（相对于 canvas）
+                const rect = canvas.getBoundingClientRect();
+                const centerX = (t1.clientX + t2.clientX) / 2;
+                const centerY = (t1.clientY + t2.clientY) / 2;
+                initialPinchCenterX = centerX - rect.left;
+                initialPinchCenterY = centerY - rect.top;
+
+                // ★ 记录当前偏移量
+                initialOffsetX = offsetX;
+                initialOffsetY = offsetY;
+
+            } else if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                isDragging = true;
+                lastTouchX = touch.clientX;
+                lastTouchY = touch.clientY;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            
+            if (e.touches.length === 2 && initialPinchDistance !== null) {
+                const t1 = e.touches[0];
+                const t2 = e.touches[1];
+                const dx = t1.clientX - t2.clientX;
+                const dy = t1.clientY - t2.clientY;
+                const currentDistance = Math.hypot(dx, dy);
+                
+                // 基于起点计算新缩放
+                let newScale = initialScale * (currentDistance / initialPinchDistance);
+                newScale = Math.min(Math.max(newScale, 0.08), 12.0);
+                
+                // ★ 关键：使用起点记录的中心点和偏移量计算
+                // 计算中心点对应的图像坐标（基于缩放前的状态）
+                const imgFixX = (initialPinchCenterX - initialOffsetX) / initialScale;
+                const imgFixY = (initialPinchCenterY - initialOffsetY) / initialScale;
+                
+                // 应用新缩放，保持图像点固定在中心点
+                offsetX = initialPinchCenterX - imgFixX * newScale;
+                offsetY = initialPinchCenterY - imgFixY * newScale;
+                scale = newScale;
+                
+                clampOffsetByBounds();
+                drawImage();
+                
+                // ★ 删除这两行！不要更新起点
+                // initialPinchDistance = currentDistance;
+                // initialScale = scale;
+                
+            } else if (e.touches.length === 1 && isDragging) {
+                const touch = e.touches[0];
+                const dx = touch.clientX - lastTouchX;
+                const dy = touch.clientY - lastTouchY;
+                if (dx !== 0 || dy !== 0) {
+                    offsetX += dx;
+                    offsetY += dy;
+                    clampOffsetByBounds();
+                    drawImage();
+                    lastTouchX = touch.clientX;
+                    lastTouchY = touch.clientY;
+                }
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (e.touches.length < 2) {
+                initialPinchDistance = null;  // 重置，下次双指重新开始
+            }
+            if (e.touches.length === 0) {
+                isDragging = false;
+            }
+        });
+
+        // 鼠标事件兼容PC
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            isDragging = true;
+            lastTouchX = e.clientX;
+            lastTouchY = e.clientY;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const dx = e.clientX - lastTouchX;
+            const dy = e.clientY - lastTouchY;
+            if (dx !== 0 || dy !== 0) {
+                offsetX += dx;
+                offsetY += dy;
+                clampOffsetByBounds();
+                lastTouchX = e.clientX;
+                lastTouchY = e.clientY;
+                drawImage();
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+        
+        // ---------- 重置按钮: 重置视图为完整居中显示 ----------
+        document.getElementById('resetBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!imageLoaded) return;
+            fitImageToCanvas();
+            drawImage();
+        });
+        
+        document.getElementById('downloadBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!imageLoaded) {
+                alert('图片未加载完成，请稍后');
+                return;
+            }
+            // 方法1: 使用原始图片的src (base64) 直接下载，这是最无损的方案
+            try {
+                // 直接从image元素获取src (base64数据)
+                const originalSrc = image.src;
+                if (originalSrc && originalSrc.startsWith('data:image')) {
+                    const link = document.createElement('a');
+                    link.download = IMAGE_NAME;
+                    link.href = originalSrc;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    // 降级: 如果图片源是blob或url，则用canvas导出高质量png
+                    // 保证导出质量: 使用canvas的原生分辨率绘制完整图片(无缩放)导出，避免任何压缩损失。
+                    const offscreenCanvas = document.createElement('canvas');
+                    offscreenCanvas.width = imageNaturalWidth;
+                    offscreenCanvas.height = imageNaturalHeight;
+                    const offCtx = offscreenCanvas.getContext('2d', { alpha: false });
+                    offCtx.imageSmoothingEnabled = false;
+                    offCtx.drawImage(image, 0, 0, imageNaturalWidth, imageNaturalHeight);
+                    // 使用最高质量png导出
+                    offscreenCanvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = IMAGE_NAME;
+                        link.href = url;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    }, 'image/png', 1.0);
+                }
+            } catch (err) {
+                console.warn(err);
+                // 最终降级: 直接从canvas导出当前视图？但可能导致有损，但作为后备采用原尺寸离屏canvas无损导出
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = imageNaturalWidth;
+                offCanvas.height = imageNaturalHeight;
+                const offCtx = offCanvas.getContext('2d');
+                offCtx.drawImage(image, 0, 0);
+                offCanvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = IMAGE_NAME;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            }
+        });
+        
+        // 初始辅助函数: 确保首次绘制前canvas尺寸正确
+        function init() {
+            resizeCanvasToDisplay();
+            // 如果图片已经加载完成，则调用fit并绘制，否则等待onload
+            if (imageLoaded) {
+                fitImageToCanvas();
+                drawImage();
+            } else {
+                // 显示等待加载背景
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ccc';
+                ctx.font = '14px system-ui';
+                ctx.textAlign = 'center';
+                ctx.fillText('加载图纸中...', canvas.width/2, canvas.height/2);
+            }
+        }
+        
+        // 由于图片异步，先调用init监听resize和基础环境，等待onload触发重绘
+        // 监听图片加载完成再次确保平滑设置
+        const originalOnload = image.onload;
+        image.onload = (e) => {
+            if (originalOnload) originalOnload.call(image, e);
+            setImageSmoothing(false);
+            // 确保canvas尺寸正确
+            resizeCanvasToDisplay();
+            fitImageToCanvas();
+            drawImage();
+        };
+        
+        // 设置指针事件捕获优化
+        canvas.addEventListener('pointerdown', onPointerDown);
+        canvas.addEventListener('pointermove', onPointerMove);
+        canvas.addEventListener('pointerup', onPointerUp);
+        
+        // 防止iOS/安卓长按菜单
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        // 启动初始化
+        init();
+    })();
+</script>
+</body>
+</html>
