@@ -3,7 +3,7 @@
 
 #原生模块加载与设置
 from idlelib.calltip_w import CalltipWindow
-import http.server, ssl, importlib
+import http.server, socketserver, ssl, importlib, urllib.parse
 import json, tkinter, tkinter.font, tkinter.messagebox, time, threading, sys, gzip, gc
 import platform, os, types, traceback, webbrowser, re, functools
 from tkinter import ttk
@@ -23,6 +23,77 @@ import package.file_operation as file_IO
 import main_source.bedrock_edition as Minecraft_BE
 
 
+class HTTP_Request_Handler(http.server.SimpleHTTPRequestHandler) :
+
+    def do_Get_Behiver(self, query_components:dict) :
+        pack_dir_name = None
+        if 'pack' in query_components :
+            if query_components['pack'][0] not in debug_windows.expand_pack_open_list : return None
+            else : pack_dir_name = debug_windows.expand_pack_open_list[query_components['pack'][0]]["dir_name"]
+
+        if query_components.get("page", [None])[0] == "index" :
+            path1 = os.path.join("expand_pack", pack_dir_name, "index.html")
+            if not os.path.isfile(path1) : return None
+            return file_IO.read_a_file(path1, "readbyte")
+        elif query_components.get("page", [None])[0] == "help" :
+            path1 = os.path.join("expand_pack", pack_dir_name, "help.html")
+            if not os.path.isfile(path1) : return None
+            return file_IO.read_a_file(path1, "readbyte")
+        elif query_components.get("render", [None])[0] in {"StructureRender", "WorldRender"} :
+            path1 = os.path.join("local_server", "StructureRender.html")
+            if not os.path.isfile(path1) : return None
+            render_type = query_components.get("render")[0]
+            return file_IO.read_a_file(path1, "readbyte").replace(b"%Type%", 
+            b"structure_render" if render_type == "StructureRender" else b"world_render")
+        elif query_components.get("render", [None])[0] in {"Structure2DRender", "World2DRender"} :
+            path1 = os.path.join("local_server", "StructurePlane.html")
+            if not os.path.isfile(path1) : return None
+            render_type = query_components.get("render")[0]
+            struct_type = "structure" if render_type == "Structure2DRender" else "world"
+            png_data = debug_windows.post_to_2Dstructure(struct_type, {})
+            return file_IO.read_a_file(path1, "readbyte").replace(b"%ImageData%", png_data)
+
+    def log_message(self, format, *args):
+        return None
+
+    def do_GET(self):
+        url_obj = urllib.parse.urlparse(self.path)
+        if url_obj.path == "/" and url_obj.query != "" :
+            query_components = urllib.parse.parse_qs(url_obj.query)
+
+            if ("render" in query_components) and \
+               ("pack" in query_components and "page" in query_components) : 
+                return None
+
+            send_bytes = self.do_Get_Behiver(query_components)
+            self.send_response(200)
+            self.send_header('Content-type', 'texthtml')
+            self.end_headers()
+            self.wfile.write(send_bytes)
+        else : super().do_GET()
+
+    def do_POST(self):
+        client_post_data = self.rfile.read(int(self.headers['content-length']))
+        try : client_post_json = json.loads(client_post_data)
+        except : client_post_json = {}
+
+        if "operation" in client_post_json :
+            ResponesData = debug_windows.post_data(client_post_json)
+        else : ResponesData = {"state": 1 , "msg": "传输数据不合法"}
+                
+        self.send_response(200)
+        self.send_header('Content-Encoding', 'gzip')
+        if isinstance(ResponesData, bytes) : 
+            self.send_header('Content-type', 'application/octet-stream')
+            self.end_headers()
+            self.wfile.write( gzip.compress(ResponesData) )
+        else : 
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write( gzip.compress( json.dumps(
+                ResponesData, separators=(',', ':'),
+                default=Minecraft_BE.DataSave.encoding).encode('utf-8')) )
+
 
 if True : #启用软件前的加载项目
     for i in app_constants.First_Load_Build_Dir : os.makedirs(i,exist_ok=True)
@@ -32,73 +103,10 @@ if True : #启用软件前的加载项目
         file_IO.write_a_file(os.path.join("functionality","example","example_bp","manifest.json"), app_constants.manifest_json)
     del manifest_path
 
-    def http_server_create(server_class=http.server.HTTPServer, handler_class=http.server.SimpleHTTPRequestHandler):
-        from urllib import parse
-        class http_Resquest(handler_class) :
-            def log_message(self, format, *args):
-                return None
-
-            def do_GET(self):
-                url_obj = parse.urlparse(self.path)
-                if url_obj.path == "/" and url_obj.query != "" :
-                    query_components = parse.parse_qs(url_obj.query)
-                    pack_dir_name = None
-
-                    if not( ("render" in query_components) or (
-                        "pack" in query_components and "page" in query_components) 
-                    ) : return None
-                    if 'pack' in query_components :
-                        if query_components['pack'][0] not in debug_windows.expand_pack_open_list : return None
-                        else : pack_dir_name = debug_windows.expand_pack_open_list[query_components['pack'][0]]["dir_name"]
-
-                    if query_components.get("page", [None])[0] == "index" :
-                        path1 = os.path.join("expand_pack", pack_dir_name, "index.html")
-                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                        send_bytes = file_IO.read_a_file(path1, "readbyte")
-                    elif query_components.get("page", [None])[0] == "help" :
-                        path1 = os.path.join("expand_pack", pack_dir_name, "help.html")
-                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                        send_bytes = file_IO.read_a_file(path1, "readbyte")
-                    elif query_components.get("render", [None])[0] == "StructureRender" :
-                        path1 = os.path.join("local_server", "StructureRender.html")
-                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                        send_bytes = file_IO.read_a_file(path1, "readbyte").replace(b"%Type%", b"structure_render")
-                    elif query_components.get("render", [None])[0] == "WorldRender" :
-                        path1 = os.path.join("local_server", "StructureRender.html")
-                        if not(os.path.exists(path1) and os.path.isfile(path1)) : return None
-                        send_bytes = file_IO.read_a_file(path1, "readbyte").replace(b"%Type%", b"world_render")
-
-                    self.send_response(200)
-                    self.send_header('Content-type', 'texthtml')
-                    self.end_headers()
-                    self.wfile.write(send_bytes)
-                else : super().do_GET()
-
-            def do_POST(self):
-                client_post_data = self.rfile.read(int(self.headers['content-length']))
-                try : client_post_json = json.loads(client_post_data)
-                except : client_post_json = {}
-
-                if "operation" in client_post_json :
-                    ResponesData = debug_windows.post_data(client_post_json)
-                else : ResponesData = {"state": 1 , "msg": "传输数据不合法"}
-                
-                self.send_response(200)
-                self.send_header('Content-Encoding', 'gzip')
-                if isinstance(ResponesData, bytes) : 
-                    self.send_header('Content-type', 'application/octet-stream')
-                    self.end_headers()
-                    self.wfile.write( gzip.compress(ResponesData) )
-                else : 
-                    self.send_header('Content-type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write( 
-                    gzip.compress( json.dumps(ResponesData, separators=(',', ':'),
-                    default=Minecraft_BE.DataSave.encoding).encode('utf-8')) )
-
+    def http_server_create():
         server_address = ('', 32323)
-        http_Resquest = functools.partial(http_Resquest, directory="local_server")
-        httpd = server_class(server_address, http_Resquest)
+        http_Resquest = functools.partial(HTTP_Request_Handler, directory="local_server")
+        httpd = http.server.ThreadingHTTPServer(server_address, http_Resquest)
         httpd.serve_forever()
     threading.Thread(target=http_server_create).start()
 
@@ -116,7 +124,6 @@ if True : #启用软件前的加载项目
                 except : traceback.print_exc()
             print('时间：%s' % str(time.time() - a_11))
     threading.Thread(target=listen_cmd_input).start()
-
 
 
 class control_windows :
@@ -144,11 +151,10 @@ class control_windows :
 
         self.user_manager = app_function.user_manager() #用户管理
         self.game_process:Minecraft_BE.RunTime.minecraft_thread = None #模拟世界线程
-        self.initialization_log = [app_function.initialization_log() for i in range(3)]
+        self.initialization_log = [app_function.initialization_log() for i in range(2)]
         self.initialization_process:List[threading.Thread] = [
             threading.Thread(target=app_function.get_app_infomation_and_login, args=(Announcement, self.user_manager, self.initialization_log[0])),
-            threading.Thread(target=app_function.flash_minecraft_id, args=(self.initialization_log[1], )),
-            threading.Thread(target=app_function.flash_minecraft_source, args=(self.user_manager, self.initialization_log[2]))
+            threading.Thread(target=app_function.flash_minecraft_id, args=(self.initialization_log[1], ))
         ]
 
         for i in self.initialization_process : i.start()
@@ -368,8 +374,8 @@ class control_windows :
     def post_data(self, post_json:dict) :
         operation_mode = {
             "expand_pack_run": self.post_to_expand_pack,
-            "structure_render": lambda e: self.post_to_structureReader("structure", e),
-            "world_render": lambda e: self.post_to_structureReader("world", e)
+            "structure_render": lambda e: self.post_to_3Dstructure("structure", e),
+            "world_render": lambda e: self.post_to_3Dstructure("world", e)
         }
 
         OperationMode = post_json.get("operation", None)
@@ -389,7 +395,7 @@ class control_windows :
             return {"state" : 6 , "msg" : "拓展包并没有指定Post处理方法"}
         return self.expand_pack_open_list[post_json["pack_id"]]['object'].do_POST(post_json)
 
-    def post_to_structureReader(self, type:Literal["structure", "world"], post_json:dict) :
+    def post_to_3Dstructure(self, type:Literal["structure", "world"], post_json:dict) :
         BindViewObject:app_tk_frame.__StructureView__ = None
         if type == "structure" : BindViewObject = self.display_frame["structure_transfor"].view_object
         elif type == "world" : BindViewObject = self.display_frame["mcworld_reader"].view_object
@@ -403,6 +409,18 @@ class control_windows :
             if post_json.get("index", -1) < 0 : return {"state": 1 , "msg": "传输数据不合法(index < 0)"}
             if post_json.get("read", -1) < 0 : return {"state": 1 , "msg": "传输数据不合法(read < 0)"}
             return BindViewObject.getIndexData(post_json["index"], post_json["read"])
+
+    def post_to_2Dstructure(self, type:Literal["structure", "world"], post_json:dict) :
+        import base64
+        Bind2DImage:bytes = None
+        if type == "structure" : Bind2DImage = self.display_frame["structure_transfor"].view_2D_object
+        elif type == "world" : Bind2DImage = self.display_frame["mcworld_reader"].view_2D_object
+
+        if Bind2DImage is None : return {"state": 2 , "msg": "结构对象暂未加载"}
+        base64_data = base64.b64encode(Bind2DImage).decode('utf-8')
+        data_url = f"data:image/png;base64,{base64_data}"
+
+        return data_url.encode('utf-8')
 
 
 

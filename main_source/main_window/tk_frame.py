@@ -1,5 +1,5 @@
 import tkinter,tkinter.messagebox,webbrowser,re,json,os,traceback,pickle,base64,itertools
-import copy,random,threading,time,gc,zlib,subprocess,sys,types,importlib.util,zipfile,shutil
+import copy,random,threading,time,gc,zlib,subprocess,sys,types,importlib.util,zipfile,io
 from typing import Any,Literal,Union,Dict,Tuple,List,Callable
 import tkinter.ttk as ttk
 
@@ -626,6 +626,11 @@ class BE_Structure_Tool(tkinter.Frame) :
         for i in file_list : self.search_result.insert(tkinter.END, i)
         self.file_list = file_list
 
+    def __gc_clear__(self) :
+        self.view_object = None
+        self.view_2D_object = None
+        gc.collect()
+
     @staticmethod
     def __get_codecs__() :
         from package.MCBEWorld import World
@@ -663,6 +668,7 @@ class BE_Structure_Tool(tkinter.Frame) :
         self.merge_page = 0
         self.merge_info: List[Tuple[str, int, int, int]] = []
         self.view_object:__StructureView__ = None
+        self.view_2D_object:bytes = None
         self.codecs = self.__get_codecs__()
 
         tkinter.Label(self,height=1,text="         ",font=tk_tool.get_default_font(5)).pack()
@@ -899,11 +905,14 @@ class BE_Structure_Tool(tkinter.Frame) :
         SubScreen_0 = tkinter.Frame(MainScreen)
         SubScreen_0.pack()
         tkinter.Label(SubScreen_0, height=1,text="         ",font=tk_tool.get_default_font(5)).grid(row=0, column=0)
-        tkinter.Button(SubScreen_0, height=1,text="<<返回主界面",font=tk_tool.get_default_font(11),bg="orange",
+        tkinter.Button(SubScreen_0, height=1,text="<<主界面",font=tk_tool.get_default_font(11),bg="orange",
             command=lambda:self.main_win.set_display_frame("welcome_screen")).grid(row=1, column=0)
         tkinter.Label(SubScreen_0, height=1,text="  ",font=tk_tool.get_default_font(5)).grid(row=1, column=1)
-        tkinter.Button(SubScreen_0, height=1,text="启用结构预览",font=tk_tool.get_default_font(11),bg="#ff7fa9",
-            command=self.show_WebGL_view).grid(row=1, column=2)
+        tkinter.Button(SubScreen_0, height=1,text="2D预览",font=tk_tool.get_default_font(11),bg="#ff7fa9",
+            command=self.show_2D_view).grid(row=1, column=2)
+        tkinter.Label(SubScreen_0, height=1,text="  ",font=tk_tool.get_default_font(5)).grid(row=1, column=3)
+        tkinter.Button(SubScreen_0, height=1,text="3D预览",font=tk_tool.get_default_font(11),bg="#ff7fa9",
+            command=self.show_WebGL_view).grid(row=1, column=4)
         
         if "FeedbackScreen" :
             FeedbackScreen = tkinter.Frame(self) 
@@ -973,6 +982,7 @@ class BE_Structure_Tool(tkinter.Frame) :
 
     def start_thread_1(self) :
         tkinter.messagebox.showinfo("Info", "运行中如果将此APP变为后台\n安卓系统会暂停APP运行\n转换也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
+        self.__gc_clear__()
         threading.Thread(target=self.transfor_file).start()
 
     def transfor_file(self) :
@@ -1139,8 +1149,7 @@ class BE_Structure_Tool(tkinter.Frame) :
         Selector:tuple = Widget.curselection()
         if not Selector : return None
         
-        self.view_object = None
-        gc.collect()
+        self.__gc_clear__()
 
         self.FileInfo1.config(text="文件名：(正在解析)")
         file_name = self.search_result.get(Selector[0])
@@ -1179,6 +1188,83 @@ class BE_Structure_Tool(tkinter.Frame) :
             self.view_object = __StructureView__(Structure1)
 
         self.can_readFile = True
+
+    def show_2D_view(self) :
+        from package.Py_module.SimplePNG import SimplePNG
+        from package.MCBELab import UpgradeBlock, ResolveBlockColor
+        if not self.view_object : tkinter.messagebox.showerror("Error", "无解析的结构\n请在结构详情界面\n点击一个结构进行解析")
+        if not self.can_readFile : tkinter.messagebox.showerror("Error", "请等待结构解析完成")
+        if (not self.view_object) or (not self.can_readFile) : return None
+
+        msg_box = tk_tool.tk_Msgbox(self.main_win.window, self.main_win.window)
+        tkinter.Label(msg_box, text="", fg='black', font=tk_tool.get_default_font(3), height=1).pack()
+        msg_laber = tkinter.Label(msg_box, text="", fg='black', font=tk_tool.get_default_font(10))
+        msg_laber.pack()
+        tkinter.Label(msg_box, text="", fg='black', font=tk_tool.get_default_font(3), height=1).pack()
+
+        msg_list = ["正在生成高度信息...", "正在生成图片(%s%%)...", "已完成，即将预览..."]
+        def thread_func() :
+            msg_laber.config(text = msg_list[0:1])
+            Struct1 = self.view_object.Common
+            Height_Info = Struct1.height_info()
+            SizeX, SizeZ = Height_Info.size[0], Height_Info.size[1]
+            index_map = Height_Info.index_map
+            shadow_map = Height_Info.shadow_map
+            ColorMap = [(0, 0, 0, 0)] * 65536
+            for index, block in enumerate(Struct1.block_palette) : 
+                block_id, block_states = UpgradeBlock(block.name, block.states)
+                rgba = ResolveBlockColor(block_id, block_states) 
+                ColorMap[index] = (rgba[0], rgba[1], rgba[2], int(rgba[3]*255))
+            time.sleep(0.5)
+
+            Image = SimplePNG(Height_Info.size[0], Height_Info.size[1])
+            ImageMemory = Image.memory_view
+            Process = set()
+            for x in range(SizeX) :
+                __p = int((x+1)/SizeX*100)
+                if __p not in Process: 
+                    msg_laber.config(text = "\n".join(msg_list[0:2]) % (__p, ))
+                    Process.add(__p)
+                for z in range(SizeZ) :
+                    index = x * SizeZ + z
+                    base_color = ColorMap[index_map[index]]
+                    intensity = shadow_map[index] / 10000
+                    byets_index = z * (1 + SizeX * 4) + 1 + x * 4
+                    ImageMemory[byets_index] = int(base_color[0] * intensity)
+                    ImageMemory[byets_index+1] = int(base_color[1] * intensity)
+                    ImageMemory[byets_index+2] = int(base_color[2] * intensity)
+                    ImageMemory[byets_index+3] = base_color[3]
+
+                    continue
+                    # 以下是如何计算intensity值的算法
+                    # 获取周围点的高度，计算法线 (利用相邻点的高度差，注意边界处理)
+                    light_dir_x, light_dir_y, light_dir_z = normalize(-1, 1, -1)  #设定光源方向 (从西北方向来，且有一定高度)
+                    ambient_strength, diffuse_strength = 0.4, 0.6 #环境光系数 (保证背光面不会全黑)
+                    h_center = height_map[index]
+                    h_left = height_map[index-1] if z > 0 else h_center
+                    h_right = height_map[index+1] if z < SizeZ-1 else h_center
+                    h_up = height_map[index-SizeZ] if x > 0 else h_center
+                    h_down = height_map[index+SizeZ] if x < SizeX-1 else h_center
+                    
+                    # 计算坡度向量 (类似求导)
+                    dx = h_right - h_left   # X轴方向的高度变化
+                    dz = h_down - h_up      # Z轴方向的高度变化
+                    
+                    # 构建法线 (假设原始向上向量为 (0,1,0)，根据坡度倾斜)
+                    d_vector = ((dx**2 + 1**2 + dz**2)**0.5)
+                    normal_x, normal_y, normal_z = dx/d_vector, 1.0/d_vector, dz/d_vector
+                    diff = normal_x*light_dir_x + normal_y*light_dir_y + normal_z*light_dir_z # 计算光照强度 (点积)
+                    intensity = ambient_strength + diffuse_strength * max(0, diff) #混合系数
+            
+            msg_laber.config(text = ("\n".join(msg_list[0:3])) % (100, ))
+            bytes_io = io.BytesIO()
+            Image.save_as(bytes_io)
+            self.view_2D_object = bytes_io.getvalue()
+            time.sleep(0.7)
+            webbrowser.open_new("http://localhost:32323?render=Structure2DRender")
+            msg_box.destroy()
+
+        threading.Thread(target = thread_func).start()
 
     def show_WebGL_view(self) :
         if not self.view_object : tkinter.messagebox.showerror("Error", "无解析的结构\n请在结构详情界面\n点击一个结构进行解析")
@@ -1221,6 +1307,7 @@ class BE_Structure_Tool(tkinter.Frame) :
 
     def start_thread_2(self) :
         tkinter.messagebox.showinfo("Info", "运行中如果将此APP变为后台\n安卓系统会暂停APP运行\n写入也将随之暂停\n\n如需运行其他应用\n可将该APP变为小窗")
+        self.__gc_clear__()
         threading.Thread(target=self.merge_run).start()
 
     def merge_run(self) :
@@ -1325,6 +1412,7 @@ class BE_World_Tool(tkinter.Frame) :
         self.split_size = [99999, 99999, 99999]
         self.enable_split = tkinter.IntVar(main_win.window, 0)
         self.view_object:__StructureView__ = None
+        self.view_2D_object: bytes = None
         self.codecs = BE_Structure_Tool.__get_codecs__()
         PosPattern = re.compile(r'@\[(-?\d+),(-?\d+),(-?\d+)\]~\[(-?\d+),(-?\d+),(-?\d+)\]')
 
@@ -1530,7 +1618,7 @@ class BE_World_Tool(tkinter.Frame) :
                 command=start_transfer_mcs).pack()
 
         if "导出结构" : 
-            def start_creat_CommonStructure(render:bool) :
+            def start_creat_CommonStructure(render:Literal[None, "2D", "3D"]=None) :
                 try : int(StartX.get())
                 except : tkinter.messagebox.showerror("Error", "起始X坐标格式错误") ; return None
                 try : int(StartY.get())
@@ -1549,7 +1637,8 @@ class BE_World_Tool(tkinter.Frame) :
                 FeedbackScreen.pack()
                 MainScreen_1.pack_forget()
                 InputList = [int(i.get()) for i in (StartX, StartY, StartZ, EndX, EndY, EndZ) ]
-                self.start_thread(3 if render else 4, [InputList[i] for i in range(0, 3)], [InputList[i] for i in range(3, 6)])
+                OpType = {"3D":3, "2D":4, None: 5}
+                self.start_thread(OpType[render], [InputList[i] for i in range(0, 3)], [InputList[i] for i in range(3, 6)])
 
             SubScreen_13 = tkinter.Frame(MainScreen_1)
             tkinter.Label(SubScreen_13, text="",fg='black',font=tk_tool.get_default_font(5), width=15, height=1).pack()
@@ -1601,12 +1690,15 @@ class BE_World_Tool(tkinter.Frame) :
             frame_m4 = tkinter.Frame(SubScreen_13)
             tkinter.Button(frame_m4, text=tk_tool.platform_string("设置"),font=tk_tool.get_default_font(10), bg="#61eaff",
                 command=lambda:self.transfor_setting(tkinter.Toplevel(main_win.window))).pack(side="left")
-            tkinter.Label(frame_m4, text="     ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
-            tkinter.Button(frame_m4, text=tk_tool.platform_string("预览"),font=tk_tool.get_default_font(10),
-                bg="#ff7fa9", command=lambda:start_creat_CommonStructure(True)).pack(side="left")
-            tkinter.Label(frame_m4, text="     ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
+            tkinter.Label(frame_m4, text="    ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
+            tkinter.Button(frame_m4, text=tk_tool.platform_string("2D"),font=tk_tool.get_default_font(10),
+                bg="#ff7fa9", command=lambda:start_creat_CommonStructure("2D")).pack(side="left")
+            tkinter.Label(frame_m4, text="    ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
+            tkinter.Button(frame_m4, text=tk_tool.platform_string("3D"),font=tk_tool.get_default_font(10),
+                bg="#ff7fa9", command=lambda:start_creat_CommonStructure("3D")).pack(side="left")
+            tkinter.Label(frame_m4, text="    ",fg='black',font=tk_tool.get_default_font(5)).pack(side="left")
             tkinter.Button(frame_m4, text=tk_tool.platform_string("导出"),font=tk_tool.get_default_font(10),
-                bg="#50ffc2", command=lambda:start_creat_CommonStructure(False)).pack(side="left")
+                bg="#50ffc2", command=lambda:start_creat_CommonStructure()).pack(side="left")
             frame_m4.pack()
 
         CloseWorld = tkinter.Frame(MainScreen_1)
@@ -1642,8 +1734,9 @@ class BE_World_Tool(tkinter.Frame) :
         self.back_button.config(state=tkinter.DISABLED)
         if mode == 1 : threading.Thread(target=self.explot_mcs).start()
         if mode == 2 : threading.Thread(target=self.transfer_mcs).start()
-        if mode == 3 : threading.Thread(target=self.render_commonstructure, args=(args[0], args[1])).start()
-        if mode == 4 : threading.Thread(target=self.creat_commonstructure, args=(args[0], args[1])).start()
+        if mode == 3 : threading.Thread(target=self.render3D_commonstructure, args=(args[0], args[1])).start()
+        if mode == 4 : threading.Thread(target=self.render2D_commonstructure, args=(args[0], args[1])).start()
+        if mode == 5 : threading.Thread(target=self.creat_commonstructure, args=(args[0], args[1])).start()
 
     def explot_mcs(self) :
         choose_index = self.mcs_list.curselection()
@@ -1726,7 +1819,7 @@ class BE_World_Tool(tkinter.Frame) :
             self.input_box.see(tkinter.END)
         self.back_button.config(state=tkinter.NORMAL)
 
-    def render_commonstructure(self, start:Tuple[int, int, int], end:Tuple[int, int, int]) :
+    def render3D_commonstructure(self, start:Tuple[int, int, int], end:Tuple[int, int, int]) :
         from package.MCStructureManage import CommonStructure
         ProcessSet = set()
         self.view_object = None
@@ -1751,6 +1844,95 @@ class BE_World_Tool(tkinter.Frame) :
             self.view_object = __StructureView__(Struct1)
             time.sleep(2)
             webbrowser.open_new("http://localhost:32323?render=WorldRender")
+        self.back_button.config(state=tkinter.NORMAL)
+
+    def render2D_commonstructure(self, start:Tuple[int, int, int], end:Tuple[int, int, int]) :
+        from package.MCStructureManage import CommonStructure
+        from package.MCBELab import UpgradeBlock, ResolveBlockColor
+        from package.Py_module.SimplePNG import SimplePNG
+        ProcessSet = set()
+        self.view_2D_object = None
+        gc.collect()
+
+        def Callback(v1, v2) :
+            Process = int( v1 / v2 * 100 )
+            if Process in ProcessSet : return None
+            ProcessSet.add(Process)
+            self.input_box.insert(tkinter.END, "正在生成结构对象(%s%%)...\n" % Process)
+            self.input_box.see(tkinter.END)
+
+        Struct1 = CommonStructure()
+        try : self.NowOpenWorld.export_CommonStructure(Struct1, self.dimension_choose.current(), start, end, Callback)
+        except : 
+            self.input_box.insert(tkinter.END, "导出发生错误：\n")
+            self.input_box.insert(tkinter.END, traceback.format_exc()+"\n")
+            self.input_box.see(tkinter.END)
+        else :
+            ProcessSet.clear()
+            self.input_box.insert(tkinter.END, "\n结构已生成完毕。")
+            self.input_box.see(tkinter.END)
+            self.view_object = __StructureView__(Struct1)
+
+            self.input_box.insert(tkinter.END, "\n正在生成高度信息...\n")
+            self.input_box.see(tkinter.END)
+            Struct1 = self.view_object.Common
+            Height_Info = Struct1.height_info()
+            SizeX, SizeZ = Height_Info.size[0], Height_Info.size[1]
+            index_map = Height_Info.index_map
+            shadow_map = Height_Info.shadow_map
+            ColorMap = [(0, 0, 0, 0)] * 65536
+            for index, block in enumerate(Struct1.block_palette) : 
+                block_id, block_states = UpgradeBlock(block.name, block.states)
+                rgba = ResolveBlockColor(block_id, block_states) 
+                ColorMap[index] = (rgba[0], rgba[1], rgba[2], int(rgba[3]*255))
+            time.sleep(0.5)
+
+            Image = SimplePNG(Height_Info.size[0], Height_Info.size[1])
+            ImageMemory = Image.memory_view
+            for x in range(SizeX) :
+                __p = int((x+1)/SizeX*100)
+                if __p not in ProcessSet: 
+                    self.input_box.insert(tkinter.END, "\n正在生成图片(%s%%)..." % __p)
+                    self.input_box.see(tkinter.END)
+                    ProcessSet.add(__p)
+                for z in range(SizeZ) :
+                    index = x * SizeZ + z
+                    base_color = ColorMap[index_map[index]]
+                    intensity = shadow_map[index] / 10000
+                    byets_index = z * (1 + SizeX * 4) + 1 + x * 4
+                    ImageMemory[byets_index] = int(base_color[0] * intensity)
+                    ImageMemory[byets_index+1] = int(base_color[1] * intensity)
+                    ImageMemory[byets_index+2] = int(base_color[2] * intensity)
+                    ImageMemory[byets_index+3] = base_color[3]
+
+                    continue
+                    # 以下是如何计算intensity值的算法
+                    # 获取周围点的高度，计算法线 (利用相邻点的高度差，注意边界处理)
+                    light_dir_x, light_dir_y, light_dir_z = normalize(-1, 1, -1)  #设定光源方向 (从西北方向来，且有一定高度)
+                    ambient_strength, diffuse_strength = 0.4, 0.6 #环境光系数 (保证背光面不会全黑)
+                    h_center = height_map[index]
+                    h_left = height_map[index-1] if z > 0 else h_center
+                    h_right = height_map[index+1] if z < SizeZ-1 else h_center
+                    h_up = height_map[index-SizeZ] if x > 0 else h_center
+                    h_down = height_map[index+SizeZ] if x < SizeX-1 else h_center
+                    
+                    # 计算坡度向量 (类似求导)
+                    dx = h_right - h_left   # X轴方向的高度变化
+                    dz = h_down - h_up      # Z轴方向的高度变化
+                    
+                    # 构建法线 (假设原始向上向量为 (0,1,0)，根据坡度倾斜)
+                    d_vector = ((dx**2 + 1**2 + dz**2)**0.5)
+                    normal_x, normal_y, normal_z = dx/d_vector, 1.0/d_vector, dz/d_vector
+                    diff = normal_x*light_dir_x + normal_y*light_dir_y + normal_z*light_dir_z # 计算光照强度 (点积)
+                    intensity = ambient_strength + diffuse_strength * max(0, diff) #混合系数
+            
+            self.input_box.insert(tkinter.END, "\n\n已完成，即将预览...")
+            self.input_box.see(tkinter.END)
+            bytes_io = io.BytesIO()
+            Image.save_as(bytes_io)
+            self.view_2D_object = bytes_io.getvalue()
+            time.sleep(0.7)
+            webbrowser.open_new("http://localhost:32323?render=World2DRender")
         self.back_button.config(state=tkinter.NORMAL)
 
 
@@ -2420,7 +2602,9 @@ class Choose_Expand(tkinter.Frame) :
 
         if uid not in user_manager.save_data["install_pack_list"]:
             tkinter.messagebox.showerror("Error", name1 + " 拓展包\n还未安装") ; return None
-        if (not app_constant.debug_testing) and (self.expand_pack_list[uid]['crc32'] != zlib.crc32(FileOperation.read_a_file(save_path, "readbyte"))) :
+        if (not app_constant.debug_testing) and (self.expand_pack_list[uid]['crc32'] != \
+            zlib.crc32(FileOperation.read_a_file(save_path, "readbyte"))) and \
+            app_constant.APP_VERSION >= tuple( self.expand_pack_list[uid].get("Minimum", (2, 2, 0, 0)) ) :
             aaa = tkinter.messagebox.askquestion("Update", name1 + "拓展包\n检测到有新版本\n是否进行更新?",)
             if aaa == "yes" : self.on_expand_install() ; return None
 
@@ -2541,14 +2725,19 @@ class Setting(tkinter.Frame) :
         tkinter.Label(self,text="联系作者",fg='black',font=tk_tool.get_default_font(18),width=15,height=1).pack()
         frame_0 = tkinter.Frame(self)
         tkinter.Button(frame_0,text='提供赞助',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
-            lambda:webbrowser.open("https://afdian.com/a/commandsimulator")).pack(side=tkinter.LEFT)
+            lambda:webbrowser.open(connent_API.APP_SPONSER_URL)).pack(side=tkinter.LEFT)
         tkinter.Label(frame_0,font=('Arial',10),width=1,height=1).pack(side=tkinter.LEFT)
         tkinter.Button(frame_0,text='交流群',font=tk_tool.get_default_font(12),bg='#66ccff' ,width=9, height=1,command=
             lambda:webbrowser.open("https://commandsimulator.great-site.net/qq_group.html")).pack(side=tkinter.LEFT)
         frame_0.pack()
         
-        tkinter.Label(self, text="Version: %s" % app_constant.APP_VERSION, fg='black', font=tk_tool.get_default_font(11), height=1).pack(side="bottom")
-        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(5), width=2, height=2).pack(side="bottom")
+        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=1).pack()
+        if app_constant.APP_VERSION[3] :
+            tkinter.Label(self, text="Version: %s.%s.%s beta-%s" % app_constant.APP_VERSION,
+            fg='black', font=tk_tool.get_default_font(11), height=1).pack(side="bottom")
+        else :
+            tkinter.Label(self, text="Version: %s.%s.%s Stable" % app_constant.APP_VERSION[0:3],
+            fg='black', font=tk_tool.get_default_font(11), height=1).pack(side="bottom")
 
 class Login(tkinter.Frame) :
 
@@ -2642,6 +2831,10 @@ class User_Info(tkinter.Frame) :
         tkinter.Label(self, text="挑战完成次数", fg='black', font=tk_tool.get_default_font(12), width=22, height=1, justify="left").pack()
         self.user_info_4 = tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(12), width=22, height=1, justify="left")
         self.user_info_4.pack()
+        
+        tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=2).pack()
+        tkinter.Button(self,text='获取拓展包',font=tk_tool.get_default_font(12),bg="#98ff78" ,width=17, height=1,command=
+            lambda:[webbrowser.open_new("https://commandsimulator.great-site.net/login.php")]).pack()
         tkinter.Label(self, text="", fg='black', font=tk_tool.get_default_font(3), width=2, height=2).pack()
         tkinter.Button(self,text='登出账户',font=tk_tool.get_default_font(12),bg='#db7093' ,width=17, height=1,command=
             lambda:[user_manager.login_out_account(),main_win.user_was_login()]).pack()

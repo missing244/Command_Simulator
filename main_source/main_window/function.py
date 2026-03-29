@@ -397,9 +397,14 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
         if not i() : break
     user.write_back()
     log.set_time_end()
-    if not app_constant.debug_testing and user.save_data['online_get']['app_version'] != app_constant.APP_VERSION : 
-        tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s\n最新版本:%s" % (app_constant.APP_VERSION,
-        user.save_data['online_get']['app_version']))
+
+    OnlineVersion = user.save_data['online_get']['app_version']
+    OnlineVersion = [int(i) for i in OnlineVersion.split(".")]
+    OnlineVersion.append(0)
+    OnlineVersion = tuple(OnlineVersion)
+    if not app_constant.debug_testing and OnlineVersion != app_constant.APP_VERSION : 
+        tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s.%s.%s\n最新版本:%s" % (app_constant.APP_VERSION[0],
+        app_constant.APP_VERSION[1], app_constant.APP_VERSION[2], user.save_data['online_get']['app_version']))
 
 def flash_minecraft_id(log:initialization_log) :
     update_id_zip_path = os.path.join("main_source", "update_source", "minecraft_id.zip")
