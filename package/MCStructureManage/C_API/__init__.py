@@ -85,24 +85,31 @@ def codecs_parser_schematic(block_array:array.array, blockData_array:array.array
         blockData_array, blockIndex_array, blockPalette_array, blockType_array, Volume)
 
 def codecs_parser_schem(block_array:array.array, blockIndex_array:array.array, 
-    blockType_array:array.array, Volume:Tuple[int, int, int]) -> Dict[int, int] : 
+    blockNBT_array:array.array, contain_dict:dict, water_tag_array:array.array, 
+    water_index:int, Volume:Tuple[int, int, int]) -> Dict[int, int] : 
     """
     schem 加速函数
     """
     return MCBEStructure_C_API.codecs_parser_schem(block_array, 
-        blockIndex_array, blockType_array, Volume)
+        blockIndex_array, blockNBT_array, contain_dict, 
+        water_tag_array, water_index, Volume)
 
-def codecs_parser_litematic(block_array:array.array, blockType_array:array.array, 
-    blockIndex_array:array.array, commonIndex_array:array.array, 
-    OriginX:int, OriginY:int, OriginZ:int, SizeX:int, SizeY:int, SizeZ:int,
+def codecs_parser_litematic(block_array:array.array, blockIndex_array:array.array, 
+    commonIndex_array:array.array, blockNBT_array:array.array,
+    contain_dict:dict, water_tag_array:array.array, water_index:int,
+    OriginX:int, OriginY:int, OriginZ:int, 
+    SizeX:int, SizeY:int, SizeZ:int,
     RegionOriginX:int, RegionOriginY:int, RegionOriginZ:int,
-    RegionSizeX:int, RegionSizeY:int, RegionSizeZ:int, bits_per_block:int) -> Dict[int, int] : 
+    RegionSizeX:int, RegionSizeY:int, RegionSizeZ:int, 
+    bits_per_block:int) -> Dict[int, int] : 
     """
     litematic 加速函数
     """
     return MCBEStructure_C_API.codecs_parser_litematic(block_array, 
-        blockType_array, blockIndex_array, commonIndex_array, 
-        OriginX, OriginY, OriginZ, SizeX, SizeY, SizeZ,
+        blockIndex_array, commonIndex_array, blockNBT_array,
+        contain_dict, water_tag_array, water_index,
+        OriginX, OriginY, OriginZ, 
+        SizeX, SizeY, SizeZ,
         RegionOriginX, RegionOriginY, RegionOriginZ,
         RegionSizeX, RegionSizeY, RegionSizeZ, 
         bits_per_block)
@@ -122,11 +129,5 @@ def split_commonstructure(input_index:array.array, output_index:array.array,
     CommonStructure裁切函数
     """
     MCBEStructure_C_API.split_commonstructure(input_index, output_index, Size, StartPos, EndPos)
-
-def handling_waterlog(blockIndex_array:array.array, water_log:dict, block_palette:list, size:array.array) -> bool :
-    """
-    CommonStructure含水方块状态同步至含水属性
-    """
-    return MCBEStructure_C_API.handling_waterlog(blockIndex_array, water_log, list(block_palette), size)
 
 

@@ -58,9 +58,9 @@ class SubChunkType :
 
     def __init__(self) :
         self.Version:int = 9
-        self.BlockIndex = array.array("H", b"\x00\x00"*4096)
+        self.BlockIndex = array.array("H", b"\x00\x00") * 4096
         self.BlockPalette:List[BlockPermutationType] = [BlockPermutationType("air")]
-        self.ContainBlockIndex = array.array("H", b"\x00\x00"*4096)
+        self.ContainBlockIndex = array.array("H", b"\x00\x00") * 4096
         self.ContainBlockPalette:List[BlockPermutationType] = [BlockPermutationType("air"), 
             BlockPermutationType("water", state={'liquid_depth': 0})]
 

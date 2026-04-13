@@ -82,17 +82,16 @@ class HTTP_Request_Handler(http.server.SimpleHTTPRequestHandler) :
         else : ResponesData = {"state": 1 , "msg": "传输数据不合法"}
                 
         self.send_response(200)
-        self.send_header('Content-Encoding', 'gzip')
         if isinstance(ResponesData, bytes) : 
             self.send_header('Content-type', 'application/octet-stream')
             self.end_headers()
-            self.wfile.write( gzip.compress(ResponesData) )
+            self.wfile.write( ResponesData )
         else : 
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write( gzip.compress( json.dumps(
+            self.wfile.write( json.dumps(
                 ResponesData, separators=(',', ':'),
-                default=Minecraft_BE.DataSave.encoding).encode('utf-8')) )
+                default=Minecraft_BE.DataSave.encoding).encode('utf-8'))
 
 
 if True : #启用软件前的加载项目

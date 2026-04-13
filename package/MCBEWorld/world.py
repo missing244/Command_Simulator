@@ -206,7 +206,7 @@ class World :
         BlockLogDict:Dict[int, int] = CommonStructure.contain_index
         BlockNBTTable:Dict[int, nbt.TAG_Compound] = CommonStructure.block_nbt
         BlockPalette.extend(BaseType.BlockPermutationType(j.name, j.states) for j in CommonStructure.block_palette)
-        MiddleArray = array.array("H", b"\x00\x00"*len(BlockPalette))
+        MiddleArray = array.array("H", b"\x00\x00") * len(BlockPalette)
 
         if  (dimension == 0 and ( not(-64 <= startPos[1] < 320) or not(-64 <= startPos[1]+SizeY < 320) )) or \
             (dimension == 1 and ( not(0 <= startPos[1] < 256) or not(0 <= startPos[1]+SizeY < 256) )) or \
@@ -321,8 +321,8 @@ class World :
         BlockPalette:list = CommonStructure.block_palette
         BlockNBTDict:Dict[int, nbt.TAG_Compound] = CommonStructure.block_nbt
 
-        MiddleArray1 = array.array("H", b"\x00\x00"*32767)
-        MiddleArray2 = array.array("H", b"\x00\x00"*32767)
+        MiddleArray1 = array.array("H", b"\x00\x00") * 32767
+        MiddleArray2 = array.array("H", b"\x00\x00") * 32767
         BlockPaletteMiddleList:List[BaseType.BlockPermutationType] = [BaseType.BlockPermutationType("air")]
         Iter1 = C_API.StructureOperatePosRange(startPos[0], startPos[2], endPos[0]+1, endPos[2]+1)
         IterLen = len(Iter1)

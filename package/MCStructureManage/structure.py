@@ -5,6 +5,7 @@ from io import IOBase
 from typing import Union,List,Dict,Tuple,Literal
 import array
 
+AirBlock = Block("air")
 
 class HeightInfo :
 
@@ -57,7 +58,7 @@ class CommonStructure :
         Volume = size[0] * size[1] * size[2]
         self.size: array.array = array.array("i", size)                                         #修改元素✘，赋值✘
         self.origin: array.array = array.array("i", [0,0,0])                                    #修改元素✔，赋值✘
-        self.block_index: array.array[int] = array.array("H", bytearray(Volume*2))              #修改元素✔，赋值✘
+        self.block_index: array.array[int] = array.array("H", b"\x00\x00") * Volume             #修改元素✔，赋值✘
         self.contain_index: Dict[int, int] = {}                                                 #修改元素✔，赋值✘
         self.block_palette: List[Block] = BiList()                                              #修改元素✔，赋值✘
         self.entity_nbt: List[nbt.TAG_Compound] = TypeCheckList().setChecker(nbt.TAG_Compound)  #修改元素✔，赋值✘
@@ -118,6 +119,18 @@ class CommonStructure :
         NBTObj = MCBELab.GenerateBlockEntityNBT(Block_ID)
         if not NBTObj : return None
         self.block_nbt[index] = NBTObj
+
+    def get_contain_block(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, Block] :
+        if not(0 <= pos_x < self.size[0]) : return None
+        if not(0 <= pos_y < self.size[1]) : return None
+        if not(0 <= pos_z < self.size[2]) : return None
+        index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
+        return self.contain_index.get(index, AirBlock)
+
+    def set_contain_block(self, pos_x:int, pos_y:int, pos_z:int, block:Union[int, Block]) :
+        index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
+        if block.__class__ is int : self.contain_index[index] = block 
+        else : self.contain_index[index] = self.block_palette.append(block)
 
     def get_blockNBT(self, pos_x:int, pos_y:int, pos_z:int) -> Union[None, nbt.TAG_Compound] :
         index = (pos_x * self.size[1] + pos_y) * self.size[2] + pos_z
@@ -181,11 +194,10 @@ class CommonStructure :
     def height_info(self, max_height:int=2147483647) -> HeightInfo :
         from . import C_API
 
-        input_bytes = b"\x00\x00" * (self.size[0] * self.size[2])
-        height_map = array.array("H", input_bytes)
-        index_map = array.array("H", input_bytes)
-        shadow_map = array.array("H", input_bytes)
-        air_data = array.array("B",  b"\x00"*65536)
+        height_map = array.array("H", b"\x00\x00") * (self.size[0] * self.size[2])
+        index_map = array.array("H", b"\x00\x00") * (self.size[0] * self.size[2])
+        shadow_map = array.array("H", b"\x00\x00") * (self.size[0] * self.size[2])
+        air_data = array.array("H",  b"\x00\x00") * 65536
 
         for index, block in enumerate(self.block_palette) :
             if block.name in MCBELab.AIR_BLOCKS : air_data[index] = 1
@@ -200,6 +212,4 @@ class CommonStructure :
         return result
 
         
-    
-
 

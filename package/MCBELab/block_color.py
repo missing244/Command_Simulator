@@ -563,7 +563,7 @@ AIR_BLOCKS = {
     'minecraft:light_block_7', 'minecraft:light_block_8', 'minecraft:light_block_9', 'minecraft:light_block_10', 
     'minecraft:light_block_11', 'minecraft:light_block_12', 'minecraft:light_block_13', 'minecraft:light_block_14', 
     'minecraft:light_block_15', 'minecraft:bubble_column', 'minecraft:fire', 'minecraft:soul_fire', 'minecraft:portal',
-    'minecraft:end_portal', 'minecraft:trip_wire',
+    'minecraft:end_portal', 'minecraft:trip_wire', 'minecraft:barrier',
 }
 
 def ResolveBlockColor(block_id:str, states:dict) :

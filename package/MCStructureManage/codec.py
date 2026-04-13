@@ -8,6 +8,22 @@ from typing import Union,Dict,Tuple,Literal,List
 import abc, re, io, json, array, itertools, urllib.parse, os, math, zipfile, traceback, zlib
 ExecuteTest = re.compile("[ ]*?/?[ ]*?execute[ ]*?(as|at|align|anchored|facing|in|positioned|rotated|if|unless|run)")
 
+def GetWaterTag(palette:List[Block]) :
+    BlockWaterLogArray = array.array("H", b"\x00\x00"*len(palette))
+    for index, block in enumerate(palette) :
+        if block.waterlogged : BlockWaterLogArray[index] = 1
+        elif block.name == "minecraft:seagrass" : BlockWaterLogArray[index] = 1
+        elif block.name == "minecraft:kelp" : BlockWaterLogArray[index] = 1
+    return BlockWaterLogArray
+
+def InsertWater(palette:List[Block]) :
+    water_index = len(palette)
+    for index, block in enumerate(palette) :
+        if block.name != "minecraft:water" : continue
+        water_index = index
+        break
+    if water_index >= len(palette) : palette.append(Block("water"))
+    return index
 
 class Codecs :
     """
@@ -331,12 +347,14 @@ class Codecs :
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]):
             self = self.Common
+            Volume = self.size[0] * self.size[1] * self.size[2]
+            if Volume > 2147483647 : raise MemoryError("结构体积超过MCS最大储存容量")
             MCS = StructureMCS.Mcstructure()
 
             MCS.size = self.size
             MCS.origin = self.origin
             MCS.block_index = array.array("i", self.block_index)
-            MCS.contain_index = array.array("i", b"\xff\xff\xff\xff" * len(self.block_index))
+            MCS.contain_index = array.array("i", b"\xff\xff\xff\xff") * len(self.block_index)
             MCS.block_palette = TypeCheckList(i.to_nbt() for i in self.block_palette)
             MCS.entity_nbt = self.entity_nbt
             MCS.block_nbt = self.block_nbt.copy()
@@ -360,14 +378,14 @@ class Codecs :
             else : return False
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase, nbt.TAG_Compound]):
-            from .C_API import codecs_parser_schematic, handling_waterlog
+            from .C_API import codecs_parser_schematic
             SCHMATIC = StructureSCHEM.Schematic.from_buffer(Reader)
 
             StructureObject = self.Common
             StructureObject.__init__( SCHMATIC.size )
             RunTimeBlock = StructureSCHEM.RuntimeID_to_Block
 
-            NBTBlockBit = array.array("B", b"\x00"*256)
+            NBTBlockBit = array.array("H", b"\x00\x00"*256)
             for index, blockname in enumerate(RunTimeBlock) : 
                 UID = MCBELab.GetNbtUID(blockname)
                 if UID : NBTBlockBit[index] = UID
@@ -423,7 +441,7 @@ class Codecs :
             else : return False
 
         def operation_structure(self, Schma_File:StructureSCHEM.Schem_V1) :
-            from .C_API import codecs_parser_schem, handling_waterlog
+            from .C_API import codecs_parser_schem
             StructureObject = self.Common
             StructureObject.__init__( Schma_File.size )
 
@@ -433,20 +451,18 @@ class Codecs :
                 blocks[index] = Block(block_data[0], block_data[1], block_data[2])
             StructureObject.block_palette.__init__(blocks)
 
-            NBTBlockBit = array.array("B", b"\x00"*len(StructureObject.block_palette))
+            NBTBlockBit = array.array("H", b"\x00\x00") * len(StructureObject.block_palette)
             for index, block in enumerate(StructureObject.block_palette) : 
                 UID = MCBELab.GetNbtUID(block.name)
                 if UID : NBTBlockBit[index] = UID
 
+            WaterIndex = InsertWater(StructureObject.block_palette)
+            WaterTag = GetWaterTag(StructureObject.block_palette)
             NBTDict = codecs_parser_schem(Schma_File.block_index, StructureObject.block_index,
-                NBTBlockBit, Schma_File.size)
+                NBTBlockBit, StructureObject.contain_index, WaterTag, WaterIndex, Schma_File.size)
             for key, value in NBTDict.items() :
                 block = StructureObject.block_palette[StructureObject.block_index[key]]
                 StructureObject.block_nbt[key] = MCBELab.GenerateBlockEntityNBT(block.name)
-
-            if handling_waterlog(StructureObject.block_index, StructureObject.contain_index,
-                StructureObject.block_palette, StructureObject.size) :
-                StructureObject.block_palette.append( Block("water") )
 
             """
                 O_X, O_Y, O_Z = Schma_File.size
@@ -515,7 +531,7 @@ class Codecs :
             else : return False
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase, nbt.TAG_Compound]) :
-            from .C_API import codecs_parser_litematic, handling_waterlog
+            from .C_API import codecs_parser_litematic
             if isinstance(Reader, nbt.TAG_Compound) : LiteNBT = Reader
             else : LiteNBT = nbt.read_from_nbt_file(Reader, byteorder="big", zip_mode="gzip").get_tag()
             Regions:Dict[str, nbt.TAG_Compound] = LiteNBT["Regions"]
@@ -562,31 +578,27 @@ class Codecs :
                     BE_Block = MCBELab.JE_Transfor_BE_Block(JE_Block_ID, JE_Block_State)
                     IndexMap[index] = StructureObject.block_palette.append( Block(*BE_Block) )
 
-                NBTBlockBit = array.array("B", b"\x00"*len(StructureObject.block_palette))
+                NBTBlockBit = array.array("H", b"\x00\x00"*len(StructureObject.block_palette))
                 for index, block in enumerate(StructureObject.block_palette) : 
                     UID = MCBELab.GetNbtUID(block.name)
                     if UID : NBTBlockBit[index] = UID
 
                 bits_per_block = max(2, math.ceil(math.log2( len(IndexMap) )))
-
+                WaterIndex = InsertWater(StructureObject.block_palette)
+                WaterTag = GetWaterTag(StructureObject.block_palette)
                 NBTDict = codecs_parser_litematic(
-                    IndexMap, NBTBlockBit, Region["BlockStates"].value, StructureObject.block_index, 
+                    IndexMap, Region["BlockStates"].value, 
+                    StructureObject.block_index, NBTBlockBit, 
+                    StructureObject.contain_index, WaterTag, WaterIndex,
                     OriginX, OriginY, OriginZ,
                     StructureObject.size[0], StructureObject.size[1], StructureObject.size[2],
                     RegionOrigin[0], RegionOrigin[1], RegionOrigin[2],
                     RegionSize[0], RegionSize[1], RegionSize[2],
                     bits_per_block)
 
-                #print( max(StructureObject.block_index), len(StructureObject.block_palette) )
-
                 for key, value in NBTDict.items() :
                     block = StructureObject.block_palette[StructureObject.block_index[key]]
                     StructureObject.block_nbt[key] = MCBELab.GenerateBlockEntityNBT(block.name)
-
-                #print(StructureObject.contain_index)
-                if handling_waterlog(StructureObject.block_index, StructureObject.contain_index,
-                    StructureObject.block_palette, StructureObject.size) :
-                    StructureObject.block_palette.append( Block("water") )
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]) :
             raise RuntimeError(f"{Writer} 并不支持序列化数据对象")
@@ -602,7 +614,6 @@ class Codecs :
             else : return False
 
         def decode(self, Reader:Union[str, bytes, io.BufferedIOBase]) :
-            from .C_API import handling_waterlog
             if isinstance(Reader, nbt.TAG_Compound) : StructureNBT = Reader
             else : StructureNBT = nbt.read_from_nbt_file(Reader, byteorder="big", zip_mode="gzip").get_tag()
             StructureObject = self.Common
@@ -624,17 +635,15 @@ class Codecs :
             if AirTest : StructureObject.block_palette.__init__( BlockList )
             else : StructureObject.block_palette.__init__( [Block("air")] + BlockList )
 
+            WaterIndex = InsertWater(StructureObject.block_palette)
+            WaterTag = GetWaterTag(StructureObject.block_palette)
             for struct_block in StructureNBT["blocks"] :
                 Posx = struct_block["pos"][0].value
                 Posy = struct_block["pos"][1].value
                 Posz = struct_block["pos"][2].value
-                Paletteid = struct_block["state"].value
-                if AirTest : StructureObject.set_block(Posx, Posy, Posz, Paletteid)
-                else : StructureObject.set_block(Posx, Posy, Posz, Paletteid+1)
-
-            if handling_waterlog(StructureObject.block_index, StructureObject.contain_index,
-                StructureObject.block_palette, StructureObject.size) :
-                StructureObject.block_palette.append( Block("water") )
+                Paletteid = struct_block["state"].value + (0 if AirTest else 1)
+                StructureObject.set_block(Posx, Posy, Posz, Paletteid)
+                if WaterTag[Paletteid] : StructureObject.set_contain_block(Posx, Posy, Posz, WaterIndex)
 
         def encode(self, Writer:Union[str, io.BufferedIOBase]) :
             raise RuntimeError(f"{Writer} 并不支持序列化数据对象")
@@ -2132,7 +2141,7 @@ class Codecs :
                 return SignNBT
 
             def Command(id:str, data:Tuple[str, int, int, str]) :
-                if data.__class__ is not list or len(data) < 4 : return None
+                if data.__class__ is not list or len(data) < 3 : return None
                 CommandBlockNBT = MCBELab.GenerateBlockEntityNBT(id)
                 if CommandBlockNBT is None : return None
                 CommandStr = data[0] if isinstance(data[0], str) else ""
