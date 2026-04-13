@@ -46,10 +46,11 @@ const camera = new THREE.PerspectiveCamera( 75, canvas.innerWidth/canvas.innerHe
 const controls = new FirstPersonControls(masterDOM, camera, canvas);
 const displayManager = new DisplayManager(renderer, camera)
 
-displayManager.scene.add(new THREE.AxesHelper(390));            //在3D场景中添加坐标轴
-displayManager.scene.add(new THREE.AmbientLight(0xfaffff));     //在3D场景中添加柔和白光
-displayManager.scene.background = new THREE.Color('lightblue'); //在3D场景中设置背景颜色
-displayManager.renderDistance = 8                               //在3D场景中设置摄像渲染距离
+displayManager.subscribeCallback(controls.update.bind(controls))  //绑定摄像头更新渲染事件
+displayManager.scene.add(new THREE.AxesHelper(390));              //在3D场景中添加坐标轴
+displayManager.scene.add(new THREE.AmbientLight(0xfaffff));       //在3D场景中添加柔和白光
+displayManager.scene.background = new THREE.Color('lightblue');   //在3D场景中设置背景颜色
+displayManager.renderDistance = 8                                 //在3D场景中设置摄像渲染距离
 
 controls.addEventListener( 'change', displayManager.requestRender() )  //订阅第一人称交互事件并更新渲染信息
 setInterval(() => controls.dispatchEvent( {type: 'change'} ), 1000);   //定时触发一次交互事件并更新渲染
@@ -69,6 +70,6 @@ StructureObject.blockIndex.fill(1, 0, 9)
 StructureObject.blockIndex.fill(2, 9, 18)
 StructureObject.blockIndex.fill(3, 18, 27)
 
-//将结构绑定到渲染控制上
-displayManager.structure = StructureObject
+displayManager.structure = StructureObject    //将结构绑定到渲染控制上
+displayManager.startRender = true             //启用渲染
 ```
