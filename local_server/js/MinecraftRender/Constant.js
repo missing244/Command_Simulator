@@ -365,7 +365,7 @@ class BlockStateChangePos {
     }
 
 
-    static __State_Disable_Rerden__(StateDict, direction) {
+    static __State_Disable_Render__(StateDict, direction) {
         if ("multi_face_direction_bits" in StateDict) {
             let State = StateDict["multi_face_direction_bits"]
             State = State ? State : 63

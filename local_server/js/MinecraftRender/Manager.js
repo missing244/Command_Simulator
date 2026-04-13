@@ -1,6 +1,7 @@
 import {THREE, ChunkRenderObject, Structure} from "./__init__.js"
 const PlantTexturePath = new URL('./MultiThread.js', import.meta.url).href
 const MultiThread = new Worker(PlantTexturePath, {type: 'module'});
+
 class ThreadEventsManager {
 
     constructor() {
@@ -19,13 +20,11 @@ class ThreadEventsManager {
 
     unsubscribe(uuid) {
         const exist = uuid in this.callbacks
-        if (exist) delete this.callbacks[key]
+        if (exist) delete this.callbacks[uuid]
         return exist
     }
 }
 const threadEventsManager = new ThreadEventsManager()
-
-
 
 class DisplayManager {
     
@@ -38,19 +37,23 @@ class DisplayManager {
     constructor(renderer, camera, structObj=null) {
         this.camera = camera
         this.renderer = renderer
+        /***   * @type {Array<Structure>} */
         this.structure = structObj
+        this.callbacks = {}
+        this.startRender = false
         
+
         const canvas = renderer.domElement;
 		this.renderer.setPixelRatio(window.devicePixelRatio)
 		this.renderer.setSize(canvas.innerWidth, canvas.innerHeight)
 
         /***   * @type {Record<String, ChunkRenderObject>} */
         this.chunk = {}
-        this.scene = new THREE.Scene()
         this.renderDistance = 10
+        this.scene = new THREE.Scene()
         this.uuid = crypto.randomUUID()
 
-        const ComputeChunkRender = ( /** @type {MessageEvent} */event) => {
+        const ComputeChunkRender = (/** @type {MessageEvent} */event) => {
             if (event.data.uuid !== this.uuid) return null
             const element = event.data.pos
             const SceneChunkPosKey = `(${element.x},${element.y},${element.z})`
@@ -60,6 +63,24 @@ class DisplayManager {
         }
         threadEventsManager.subscribe(ComputeChunkRender)
     }
+
+    
+    subscribeCallback(callback) {
+        const key = crypto.randomUUID()
+        this.callbacks[key] = callback
+        return key
+    }
+
+    unsubscribeCallback(uuid) {
+        const exist = uuid in this.callbacks
+        if (exist) delete this.callbacks[key]
+        return exist
+    }
+
+    unsubscribeAll() {
+        this.callbacks = {}
+    }
+
 
     /**
      * 创建一个渲染回调函数
@@ -79,7 +100,8 @@ class DisplayManager {
                 camera.aspect = canvas.clientWidth / canvas.clientHeight;
                 camera.updateProjectionMatrix();
             }
-            this.flashRender()
+            if (this.startRender) this.flashRender()
+            for (const [key, value] of Object.entries(this.callbacks)) value()
             renderer.render( scene, camera );
         }
         const resizeRendererToDisplaySize = () => {
@@ -98,16 +120,14 @@ class DisplayManager {
         return requestRenderIfNotRequested
     }
 
-    /**
-     * 刷新渲染区块
-     */
+    /** * 刷新渲染区块 */
     flashRender(){
         if (!this.structure) return null
         const CameraX = this.camera.position.x
-        const CameraY = this.camera.position.y
         const CameraZ = this.camera.position.z
         const CameraChunkX = Math.floor( CameraX / 16 )
         const CameraChunkZ = Math.floor( CameraZ / 16 )
+        const CameraPos = new THREE.Vector3(CameraX, 0, CameraZ)
 
         const LoopStartChunkX = (CameraChunkX - this.renderDistance) * 16
         const LoopStartChunkZ = (CameraChunkZ - this.renderDistance) * 16
@@ -125,14 +145,15 @@ class DisplayManager {
                     const chunkStart = new THREE.Vector3(x, 0, z)
                     const distanceX = Math.abs(x/16 - CameraChunkX)
                     const distanceZ = Math.abs(z/16 - CameraChunkZ)
-                    const chunkDistance = Math.pow(distanceX*distanceX + distanceZ*distanceZ, 0.5)
+                    const chunkDistance = Math.sqrt(distanceX*distanceX + distanceZ*distanceZ)
                     if (chunkDistance > this.renderDistance) continue
 
                     RenderChunkPos.push(chunkStart)
                 }
             }
         }
-
+        
+        RenderChunkPos.sort((a, b) => a.distanceTo(CameraPos) - b.distanceTo(CameraPos))
         const SceneChunkPosSet = new Set( Object.keys(this.chunk) )
         RenderChunkPos.forEach((element) => {
             const SceneChunkPosKey = `(${element.x},${element.y},${element.z})`
@@ -146,7 +167,8 @@ class DisplayManager {
                 const SliceEnd = [element.x+16, element.y+384, element.z+16]
                 const ArraySliceInfo = this.structure.getBlockIndexSlice(...SliceStart, ...SliceEnd)
 
-                MultiThread.postMessage({type:"ComputeMeshData", uuid:this.uuid, 
+                MultiThread.postMessage({
+                    type:"ComputeMeshData", uuid:this.uuid, 
                     pos:element, size:ArraySliceInfo.size,
                     requestStart:SliceStart, requestEnd:SliceEnd,
                     realStart:ArraySliceInfo.startPos, realEnd:ArraySliceInfo.endPos,
@@ -159,7 +181,6 @@ class DisplayManager {
         SceneChunkPosSet.forEach( (item) => {
             if (!this.chunk[item]) return null
             this.chunk[item].removeRender(this.scene)
-            //delete this.chunk[item]
         })
     }
 }

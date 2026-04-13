@@ -90,7 +90,7 @@ class PCFirstPersonControls extends EventDispatcher {
 		 * @readonly
 		 * @default 10
 		 */
-		this.moveSpeed = 10; // 移动速度
+		this.moveSpeed = 15; // 移动速度
 
 		/**
 		 * Whether the controls are locked or not.
@@ -161,7 +161,6 @@ class PCFirstPersonControls extends EventDispatcher {
 				case 'ShiftLeft': this.moveState.down = false; break;
 			}
 		});
-		setInterval( () => this.update(), 20)
 	}
 
     update() {
@@ -254,10 +253,13 @@ function onMouseMove( event ) {
 	if ( this.enabled === false || this.isLocked === false ) return;
 
 	const camera = this.object;
+	const maxDelta = 150;
 	_euler.setFromQuaternion( camera.quaternion );
 
-	_euler.y -= event.movementX * _MOUSE_SENSITIVITY * this.pointerSpeed;
-	_euler.x -= event.movementY * _MOUSE_SENSITIVITY * this.pointerSpeed;
+	const movementX = Math.max(-maxDelta, Math.min(maxDelta, event.movementX));
+	const movementY = Math.max(-maxDelta, Math.min(maxDelta, event.movementY));
+	_euler.y -= movementX * _MOUSE_SENSITIVITY * this.pointerSpeed;
+	_euler.x -= movementY * _MOUSE_SENSITIVITY * this.pointerSpeed;
 	_euler.x = Math.max( _PI_2 - this.maxPolarAngle, Math.min( _PI_2 - this.minPolarAngle, _euler.x ) );
 
 	camera.quaternion.setFromEuler( _euler );
@@ -311,7 +313,7 @@ class PEFirstPersonControls extends EventDispatcher {
 		 * @readonly
 		 * @default 10
 		 */
-		this.moveSpeed = 10; // 移动速度
+		this.moveSpeed = 15; // 移动速度
 
 		/**
 		 * Camera pitch, lower limit. Range is '[0, Math.PI]' in radians.
@@ -359,7 +361,7 @@ class PEFirstPersonControls extends EventDispatcher {
 		style.textContent = `
 			#joystick {
 				position: absolute;
-				left: 40px;
+				left: 60px;
 				bottom: 80px;
 
 				width: 140px;
@@ -368,7 +370,7 @@ class PEFirstPersonControls extends EventDispatcher {
 
 				background: rgba(128, 128, 128, 0.4);
 				touch-action: none;
-				}
+			}
 
 			#joystick-handle {
 				position: absolute;
@@ -396,7 +398,7 @@ class PEFirstPersonControls extends EventDispatcher {
 			}
 			#vertical-pad {
 				position: absolute;
-				right: 30px;
+				right: 60px;
 				bottom: 60px;
 				margin: 2% 0px;
 
@@ -523,8 +525,6 @@ class PEFirstPersonControls extends EventDispatcher {
 		}
 		canvas.addEventListener('touchend', releaseLookTouch);
 		canvas.addEventListener('touchcancel', releaseLookTouch);
-
-		setInterval( () => this.update(), 20)
 	}
 
     update() {
@@ -608,4 +608,4 @@ class FirstPersonControls {
 	}
 }
 
-export { PCFirstPersonControls, PEFirstPersonControls, FirstPersonControls };
+export { PCFirstPersonControls, PEFirstPersonControls, FirstPersonControls, isMobile };

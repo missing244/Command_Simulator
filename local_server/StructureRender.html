@@ -3,38 +3,479 @@
 	<head>
         <meta charset="UTF-8">
 		<title>可视化模型</title>
-        <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
 	</head>
+
+    <style>
+        /* 横屏提示遮罩层：默认隐藏，仅在竖屏且未全屏或者需要引导时显示（移动端重点） */
+        .orientation-tip {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 9999;
+            pointer-events: none;       /* 让提示层不干扰点击穿透到画布，但点击依然触发画布事件 */
+            transition: opacity 0.2s ease;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            text-align: center;
+            color: white;
+        }
+
+        /* 提示内容视觉样式 - 简洁清晰 */
+        .tip-content {
+            background: rgba(0,0,0,0.7);
+            padding: 20px 28px;
+            border-radius: 56px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .tip-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: inline-block;
+            animation: rotateHint 2s infinite linear;
+        }
+
+        .tip-text {
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .tip-sub {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* 简单旋转动画，提示横屏 */
+        @keyframes rotateHint {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(-90deg); }
+            50% { transform: rotate(-180deg); }
+            75% { transform: rotate(-270deg); }
+            100% { transform: rotate(-360deg); }
+        }
+    </style>
+
+    <style>
+        /* ========= 下拉菜单面板 (纯CSS) ========= */
+        .control-panel {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1000;
+        }
+
+        /* 下拉按钮 - 移动端友好 */
+        .panel-toggle {
+            background: rgba(30, 30, 40, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 32px;
+            padding: 10px 18px;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            letter-spacing: 0.5px;
+            user-select: none;
+        }
+
+        .panel-toggle:active {
+            background: rgba(50, 50, 70, 0.95);
+            transform: scale(0.96);
+        }
+
+        /* 下拉内容 - 默认隐藏 */
+        .dropdown-content {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: rgba(24, 24, 32, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 280px;
+            padding: 16px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        /* 通过 checkbox hack 实现纯CSS下拉 (无JS) */
+        #menu-checkbox {
+            display: none;
+        }
+
+        #menu-checkbox:checked ~ .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* 控件组样式 */
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            color: #e0e0e0;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .label-value {
+            color: #ffaa44;
+            font-weight: 600;
+            background: rgba(0,0,0,0.4);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        /* 滑动条 (移动端触摸友好) */
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #3a3a44;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input[type="range"]:focus {
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #ffaa44;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+
+        /* XYZ 坐标行 - 使用网格布局 让移动端容易点击 */
+        .coord-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .coord-item {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            border-radius: 32px;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .coord-letter {
+            font-weight: bold;
+            width: 26px;
+            font-size: 15px;
+            color: #ffaa66;
+        }
+
+        .coord-value {
+            background: #1e1e2a;
+            border: 1px solid #3a3a4a;
+            border-radius: 24px;
+            padding: 6px 8px;
+            width: 180px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            outline: none;
+            font-family: monospace;
+        }
+
+        .coord-value:focus {
+            border-color: #ffaa44;
+        }
+
+        /* 数值设置辅助说明 */
+        .coord-note {
+            font-size: 10px;
+            color: #aaa;
+            text-align: center;
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        /* 移动端适配: 触摸区域放大 */
+        @media (max-width: 600px) {
+            .panel-toggle {
+                padding: 10px 18px;
+                font-size: 16px;
+            }
+            .dropdown-content {
+                width: 260px;
+                right: 0;
+                left: auto; /* 小屏幕避免溢出左边 */
+            }
+            .coord-value {
+                width: 70px;
+                font-size: 13px;
+                padding: 6px 6px;
+            }
+            .coord-item {
+                gap: 4px;
+            }
+        }
+    </style>
 
     <body>
 		<div id="masterDOM" style="position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; overflow: hidden;">
 		<canvas id="threejs" style="width: 100%; height: 100%;"></canvas>
 		</div> 
+            <div class="control-panel">
+        <!-- 隐藏checkbox实现下拉切换 -->
+        <input type="checkbox" id="menu-checkbox">
+        <label for="menu-checkbox" class="panel-toggle">
+            ⚙️ 控件
+            <span style="font-size: 14px;">▼</span>
+        </label>
+        
+        <div class="dropdown-content">
+            <!-- 1. 摄像机速度滑动条 -->
+            <div class="control-group">
+                <div class="control-label">
+                    <span>摄像机速度</span>
+                    <span class="label-value" id="speedValueDisplay">10.00</span>
+                </div>
+                <input type="range" id="cameraSpeed" min="5" max="30" step="0.1" value="13.0">
+            </div>
+            
+            <!-- 2. XYZ 坐标显示 + 数值直接设置 -->
+            <div class="control-group">
+                <div class="control-label">
+                    <span>坐标位置</span>
+                    <span class="label-value" id="click_teleport" 
+                    style="user-select: none; cursor: pointer;">→点我传送←</span>
+                </div>
+                
+                <!-- X 坐标 -->
+                <div class="coord-row">
+                    <div class="coord-item">
+                        <span class="coord-letter">X:</span>
+                        <input type="number" id="coordX" class="coord-value" step="0.1" value="0.0">
+                    </div>
+                    <!-- Y 坐标 -->
+                    <div class="coord-item">
+                        <span class="coord-letter">Y:</span>
+                        <input type="number" id="coordY" class="coord-value" step="0.1" value="0.0">
+                    </div>
+                    <!-- Z 坐标 -->
+                    <div class="coord-item">
+                        <span class="coord-letter">Z:</span>
+                        <input type="number" id="coordZ" class="coord-value" step="0.1" value="0.0">
+                    </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+
+        <div id="orientationTip" class="orientation-tip" style="display: none;">
+            <div class="tip-content">
+                <div class="tip-icon">🔄</div>
+                <div class="tip-text">请将设备旋转至横屏</div>
+                <div class="tip-sub">获得最佳体验 · 点击画布全屏模式</div>
+                <div class="tip-sub">部分浏览器需要取消竖屏锁定后手动横屏</div>
+                <div style="height: 10px;"></div>
+            </div>
+        </div>
     </body>
+
+    <script type="module">
+		import {isMobile} from './js/FirstPersonControls.js';
+        const tipEl = document.getElementById('orientationTip')
+		const canvas3D = document.querySelector( '#threejs' )
+        
+        // ---------- 全局状态 ----------
+        let isFullscreenActive = false;      // 记录当前是否处于全屏状态（浏览器的全屏）
+        let currentOrientation = 'portrait'; // 当前屏幕方向 portrait / landscape
+
+        // ---------- 横屏提示逻辑 (核心横屏检测与展示/隐藏) ----------
+        function updateOrientationAndTip() {
+            // 检测当前屏幕方向: 优先使用 screen.orientation 兼容性好，回退 matchMedia
+            let isLandscape = false;
+            if (screen.orientation && screen.orientation.type) {
+                isLandscape = screen.orientation.type.startsWith('landscape');
+            } else if (window.matchMedia) {
+                isLandscape = window.matchMedia("(orientation: landscape)").matches;
+            } else isLandscape = window.innerWidth > window.innerHeight; // 根据宽高比判断
+                
+            currentOrientation = isLandscape ? 'landscape' : 'portrait';
+            // 横屏提示显示条件: 在移动端（或者普遍情况）且不是横屏模式时显示提示
+            // 但如果已经是全屏模式并且强制横屏后再横屏可能不干扰, 但为了符合需求"横屏提示",
+            // 规则: 当设备处于竖屏状态时，显示横屏提示浮层; 横屏时隐藏提示。
+            // 另外在PC端宽高比也可能是竖屏, 但PC通常不需要强制旋转; 但仍然根据横竖屏显示提示，
+            // 用户点击全屏后可能会变成横屏全屏（浏览器全屏会保留原始方向但是提供横屏内容）, 但移动端我们会额外触发横屏锁定请求。
+            // 需要确保提示层仅在竖屏时可见，横屏自动隐藏，提升体验。
+            if (!isLandscape) tipEl.style.display = 'flex';   // 竖屏: 展示横屏提示
+            else tipEl.style.display = 'none';   // 横屏: 隐藏提示
+        }
+            
+        // ---------- 强制全屏 + 横屏核心 (兼容移动端强制横屏) ----------
+        // 功能: 点击画布触发全屏，并且在移动端尝试锁定横屏方向 (screen.orientation.lock)
+        async function enterFullscreenAndLockLandscape() {
+            const elem = document.documentElement; // 全屏整个页面，包含画布全屏效果更好
+            // 全屏API 兼容性封装
+            const requestFullscreen = elem.requestFullscreen ||
+                elem.webkitRequestFullscreen || elem.msRequestFullscreen;
+            if (!requestFullscreen) {
+                alert("您的浏览器不支持全屏功能，但画布依然可用。建议横屏使用");
+                return;
+            }
+                
+            try {
+                const fullscreenPromise = requestFullscreen.call(elem); // 调用全屏
+                if (fullscreenPromise && typeof fullscreenPromise.catch === 'function') {
+                    await fullscreenPromise.catch(err => {console.warn("全屏请求失败:", err)} );
+                }
+                    
+                // 全屏成功后, 针对移动端进行屏幕方向锁定为横屏 (landscape-primary 或 landscape)
+                if (screen.orientation && screen.orientation.lock) {
+                    try { 
+                        // 锁定横屏模式 (支持 landscape 为主)
+                        await screen.orientation.lock('landscape'); 
+                    } catch (orientError) {
+                        // 某些设备可能权限不足或者不支持锁定，静默处理
+                        // 降级: 不做额外操作, 但仍然全屏, 用户手动旋转
+                        console.warn("方向锁定失败或不支持:", orientError);
+                    }
+                } else if (screen.orientation && typeof screen.orientation.lock !== 'function') {
+                    console.log("当前环境不支持 screen.orientation.lock");
+                }
+
+                isFullscreenActive = true; // 更新全屏标志
+                setTimeout(() => {updateOrientationAndTip()}, 80); // 全屏变化时, 重置画布尺寸并监听方向
+            } catch (error) {
+                console.error("全屏激活错误:", error);
+            }
+        }
+
+        if (isMobile()) {
+            updateOrientationAndTip()
+            canvas3D.addEventListener('click', (e) => {
+                e.stopPropagation()
+                enterFullscreenAndLockLandscape() });
+            window.addEventListener('resize', updateOrientationAndTip);
+            window.addEventListener('orientationchange', () => setTimeout(updateOrientationAndTip, 30) );
+        }
+    </script>
 
     <script type="module">
 		import * as THREE from "./js/three.module.js";
 		import {FirstPersonControls} from './js/FirstPersonControls.js';
 		import {Block, Structure, DisplayManager} from "./js/MinecraftRender/__init__.js";
-        
-
 
 		const masterDOM = document.querySelector( '#masterDOM' ) //获取画布父类DOM对象
 		const canvas = document.querySelector( '#threejs' )      //获取画布DOM对象
 
 		//创建WebGL对象，透视相机对象，第一人称交互逻辑，显示逻辑
 		const renderer = new THREE.WebGLRenderer( {antialias: true, canvas} )
-		const camera = new THREE.PerspectiveCamera( 75, canvas.innerWidth/canvas.innerHeight, 0.1, 2000 );
+		const camera = new THREE.PerspectiveCamera( 75, canvas.innerWidth/canvas.innerHeight, 0.1, 10000 );
 		const controls = new FirstPersonControls(masterDOM, camera, canvas);
-		const displayManager = new DisplayManager(renderer, camera)
+		const displayManager = new DisplayManager(renderer, camera, new Structure([1, 1, 1]))
 
-		displayManager.scene.add(new THREE.AxesHelper(390));            //在3D场景中添加坐标轴
-		displayManager.scene.add(new THREE.AmbientLight(0xfaffff));     //在3D场景中添加柔和白光
-		displayManager.scene.background = new THREE.Color('lightblue'); //在3D场景中设置背景颜色
-		displayManager.renderDistance = 8                               //在3D场景中设置摄像渲染距离
+        displayManager.subscribeCallback(controls.update.bind(controls))                 //绑定摄像头更新渲染事件
+		displayManager.scene.add(new THREE.AxesHelper(3000));                            //在3D场景中添加坐标轴
+		displayManager.scene.add(new THREE.AmbientLight(0xfaffff));                      //在3D场景中添加柔和白光
+		displayManager.scene.background = new THREE.Color('lightblue');                  //在3D场景中设置背景颜色
+		displayManager.renderDistance = 13                                               //在3D场景中设置摄像渲染距离
 
         controls.addEventListener( 'change', displayManager.requestRender() )  //订阅第一人称交互事件并更新渲染信息
-		setInterval(() => controls.dispatchEvent( {type: 'change'} ), 1000);   //定时触发一次交互事件并更新渲染
+		setInterval(() => controls.dispatchEvent( {type: 'change'} ), 500);   //定时触发一次交互事件并更新渲染
+
+
+
+        // UI 元素绑定
+        const speedSlider = document.getElementById('cameraSpeed');
+        const speedDisplay = document.getElementById('speedValueDisplay');
+        const inputX = document.getElementById('coordX');
+        const inputY = document.getElementById('coordY');
+        const inputZ = document.getElementById('coordZ');
+        const clickTP = document.getElementById('click_teleport');
+        const lastPos = {x:-1, y:-1, z:-1};
+
+        // 监听速度滑动条
+        speedSlider.addEventListener('input', (e) => {
+            const cameraSpeed = parseFloat(e.target.value);
+            controls.moveSpeed = cameraSpeed;
+            speedDisplay.innerText = cameraSpeed.toFixed(2);
+        });
+
+        // 监听坐标输入框变化 (直接设置)
+        function updatePositionFromInputs() {
+            let newX = parseFloat(inputX.value);
+            let newY = parseFloat(inputY.value);
+            let newZ = parseFloat(inputZ.value);
+            if (!isNaN(newX)) {camera.position.x = newX; inputX.value = newX.toFixed(2);}
+            if (!isNaN(newY)) {camera.position.y = newY; inputY.value = newY.toFixed(2);}
+            if (!isNaN(newZ)) {camera.position.z = newZ; inputZ.value = newZ.toFixed(2);}
+        }
+        clickTP.addEventListener("click", updatePositionFromInputs)
+
+        function updateDisplayPosition() {
+            if (lastPos.x !== camera.position.x) {
+                inputX.value = camera.position.x.toFixed(2)
+                lastPos.x = camera.position.x }
+            if (lastPos.y !== camera.position.y) {
+                inputY.value = camera.position.y.toFixed(2)
+                lastPos.y = camera.position.y }
+            if (lastPos.z !== camera.position.z) {
+                inputZ.value = camera.position.z.toFixed(2)
+                lastPos.z = camera.position.z }
+        }
+        displayManager.subscribeCallback(updateDisplayPosition)
+
+
         
         function HttpConnent(response_type="arraybuffer", timeout=90000) {
             const xhr = new XMLHttpRequest();
@@ -46,9 +487,9 @@
 
         setTimeout( () => {
             const request_url = 'http://localhost:32323'
-            const buffer_size = 128 * 128 * 384
+            const buffer_size = 1024 * 1024 * 16
 
-            let StructureObject = new Structure([1, 1, 1])
+            let StructureObject = displayManager.structure
             let Size = [1, 1, 1]
             let Palette = []
             let ConnentDone = []
@@ -82,7 +523,8 @@
             })
             const GetIndexData = (startIndex, readCount, index) => {
                 new Promise((resolve, reject) => {
-                    const req_json = {"operation":GetStructureType, "process":"getIndexData", "index":startIndex, "read":readCount}
+                    const req_json = {"operation":GetStructureType, "process":"getIndexData", 
+                        "index":startIndex, "read":readCount}
                     const xhr = HttpConnent()
                     xhr.open('POST', request_url, true);
                     xhr.onload = () => {
@@ -94,11 +536,12 @@
                     }
                     xhr.send(JSON.stringify(req_json));
                 }).then(result => {
-                    StructureObject.blockIndex.set(result, startIndex)
                     ConnentDone[index] = true
-                    if (ConnentDone.every(i => i)) displayManager.structure = StructureObject
+                    StructureObject.blockIndex.batchUpdate(result, startIndex)
+                    if (ConnentDone.every(i => i)) displayManager.startRender = true
                 }).catch(error => {
-                    alert('服务器通信失败:\n' + error.message);
+                    alert('服务器通信失败:\n' + error.message)
+                    throw error;
                 })
             }
 
@@ -119,13 +562,14 @@
                 camera.position.y = StructureObject.size[1] / 2;
                 camera.position.z = 0;
                 camera.lookAt(1, 0, 1);
-                
+
                 for (let index = 0; index<(Volume/buffer_size); index++) {
                     ConnentDone.push(false)
                     GetIndexData(buffer_size*index, buffer_size, index)
                 }
             }).catch(error => {
                 alert('服务器通信失败:\n' + error.message);
+                throw error;
             })
         }, 1000)
 

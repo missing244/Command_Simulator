@@ -171,20 +171,204 @@ class Structure {
 
         const sizeX = this.size[0]; const sizeY = this.size[1]; const sizeZ = this.size[2]
         const blockPlatte = new Array(...this.blockPlatte)
-        const airTestArray = []             //储存方块是否是空气类，元素数量与方块调色板一致
-        const renderDataArray = []          //储存方块指向的渲染数据，元素数量与方块调色板一致
-        const coordinateFunctionArray = []  //储存方块坐标变换函数，元素数量与方块调色板一致
-        //console.log(renderDataArray)
-        //console.log(coordinateFunctionArray)
+        const airTestArray = []              //储存方块是否是空气类，元素数量与方块调色板一致
+        const renderDataArray = []           //储存方块指向的渲染数据，元素数量与方块调色板一致
+        const blockModelArray = []           //储存方块模型面的UV变换结果，元素数量与方块调色板一致
+        const blockGeometryArray = []        //储存方块模型加方块状态的变换结果，元素数量与方块调色板一致
 
         blockPlatte.push(AirBlock)
         blockPlatte.forEach( (block) => {
+            const ArrayLastIndex = airTestArray.length
+
             airTestArray.push( Constant.AirTypes.has(block.identifier) )
             renderDataArray.push( BlockDefine.QueryBlockRender(block) ) 
-            coordinateFunctionArray.push( Constant.BlockStateChangePos.
-                getStatesToChangeCoordinatesFunction(block) ) 
+            blockGeometryArray.push( {} ) 
+            
+            const TransFunc = Constant.BlockStateChangePos.getStatesToChangeCoordinatesFunction(block)
+            const RenderModel = RenderDefine.ModelDefine[renderDataArray[ArrayLastIndex].model]
+            blockModelArray.push( RenderModel ) 
+
+            for (const face_name in RenderModel) {
+                const FaceData = JSON.parse(JSON.stringify(RenderDefine.FaceDefine[face_name]))
+                if (!TransFunc) {blockGeometryArray[ArrayLastIndex][face_name] = FaceData ; continue; }
+                
+                FaceData.dir = TransFunc(FaceData.dir, block.states, true)
+                for (let index = 0; index < FaceData.dir.length; index++) FaceData.dir[index] = Math.round(FaceData.dir[index])
+                if (!Constant.BlockStateChangePos.__State_Disable_Render__(block.states, FaceData.dir)) continue
+
+                for (const pos_uv of FaceData.corners) {pos_uv.pos = TransFunc(pos_uv.pos, block.states, true)}
+                blockGeometryArray[ArrayLastIndex][face_name] = FaceData
+            }
         })
 
+        const greedyMesherBuild = ({single, transparent, fluid}) => {
+            const dims = [this.size[0], this.size[1], this.size[2]]
+            const get = (x,y,z) => this.getBlockIndex(x,y,z)
+
+            const pushFace = (buffer, verts, w, h, render) => {
+                const ndx = buffer.pos.length / 3
+
+                const tileSize = this.tileSize
+                const texW = this.SingleTextureWidth
+                const texH = this.SingleTextureHeight
+
+                const uvPosX = (render.index % 256) * tileSize
+                const uvPosY = Math.floor(render.index / 256) * 160
+
+                const u0 = uvPosX / texW
+                const v0 = uvPosY / texH
+                const u1 = (uvPosX + tileSize * w) / texW
+                const v1 = (uvPosY + tileSize * h) / texH
+
+                for (let i=0;i<4;i++) {
+                    const p = verts[i]
+                    buffer.pos.push(p[0], p[1], p[2])
+                }
+
+                buffer.uv.push(
+                    u0, v0,
+                    u1, v0,
+                    u1, v1,
+                    u0, v1
+                )
+
+                buffer.ind.push(
+                    ndx, ndx+1, ndx+2,
+                    ndx, ndx+2, ndx+3
+                )
+            }
+
+            // 6个方向
+            for (let d = 0; d < 3; d++) {
+
+                const mask = []
+                const u = (d + 1) % 3
+                const v = (d + 2) % 3
+
+                const x = [0,0,0]
+                const q = [0,0,0]
+                q[d] = 1
+
+                for (x[d] = -1; x[d] < dims[d]; ) {
+
+                    // --- 构建mask ---
+                    let n = 0
+
+                    for (x[v]=0; x[v]<dims[v]; x[v]++) {
+                        for (x[u]=0; x[u]<dims[u]; x[u]++) {
+
+                            const a = (x[d] >= 0) ? get(x[0], x[1], x[2]) : -1
+                            const b = (x[d] < dims[d]-1) ? get(x[0]+q[0], x[1]+q[1], x[2]+q[2]) : -1
+
+                            let cell = null
+
+                            if (a !== -1) {
+
+                                const render = renderDataArray[a]
+
+                                if (render?.fluid) {
+                                    if (d === 1 && q[1] === 1) {
+                                        const up = get(x[0],x[1]+1,x[2])
+                                        if (up !== a) {
+                                            cell = { id: a, type: "fluid" }
+                                        }
+                                    }
+                                } else {
+                                    if (b === -1 || b !== a) {
+                                        if (render.transparent) {
+                                            cell = { id: a, type: "transparent" }
+                                        } else {
+                                            cell = { id: a, type: "single" }
+                                        }
+                                    }
+                                }
+                            }
+
+                            mask[n++] = cell
+                        }
+                    }
+
+                    x[d]++
+
+                    // --- Greedy 合并 ---
+                    n = 0
+                    for (let j=0; j<dims[v]; j++) {
+                        for (let i=0; i<dims[u]; ) {
+
+                            const cell = mask[n]
+                            if (!cell) { i++; n++; continue }
+
+                            let w
+                            for (w=1; i+w<dims[u]; w++) {
+                                const next = mask[n+w]
+                                if (!next || next.id !== cell.id || next.type !== cell.type) break
+                            }
+
+                            let h
+                            let done = false
+                            for (h=1; j+h<dims[v]; h++) {
+                                for (let k=0; k<w; k++) {
+                                    const next = mask[n + k + h*dims[u]]
+                                    if (!next || next.id !== cell.id || next.type !== cell.type) {
+                                        done = true
+                                        break
+                                    }
+                                }
+                                if (done) break
+                            }
+
+                            // --- 生成面 ---
+                            x[u] = i
+                            x[v] = j
+
+                            const du = [0,0,0]
+                            const dv = [0,0,0]
+
+                            du[u] = w
+                            dv[v] = h
+
+                            const verts = []
+
+                            for (let m=0; m<4; m++) {
+                                const pos = [x[0], x[1], x[2]]
+
+                                if (m === 1 || m === 2) {
+                                    pos[0]+=du[0]; pos[1]+=du[1]; pos[2]+=du[2]
+                                }
+                                if (m === 2 || m === 3) {
+                                    pos[0]+=dv[0]; pos[1]+=dv[1]; pos[2]+=dv[2]
+                                }
+
+                                verts.push([
+                                    pos[0]-startX,
+                                    pos[1]-startY,
+                                    pos[2]-startZ
+                                ])
+                            }
+
+                            // 👉 根据材质选择buffer
+                            let buffer
+                            if (cell.type === "single") buffer = single
+                            else if (cell.type === "transparent") buffer = transparent
+                            else buffer = fluid
+
+                            const render = renderDataArray[cell.id]
+                            pushFace(buffer, verts, w, h, render)
+
+                            // 清mask
+                            for (let l=0; l<h; l++) {
+                                for (let k=0; k<w; k++) {
+                                    mask[n + k + l*dims[u]] = null
+                                }
+                            }
+
+                            i += w
+                            n += w
+                        }
+                    }
+                }
+            }
+        }
         const __renderConnent__ = (x, y, z, BlockRenderData, positions, uvs, indices, TextureWidth, TextureHeight) => {
             const { tileSize } = this
 
@@ -260,12 +444,12 @@ class Structure {
                 indices.push(ndx, ndx+1, ndx+2, ndx+2, ndx+1, ndx+3)
             }
         }
-        const renderTransparent = (x, y, z, Block, BlockRenderData, BlockPosTransFunc, positions, uvs, indices) => {
+        const renderTransparent = (x, y, z, Block, BlockRenderData, BlockModel, BlockGeometry, positions, uvs, indices) => {
             const { tileSize, TransparentTextureWidth, TransparentTextureHeight} = this
 
             //遍历需要渲染的每一个面
-            for (const face_name in RenderDefine.ModelDefine[BlockRenderData.model]) {
-                const {dir, corners} = RenderDefine.FaceDefine[face_name]
+            for (const face_name in BlockModel) {
+                const {dir, corners} = BlockGeometry[face_name]
 
                 if (!BlockRenderData.flawed) {
                     const NeighborBlockIndex = this.getBlockIndex(x+dir[0], y+dir[1], z+dir[2])
@@ -285,14 +469,13 @@ class Structure {
                     //满足以上条件需渲染连接方块面   相邻方块是同ID类、方块是实心完整方块
                 }
 
-                const uvMode = RenderDefine.ModelDefine[BlockRenderData.model][face_name]
+                const uvMode = BlockModel[face_name]
                 const uvPosX = (BlockRenderData["index"] % 256) * tileSize
                 const uvPosY = Math.floor(BlockRenderData["index"] / 256) * 160 + tileSize * uvMode
                 //生成模型部分
                 const ndx = Math.floor(positions.length / 3)
                 for ( const { pos, uv } of corners ) {
-                    const New_Pos = BlockPosTransFunc ? BlockPosTransFunc(pos, Block.states) : pos
-                    positions.push( New_Pos[0]+x-startX, New_Pos[1]+y-startY, New_Pos[2]+z-startZ )
+                    positions.push( pos[0]+x-startX, pos[1]+y-startY, pos[2]+z-startZ )
                     uvs.push( (uvPosX+uv[0])/TransparentTextureWidth, (uvPosY+uv[1])/TransparentTextureHeight )
                 }
                 indices.push(ndx, ndx+1, ndx+2, ndx+2, ndx+1, ndx+3)
@@ -303,13 +486,12 @@ class Structure {
                 positions, uvs, indices,
                 TransparentTextureWidth, TransparentTextureHeight)
         }
-        const renderDoubleSide = (x, y, z, Block, BlockRenderData, BlockPosTransFunc, positions, uvs, indices) => {
+        const renderDoubleSide = (x, y, z, Block, BlockRenderData, BlockModel, BlockGeometry, positions, uvs, indices) => {
             const { tileSize, DoubleTextureWidth, DoubleTextureHeight} = this
             
             //遍历需要渲染的每一个面
-            for (const face_name in RenderDefine.ModelDefine[BlockRenderData.model]) {
-                const {dir, corners} = RenderDefine.FaceDefine[face_name]
-                if (!Constant.BlockStateChangePos.__State_Disable_Rerden__(Block.states, dir)) continue
+            for (const face_name in BlockModel) {
+                const {dir, corners} = BlockGeometry[face_name]
 
                 if (!BlockRenderData.flawed) {
                     const NeighborBlockIndex = this.getBlockIndex(x+dir[0], y+dir[1], z+dir[2])
@@ -317,20 +499,19 @@ class Structure {
                     const NeighborBlockData = renderDataArray[NeighborBlockIndex]
                     if ( !(
                         Constant.AirTypes.has(NeighborBlock.identifier) || 
-                        (NeighborBlockData && NeighborBlockData.flawed)
+                        (NeighborBlockData && NeighborBlockData.flawed) || 
                         (NeighborBlockData && NeighborBlockData.transmitting)
                     )) continue
                     //满足以上条件需渲染方块面   相邻方块空气、不完整、透光
                 }
 
-                const uvMode = RenderDefine.ModelDefine[BlockRenderData.model][face_name]
+                const uvMode = BlockModel[face_name]
                 const uvPosX = (BlockRenderData["index"] % 256) * tileSize
                 const uvPosY = Math.floor(BlockRenderData["index"] / 256) * 160 + uvMode * tileSize
                 //生成模型部分
                 const ndx = Math.floor(positions.length / 3)
                 for ( const { pos, uv } of corners ) {
-                    const New_Pos = BlockPosTransFunc ? BlockPosTransFunc(pos, Block.states) : pos
-                    positions.push( New_Pos[0]+x-startX, New_Pos[1]+y-startY, New_Pos[2]+z-startZ )
+                    positions.push( pos[0]+x-startX, pos[1]+y-startY, pos[2]+z-startZ )
                     uvs.push( (uvPosX+uv[0])/DoubleTextureWidth, (uvPosY+uv[1])/DoubleTextureHeight )
                 }
                 indices.push(ndx, ndx+1, ndx+2, ndx+2, ndx+1, ndx+3)
@@ -341,37 +522,34 @@ class Structure {
                 positions, uvs, indices,
                 DoubleTextureWidth, DoubleTextureHeight)
         }
-        const renderSingleSide = (x, y, z, Block, BlockRenderData, BlockPosTransFunc, positions, uvs, indices) => {
+        const renderSingleSide = (x, y, z, Block, BlockRenderData, BlockModel, BlockGeometry, positions, uvs, indices) => {
             const { tileSize, SingleTextureWidth, SingleTextureHeight} = this
 
             //遍历需要渲染的每一个面
-            for (const face_name in RenderDefine.ModelDefine[BlockRenderData.model]) {
-            const {dir, corners} = RenderDefine.FaceDefine[face_name]
+            for (const face_name in BlockModel) {
+                const {dir, corners} = BlockGeometry[face_name]
 
-            if (!BlockRenderData.flawed) {
-                let New_Pos = BlockPosTransFunc ? BlockPosTransFunc(dir, Block.states, true) : dir
-                for (let index = 0; index < New_Pos.length; index++) New_Pos[index] = Math.round(New_Pos[index])
-                const NeighborBlockIndex = this.getBlockIndex(x+New_Pos[0], y+New_Pos[1], z+New_Pos[2])
-                const NeighborBlock = blockPlatte[NeighborBlockIndex]
-                const NeighborBlockData = renderDataArray[NeighborBlockIndex]
-                if (!(
-                    Constant.AirTypes.has(NeighborBlock.identifier) || 
-                    (!Constant.CopperGrateTypes.has(Block.identifier) && Constant.CopperGrateTypes.has(NeighborBlock.identifier)) ||
-                    (NeighborBlockData && ( !BlockRenderData.transmitting && NeighborBlockData.transmitting)) ||
-                    (NeighborBlockData && ( NeighborBlockData.flawed || NeighborBlockData.transparent)
-                    ))
-                ) continue
-                //满足以上条件需渲染方块面   相邻方块空气、铜栅格、不完整、透光、透明
-            }
+                if (!BlockRenderData.flawed) {
+                    const NeighborBlockIndex = this.getBlockIndex(x+dir[0], y+dir[1], z+dir[2])
+                    const NeighborBlock = blockPlatte[NeighborBlockIndex]
+                    const NeighborBlockData = renderDataArray[NeighborBlockIndex]
+                    if (!(
+                        Constant.AirTypes.has(NeighborBlock.identifier) || 
+                        (!Constant.CopperGrateTypes.has(Block.identifier) && Constant.CopperGrateTypes.has(NeighborBlock.identifier)) ||
+                        (NeighborBlockData && ( !BlockRenderData.transmitting && NeighborBlockData.transmitting)) ||
+                        (NeighborBlockData && ( NeighborBlockData.flawed || NeighborBlockData.transparent)
+                        ))
+                    ) continue
+                    //满足以上条件需渲染方块面   相邻方块空气、铜栅格、不完整、透光、透明
+                }
 
-            const uvMode = RenderDefine.ModelDefine[BlockRenderData.model][face_name]
-            const uvPosX = (BlockRenderData["index"] % 256) * tileSize
-            const uvPosY = Math.floor(BlockRenderData["index"] / 256) * 160 + tileSize * uvMode
-            //生成模型部分
-            const ndx = Math.floor(positions.length / 3)
+                const uvMode = BlockModel[face_name]
+                const uvPosX = (BlockRenderData["index"] % 256) * tileSize
+                const uvPosY = Math.floor(BlockRenderData["index"] / 256) * 160 + tileSize * uvMode
+                //生成模型部分
+                const ndx = Math.floor(positions.length / 3)
                 for ( const { pos, uv } of corners ) {
-                    const New_Pos = BlockPosTransFunc ? BlockPosTransFunc(pos, Block.states) : pos
-                    positions.push( New_Pos[0]+x-startX, New_Pos[1]+y-startY, New_Pos[2]+z-startZ )
+                    positions.push( pos[0]+x-startX, pos[1]+y-startY, pos[2]+z-startZ )
                     uvs.push( (uvPosX+uv[0])/SingleTextureWidth, (uvPosY+uv[1])/SingleTextureHeight )
                 }
                 indices.push(ndx, ndx+1, ndx+2, ndx+2, ndx+1, ndx+3)
@@ -388,27 +566,28 @@ class Structure {
             for ( let y = startY; y <= endY && y < sizeY; y++ ) {
                 for ( let z = startZ; z <= endZ && z < sizeZ; z++ ) {
                     const BlockIndex = this.blockIndex[this.getOffset(x, y, z)]
-                    const BlockAirTest = airTestArray[BlockIndex]
                     const BlockRenderData = renderDataArray[BlockIndex]
-                    if (BlockAirTest) continue
+                    if (airTestArray[BlockIndex]) continue
                     if (!BlockRenderData) continue
                     const Block = blockPlatte[BlockIndex]
-                    const BlockPosTransFunc = coordinateFunctionArray[BlockIndex]
+                    const BlockModel = blockModelArray[BlockIndex]
+                    const BlockGeometry = blockGeometryArray[BlockIndex]
 
                     //根据方块选择单面渲染模式还是双面渲染模式
                     if (Constant.LavaTypes.has(Block.identifier)) renderFluid(x, y, z, 
                         "minecraft:lava", this.SingleTextureWidth, this.SingleTextureHeight, 
                         single_positions, single_uvs, single_indices)
                     else if (BlockRenderData.transparent && !BlockRenderData.fluid) 
-                        renderTransparent(x, y, z, 
-                        Block, BlockRenderData, BlockPosTransFunc, 
+                        renderTransparent(x, y, z, Block,
+                        BlockRenderData, BlockModel, BlockGeometry, 
                         transparent_positions, transparent_uvs, transparent_indices)
                     else if (BlockRenderData.double_side && !BlockRenderData.fluid) 
-                        renderDoubleSide(x, y, z, 
-                        Block, BlockRenderData, BlockPosTransFunc, 
+                        renderDoubleSide(x, y, z, Block,
+                        BlockRenderData, BlockModel, BlockGeometry, 
                         double_positions, double_uvs, double_indices)
-                    else if (!BlockRenderData.fluid) renderSingleSide(x, y, z, 
-                        Block, BlockRenderData, BlockPosTransFunc, 
+                    else if (!BlockRenderData.fluid) 
+                        renderSingleSide(x, y, z, Block,
+                        BlockRenderData, BlockModel, BlockGeometry, 
                         single_positions, single_uvs, single_indices)
 
                     if (BlockRenderData.water_log || Constant.WaterTypes.has(Block.identifier)) renderFluid(x, y, z, 
@@ -464,7 +643,7 @@ function ComputeMeshData(requestStart, requestEnd, realStart, realEnd, size, blo
 
 self.onmessage = function(e) {
     let result = null, transferables = null
-    //console.log(e)
+
     if (e.data.type === "ComputeMeshData") {
         //需要传参 {uuid, pos, size, requestStart, requestEnd, realStart, realEnd, chunkSize, blockIndex, blockPalette}
         const returnValue = ComputeMeshData( 
