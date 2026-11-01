@@ -22,7 +22,7 @@ def throw_nbt_error(e, buffer, length):
         value = value[0:4] + b'...' + value[-3:]
     raise NbtParseError("%s (%s) 位于 %s 到 %s字节" % (e.args[0], value, buffer.tell() - length, buffer.tell()))
 
-def buffer_read(buffer, length, msg):
+def buffer_read(buffer, length, msg) -> bytes:
     byte = buffer.read(length)
     if len(byte) != length: raise NbtParseError("ELO Error，期望%s字节，实际为%s字节（%s）" % (length, len(byte), msg))
     return byte

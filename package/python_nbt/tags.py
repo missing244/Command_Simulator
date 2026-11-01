@@ -259,15 +259,13 @@ class TAG_String(TAG_Base_String, metaclass=TAG_String_Meta):
     @classmethod
     def _from_bytesIO(cls, buffer, mode=False):
         byte = buffer_read(buffer, 2, "字符串长度")
-        try:
-            length = ce.bytes_to_length(byte, mode)
-        except Exception as e:
-            throw_nbt_error(e, buffer, 2)
+        try: length = ce.bytes_to_length(byte, mode)
+        except Exception as e: throw_nbt_error(e, buffer, 2)
+
         byte = buffer_read(buffer, length, "字符串")
-        try:
-            return cls(byte)
-        except Exception as e:
-            throw_nbt_error(e, buffer, length)
+        if byte.startswith(b"\x00\x00\x81") : byte = byte + buffer_read(buffer, 2, "字符串")
+        try: return cls(byte)
+        except Exception as e: throw_nbt_error(e, buffer, length)
 
     @classmethod
     def _from_snbt(cls, buffer):
@@ -292,11 +290,15 @@ class TAG_String(TAG_Base_String, metaclass=TAG_String_Meta):
         buffer.write(self._to_snbt())
 
     def to_bytes(self, mode: bool=False) -> bytes:
-        return ce.length_to_bytes(len(self.__value), mode) + self.__value
+        if self.__value.startswith(b"\x00\x00\x81") :
+            return ce.length_to_bytes(len(self.__value)-2, mode) + self.__value
+        else : return ce.length_to_bytes(len(self.__value), mode) + self.__value
 
     def get_value(self) -> str:
         if self.__cache is None:
-            self.__cache = ce.unpack_data(self.__value, self.type)
+            try : self.__cache = ce.unpack_data(self.__value, self.type)
+            except : return self.__value
+            else : return self.__cache
         return self.__cache
 
     def set_value(self, value):

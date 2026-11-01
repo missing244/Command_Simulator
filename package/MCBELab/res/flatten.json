@@ -188,34 +188,34 @@
 
         "minecraft:grass_block" : {"block_id":"minecraft:grass","block_data":{}},
         
-        "minecraft:oak_leaves" : {"block_id":"minecraft:leaves","block_data":{"old_leaf_type": "oka"}},
+        "minecraft:oak_leaves" : {"block_id":"minecraft:leaves","block_data":{"old_leaf_type": "oak"}},
         "minecraft:spruce_leaves" : {"block_id":"minecraft:leaves","block_data":{"old_leaf_type": "spruce"}},
         "minecraft:birch_leaves" : {"block_id":"minecraft:leaves","block_data":{"old_leaf_type": "birch"}},
         "minecraft:jungle_leaves" : {"block_id":"minecraft:leaves","block_data":{"old_leaf_type": "jungle"}},
         "minecraft:acacia_leaves" : {"block_id":"minecraft:leaves2","block_data":{"old_leaf_type": "acacia"}},
         "minecraft:dark_oak_leaves" : {"block_id":"minecraft:leaves2","block_data":{"old_leaf_type": "dark_oak"}},
         
-        "minecraft:oak_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "oka"}},
+        "minecraft:oak_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "oak"}},
         "minecraft:spruce_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "spruce"}},
         "minecraft:birch_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "birch"}},
         "minecraft:jungle_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "jungle"}},
         "minecraft:acacia_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "acacia"}},
         "minecraft:dark_oak_double_slab" : {"block_id":"minecraft:double_wooden_slab","block_data":{"wood_type": "dark_oak"}},
         
-        "minecraft:oak_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "oka"}},
+        "minecraft:oak_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "oak"}},
         "minecraft:spruce_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "spruce"}},
         "minecraft:birch_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "birch"}},
         "minecraft:jungle_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "jungle"}},
         "minecraft:acacia_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "acacia"}},
         "minecraft:dark_oak_slab" : {"block_id":"minecraft:wooden_slab","block_data":{"wood_type": "dark_oak"}},
         
-        "minecraft:oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oka","stripped_bit": false}},
+        "minecraft:oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oak","stripped_bit": false}},
         "minecraft:spruce_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "spruce","stripped_bit": false}},
         "minecraft:birch_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "birch","stripped_bit": false}},
         "minecraft:jungle_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "jungle","stripped_bit": false}},
         "minecraft:acacia_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "acacia","stripped_bit": false}},
         "minecraft:dark_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "dark_oak","stripped_bit": false}},
-        "minecraft:stripped_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oka","stripped_bit": true}},
+        "minecraft:stripped_oak_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "oak","stripped_bit": true}},
         "minecraft:stripped_spruce_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "spruce","stripped_bit": true}},
         "minecraft:stripped_birch_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "birch","stripped_bit": true}},
         "minecraft:stripped_jungle_wood" : {"block_id":"minecraft:wood","block_data":{"wood_type": "jungle","stripped_bit": true}},
@@ -439,7 +439,7 @@
         "minecraft:iron_chain": {"block_id":"minecraft:chain","block_data":{}},
 
 
-        "mushroom_stem":{"block_id":"minecraft:red_mushroom_block","block_data":{"huge_mushroom_bits":15}}
+        "minecraft:mushroom_stem":{"block_id":"minecraft:red_mushroom_block","block_data":{"huge_mushroom_bits":15}}
     },
     "block_state": {
         "minecraft:vertical_half":{

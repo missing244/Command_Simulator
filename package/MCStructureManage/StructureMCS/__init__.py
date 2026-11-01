@@ -4,4 +4,4 @@
     * 可用对象 Mcstructure: 解析mcstructure文件的类
 """
 
-from .mcstructure import Mcstructure
+from .mcstructure import Mcstructure, Mcstructure_V2

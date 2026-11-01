@@ -2,7 +2,7 @@ from . import BaseMatch,SpecialMatch,JsonPaser
 
 #1.16.0的replaceitem没有destroy和keep模式，这里是Old_Item_Handling后面的
 Command_Replaceitem = BaseMatch.AnyString("Item_Type").add_leaves(
-        BaseMatch.Int("Amount", min_value=0, max_value=64).add_leaves(
+        BaseMatch.Int("Amount", min_value=1, max_value=64).add_leaves(
             BaseMatch.Int("Data", min_value=0, max_value=32767).add_leaves(
                 JsonPaser.Json_Tree( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
@@ -73,21 +73,21 @@ Command_Summon_Rotation_New = [
 
 #loot的来源
 Command_Loot = [
-    BaseMatch.Char("Argument","kill").add_leaves(
+    BaseMatch.Char("Loot_From","kill").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
             BaseMatch.Enum("Tool_Type","mainhand","offhand").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.AnyString("Tool_Type").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
     ),
-    BaseMatch.Char("Argument","loot").add_leaves(
+    BaseMatch.Char("Loot_From","loot").add_leaves(
         *SpecialMatch.String_Tree("Loot_Table",
             BaseMatch.Enum("Tool_Type","mainhand","offhand").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.AnyString("Tool_Type").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
     ),
-    BaseMatch.Char("Argument","mine").set_version(1, 21, 60, "min").add_leaves(
+    BaseMatch.Char("Loot_From","mine").set_version(1, 21, 60, "min").add_leaves(
         *SpecialMatch.Pos_Tree(
             BaseMatch.Enum("Tool_Type","mainhand","offhand").add_leaves( BaseMatch.END_NODE ),
             BaseMatch.AnyString("Tool_Type").add_leaves( BaseMatch.END_NODE ),
@@ -135,16 +135,16 @@ Command_Title = [
 
 #Obrit摄像机设置部分
 Obrit_Camera_Setting = [
-    BaseMatch.Char("Obrit_Setting","entity_offset").add_leaves(
+    BaseMatch.Char("Obrit_Setting","entity_offset").set_version(1,20,40,"min").add_leaves(
         BaseMatch.Float("X_Offset", min_value=-64, max_value=64).add_leaves(
             BaseMatch.Float("Y_Offset", min_value=-64, max_value=64).add_leaves( 
                 BaseMatch.Float("Z_Offset", min_value=-64, max_value=64).add_leaves( BaseMatch.END_NODE )
             )
         )
     ),
-    BaseMatch.Char("Obrit_Setting","view_offset").add_leaves(
-        BaseMatch.Float("X_Offset", min_value=-100, max_value=100).add_leaves( 
-            BaseMatch.Float("Y_Offset", min_value=-100, max_value=100).add_leaves( 
+    BaseMatch.Char("Obrit_Setting","view_offset").set_version(1,20,40,"min").add_leaves(
+        BaseMatch.Float("X_Offset", min_value=-64, max_value=64).add_leaves( 
+            BaseMatch.Float("Y_Offset", min_value=-64, max_value=64).add_leaves( 
                 BaseMatch.Char("Obrit_Setting","entity_offset").add_leaves(
                     BaseMatch.Float("X_Offset", min_value=-64, max_value=64).add_leaves(
                         BaseMatch.Float("Y_Offset", min_value=-64, max_value=64).add_leaves( 
@@ -158,24 +158,29 @@ Obrit_Camera_Setting = [
     )
 ]
 
+Camera_Ease_Type = ("linear", "spring", "in_quad", "out_quad", "in_out_quad", "in_cubic", "out_cubic", "in_out_cubic", 
+ "in_quart", "out_quart", "in_out_quart", "in_quint", "out_quint", "in_out_quint", "in_sine", "out_sine", 
+ "in_out_sine", "in_expo", "out_expo", "in_out_expo", "in_circ", "out_circ", "in_out_circ", "in_bounce", 
+ "out_bounce", "in_out_bounce", "in_back", "out_back", "in_out_back", "in_elastic", "out_elastic", "in_out_elastic")
+
 #后面打✓的是完整测试过的
 #加V的是检查过版本的
 Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Command_Start","/").add_leaves(
     # ability ✓ V
     BaseMatch.Char("Command","ability").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Enum("Argument","worldbuilder","mayfly","mute").add_leaves(
-                BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
-                BaseMatch.END_NODE
+            BaseMatch.Enum("AbilityName","worldbuilder","mayfly","mute").add_leaves(
+                BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.End_Node().set_handle("ability.set") ),
+                BaseMatch.End_Node().set_handle("ability.query")
             ),
-            BaseMatch.END_NODE
+            BaseMatch.End_Node().set_handle("ability.queryall")
         )
     ),
     # aimassist ✓ V
     BaseMatch.Char("Command","aimassist").set_version(1,21,50,"min").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Char("Argument","clear").add_leaves(BaseMatch.END_NODE),
-            BaseMatch.Char("Argument","set").add_leaves(
+            BaseMatch.Char("Argument","clear").set_handle("aimassist.clear").add_leaves(BaseMatch.END_NODE),
+            BaseMatch.Char("Argument","set").set_handle("aimassist.set").add_leaves(
                 BaseMatch.Float("X_Angle", min_value=10, max_value=90).add_leaves(
                     BaseMatch.Float("Y_Angle", min_value=10, max_value=90).add_leaves(
                         BaseMatch.Float("MaxDistance", min_value=1, max_value=16).add_leaves(
@@ -195,25 +200,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     ),
     # alwaysday ✓ V
     BaseMatch.Char("Command","alwaysday").add_leaves( 
-        BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ) ,
-        BaseMatch.END_NODE
-    ),
-    # controlscheme ✓ V
-    BaseMatch.Char("Command","controlscheme").set_version(1,21,90,"min").add_leaves(
-        *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Char("Argument","clear").add_leaves(BaseMatch.END_NODE),
-            BaseMatch.Char("Argument","set").add_leaves(
-                BaseMatch.Enum("ControlScheme", "camera_relative", "camera_relative_strafe", 
-                "locked_player_relative_strafe", "player_relative", "player_relative_strafe"
-                ).add_leaves(BaseMatch.END_NODE)
-            )
-        )
+        BaseMatch.Enum("Value","true","false").set_handle("alwaysday.set").add_leaves( BaseMatch.END_NODE ) ,
+        BaseMatch.End_Node().set_handle("alwaysday.query")
     ),
     # camera ✓ V ps: 1.20.10.23加入了facing,不过在1.20.20.22以前属于实验玩法
     BaseMatch.Char("Command","camera").set_version(1,20,30,"min").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Char("Argument","clear").add_leaves( BaseMatch.END_NODE ),
-            BaseMatch.Char("Argument","fade").add_leaves( 
+            BaseMatch.Char("Argument","clear").set_handle("camera.clear").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.Char("Argument","fade").set_handle("camera.fade").add_leaves( 
                 BaseMatch.Char("Color","color").add_leaves( 
                     BaseMatch.Int("Color_Red", min_value=0, max_value=255).add_leaves( 
                         BaseMatch.Int("Color_Green", min_value=0, max_value=255).add_leaves( 
@@ -239,19 +233,19 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 ),
                 BaseMatch.END_NODE
             ),
-            BaseMatch.Char("Argument","remove_target").add_leaves( BaseMatch.END_NODE ),
-            BaseMatch.Char("Argument","set").add_leaves(
+            BaseMatch.Char("Argument","attach_to_entity").set_handle("camera.attach").set_version(26,10,0,"min").add_leaves(
+                *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE )
+            ),
+            BaseMatch.Char("Argument","detach_from_entity").set_handle("camera.detach").set_version(26,10,0,"min").add_leaves(BaseMatch.END_NODE),
+            BaseMatch.Char("Argument","play_spline").set_handle("camera.play_spline").set_version(26,10,0,"min").add_leaves(
+                *SpecialMatch.String_Tree("Spline_Name", BaseMatch.END_NODE)
+            ),
+            BaseMatch.Char("Argument","set").set_handle("camera.set").add_leaves(
                 BaseMatch.AnyString("Camera_Type").add_leaves(
                     BaseMatch.Char("Type_Argument","default").add_leaves( BaseMatch.END_NODE ),
                     BaseMatch.Char("Type_Argument","ease").add_leaves(
                         BaseMatch.Float("Camera_Ease_Time").add_leaves(
-                            BaseMatch.Enum("Ease_Type", "linear", "spring", "in_quad", "out_quad", "in_out_quad", 
-                            "in_cubic", "out_cubic", "in_out_cubic", "in_quart", "out_quart", "in_out_quart", 
-                            "in_quint", "out_quint", "in_out_quint", "in_sine", "out_sine", "in_out_sine", "in_expo",
-                            "out_expo", "in_out_expo", "in_circ", "out_circ", "in_out_circ", "in_bounce", "out_bounce",
-                            "in_out_bounce", "in_back", "out_back", "in_out_back", "in_elastic", "out_elastic",
-                            "in_out_elastic").add_leaves(
-                                BaseMatch.END_NODE,
+                            BaseMatch.Enum("Ease_Type", *Camera_Ease_Type).add_leaves(
                                 BaseMatch.Char("Camera_Type_Argument","default").add_leaves( BaseMatch.END_NODE ),
                                 BaseMatch.Char("Camera_Type_Argument","facing").add_leaves(
                                     *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE ),
@@ -270,8 +264,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                                     )
                                 ),
                                 BaseMatch.Char("Camera_Type_Argument","rot").add_leaves(
-                                    *SpecialMatch.Rotation_Tree( BaseMatch.END_NODE )
-                                )
+                                    *SpecialMatch.Rotation_Tree( *Obrit_Camera_Setting, BaseMatch.END_NODE )
+                                ),
+                                *Obrit_Camera_Setting, 
+                                BaseMatch.END_NODE
                             )
                         )
                     ),
@@ -292,16 +288,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                         )    
                     ),
                     BaseMatch.Char("Type_Argument","rot").add_leaves(
-                        *SpecialMatch.Rotation_Tree( 
-                            *Obrit_Camera_Setting,
-                            BaseMatch.END_NODE
-                        )
+                        *SpecialMatch.Rotation_Tree( *Obrit_Camera_Setting, BaseMatch.END_NODE)
                     ),
                     *Obrit_Camera_Setting,
                     BaseMatch.END_NODE,
                 )
             ),
-            BaseMatch.Char("Argument","target_entity").add_leaves( 
+            BaseMatch.Char("Argument","remove_target").set_handle("camera.remove_target").set_version(1,21,60,"min").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.Char("Argument","target_entity").set_handle("camera.add_target").set_version(1,21,60,"min").add_leaves( 
                 *SpecialMatch.BE_Selector_Tree(
                     BaseMatch.Char("Argument", "target_center_offset").add_leaves(
                         BaseMatch.Float("X_Offset", min_value=-64, max_value=64).add_leaves(
@@ -313,33 +307,27 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     BaseMatch.END_NODE
                 )
             ),
-            BaseMatch.Char("Argument","fov_set").set_version(1,21,100,"min").add_leaves( 
+            BaseMatch.Char("Argument","fov_set").set_handle("camera.fov_set").set_version(1,21,111,"min").add_leaves( 
                 BaseMatch.Float("FovValue").add_leaves( 
                     BaseMatch.Float("Camera_Ease_Time").add_leaves(
-                        BaseMatch.Enum("Ease_Type", "linear", "spring", "in_quad", "out_quad", "in_out_quad", 
-                        "in_cubic", "out_cubic", "in_out_cubic", "in_quart", "out_quart", "in_out_quart", 
-                        "in_quint", "out_quint", "in_out_quint", "in_sine", "out_sine", "in_out_sine", "in_expo",
-                        "out_expo", "in_out_expo", "in_circ", "out_circ", "in_out_circ", "in_bounce", "out_bounce",
-                        "in_out_bounce", "in_back", "out_back", "in_out_back", "in_elastic", "out_elastic",
-                        "in_out_elastic").add_leaves( BaseMatch.END_NODE )
-                    )
+                        BaseMatch.Enum("Ease_Type", *Camera_Ease_Type).add_leaves( BaseMatch.END_NODE ),
+                        BaseMatch.END_NODE
+                    ),
+                    BaseMatch.END_NODE
                 )
             ),
-            BaseMatch.Char("Argument","fov_clear").set_version(1,21,100,"min").add_leaves( 
+            BaseMatch.Char("Argument","fov_clear").set_handle("camera.fov_clear").set_version(1,21,111,"min").add_leaves( 
                 BaseMatch.Float("Camera_Ease_Time").add_leaves(
-                    BaseMatch.Enum("Ease_Type", "linear", "spring", "in_quad", "out_quad", "in_out_quad", 
-                    "in_cubic", "out_cubic", "in_out_cubic", "in_quart", "out_quart", "in_out_quart", 
-                    "in_quint", "out_quint", "in_out_quint", "in_sine", "out_sine", "in_out_sine", "in_expo",
-                    "out_expo", "in_out_expo", "in_circ", "out_circ", "in_out_circ", "in_bounce", "out_bounce",
-                    "in_out_bounce", "in_back", "out_back", "in_out_back", "in_elastic", "out_elastic",
-                    "in_out_elastic").add_leaves( BaseMatch.END_NODE )
-                )
+                    BaseMatch.Enum("Ease_Type", *Camera_Ease_Type).add_leaves( BaseMatch.END_NODE ),
+                    BaseMatch.END_NODE
+                ),
+                BaseMatch.END_NODE
             )
         )
     ),
     # camerashake ✓ V
     BaseMatch.Char("Command","camerashake").add_leaves( 
-        BaseMatch.Char("Argument","add").add_leaves( 
+        BaseMatch.Char("Argument","add").set_handle("camerashake.add").add_leaves( 
             *SpecialMatch.BE_Selector_Tree(
                 BaseMatch.Float("Intensity", min_value=0, max_value=4).add_leaves(
                     BaseMatch.Float("Time").add_leaves(
@@ -351,7 +339,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 BaseMatch.END_NODE
             )
         ),
-        BaseMatch.Char("Argument","stop").add_leaves( 
+        BaseMatch.Char("Argument","stop").set_handle("camerashake.stop").add_leaves( 
             *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         )
@@ -377,14 +365,16 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         ),
         BaseMatch.END_NODE
     ),
-    # say ✓ V
-    BaseMatch.Char("Command","say").add_leaves( 
-        BaseMatch.AnyMsg("Msg").add_leaves( BaseMatch.END_NODE )
-    ),
-    # daylock ✓ V
-    BaseMatch.Char("Command","daylock").add_leaves( 
-        BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ) ,
-        BaseMatch.END_NODE
+    # controlscheme ✓ V
+    BaseMatch.Char("Command","controlscheme").set_version(1,21,90,"min").add_leaves(
+        *SpecialMatch.BE_Selector_Tree(
+            BaseMatch.Char("Argument","clear").set_handle("controlscheme.clear").add_leaves(BaseMatch.END_NODE),
+            BaseMatch.Char("Argument","set").set_handle("controlscheme.set").add_leaves(
+                BaseMatch.Enum("ControlScheme", "camera_relative", "camera_relative_strafe", 
+                "locked_player_relative_strafe", "player_relative", "player_relative_strafe"
+                ).add_leaves(BaseMatch.END_NODE)
+            )
+        )
     ),
     # clone ✓ V
     BaseMatch.Char("Command","clone").add_leaves(
@@ -397,11 +387,11 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     ),
                     BaseMatch.Enum("Mask_Mode","filtered").add_leaves(
                         BaseMatch.Enum("Clone_Mode","force","move","normal").add_leaves(
-                            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
+                            BaseMatch.AnyString("Block_ID(Condition)").set_version(1,19,70,"max").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                                 BaseMatch.Int("Block_Data", min_value=-1, max_value=32767).add_leaves( BaseMatch.END_NODE )
                             ),
-                            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
+                            BaseMatch.AnyString("Block_ID(Condition)").set_version(1,19,70,"min").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                                 BaseMatch.END_NODE
                             )
@@ -432,9 +422,14 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             )
         )
     ),
+    # daylock ✓ V
+    BaseMatch.Char("Command","daylock").add_leaves( 
+        BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ) ,
+        BaseMatch.END_NODE
+    ),
     # dialogue  NPC相关 ✓ V
     BaseMatch.Char("Command","dialogue").add_leaves(
-        BaseMatch.Char("Argument","open").add_leaves(
+        BaseMatch.Char("Argument","open").set_handle("dialogue.open").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
                 *SpecialMatch.BE_Selector_Tree(
                     BaseMatch.AnyString("Scene_Name").add_leaves( BaseMatch.END_NODE ),
@@ -442,7 +437,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 )
             )
         ),
-        BaseMatch.Char("Argument","change").add_leaves(
+        BaseMatch.Char("Argument","change").set_handle("dialogue.change").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
                 BaseMatch.AnyString("Scene_Name").add_leaves(
                     *SpecialMatch.BE_Selector_Tree( BaseMatch.END_NODE ),
@@ -458,11 +453,11 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # effect ✓ V
     BaseMatch.Char("Command","effect").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.Char("Argument","clear").add_leaves( 
+            BaseMatch.Char("Argument","clear").set_handle("effect.clear").add_leaves( 
                 BaseMatch.AnyString("Effect_Type").set_version(1,21,40,"min").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
             ),
-            BaseMatch.AnyString("Effect_Type").add_leaves(
+            BaseMatch.AnyString("Effect_Type").set_handle("effect.give").add_leaves(
                 BaseMatch.Int("Seconds", min_value=0, max_value=1000000).add_leaves(
                     BaseMatch.Int("Amplifier", min_value=0, max_value=255).add_leaves(
                         BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
@@ -519,7 +514,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                         BaseMatch.END_NODE
                     ),
                     BaseMatch.Char("Fill_Mode","replace").add_leaves(
-                        BaseMatch.AnyString("Block_ID").add_leaves(
+                        BaseMatch.AnyString("Block_ID(Condition)").add_leaves(
                             SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                             BaseMatch.END_NODE
                         ),
@@ -531,7 +526,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").set_version(1,19,80,"max").add_leaves(
                     SpecialMatch.BE_BlockState_Tree(
                         BaseMatch.Char("Fill_Mode","replace").add_leaves(
-                            BaseMatch.AnyString("Block_ID").add_leaves(
+                            BaseMatch.AnyString("Block_ID(Condition)").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                                 BaseMatch.END_NODE
                             ),
@@ -545,7 +540,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
                     BaseMatch.Int("Block_Data").add_leaves(
                         BaseMatch.Char("Fill_Mode","replace").add_leaves(
-                            BaseMatch.AnyString("Block_ID").add_leaves(
+                            BaseMatch.AnyString("Block_ID(Condition)").add_leaves(
                                 BaseMatch.Int("Block_Data", min_value=-1, max_value=32767).add_leaves(BaseMatch.END_NODE),
                                 BaseMatch.END_NODE
                             ),
@@ -556,7 +551,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     ),
                     SpecialMatch.BE_BlockState_Tree(
                         BaseMatch.Char("Fill_Mode","replace").add_leaves(
-                            BaseMatch.AnyString("Block_ID").add_leaves(
+                            BaseMatch.AnyString("Block_ID(Condition)").add_leaves(
                                 SpecialMatch.BE_BlockState_Tree(BaseMatch.END_NODE),
                                 BaseMatch.END_NODE
                             ),
@@ -568,12 +563,6 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     BaseMatch.END_NODE
                 )
             )
-        )
-    ),
-    # tellraw ✓ V
-    BaseMatch.Char("Command","tellraw").add_leaves(
-        *SpecialMatch.BE_Selector_Tree(
-            JsonPaser.Json_Tree( BaseMatch.END_NODE )
         )
     ),
     # fog ✓ V
@@ -646,8 +635,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 ),
                 BaseMatch.Enum("Permission","dismount","jump","lateral_movement","mount","move_backward",
                 "move_forward","move_left","move_right","sneak").set_version(1,21,50,"min").add_leaves(
-                    BaseMatch.Enum("State","enabled","disabled").add_leaves( BaseMatch.END_NODE ),
-                    BaseMatch.END_NODE
+                    BaseMatch.Enum("State","enabled","disabled").add_leaves( BaseMatch.END_NODE )
                 )
             )
         )
@@ -678,10 +666,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     BaseMatch.Char("Command","list").add_leaves( BaseMatch.END_NODE ),
     # locate ✓ V
     BaseMatch.Char("Command","locate").set_version(1,19,10,"min").add_leaves(
-        BaseMatch.Char("Argument","biome").add_leaves(
+        BaseMatch.Char("Argument","biome").set_handle("locate.biome").add_leaves(
             BaseMatch.AnyString("Biome_Type").add_leaves( BaseMatch.END_NODE )
         ),
-        BaseMatch.Char("Argument","structure").add_leaves(
+        BaseMatch.Char("Argument","structure").set_handle("locate.structure").add_leaves(
             BaseMatch.AnyString("Structure_Type").add_leaves(
                 BaseMatch.Enum("Value","true","false").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
@@ -689,39 +677,39 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         )
     ),
     BaseMatch.Char("Command","locate").set_version(1,19,10,"max").add_leaves(
-        BaseMatch.AnyString("Structure_Type").add_leaves( BaseMatch.END_NODE )
+        BaseMatch.AnyString("Structure_Type").set_handle("locate.structure").add_leaves( BaseMatch.END_NODE )
     ),
     # loot ✓ V
     BaseMatch.Char("Command","loot").add_leaves(
-        BaseMatch.Char("Argument","give").add_leaves(
+        BaseMatch.Char("Loot_Mode","give").add_leaves(
             *SpecialMatch.BE_Selector_Tree(*Command_Loot)
         ),
-        BaseMatch.Char("Argument","insert").add_leaves(
+        BaseMatch.Char("Loot_Mode","insert").add_leaves(
             *SpecialMatch.Pos_Tree(*Command_Loot)
         ),
-        BaseMatch.Char("Argument","spawn").add_leaves(
+        BaseMatch.Char("Loot_Mode","spawn").add_leaves(
             *SpecialMatch.Pos_Tree(*Command_Loot)
         ),
-        BaseMatch.Char("Argument","replace").add_leaves(
-            BaseMatch.Char("Argument","block").set_version(1,19,40,"min").add_leaves(
+        BaseMatch.Char("Loot_Mode","replace").add_leaves(
+            BaseMatch.Char("Loot_To_Target","block").set_version(1,19,40,"min").add_leaves(
                 *SpecialMatch.Pos_Tree(
                     BaseMatch.Char("Slot_Type","slot.container").add_leaves(
-                        BaseMatch.Int("Slot_ID").add_leaves(
-                            BaseMatch.Int("Count").add_leaves(*Command_Loot),
+                        BaseMatch.Int("Slot_Idx", min_value=0).add_leaves(
+                            BaseMatch.Int("Count", min_value=1).add_leaves(*Command_Loot),
                             *Command_Loot
                         )
                     )
                 )
             ),
-            BaseMatch.Char("Argument","entity").set_version(1,19,00,"min").add_leaves(
+            BaseMatch.Char("Loot_To_Target","entity").set_version(1,19,00,"min").add_leaves(
                 *SpecialMatch.BE_Selector_Tree(
                     BaseMatch.Enum("Slot_Type",
                     "slot.weapon.mainhand","slot.weapon.offhand",
                     "slot.armor.head","slot.armor.chest","slot.armor.legs","slot.armor.feet",
                     "slot.enderchest","slot.hotbar","slot.inventory","slot.saddle","slot.armor",
                     "slot.armor","slot.chest","slot.equippable").add_leaves(
-                        BaseMatch.Int("Slot_ID").add_leaves(
-                            BaseMatch.Int("Count").add_leaves(*Command_Loot),
+                        BaseMatch.Int("Slot_Idx", min_value=0).add_leaves(
+                            BaseMatch.Int("Count", min_value=1).add_leaves(*Command_Loot),
                             *Command_Loot
                         )
                     )
@@ -731,7 +719,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     ),
     # me ✓ V
     BaseMatch.Char("Command","me").add_leaves(
-        BaseMatch.AnyMsg("Msg").add_leaves( BaseMatch.END_NODE )
+        BaseMatch.AnyMsg("SelectorMsg").add_leaves( BaseMatch.END_NODE )
     ),
     # mobevent 生物事件 ✓ V
     BaseMatch.Char("Command","mobevent").add_leaves(
@@ -744,13 +732,20 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # tell ✓ V
     BaseMatch.Enum("Command","tell","msg","w").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.AnyMsg("Msg").add_leaves( BaseMatch.END_NODE )
+            BaseMatch.AnyMsg("SelectorMsg").add_leaves( BaseMatch.END_NODE )
+        )
+    ),
+        # tellraw ✓ V
+    # tell ✓ V
+    BaseMatch.Char("Command","tellraw").add_leaves(
+        *SpecialMatch.BE_Selector_Tree(
+            JsonPaser.Json_Tree( BaseMatch.END_NODE )
         )
     ),
     # music ✓ V
     BaseMatch.Char("Command","music").add_leaves(
         BaseMatch.Enum("Argument","play","queue").add_leaves(
-            BaseMatch.AnyString("Track_Name").add_leaves(
+            BaseMatch.AnyString("Music_Name").add_leaves(
                 BaseMatch.Float("Volume", min_value=0, max_value=1).add_leaves(
                     BaseMatch.Float("Fade_Seconds", min_value=0, max_value=10).add_leaves(
                         BaseMatch.Enum("Repeat_Mode","play_once","loop").add_leaves( BaseMatch.END_NODE ),
@@ -765,7 +760,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             BaseMatch.Float("Fade_Seconds", min_value=0, max_value=10).add_leaves( BaseMatch.END_NODE ),
             BaseMatch.END_NODE
         ),
-        BaseMatch.Char("Command","volume").add_leaves(
+        BaseMatch.Char("Argument","volume").add_leaves(
             BaseMatch.Float("Volume", min_value=0, max_value=1).add_leaves( BaseMatch.END_NODE )
         )
     ),
@@ -779,7 +774,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # playanimation ✓ V
     BaseMatch.Char("Command","playanimation").add_leaves(
         *SpecialMatch.BE_Selector_Tree(
-            BaseMatch.AnyString("animation_Type").add_leaves(
+            BaseMatch.AnyString("Animation_Type").add_leaves(
                 BaseMatch.AnyString("Next_State_Type").add_leaves(
                     BaseMatch.Float("Blend_Out_Time").add_leaves(
                         *SpecialMatch.String_Tree("Stop_Expression_Type",
@@ -801,7 +796,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 *SpecialMatch.Pos_Tree(
                     BaseMatch.Float("Volume", min_value=0).add_leaves(
                         BaseMatch.Float("Pitch", min_value=0, max_value=2).add_leaves(
-                            BaseMatch.Float("Minimum_Volume", min_value=0, max_value=1).add_leaves( BaseMatch.END_NODE ),
+                            BaseMatch.Float("Minimum_Volume").add_leaves( BaseMatch.END_NODE ),
                             BaseMatch.END_NODE
                         ),
                         BaseMatch.END_NODE
@@ -912,7 +907,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 )
             ),
             BaseMatch.Enum("Argument","evict_riders","stop_riding").add_leaves( BaseMatch.END_NODE ),
-            BaseMatch.Char("Command","summon_rider").add_leaves(
+            BaseMatch.Char("Argument","summon_rider").add_leaves(
                 BaseMatch.AnyString("Entity_Type").add_leaves(
                     BaseMatch.AnyString("Event_Type").add_leaves(
                         BaseMatch.AnyString("Name_Type").add_leaves( BaseMatch.END_NODE ),
@@ -921,7 +916,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                     BaseMatch.END_NODE
                 )
             ),
-            BaseMatch.Char("Command","summon_ride").add_leaves(
+            BaseMatch.Char("Argument","summon_ride").add_leaves(
                 BaseMatch.AnyString("Entity_Type").add_leaves(
                     BaseMatch.Enum("Ride_Rules","no_ride_change","reassign_rides","skip_riders").add_leaves(
                         BaseMatch.AnyString("Event_Type").add_leaves(
@@ -934,6 +929,10 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
                 )
             )
         )
+    ),
+    # say ✓ V
+    BaseMatch.Char("Command","say").add_leaves( 
+        BaseMatch.AnyMsg("SelectorMsg").add_leaves( BaseMatch.END_NODE )
     ),
     # schedule ✓ V
     BaseMatch.Char("Command","schedule").add_leaves(
@@ -1253,7 +1252,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
     # testforblock ✓ V
     BaseMatch.Char("Command","testforblock").add_leaves(
         *SpecialMatch.Pos_Tree(
-            BaseMatch.AnyString("Block_ID").add_leaves(
+            BaseMatch.AnyString("Block_ID(Condition)").add_leaves(
                 SpecialMatch.BE_BlockState_Tree( BaseMatch.END_NODE ),
                 BaseMatch.Int("Block_Data", min_value=-1, max_value=32767).set_version(1,19,70,"max").add_leaves( BaseMatch.END_NODE ),
                 BaseMatch.END_NODE
@@ -1322,12 +1321,37 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         BaseMatch.Char("Time_Model","add").add_leaves(
             BaseMatch.Int("Amount").add_leaves( BaseMatch.END_NODE )
         ),
+        BaseMatch.Char("Time_Model","pause", "resume").set_version(1,26,60,"min").add_leaves( BaseMatch.END_NODE ),
         BaseMatch.Char("Time_Model","query").add_leaves(
-            BaseMatch.Enum("Time_Type","daytime","gametime","day").add_leaves( BaseMatch.END_NODE )
+            BaseMatch.Enum("Time_Type","day","daytime","gametime").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.Enum("Time_Type","time").set_version(1,26,60,"min").add_leaves( BaseMatch.END_NODE )
         ),
         BaseMatch.Char("Time_Model","set").add_leaves(
-            BaseMatch.Enum("Time","day","noon","sunrise","sunset","night","midnight").add_leaves( BaseMatch.END_NODE ),
-            BaseMatch.Int("Time_Int").add_leaves( BaseMatch.END_NODE )
+            BaseMatch.Int("Time_Int").add_leaves( BaseMatch.END_NODE ),
+            BaseMatch.Enum("Time_Marker","day","noon","sunrise","sunset","night","midnight").add_leaves(
+                BaseMatch.Enum("Time_Marker_When","next","previous","stay").set_version(1,26,60,"min")
+                    .add_leaves(BaseMatch.END_NODE),
+                BaseMatch.END_NODE
+            )
+        ),
+        BaseMatch.Char("Time_Model","of").set_version(1,26,60,"min").add_leaves(
+            BaseMatch.AnyString("Clock_Name").add_leaves(
+                BaseMatch.Char("SubTime_Model","add").add_leaves(
+                    BaseMatch.Int("Amount").add_leaves( BaseMatch.END_NODE )
+                ),
+                BaseMatch.Char("SubTime_Model","pause", "resume").set_version(1,26,60,"min").add_leaves( BaseMatch.END_NODE ),
+                BaseMatch.Char("Time_Model","query").add_leaves(
+                    BaseMatch.Enum("Time_Type","time").add_leaves( BaseMatch.END_NODE )
+                ),
+                BaseMatch.Char("Time_Model","set").add_leaves(
+                    BaseMatch.Int("Time_Int").add_leaves( BaseMatch.END_NODE ),
+                    BaseMatch.Enum("Time_Marker","day","noon","sunrise","sunset","night","midnight").add_leaves(
+                        BaseMatch.Enum("Time_Marker_When","next","previous","stay").set_version(1,26,60,"min")
+                            .add_leaves(BaseMatch.END_NODE),
+                        BaseMatch.END_NODE
+                    )
+                ),
+            )
         )
     ),
     # title titleraw ✓ V
@@ -1335,7 +1359,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
         *SpecialMatch.BE_Selector_Tree(
             *Command_Title,
             BaseMatch.Enum("Model","title","subtitle","actionbar").add_leaves(
-                BaseMatch.AnyMsg("Msg").add_leaves( BaseMatch.END_NODE )
+                BaseMatch.AnyMsg("SelectorMsg").add_leaves( BaseMatch.END_NODE )
             )
         )
     ),
@@ -1396,7 +1420,7 @@ Command_Tree = SpecialMatch.Command_Root().add_leaves( BaseMatch.KeyWord("Comman
             ),
             BaseMatch.END_NODE
         ),
-        BaseMatch.Int("Amount","L","l").add_leaves(
+        BaseMatch.Int("AmountLevel","L","l").add_leaves(
             *SpecialMatch.BE_Selector_Tree(
                 BaseMatch.END_NODE
             ),
@@ -1416,7 +1440,7 @@ Command_Tree.tree_leaves[-2].add_leaves(
         *SpecialMatch.Pos_Tree(
             BaseMatch.Char("Block_Test","detect").add_leaves(
                 *SpecialMatch.Pos_Tree(
-                    BaseMatch.AnyString("Block_ID").add_leaves(
+                    BaseMatch.AnyString("Block_ID(Condition)").add_leaves(
                         BaseMatch.Int("Block_Data").add_leaves( *Command_Tree.tree_leaves )
                     )
                 )
@@ -1499,12 +1523,12 @@ Command_Execute[7].add_leaves(   # rotated
 Command_Execute[8].add_leaves(   # if unless
     BaseMatch.Char("Type","block").add_leaves(
         *SpecialMatch.Pos_Tree(
-            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"min").add_leaves(
+            BaseMatch.AnyString("Block_ID(Condition)").set_version(1,19,70,"min").add_leaves(
                 SpecialMatch.BE_BlockState_Tree(BaseMatch.END_NODE, *Command_Execute),
                 *Command_Execute,
                 BaseMatch.END_NODE
             ),
-            BaseMatch.AnyString("Block_ID").set_version(1,19,70,"max").add_leaves(
+            BaseMatch.AnyString("Block_ID(Condition)").set_version(1,19,70,"max").add_leaves(
                 BaseMatch.Int("Block_Data").add_leaves(BaseMatch.END_NODE, *Command_Execute),
                 SpecialMatch.BE_BlockState_Tree(*Command_Execute),
                 *Command_Execute,

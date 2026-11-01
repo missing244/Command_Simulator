@@ -24,7 +24,7 @@ def GetWorldEdtion(path:str) :
 def GetWorldEncryptKey(path:str) -> bytes :
     """
     获取文件路径对应的存档加密密钥
-    * 返回 int : 此存档的数字密钥
+    * 返回 bytes : 此存档的数字密钥
     * 返回 None : 此存档并不是加密存档
     """
     db_file_path = os.path.join(path, "db", "CURRENT")
@@ -36,7 +36,7 @@ def GetWorldEncryptKey(path:str) -> bytes :
     with open(db_file_path, "rb") as CURRENT :
         if CURRENT.read(4) != Encrypt_Header : return None
         KeyBytes2 = CURRENT.read()
-        SECRET_KEY = C_API.cycle_xor(KeyBytes1, KeyBytes2)
+        SECRET_KEY = C_API.cycle_xor(KeyBytes1, KeyBytes2)[0:8]
         return SECRET_KEY
 
 
@@ -110,7 +110,7 @@ class World :
             raise RuntimeError("不允许修改 MCStructure 属性")
         else : 
             if name == "encrypt_key" and value is not None:
-                if value.__len__() != 16 : raise ValueError("encrypt_key 应为16字节长度")
+                if value.__len__() != 8 : raise ValueError("encrypt_key 应为16字节长度")
                 self.__runtime_cache["encrypt_key"] = base64.b64encode(value).decode("utf-8")
             super().__setattr__(name, value)
 

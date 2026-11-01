@@ -54,7 +54,6 @@ class BiList :
         self.__backward:Dict[Any, int] = {i:j for i,j in zip( reversed(self.__forward), 
             reversed( range(len(self.__forward)) ) )}
 
-
     def __str__(self) :
         return str(self.__forward)
 
@@ -80,11 +79,17 @@ class BiList :
 
     def __delitem__(self, key:Union[int, Any]):
         if key.__class__ is int :
+            if key >= len(self.__forward): raise IndexError(f'Key {key} out of index.')
             del self.__backward[self.__forward[key]]
             del self.__forward[key]
+            for i in range(key, len(self.__forward)):
+                self.__backward[self.__forward[i]] = i
         elif key in self.__backward :
+            idx = self.__backward[key]
             del self.__forward[self.__backward[key]]
             del self.__backward[key]
+            for i in range(idx, len(self.__forward)):
+                self.__backward[self.__forward[i]] = i
         else: raise KeyError(f'Key or value {key} not found.')
     
 
@@ -93,6 +98,7 @@ class BiList :
 
     def __iadd__(self, iter_obj: Iterable) :
         self.extend(iter_obj)
+        return self
 
     def __mul__(self, value: int) :
         return self.__class__(self.__forward * value)
@@ -142,12 +148,12 @@ class BiList :
         for i,j in zip(self.__forward[index:], itertools.count(index)) : 
             self.__backward[i] = j
         return a
-        
+
     def remove(self, value:Any) :
         if value not in self.__backward : raise ValueError(f"object {value} not in list.")
         a = self.__backward[value]
         self.pop(a)
-    
+
     def index(self, value:Any, start:int=0, stop:int=2**63-1) :
         return self.__forward.index(value, start, stop)
 

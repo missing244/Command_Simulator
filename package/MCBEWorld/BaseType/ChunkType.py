@@ -87,6 +87,18 @@ class SubChunkType :
                 BlockPallate[j-1] = BlockPermutationType(BlockID, BlockState)
             ChunkObject.BlockPalette.clear()
             ChunkObject.BlockPalette.extend(BlockPallate)
+        elif chunk_version == 1 :
+            block_use_bit = bytes_io.read(1)[0] >> 1 # 字节使用的bit位数
+            if block_use_bit < 1 : raise RuntimeError("方块比特数据错误")
+            block_count_save_in_4bytes = 32 // block_use_bit # 4个字节能存储多少索引
+            read_items = math.ceil(4096 / block_count_save_in_4bytes) # 一共需要多少个int型
+            block_index_bytes = bytes_io.read(read_items*4)
+            if len(block_index_bytes) != read_items*4 : raise RuntimeError("区块数据不完整")
+            chunk_parser(block_index_bytes, ChunkObject.BlockIndex, block_use_bit) #解析方块索引
+            block_count = int.from_bytes(bytes_io.read(4), "little")
+            ChunkObject.BlockPalette.clear()
+            for j in range(block_count) : ChunkObject.BlockPalette.append( 
+                BlockPermutationType.from_nbt( nbt.read_from_nbt_file(bytes_io, byteorder="little").get_tag() ) )
         elif chunk_version >= 8 :
             if chunk_version > 8 : sub_layers = bytes_io.read(2)[0]
             else : sub_layers = bytes_io.read(1)[0]
@@ -105,6 +117,7 @@ class SubChunkType :
                 BlockList.clear()
                 for j in range(block_count) : BlockList.append( 
                     BlockPermutationType.from_nbt( nbt.read_from_nbt_file(bytes_io, byteorder="little").get_tag() ) )
+        else : raise RuntimeError("未知的子区块版本：%s" % chunk_version)
 
         return ChunkObject
 

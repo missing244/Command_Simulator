@@ -3,10 +3,10 @@ func Json_Tree 用于给外部命令树注册命令分支使用\n
 func json_tokenizer 用于解析json\n
 """
 
-import re
-from typing import Dict
+import re, ast
+from typing import Dict, List as ListObj
 
-from . import BaseMatch,SpecialMatch
+from . import BaseMatch, SpecialMatch
 
 class Not_Parser_Object(Exception) : pass
 class Json_Error(BaseMatch.Command_Match_Exception) : pass
@@ -15,6 +15,7 @@ class Json_Start(BaseMatch.KeyWord) : pass
 class List_Start(BaseMatch.KeyWord) : pass
 
 class Json_String(BaseMatch.Match_Base) :
+
     def __init__(self, token_type: str, auto_complete:Dict[str,str]=None) -> None :
         super().__init__(token_type)
         self.re_match = re.compile(r'"([^"\\]|\\u[a-fA-F0-9]{4}|\\[^u])*"')
@@ -29,7 +30,8 @@ class Json_String(BaseMatch.Match_Base) :
         _match = self.re_match.match(s,s_pointer)
         if not _match : raise SpecialMatch.Illegal_Match(">>%s<< 并不是有效的引号字符串" % s[s_pointer:len_s], pos=(s_pointer,len_s), word=s[s_pointer:len_s])
 
-        return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
+        str_val = _match.group()
+        return {"type":self.token_type, "token":str_val, "start":_match.start(), "end":_match.end()}
 
     def _auto_complete(self) -> Dict[str,str] : 
         if self.auto_complete is None : return {'"string"':""}
@@ -92,10 +94,10 @@ class Json_Parser :
     no_match_error1 = re.compile("[^\\{\\},:\\[\\]\\u000a\\u0020\\u000d\\u0009]{1,}")
     no_match_error2 = re.compile(".{0,1}")
 
-    def __init__(self) -> None:
+    def __init__(self, command_str:str, read_pointers:int=0) -> None:
+        self.command_str = command_str
+        self.read_pointers = read_pointers
         self.recursion_count = 0
-        self.command_str = ""
-        self.read_pointers = 0
 
     def _parser(self, current_leaves:BaseMatch.Match_Base, Token_list:list) :
         self.recursion_count += 1
@@ -114,6 +116,7 @@ class Json_Parser :
                 elif node.__class__ is List_Start and List is not node : 
                     self._parser(self.parser_list_root, Token_list)
                 else : Token_list.append(a)
+
                 # 防止退栈时阅读指针倒退，因为匹配对象a还是之前匹配过的字符, 例子：{ "a" : { } }
                 if a["end"] > self.read_pointers : self.read_pointers = a["end"]
                 break
@@ -127,18 +130,57 @@ class Json_Parser :
 
         self.recursion_count -= 1
 
-    def parser(self, Token_list:list, command_str:str, pointer:int) :
-        self.recursion_count = 0
-        self.command_str = command_str
-        self.read_pointers = pointer
+    def parser(self, Token_list:list) :
         self._parser(self.parser_json_root, Token_list)
         Token_list[-1]["type"] = "All_Json_End"
+
+
+    def _parser_v2(self, current_leaves:BaseMatch.Match_Base, token_list:list, errors:ListObj[Exception], next_node:list) :
+        self.recursion_count += 1
+
+        while current_leaves.tree_leaves :
+            is_not_successs = True
+
+            for node in current_leaves.tree_leaves :
+                if self.recursion_count > 512 : break
+                try : token = node._match_string(self.command_str, self.read_pointers)
+                except Exception as e : errors.append(e) ; continue
+
+                errors.clear()
+                current_leaves = node
+                is_not_successs = False
+                if node.__class__ is Json_Start and Json is not node :
+                    self._parser_v2(self.parser_json_root, token_list, errors, next_node)
+                elif node.__class__ is List_Start and List is not node : 
+                    self._parser_v2(self.parser_list_root, token_list, errors, next_node)
+                else : token_list.append(token)
+
+                # 防止退栈时阅读指针倒退，因为匹配对象a还是之前匹配过的字符, 例子：{ "a" : { } }
+                if token["end"] > self.read_pointers : self.read_pointers = token["end"]
+                break
+
+            if is_not_successs : 
+                next_node.extend(current_leaves.tree_leaves)
+                raise BaseMatch.Not_Match()
+            
+            self.read_pointers = self.white_space_match.match(self.command_str, self.read_pointers).end()
+
+        self.recursion_count -= 1
+
+    def parser_v2(self, token_list:list, errors:ListObj[Exception], next_node:list) :
+        self._parser_v2(self.parser_json_root, token_list, errors, next_node)
+        token_list[-1]["type"] = "All_Json_End"
 
 
 
 
 
 def json_tokenizer(token_list:list, s:str, pos:int) :
-    JSON_PARSER = Json_Parser()
-    JSON_PARSER.parser(token_list, s, pos)
+    JSON_PARSER = Json_Parser(s, pos)
+    JSON_PARSER.parser(token_list)
+
+def json_tokenizer_v2(s:str, pos:int, token_list:list, errors:ListObj[Exception], next_node:list) :
+    JSON_PARSER = Json_Parser(s, pos)
+    JSON_PARSER.parser_v2(token_list, errors, next_node)
+
 

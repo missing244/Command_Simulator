@@ -110,14 +110,11 @@ def unpack_data(data: bytes, data_type: TAG, mode=False) -> Union[int, float, st
         except:
             raise ValueError("格式不正确")
     if data_type in [TAG.STRING]:
-        try:
-            return data.decode('utf-8')
+        try: return data.decode('utf-8')
         except:
-            try:
-                return data.decode(encoding='utf-8', errors='ignore')
-            except:
-                raise ValueError("编码错误")
-    
+            try: return data.decode(encoding='utf-8', errors='ignore')
+            except: raise ValueError("编码错误")
+
     raise TypeError("期望类型为 %s，但传入了 %s" % (TAG, data_type.__class__))
 
 def bytes_to_tag_type(data: bytes) -> TAG:

@@ -17,7 +17,9 @@ def GetPlatform() :
     return SoftwarePlatform
 
 def init() :
-    import os, platform, sys, hashlib, re, zipfile, subprocess
+    import os, platform, sys, hashlib, re, zipfile, subprocess, struct
+    if struct.calcsize("P") < 8 : raise EnvironmentError("使用的Python或操作系统不是64位程序")
+    
     LinkCommand = "aarch64-linux-android-gcc -shared build/temp.linux-aarch64-3.9/C_module/array.o " \
         "build/temp.linux-aarch64-3.9/fast_api.o -L%s -lpython%s.%s -o Linux_aarch64.pyd"
     py_dll_name = "MCBEWorld_C_API.%s"

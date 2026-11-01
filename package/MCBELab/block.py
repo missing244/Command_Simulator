@@ -172,21 +172,18 @@ def RunawayDataValueTransforBlock(id:str, dataValue:int) :
 
 def UpgradeBlock(id:str, states:Dict[str, Union[bool, int, str]]) -> Tuple[str, Dict[str, Union[bool, int, str]]] :
     if id in OldBlockData["block_id"] : id = OldBlockData["block_id"][id]
-    states = dict(states.items())
+    states = states.copy()
     
-    UpgradeID, SameKey = False, []
+    SameKey = []
     for new_id, old_data in OldBlockData["block"].items() :
         if SameKey : SameKey.clear()
 
         if old_data["block_id"] != id : continue
-        if not old_data["block_data"] : UpgradeID = True
         for statekey, stateval in old_data["block_data"].items() :
-            UpgradeID = False
-            if statekey not in states : continue
-            if stateval != states[statekey] : continue
+            if statekey not in states : break
+            if stateval != states[statekey] : break
             SameKey.append(statekey)
-            UpgradeID = True
-        if not UpgradeID : continue
+        if len(SameKey) != len(old_data["block_data"]) : continue
         id = new_id
         break
     

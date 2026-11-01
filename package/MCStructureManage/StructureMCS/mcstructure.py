@@ -1,4 +1,4 @@
-import os,array,ctypes
+import os,array,ctypes,zlib
 from .. import nbt
 from ..__private import TypeCheckList
 from typing import Union,List,TypedDict,Dict,Literal
@@ -97,7 +97,7 @@ class Mcstructure :
         StructureNBT['structure'] = nbt.TAG_Compound()
         StructureBlockIndices = StructureNBT['structure']['block_indices'] = nbt.TAG_List(type=nbt.TAG_List)
         StructureBlockIndices.append( nbt.TAG_List(self.block_index, nbt.TAG_Int) )
-        StructureBlockIndices.append( nbt.TAG_List(self.contain_index, nbt.TAG_List) )
+        StructureBlockIndices.append( nbt.TAG_List(self.contain_index, nbt.TAG_Int) )
 
         StructureEntity = StructureNBT['structure']['entities'] = nbt.TAG_List(type=nbt.TAG_Compound)
         StructureNBT['structure']['palette'] = nbt.TAG_Compound()
@@ -116,5 +116,62 @@ class Mcstructure :
         else : _file = buffer
         nbt.write_to_nbt_file(_file, StructureNBT, byteorder="little")
 
+class Mcstructure_V2(Mcstructure) :
 
+    @classmethod
+    def from_buffer(cls, buffer:Union[str, FileIO, BytesIO, nbt.TAG_Compound]) :
+        if isinstance(buffer, nbt.TAG_Compound) : NBT = buffer
+        else : NBT = nbt.read_from_nbt_file(buffer, byteorder="little")
 
+        StructureObject = cls()
+        StructureObject.size = NBT["size"].get_value()
+        StructureObject.origin = NBT["structure_world_origin"].get_value()
+        if NBT.get("compression", 0) == 0 : unzip_data = NBT["structure"].get_value().tobytes()
+        else : unzip_data = zlib.decompress(memoryview(NBT["structure"].get_value()))
+        SubNBT = nbt.read_from_nbt_file(unzip_data, byteorder="little")
+        StructureObject.block_index = SubNBT['block_indices'][0].get_value()
+        if len(SubNBT['block_indices']) > 1 : StructureObject.contain_index = SubNBT['block_indices'][1].get_value()
+        else : StructureObject.contain_index = array.array("b", b"\x00") * (
+            StructureObject.size[0] * StructureObject.size[1] * StructureObject.size[2])
+        StructureObject.block_palette.extend(SubNBT['palette']['default']['block_palette'])
+        StructureObject.entity_nbt.extend(SubNBT['entities'])
+        for index_str, block_nbt in SubNBT['palette']['default']['block_position_data'].items() :
+            StructureObject.block_nbt[int(index_str)] = block_nbt
+
+        return StructureObject
+
+    def save_as(self, buffer:Union[str, FileIO, BytesIO]) :
+        #self.error_check()
+
+        StructureNBT = nbt.TAG_Compound()
+        StructureNBT['format_version'] = nbt.TAG_Int(2)
+        StructureNBT['compression'] = nbt.TAG_Int(1)
+        StructureNBT['size'] = nbt.TAG_List(self.size, type=nbt.TAG_Int)
+        StructureNBT['structure_world_origin'] = nbt.TAG_List(self.origin, type=nbt.TAG_Int)
+
+        StructureSaves = nbt.TAG_Compound()
+        StructureBlockIndices = StructureSaves['block_indices'] = nbt.TAG_List(type=nbt.TAG_IntArray)
+        StructureBlockIndices.append( nbt.TAG_IntArray(self.block_index) )
+        StructureBlockIndices.append( nbt.TAG_IntArray(self.contain_index) )
+
+        StructureEntity = StructureSaves['entities'] = nbt.TAG_List(type=nbt.TAG_Compound)
+        StructureSaves['palette'] = nbt.TAG_Compound()
+        StructureSaves['palette']['default'] = nbt.TAG_Compound()
+        StructureBlockPalette = StructureSaves['palette']['default']['block_palette'] = nbt.TAG_List(type=nbt.TAG_Compound)
+        StructureBlockNBT = StructureSaves['palette']['default']['block_position_data'] = nbt.TAG_Compound()
+
+        if self.entity_nbt : StructureEntity.extend(self.entity_nbt)
+        if self.block_palette : StructureBlockPalette.extend(self.block_palette)
+        for index, block_nbt in self.block_nbt.items() : StructureBlockNBT[str(index)] = block_nbt
+
+        IO1 = BytesIO()
+        nbt.write_to_nbt_file(IO1, StructureSaves)
+        array1 = array.array("b", zlib.compress(IO1.getvalue()))
+        StructureNBT['structure'] = nbt.TAG_ByteArray(array1)
+
+        if isinstance(buffer, str) : 
+            base_path = os.path.realpath(os.path.join(buffer, os.pardir))
+            os.makedirs(base_path, exist_ok=True)
+            _file = open(buffer, "wb")
+        else : _file = buffer
+        nbt.write_to_nbt_file(_file, StructureNBT, byteorder="little")

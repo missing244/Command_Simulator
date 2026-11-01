@@ -6,9 +6,11 @@ from . import command_tree as CommandTree
 from . import parser_system as ParserSystem
 
 Parser = ParserSystem.Command_Parser(CommandTree.Command_Tree)
+ParserResult = ParserSystem.ParserResult
 
 def Start_Tokenizer(command:str, version:tuple) :
     return Parser.parser(command, version)
 
-
+def Start_Tokenizer_V2(command:str, version:tuple) :
+    return Parser.parser_v2(command, version)
 

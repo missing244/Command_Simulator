@@ -7,7 +7,7 @@
 
 
 import re,abc
-from typing import Dict,Union,List,Tuple,Literal
+from typing import Dict,Union,List,TypedDict,Literal
 
 __all__ = ["Match_Base","Enum","Char","KeyWord","Int","Float"]
 
@@ -21,6 +21,11 @@ class Not_Match(Command_Match_Exception) : pass
 class SyntaxError(Command_Match_Exception) : pass
 class To_Many_Args(Command_Match_Exception) : pass
 
+class Token(TypedDict) :
+    type: str
+    token: Union[str, int, float]
+    start: int 
+    end: int
 
 
 def string_to_rematch(s:str) -> str :
@@ -52,13 +57,14 @@ class Match_Base(metaclass=abc.ABCMeta) :
     _auto_complete : 提供自动补全的字符串列表
     '''
 
-    def __init__(self,token_type:str) -> None :
+    def __init__(self, token_type:str) -> None :
         if not isinstance(token_type,str) : raise TypeError("token_type 提供字符串以外的参数")
-        token_type1 = token_type.split(":",1)
+        token_type1 = token_type.split(":", 1)
+        self.handle_tag = None
         self.token_type = token_type1[0]
         self.tree_leaves:List[Match_Base] = []
-        self.maximum_version:Union[None,List[int]] = None
-        self.minimum_version:Union[None,List[int]] = None
+        self.maximum_version:Union[None, List[int]] = None
+        self.minimum_version:Union[None, List[int]] = None
         if len(token_type1) > 1 : self.argument_dimension = token_type1[1].split(";")
         else : self.argument_dimension = []
 
@@ -73,7 +79,7 @@ class Match_Base(metaclass=abc.ABCMeta) :
         return self
 
     @abc.abstractmethod
-    def _match_string(self,s:str,s_pointer:int) -> re.Match : pass
+    def _match_string(self, s:str, s_pointer:int) -> Token : pass
     
     @abc.abstractmethod
     def _auto_complete(self) -> Dict[str,str] : pass
@@ -81,6 +87,10 @@ class Match_Base(metaclass=abc.ABCMeta) :
     def set_version(self, v1:int, v2:int, v3:int, _type:Literal["min","max"]) :
         if _type == "min" : self.minimum_version = (v1,v2,v3)
         elif _type == "max" : self.maximum_version = (v1,v2,v3)
+        return self
+
+    def set_handle(self, handle:str) :
+        self.handle_tag = handle
         return self
 
 class End_Node(Match_Base) :
@@ -129,8 +139,8 @@ class Enum(Match_Base) :
 
     def __init__(self, token_type:str, *s:str, terminator:str=TERMINATOR_RE) -> None :
         for i in s :
-            if not isinstance(i,str) : raise TypeError("s 提供字符串以外的参数")
-        if not isinstance(terminator,str) : raise TypeError("terminator 提供字符串以外的参数")
+            if not isinstance(i, str) : raise TypeError("s 提供字符串以外的参数")
+        if not isinstance(terminator, str) : raise TypeError("terminator 提供字符串以外的参数")
         super().__init__(token_type)
         self.base_input = s
         self.re_match = re.compile("[^%s]{0,}" % terminator)
@@ -212,9 +222,11 @@ class KeyWord(Match_Base) :
 
     def _match_string(self,s:str,s_pointer:int) : 
         _match = [i.match(s, pos=s_pointer) for i in self.re_match]
-        a = [self.re_test[index].search(item.group()) for index,item in enumerate(_match)]
-        if not any(a) : raise Not_Match(">>%s<< 并不是有效的字符" % _match[0].group(), 
-            pos=(_match[0].start(),_match[0].end()), word=_match[0].group())
+        a = [self.re_test[index].search(item.group() if item else "") for index, item in enumerate(_match)]
+        if not any(a) : 
+            error_match = _match[0] if _match[0] else re.compile(".{0,}").match(s, pos=s_pointer)
+            raise Not_Match(">>%s<< 并不是有效的字符" % error_match.group(), 
+            pos=(error_match.start(), error_match.end()), word=error_match.group())
 
         _match = next( (_match[index] for index,item in enumerate(a) if item) )
         return {"type":self.token_type, "token":_match.group(), "start":_match.start(), "end":_match.end()}
@@ -306,7 +318,7 @@ class Float(Match_Base) :
             return {"type":self.token_type, "token":float(a.group()) if "." in a.group() else int(a.group()), 
                     "start":_match.start(), "end":_match.end()}
         elif a is None : raise Not_Match(">>%s<< 并不是有效的数值" % _match.group(), pos=(_match.start(),_match.end()), word=_match.group())
-        else : raise Not_Match(">>%s<< 并不处于有效的范围()" % (_match.group(), self.support_range[0],
+        else : raise Not_Match(">>%s<< 并不处于有效的范围(%s~%s)" % (_match.group(), self.support_range[0],
             self.support_range[1]), pos=(_match.start(),_match.end()), word=_match.group())
 
     def _auto_complete(self) -> Dict[str,str] : 

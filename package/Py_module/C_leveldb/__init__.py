@@ -16,7 +16,9 @@ def GetPlatform() :
     return SoftwarePlatform
 
 def init() :
-    import os, platform, sys, hashlib, re, zipfile, subprocess
+    import os, platform, sys, hashlib, re, zipfile, subprocess, struct
+    if struct.calcsize("P") < 8 : raise EnvironmentError("使用的Python或操作系统不是64位程序")
+
     LinkCommand = "aarch64-linux-android-g++ -shared build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/builder.o " \
         "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/c.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/db_impl.o " \
         "build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/db_iter.o build/temp.linux-aarch64-3.9/./leveldb-mcpe/db/dbformat.o " \

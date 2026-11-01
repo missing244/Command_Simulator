@@ -7,7 +7,11 @@ ContainerNBT_ID = {"minecraft:chest": "Chest", "minecraft:trapped_chest": "Chest
 "minecraft:shulker_box": "ShulkerBox", "minecraft:undyed_shulker_box": "ShulkerBox", 
 "minecraft:barrel": "Barrel", "minecraft:dispenser": "Dispenser", "minecraft:dropper": "Dropper", 
 "minecraft:furnace": "Furnace", "minecraft:lit_furnace": "Furnace", "minecraft:smoker": "Smoker", 
-"minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace", "minecraft:ender_chest":"EnderChest"}
+"minecraft:lit_smoker": "Smoker", "minecraft:blast_furnace": "BlastFurnace", "minecraft:ender_chest":"EnderChest",
+"minecraft:crafter":"Crafter", "minecraft:copper_chest": "Chest", "minecraft:exposed_copper_chest": "Chest",
+"minecraft:weathered_copper_chest": "Chest", "minecraft:oxidized_copper_chest": "Chest",
+"minecraft:waxed_copper_chest": "Chest", "minecraft:waxed_exposed_copper_chest": "Chest",
+"minecraft:waxed_weathered_copper_chest": "Chest", "minecraft:waxed_oxidized_copper_chest": "Chest"}
 
 def GenerateCommandBlockNBT(NBTid:str) -> nbt.TAG_Compound :
     node = nbt.NBT_Builder()
@@ -57,7 +61,7 @@ def GenerateSignNBT(NBTid:str) -> nbt.TAG_Compound :
             TextOwner = node.string("") )
     ).build()
 
-def GenerateBedNBT(NBTid:str) -> nbt.TAG_Compound  :
+def GenerateBedNBT(NBTid:str) -> nbt.TAG_Compound :
     node = nbt.NBT_Builder()
     return node.compound(
         color = node.byte(0),
@@ -65,7 +69,7 @@ def GenerateBedNBT(NBTid:str) -> nbt.TAG_Compound  :
         id = node.string(NBTid)
     ).build()
 
-def GenerateBannerNBT(NBTid:str) -> nbt.TAG_Compound  :
+def GenerateBannerNBT(NBTid:str) -> nbt.TAG_Compound :
     node = nbt.NBT_Builder()
     return node.compound(
         isMovable = node.byte(1),
@@ -74,6 +78,18 @@ def GenerateBannerNBT(NBTid:str) -> nbt.TAG_Compound  :
         Base = node.int(0),
         id = node.string(NBTid)
     ).build()
+
+def GenerateSkullNBT(NBTid:str) -> nbt.TAG_Compound :
+    node = nbt.NBT_Builder()
+    return node.compound(
+        BlockEntityVersion = node.int(0),
+        DoingAnimation = node.byte(1),
+        MouthTickCount = node.int(0),
+        Rotation = node.float(0),
+        SkullType = node.byte(-1),
+        id = node.string(NBTid)
+    ).build()
+
 
 
 def GetNbtUID(id) :
@@ -85,6 +101,7 @@ def GetNbtUID(id) :
     elif id.endswith("bed") : return 5
     elif id.endswith("_banner") : return 6
     elif id.endswith("_shelf") : return 7
+    elif id.endswith("skull") or id.endswith("_head") : return 8
 
 def GetNbtID(id:str) :
     id = f"minecraft:{id}" if ":" not in id else id
@@ -95,6 +112,7 @@ def GetNbtID(id:str) :
     elif id.endswith("bed") : return "Bed"
     elif id.endswith("_banner") : return "Banner"
     elif id.endswith("_shelf") : return "Shelf"
+    elif id.endswith("skull") or id.endswith("_head") : return "Skull"
 
 def GenerateBlockEntityNBT(id:str) :
     id = f"minecraft:{id}" if ":" not in id else id
@@ -106,3 +124,4 @@ def GenerateBlockEntityNBT(id:str) :
     elif id.endswith("bed") : return GenerateBedNBT("Bed")
     elif id.endswith("_banner") : return GenerateBannerNBT("Banner")
     elif id.endswith("_shelf") : return GenerateContainerNBT("Shelf")
+    elif id.endswith("skull") or id.endswith("_head") : return GenerateSkullNBT("Skull")

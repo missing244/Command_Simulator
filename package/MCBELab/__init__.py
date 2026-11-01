@@ -22,6 +22,7 @@ from .. import python_nbt as nbt
 from .block import TransforBlock, TransforDatavalue, RunawayTransforBlock, UpgradeBlock
 from .block import BlockTransforRunaway, JE_Transfor_BE_Block, RunawayDataValueTransforBlock
 from .block_entity import GetNbtUID, GetNbtID, GenerateBlockEntityNBT
+from .item import UpgradeItem
 from .entity import GenerateEntity
 from .translate import ItemTranslateData, BlockTranslateData, EntityTranslateData
 from .block_color import AIR_BLOCKS, ResolveBlockColor

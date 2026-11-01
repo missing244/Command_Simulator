@@ -1,10 +1,18 @@
-__version__ = (1, 0, 0)
-
-
-import re,time,random,json,traceback
-from urllib import parse,request
-from typing import Union,List
+import re, time, gzip, json, traceback, itertools
+from urllib import parse, request
+from typing import Union, List
 from html.parser import HTMLParser
+
+TEST_BAIDU_URL = "https://www.baidu.com"
+APP_INFO_URL = "https://sharechain.qq.com/a28ff773d6d07e3830dc7bf54cc7a079"
+APP_SPONSER_URL = "https://ifdian.net/a/commandsimulator"
+
+AUTO_LOGIN = ["https://command.infinityfreeapp.com/app_login.php?i=1","https://commandsimulatorapi.great-site.net/app_login.php?i=1"]
+MANUAL_LOGIN = ["https://command.infinityfreeapp.com/manual_login.php?i=1","https://commandsimulatorapi.great-site.net/manual_login.php?i=1"]
+UPDATE_EXPAND_PACK = ["https://command.infinityfreeapp.com/expand_pack_get.php?i=1","https://commandsimulatorapi.great-site.net/expand_pack_get.php?i=1"]
+
+qq_share_re_search = (re.compile('<script type="text/javascript">window\\.syncData = '), re.compile(';</script>'))
+
 
 class MyHTMLParser(HTMLParser):
     def __init__(self):
@@ -13,14 +21,6 @@ class MyHTMLParser(HTMLParser):
 
     def handle_data(self, data):
         self.data1 = data
-
-parser = MyHTMLParser()
-
-
-request_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.%s.54' %
-    random.randint(1000, 9999)}
-qq_share_re_search = (re.compile('<script type="text/javascript">window\\.syncData = '), re.compile(';</script>'))
-
 
 class AES_mode:
 
@@ -188,7 +188,7 @@ class AES_mode:
         State = self.AddRoundKey(State, RoundKeys, 0)
         return self._16bytes_xor(State,vi)
 
-class js_execute :
+class JS_execute :
 
     def toNumber(str1) :
         list1 = []
@@ -202,62 +202,54 @@ class js_execute :
             str1 += ("000" + hex(i).replace("0x",""))[-2:]
         return str1
 
-    def decode(http_str):
+    @classmethod
+    def decode(cls, http_str):
         if "<script type=\"text/javascript\" src=\"/aes.js\" >" in http_str :
             re_1 = re.search("a=toNumbers\\(\"[0123456789abcdef]+\"",http_str)
             re_2 = re.search("b=toNumbers\\(\"[0123456789abcdef]+\"",http_str)
             re_3 = re.search("c=toNumbers\\(\"[0123456789abcdef]+\"",http_str)
-            a1 = eval("0x" + http_str[re_1.start():re_1.end()].replace("a=toNumbers(","").replace("\"",""))
-            b1 = js_execute.toNumber(http_str[re_2.start():re_2.end()].replace("b=toNumbers(","").replace("\"",""))
-            c1 = js_execute.toNumber(http_str[re_3.start():re_3.end()].replace("c=toNumbers(","").replace("\"",""))
-            return "__test=" + js_execute.cbc_decode(c1,a1,b1)
+            a1 = eval("0x" + re_1.group().replace("a=toNumbers(","").replace("\"",""))
+            b1 = cls.toNumber(re_2.group().replace("b=toNumbers(","").replace("\"",""))
+            c1 = cls.toNumber(re_3.group().replace("c=toNumbers(","").replace("\"",""))
+            return "__test=" + cls.cbc_decode(c1, a1, b1)
         else :
             re_1 = re.search(r"document.cookie=[\"\w_=]+",http_str)
-            return http_str[re_1.start():re_1.end()].split("\"")[1]
-
-    def cbc_decode(text1,key,vi):
+            return re_1.group().split("\"")[1]
+    
+    @classmethod
+    def cbc_decode(cls, text1, key, vi):
         cipher = AES_mode()
         key = cipher.round_key_generator(key)
-        d = cipher.decrypt(text1,key,vi)
-        return js_execute.toHex(d)
+        d = cipher.decrypt(text1, key, vi)
+        return cls.toHex(d)
 
-def request_url_without_error(url:Union[str,List[str]], post_data:dict=None, cookie_data:str=None, timeout_s:float=3) -> Union[None,bytes] : 
-    """不产生异常,这个函数一定要运行于多线程"""
-    if cookie_data : request_headers["cookie"] = cookie_data
+
+def url_request(urls:Union[str, List[str]], post_data:dict=None, 
+    request_headers:dict=None, timeout_s:float=5) -> Union[None, bytes] : 
+    """不产生异常, 这个函数一定要运行于多线程"""
     if post_data is not None : post_data = parse.urlencode(post_data).encode('utf-8')
-    if isinstance(url,str) : url = [url]
+    if isinstance(urls, str) : urls = [urls]
     
-    for url1 in url :
-        for times1 in range(2) :
-            req1 = request.Request(url1, headers=request_headers, data = post_data)
-            try : response2:bytes = request.urlopen(req1,timeout=timeout_s).read()
-            except : response2 = None; print(url1) ; print(traceback.format_exc().split("\n")[-2]) ; continue
+    for url, times in itertools.product(urls, range(2)) :
+        req1 = request.Request(url, headers=request_headers, data=post_data)
+        try : response = request.urlopen(req1, timeout=timeout_s)
+        except : print(url) ; print(traceback.format_exc().split("\n")[-2]) ; continue
+        response_data:bytes = response.read()
+        if response.getheader('content-encoding') == "gzip": response_data = gzip.decompress(response_data)
             
-            if (b'<script type="text/javascript" src="/aes.js" ></script>' in response2) :
-                request_headers["cookie"] = js_execute.decode(response2.decode("utf-8")) ; time.sleep(0.25)
-            else : return response2
+        if (b'<script type="text/javascript" src="/aes.js" ></script>' in response_data) :
+            request_headers["cookie"] = JS_execute.decode(response_data.decode("utf-8"))
+            time.sleep(0.1)
+        else : return response_data
 
 def transfor_qq_share(a:str) -> str :
+    parser = MyHTMLParser()
     b = qq_share_re_search[0].search(a)
     if b is None : return None
     c = qq_share_re_search[1].search(a[b.end():])
     if c is None : return None
     parser.feed(json.loads(a[b.end():b.end()+c.start()])['shareData']['html_content'])
     return parser.data1
-
-
-
-TEST_BAIDU_URL = "https://www.baidu.com"
-APP_INFO_URL = "https://sharechain.qq.com/a28ff773d6d07e3830dc7bf54cc7a079"
-APP_SPONSER_URL = "https://ifdian.net/a/commandsimulator"
-
-AUTO_LOGIN = ["https://command.infinityfreeapp.com/app_login.php?i=1","https://commandsimulatorapi.great-site.net/app_login.php?i=1"]
-MANUAL_LOGIN = ["https://command.infinityfreeapp.com/manual_login.php?i=1","https://commandsimulatorapi.great-site.net/manual_login.php?i=1"]
-UPDATE_EXPAND_PACK = ["https://command.infinityfreeapp.com/expand_pack_get.php?i=1","https://commandsimulatorapi.great-site.net/expand_pack_get.php?i=1"]
-
-UPDATE_BE_ID = "https://idlist.projectxero.top/data/beta/vanilla.zip"
-
-
 
 def get_online_api(json1:dict) :
     global AUTO_LOGIN, MANUAL_LOGIN, UPDATE_EXPAND_PACK, APP_SPONSER_URL

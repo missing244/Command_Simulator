@@ -5,7 +5,7 @@
 from .base_match import TERMINATOR_RE
 from . import BaseMatch
 from typing import Dict,Union,List,Tuple
-import re
+import re, ast
 
 __all__ = ["BE_String", "BE_Quotation_String", "Relative_Offset_Float", "Local_Offset_Float"]
 
@@ -309,7 +309,7 @@ def middle_scores_loop(*end_node:BaseMatch.Match_Base) :
 
 def middle_haspermission_loop(*end_node:BaseMatch.Match_Base) :
     haspermission1 = BaseMatch.KeyWord("Start_Permission_Argument","{")
-    haspermission2 = BaseMatch.Enum("Permission_Argument","camera","movement")
+    haspermission2 = BaseMatch.AnyString("Permission_Argument")
     haspermission2.add_leaves( 
         BaseMatch.KeyWord("Equal","=").add_leaves( 
             BaseMatch.Enum("Value","enabled","disabled").add_leaves( 
@@ -448,17 +448,17 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
             BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
             BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         ),
-        BaseMatch.Float("Value").add_leaves(
+        BaseMatch.Float("Static_Value").add_leaves(
             BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
             BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         )
     ))
     Selector_Var2[1].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves( 
-        BaseMatch.Int("Value").set_version(1,19,70,"max").add_leaves(
+        BaseMatch.Int("Static_Value").set_version(1,19,70,"max").add_leaves(
             BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
             BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         ),
-        BaseMatch.Float("Value").set_version(1,19,70,"min").add_leaves(
+        BaseMatch.Float("Static_Value").set_version(1,19,70,"min").add_leaves(
             BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
             BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         )
@@ -483,13 +483,13 @@ def BE_Selector_Tree(*end_node:BaseMatch.Match_Base) :
     ))
     Selector_Var2[5].add_leaves( BaseMatch.KeyWord("Equal","=").add_leaves(
             BaseMatch.Enum("Value",
-            "0","survival","s","1","creative","c","2","adventure","a","spectator").add_leaves(
+            "0","survival","s","1","creative","c","2","adventure","a","5","default","d","spectator").add_leaves(
                 BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
                 BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         ),
         BaseMatch.KeyWord("Not","!").add_leaves( 
             BaseMatch.Enum("Value",
-            "0","survival","s","1","creative","c","2","adventure","a","spectator").add_leaves(
+            "0","survival","s","1","creative","c","2","adventure","a","5","default","d","spectator").add_leaves(
                 BaseMatch.KeyWord("Next_Selector_Argument",",").add_leaves(*Selector_Var2),
                 BaseMatch.KeyWord("End_Selector_Argument","]").add_leaves(*end_node)
         )
@@ -582,29 +582,29 @@ def BE_BlockState_Tree(*end_node:BaseMatch.Match_Base) :
     start2 = BE_BlockState_String("BlockState")
     start2.add_leaves(
         BaseMatch.KeyWord("Equal",":").set_version(1,20,10,"max").add_leaves(
-            BE_BlockState_String("Value").add_leaves(
+            BE_BlockState_String("String").add_leaves(
                 BaseMatch.KeyWord("End_BlockState_Argument","]").add_leaves(*end_node),
                 BaseMatch.KeyWord("Next_BlockState_Argument",",").add_leaves(start2)
             ),
-            BaseMatch.Enum("Value","true","false").add_leaves(
+            BaseMatch.Enum("Bool","true","false").add_leaves(
                 BaseMatch.KeyWord("End_BlockState_Argument","]").add_leaves(*end_node),
                 BaseMatch.KeyWord("Next_BlockState_Argument",",").add_leaves(start2)
             ),
-            BaseMatch.Int("Value").add_leaves(
+            BaseMatch.Int("Int").add_leaves(
                 BaseMatch.KeyWord("End_BlockState_Argument","]").add_leaves(*end_node),
                 BaseMatch.KeyWord("Next_BlockState_Argument",",").add_leaves(start2)
             ),
         ),
         BaseMatch.KeyWord("Equal","=").set_version(1,20,10,"min").add_leaves(
-            BE_BlockState_String("Value").add_leaves(
+            BE_BlockState_String("String").add_leaves(
                 BaseMatch.KeyWord("End_BlockState_Argument","]").add_leaves(*end_node),
                 BaseMatch.KeyWord("Next_BlockState_Argument",",").add_leaves(start2)
             ),
-            BaseMatch.Enum("Value","true","false").add_leaves(
+            BaseMatch.Enum("Bool","true","false").add_leaves(
                 BaseMatch.KeyWord("End_BlockState_Argument","]").add_leaves(*end_node),
                 BaseMatch.KeyWord("Next_BlockState_Argument",",").add_leaves(start2)
             ),
-            BaseMatch.Int("Value").add_leaves(
+            BaseMatch.Int("Int").add_leaves(
                 BaseMatch.KeyWord("End_BlockState_Argument","]").add_leaves(*end_node),
                 BaseMatch.KeyWord("Next_BlockState_Argument",",").add_leaves(start2)
             ),

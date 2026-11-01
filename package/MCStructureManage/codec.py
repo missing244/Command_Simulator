@@ -303,20 +303,9 @@ class Codecs :
 
             BDX.save_as(Writer)
 
-    class MCSTRUCTURE(CodecsBase) :
+    class MCSTRUCTURE_V1(CodecsBase) :
 
-        @classmethod
-        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
-            DataType:Literal["nbt", "json", "bytes"]) :
-            if DataType != "nbt" : return False
-            NBT = Data
-
-            if "size" in NBT and "structure_world_origin" in NBT and 'structure' in NBT : return True
-            else : return False
-
-        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase, nbt.TAG_Compound]):
-            MCS = StructureMCS.Mcstructure.from_buffer(Reader)
-                    
+        def __decode__(self, MCS:Union[StructureMCS.Mcstructure, StructureMCS.Mcstructure_V2]) :
             StructureObject = self.Common
             StructureObject.size = MCS.size
             StructureObject.origin = MCS.origin
@@ -331,25 +320,24 @@ class Codecs :
             air_index = len(MCS.block_palette)
             block_list = [None] * len(MCS.block_palette)
             for index, block in enumerate(MCS.block_palette) :
-                name = block["name"].value
-                state = {i:(bool(j.value) if isinstance(j, nbt.TAG_Byte) else j.value) for i,j in block["states"].items()}
+                name = block["name"].value if "name" in block else "minecraft:info_update2"
+                state = {i:(bool(j.value) if isinstance(j, nbt.TAG_Byte) else j.value) 
+                        for i,j in block.get("states", {}).items()}
                 block_list[index] = block_obj = Block(name, state)
                 if block_obj.name == "minecraft:air" : air_index = index
             if air_index == len(MCS.block_palette) : block_list.append( Block("air") )
-                
+
             MCS_index_array = MCS.block_index
-            while 1 : 
-                try : Index = MCS_index_array.index(-1)
-                except : break
-                else : MCS_index_array[Index] = air_index
+            for i, j in enumerate(MCS_index_array) :
+                if j >= 0 : continue
+                MCS_index_array[i] = air_index
             StructureObject.block_index = array.array("H", MCS_index_array)
             StructureObject.block_palette.__init__(block_list)
 
-        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+        def __encode__(self, MCS:Union[StructureMCS.Mcstructure, StructureMCS.Mcstructure_V2]) :
             self = self.Common
             Volume = self.size[0] * self.size[1] * self.size[2]
             if Volume > 2147483647 : raise MemoryError("结构体积超过MCS最大储存容量")
-            MCS = StructureMCS.Mcstructure()
 
             MCS.size = self.size
             MCS.origin = self.origin
@@ -363,7 +351,48 @@ class Codecs :
 
             for key, value in MCS.block_nbt.items() :
                 MCS.block_nbt[key] = nbt.TAG_Compound({"block_entity_data":value})
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+            NBT = Data
+
+            if NBT.get("format_version", 1) != 1 : return False
+            if "size" in NBT and "structure_world_origin" in NBT and 'structure' in NBT : return True
+            else : return False
+
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase, nbt.TAG_Compound]):
+            MCS = StructureMCS.Mcstructure.from_buffer(Reader)
+            self.__decode__(MCS)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            MCS = StructureMCS.Mcstructure()
+            self.__encode__(MCS)
             MCS.save_as(Writer)
+
+    class MCSTRUCTURE_V2(MCSTRUCTURE_V1) :
+
+        @classmethod
+        def verify(self, Data:Union[io.IOBase, nbt.TAG_Compound, dict], 
+            DataType:Literal["nbt", "json", "bytes"]) :
+            if DataType != "nbt" : return False
+            NBT = Data
+
+            if NBT.get("format_version", 1) != 2 : return False
+            if "size" in NBT and "structure_world_origin" in NBT and 'structure' in NBT : return True
+            else : return False
+
+        def decode(self, Reader:Union[str, bytes, io.BufferedIOBase, nbt.TAG_Compound]):
+            MCS = StructureMCS.Mcstructure_V2.from_buffer(Reader)
+            self.__decode__(MCS)
+
+        def encode(self, Writer:Union[str, io.BufferedIOBase]):
+            MCS = StructureMCS.Mcstructure_V2()
+            self.__encode__(MCS)
+            MCS.save_as(Writer)
+
+    MCSTRUCTURE = MCSTRUCTURE_V1
 
     class SCHEMATIC(CodecsBase) :
 
@@ -622,7 +651,7 @@ class Codecs :
             
             BlockList = [None] * len(StructureNBT["palette"])
             AirTest = False
-            for block_index, block_data  in enumerate(StructureNBT["palette"]) :
+            for block_index, block_data in enumerate(StructureNBT["palette"]) :
                 java_id = block_data["Name"].value
                 java_state = {}
                 for key, val in block_data.get("Properties", {}).items() :
@@ -2423,15 +2452,12 @@ class Codecs :
             size_x, size_y, size_z = self.size[0], self.size[1], self.size[2]
             block_string = [block.blockString for block in self.block_palette]
 
-            #快速获取方块索引位置
-            get_index = lambda x,y,z: (x * size_y + y) * size_z + z
-            #快速测试区域体积
-            volume_test = lambda x1,y1,z1,x2,y2,z2 : abs((x2-x1+1) * (y2-y1+1) * (z2-z1+1)) <= 32768
-            #测试是否可填充
-            def can_fill(index:int, block:int) -> bool:
+            
+            get_index = lambda x,y,z: (x * size_y + y) * size_z + z    #快速获取方块索引位置
+            volume_test = lambda x1,y1,z1,x2,y2,z2 : abs((x2-x1+1) * (y2-y1+1) * (z2-z1+1)) <= 32768 #快速测试区域体积
+            def can_fill(index:int, block:int) -> bool: #测试是否可填充
                 return can_setblock[index] and self.block_index[index] == block
-            #贪心寻找最大区域
-            def process(x:int, y:int, z:int, b:int) :
+            def process(x:int, y:int, z:int, b:int) : #贪心寻找最大区域
                 ex, ey, ez = x + 1, y + 1, z + 1
                 for ex in range(x+1, size_x, 1) :
                     idx = get_index(ex, y, z)
@@ -2576,7 +2602,7 @@ class Codecs :
 
 
 
-SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
+SupportCodecs = [Codecs.BDX, Codecs.MCSTRUCTURE, Codecs.MCSTRUCTURE_V2, Codecs.SCHEMATIC, Codecs.RUNAWAY, Codecs.KBDX, 
     Codecs.MIANYANG_V1, Codecs.MIANYANG_V2, Codecs.MIANYANG_V3, Codecs.GANGBAN_V1, Codecs.GANGBAN_V2,
     Codecs.GANGBAN_V3, Codecs.GANGBAN_V4, Codecs.GANGBAN_V5, Codecs.GANGBAN_V6, Codecs.GANGBAN_V7, 
     Codecs.FUHONG_V1, Codecs.FUHONG_V2, Codecs.FUHONG_V3, Codecs.FUHONG_V4, Codecs.FUHONG_V6, 
@@ -2657,6 +2683,5 @@ def getStructureDataAndType(IO_Byte_Path: Union[str, bytes, io.IOBase]) :
         return (data, class_obj)
 
     _file.seek(0)
-
 
 

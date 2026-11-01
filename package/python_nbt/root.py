@@ -6,6 +6,7 @@
 from typing import Literal, Union
 from io import StringIO, BytesIO, IOBase, RawIOBase, BufferedIOBase, TextIOBase
 import zlib, gzip, os
+from pathlib import Path
 
 from .error import *
 from . import tags, snbt, codec as ce, TAG, TAGLIST
@@ -124,10 +125,10 @@ class RootNBT:
     # === nbt ===
     @classmethod
     def from_nbt(cls,
-        data     : Union[str, bytes, IOBase],
+        data     : Union[str, Path, bytes, IOBase],
         zip_mode : Literal['none', 'gzip', 'zlib'] = None,
         byteorder: Literal['little', 'big'] = 'little'):
-        if isinstance(data, str):
+        if isinstance(data, (str, Path)):
             path_is_file(data)
             data = open(data, 'rb')
         if isinstance(data, bytes):
@@ -137,13 +138,13 @@ class RootNBT:
         return cls(*parse_nbt(data, byteorder == 'big'))
     
     def to_nbt(self,
-        target   : Union[str, IOBase] = None,
+        target   : Union[str, Path, IOBase] = None,
         zip_mode : Literal['none', 'gzip', 'zlib'] = 'none',
         byteorder: Literal['little', 'big'] = 'little') -> bytes:
         res = True if target is None else False
         if target is None:
             target = BytesIO()
-        if isinstance(target, str):
+        if isinstance(target, (str, Path)):
             target = open(target, 'wb')
         is_byte_io(target) and is_writ_io(target) and is_seek_io(target)
         data = render_nbt(self.__tag, self.__root_name, byteorder == 'big')
@@ -154,19 +155,19 @@ class RootNBT:
 
     # === snbt ===
     @classmethod
-    def from_snbt(cls, data: Union[str, IOBase]):
-        if isinstance(data, str):
+    def from_snbt(cls, data: Union[str, Path, IOBase]):
+        if isinstance(data, (str, Path)):
             if os.path.exists(data) and not os.path.isfile(data): raise NbtFileError("路径('%s')非文件" % data)
             if os.path.exists(data) and os.path.isfile(data): data = open(data, 'r')
             elif not os.path.exists(data): data = StringIO(data)
         is_text_io(data) and is_read_io(data) and is_seek_io(data)
         return cls(*parse_snbt(data))
 
-    def to_snbt(self, target: Union[str, IOBase] = None, format=False, size=4) -> str:
+    def to_snbt(self, target: Union[str, Path, IOBase] = None, format=False, size=4) -> str:
         res = True if target is None else False
         if target is None:
             target = StringIO()
-        if isinstance(target, str):
+        if isinstance(target, (str, Path)):
             target = open(target, 'w')
         is_text_io(target) and is_writ_io(target) and is_seek_io(target)
         data = render_snbt(self.__tag, self.__root_name, target, format, size)
@@ -176,10 +177,10 @@ class RootNBT:
     # === dat ===
     @classmethod
     def from_dat(cls,
-        data     : Union[str, bytes, IOBase],
+        data     : Union[str, Path, bytes, IOBase],
         zip_mode : Literal['none', 'gzip', 'zlib'] = 'none',
         byteorder: Literal['little', 'big'] = 'little'):
-        if isinstance(data, str):
+        if isinstance(data, (str, Path)):
             path_is_file(data)
             data = open(data, 'rb')
         if isinstance(data, bytes):
@@ -199,13 +200,13 @@ class RootNBT:
         return cls(*parse_nbt(data, byteorder == 'big'))
 
     def to_dat(self,
-        target   : Union[str, IOBase] = None,
+        target   : Union[str, Path, IOBase] = None,
         zip_mode : Literal['none', 'gzip', 'zlib'] = 'none',
         byteorder: Literal['little', 'big'] = 'little') -> bytes:
         res = bool(target)
         if target is None:
             target = BytesIO()
-        if isinstance(target, str):
+        if isinstance(target, (str, Path)):
             target = open(target, 'wb')
         is_byte_io(target) and is_writ_io(target) and is_seek_io(target)
         data = render_nbt(self.__tag, self.__root_name, byteorder == 'big')
