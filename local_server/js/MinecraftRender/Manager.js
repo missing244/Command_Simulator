@@ -24,7 +24,6 @@ class ThreadEventsManager {
         return exist
     }
 }
-const threadEventsManager = new ThreadEventsManager()
 
 class DisplayManager {
     
@@ -34,14 +33,15 @@ class DisplayManager {
      * @param {THREE.PerspectiveCamera} camera - 透视摄像机
      * @param {Structure?} structObj - 需要显示的结构
      */
-    constructor(renderer, camera, structObj=null) {
+    constructor(renderer, camera, controls, structObj=null) {
         this.camera = camera
         this.renderer = renderer
+        this.controls = controls
         /***   * @type {Array<Structure>} */
         this.structure = structObj
         this.callbacks = {}
         this.startRender = false
-        
+        this.threadEvents = new ThreadEventsManager()
 
         const canvas = renderer.domElement;
 		this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -52,6 +52,7 @@ class DisplayManager {
         this.renderDistance = 10
         this.scene = new THREE.Scene()
         this.uuid = crypto.randomUUID()
+        this.renderRequested = false;
 
         const ComputeChunkRender = (/** @type {MessageEvent} */event) => {
             if (event.data.uuid !== this.uuid) return null
@@ -59,49 +60,61 @@ class DisplayManager {
             const SceneChunkPosKey = `(${element.x},${element.y},${element.z})`
             const RenderObject = this.structure.getRenderObject(
                 element.x, element.y, element.z, event.data.returnData)
-            this.chunk[SceneChunkPosKey] = RenderObject
+            if (this.chunk[SceneChunkPosKey] === null) this.chunk[SceneChunkPosKey] = RenderObject
         }
-        threadEventsManager.subscribe(ComputeChunkRender)
+        this.threadEvents.subscribe(ComputeChunkRender)
     }
 
-    
     subscribeCallback(callback) {
         const key = crypto.randomUUID()
         this.callbacks[key] = callback
         return key
     }
-
     unsubscribeCallback(uuid) {
         const exist = uuid in this.callbacks
         if (exist) delete this.callbacks[key]
         return exist
     }
-
     unsubscribeAll() {
         this.callbacks = {}
     }
 
+    removeChunk(pos_x, pos_z){
+        const posx = Math.floor(pos_x / 16) * 16
+        const posz = Math.floor(pos_z / 16) * 16
+        const SceneChunkPosKey = `(${posx},${0},${posz})`
+        if (!Object.hasOwn(this.chunk, SceneChunkPosKey)) return
+        this.chunk[SceneChunkPosKey].removeRender(this.scene)
+        delete this.chunk[SceneChunkPosKey]
+    }
+    removeAllChunk(){
+        Object.keys(this.chunk).forEach((item) => {
+            if (this.chunk[item]) this.chunk[item].removeRender(this.scene)
+            delete this.chunk[item]
+        })
+    }
 
     /**
      * 创建一个渲染回调函数
      * 用于绑定渲染更新事件
      */
-    requestRender(){
-        let renderRequested = false;
-        const renderer = this.renderer
-        const camera = this.camera
+    requestRender(type){
         const scene = this.scene
+        const camera = this.camera
+        const controls = this.controls
+        const renderer = this.renderer
         const canvas = renderer.domElement
 
         const render = () => {
-            renderRequested = undefined;
+            this.renderRequested = undefined;
             const needUpdate = resizeRendererToDisplaySize(renderer)
             if (needUpdate) {
                 camera.aspect = canvas.clientWidth / canvas.clientHeight;
                 camera.updateProjectionMatrix();
             }
-            if (this.startRender) this.flashRender()
+            this.controls.update()
             for (const [key, value] of Object.entries(this.callbacks)) value()
+            if (this.startRender) this.flashRender()
             renderer.render( scene, camera );
         }
         const resizeRendererToDisplaySize = () => {
@@ -112,12 +125,28 @@ class DisplayManager {
             return needResize;
         }
         const requestRenderIfNotRequested = () => {
-            if ( renderRequested ) return null
-            renderRequested = true;
+            if ( this.renderRequested ) return null
+            this.renderRequested = true;
             requestAnimationFrame(render);
         }
+        const loopCameraMoveRenderRequested = () => {
+            requestAnimationFrame(cameraMoveRenderIfNotRequested);
+            requestAnimationFrame(loopCameraMoveRenderRequested);
+        }
+        const cameraMoveRenderIfNotRequested = () => {
+		    const planeMove = Math.abs(controls.moveState.plane[0]) + Math.abs(controls.moveState.plane[1])
+		    const changed = controls.moveState.forward || 
+                controls.moveState.backward || controls.moveState.left || 
+                controls.moveState.right || controls.moveState.up || 
+                controls.moveState.down || planeMove > 0.001;
+            if ( this.renderRequested || !changed ) return null
+            this.renderRequested = true;
+            render()
+        }
 
-        return requestRenderIfNotRequested
+        if (type === "camera_move") return loopCameraMoveRenderRequested
+        else if (type === "change_request") return requestRenderIfNotRequested
+        else throw Error("type需要 camera_move 或 change_request")
     }
 
     /** * 刷新渲染区块 */

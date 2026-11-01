@@ -1,246 +1,1161 @@
 <!DOCTYPE html>
+<html lang="zh-CN">
 
-<html>
-
-	<head>
-		<meta charset="utf-8">
-		<title> 命令模拟器文档 </title>
-        <!-- <link href="./css/style_index.css" rel="stylesheet" type="text/css" media="all" /> -->
-	</head>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="color-scheme" content="dark">
+	<meta name="theme-color" content="#070c16">
+	<meta name="description" content="命令模拟器帮助文档：使用须知、世界配置、命令调试。">
+	<title>命令模拟器 · 帮助文档</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070c16'/%3E%3Cpath d='M16 5 27 11.4v9.2L16 27 5 20.6v-9.2z' fill='%232f8d55'/%3E%3Cpath d='M5 11.4 16 17.8l11-6.4v9.2L16 27z' fill='%230f3d23'/%3E%3Cpath d='M16 5 27 11.4 16 17.8 5 11.4z' fill='%233ee08f'/%3E%3C/svg%3E">
 
 	<style>
-		.cb_window{
-			width: 80%;
-			height: 60px;
+		/* ========== 基础变量 ========== */
+		:root {
+			--bg: #070c16;
+			--panel: rgba(255, 255, 255, .045);
+			--panel-hi: rgba(255, 255, 255, .08);
+			--line: rgba(255, 255, 255, .10);
+			--line-hi: rgba(255, 255, 255, .20);
+			--text: #eaf1fb;
+			--muted: #96a8c2;
+			--mint: #3ee08f;
+			--amber: #ffc857;
+			--violet: #b493ff;
+			--radius: 20px;
+			--wrap: min(1140px, 100% - clamp(28px, 6vw, 72px));
+			--shadow: 0 30px 70px -34px rgba(0, 0, 0, .95);
+			--font: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+				"Microsoft YaHei", "Noto Sans SC", sans-serif;
 		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html {
+			scroll-behavior: smooth;
+			-webkit-text-size-adjust: 100%;
+		}
+
 		body {
-			background-color: rgba(0, 26, 255, 0.118);
+			margin: 0;
+			min-height: 100dvh;
+			font-family: var(--font);
+			color: var(--text);
+			line-height: 1.65;
+			background:
+				radial-gradient(1100px 620px at 12% -12%, rgba(62, 224, 143, .20), transparent 62%),
+				radial-gradient(900px 560px at 96% 2%, rgba(180, 147, 255, .16), transparent 58%),
+				radial-gradient(1000px 700px at 50% 112%, rgba(255, 200, 87, .085), transparent 62%),
+				linear-gradient(180deg, #070c16 0%, #0a1120 42%, #060a12 100%);
+			background-repeat: no-repeat;
+			/* 不使用 background-attachment: fixed —— iOS 上会导致背景抖动 */
+			-webkit-font-smoothing: antialiased;
+			/* clip 不会创建滚动容器，否则吸顶导航会失效 */
+			overflow-x: clip;
 		}
-		body canvas{
-			border-radius: 20px;
-			margin: 0px auto;
-			margin-bottom: 50px;
-		}
-		#header .inner{
+
+		/* 淡淡的方格纹理，呼应命令方块 */
+		body::before {
+			content: "";
 			position: fixed;
-			top: 0px;
-			background-color: #5f5f5f;
-			border-bottom-left-radius: 10px ;
-			border-bottom-right-radius: 10px ;
-			width: 98.5%;
-			height: 70px;
+			inset: 0;
+			z-index: -1;
+			pointer-events: none;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px);
+			background-size: 52px 52px;
+			mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 78%);
+			-webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 78%);
+			opacity: .7;
 		}
-		#topmenu {
-			margin: auto auto;
-			font-size: xx-large;
-			color: white;
-			font-weight: 900;
-			text-align: center;
+
+		::selection {
+			background: rgba(62, 224, 143, .3);
+			color: #fff;
 		}
-		.table_1{
-			display: flex;
-			width: 87%;
-			margin: 0px auto;
+
+		:focus-visible {
+			outline: 2px solid var(--mint);
+			outline-offset: 3px;
+			border-radius: 8px;
 		}
-		.table_2_0{
-			width: 50%;
-			height: 350px;
+
+		a {
+			color: inherit;
 		}
-		.table_3{
-			background-color: white;
-			width: 80%;
-			height: 80%;
-			margin: 10% auto;
+
+		.wrap {
+			width: var(--wrap);
+			margin-inline: auto;
+		}
+
+		.sr-skip {
+			position: absolute;
+			left: -9999px;
+			top: 8px;
+			z-index: 99;
+			padding: 10px 16px;
 			border-radius: 10px;
-			padding-bottom: 20px;
-			text-align: center; 
+			background: var(--mint);
+			color: #04140b;
+			font-weight: 700;
+			text-decoration: none;
 		}
-		.help{
-			padding: 8px 8px;
-			width: 800px;
-			margin: 0px auto;
+
+		.sr-skip:focus {
+			left: 12px;
+		}
+
+		/* ========== 顶部导航 ========== */
+		.site-header {
+			position: sticky;
+			top: 0;
+			z-index: 40;
+			background: rgba(7, 12, 22, .74);
+			border-bottom: 1px solid var(--line);
+			backdrop-filter: blur(16px) saturate(160%);
+			-webkit-backdrop-filter: blur(16px) saturate(160%);
+			padding-left: env(safe-area-inset-left);
+			padding-right: env(safe-area-inset-right);
+		}
+
+		.site-header__inner {
 			display: flex;
-			font-size: 27px;
-			background: #ffffff;
-			border-radius: 10px;
+			align-items: center;
+			gap: 6px;
+			min-height: 64px;
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			text-decoration: none;
+			flex: none;
+			min-height: 44px;
+		}
+
+		.brand svg {
+			width: 30px;
+			height: 30px;
+			flex: none;
+			filter: drop-shadow(0 0 14px rgba(62, 224, 143, .5));
+		}
+
+		.brand__name {
+			font-weight: 700;
+			font-size: 16px;
+			letter-spacing: .02em;
+			white-space: nowrap;
+		}
+
+		.brand__sub {
+			color: var(--muted);
+			font-size: 13px;
+			padding-left: 10px;
+			margin-left: 2px;
+			border-left: 1px solid var(--line-hi);
+			white-space: nowrap;
+		}
+
+		.nav {
+			display: flex;
+			align-items: center;
+			gap: 2px;
+			margin-left: auto;
+		}
+
+		.nav a {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 9px 13px;
+			border-radius: 999px;
+			font-size: 14px;
+			color: var(--muted);
+			text-decoration: none;
+			white-space: nowrap;
+			transition: color .2s, background-color .2s;
+		}
+
+		.nav a:hover {
+			color: var(--text);
+			background: var(--panel-hi);
+		}
+
+		.nav a.is-out {
+			color: var(--mint);
+		}
+
+		/* ========== 首屏 ========== */
+		.hero {
+			display: grid;
+			grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+			gap: clamp(26px, 4vw, 56px);
+			align-items: center;
+			padding: clamp(30px, 5vw, 66px) 0 clamp(26px, 4vw, 46px);
+		}
+
+		.eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			margin: 0 0 18px;
+			padding: 6px 13px 6px 10px;
+			border: 1px solid rgba(62, 224, 143, .28);
+			border-radius: 999px;
+			background: rgba(62, 224, 143, .08);
+			color: #9ff0c6;
+			font-size: 12px;
+			font-weight: 600;
+			letter-spacing: .14em;
+		}
+
+		.eyebrow__dot {
+			width: 7px;
+			height: 7px;
+			border-radius: 2px;
+			background: var(--mint);
+			box-shadow: 0 0 0 4px rgba(62, 224, 143, .16);
+			animation: blink 2.6s ease-in-out infinite;
+		}
+
+		@keyframes blink {
+			50% { opacity: .35; }
+		}
+
+		h1 {
+			margin: 0;
+			font-size: clamp(30px, 6.2vw, 54px);
+			line-height: 1.16;
+			letter-spacing: -.015em;
+			font-weight: 800;
+			text-wrap: balance;
+		}
+
+		h1 em {
+			font-style: normal;
+			background: linear-gradient(96deg, #9dffc9 0%, var(--mint) 42%, var(--amber) 100%);
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+		}
+
+		.hero__lead {
+			margin: 16px 0 0;
+			max-width: 46ch;
+			font-size: clamp(15px, 2.6vw, 17px);
+			color: var(--muted);
+		}
+
+		.hero__lead b {
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		.hero__actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: clamp(20px, 3vw, 28px);
+		}
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			min-height: 48px;
+			padding: 12px 20px;
+			border-radius: 14px;
+			font-size: 15px;
+			font-weight: 600;
+			text-decoration: none;
+			transition: transform .2s, box-shadow .25s, background-color .25s, border-color .25s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.btn svg {
+			width: 17px;
+			height: 17px;
+			flex: none;
+			transition: transform .25s;
+		}
+
+		.btn--primary {
+			color: #04150c;
+			background: linear-gradient(180deg, #63f0a6, #2fcf80);
+			box-shadow: 0 12px 30px -14px rgba(62, 224, 143, .85), inset 0 1px 0 rgba(255, 255, 255, .45);
+		}
+
+		.btn--primary:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 18px 36px -16px rgba(62, 224, 143, .95), inset 0 1px 0 rgba(255, 255, 255, .5);
+		}
+
+		.btn--primary:hover svg {
+			transform: translateX(3px);
+		}
+
+		.btn--ghost {
+			color: var(--text);
+			background: var(--panel-hi);
+			border: 1px solid var(--line);
+		}
+
+		.btn--ghost:hover {
+			background: rgba(255, 255, 255, .13);
+			border-color: var(--line-hi);
+			transform: translateY(-2px);
+		}
+
+		.hero__meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px 18px;
+			margin: 20px 0 0;
+			padding: 0;
+			list-style: none;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.hero__meta li {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.hero__meta li::before {
+			content: "";
+			width: 5px;
+			height: 5px;
+			border-radius: 1px;
+			background: var(--mint);
+			opacity: .7;
+		}
+
+		/* ========== 3D 展示区 ========== */
+		.stage {
+			position: relative;
+			isolation: isolate;
+			border-radius: 26px;
+			border: 1px solid var(--line);
+			/* 用显式高度而不是 aspect-ratio：后者与 max-height 同时使用会反推宽度 */
+			height: clamp(280px, 34vw, 430px);
+			overflow: hidden;
+			box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .09);
+			background:
+				radial-gradient(120% 85% at 50% -10%, rgba(62, 224, 143, .22), transparent 62%),
+				radial-gradient(80% 60% at 50% 120%, rgba(255, 200, 87, .12), transparent 70%),
+				linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .015));
+			touch-action: pan-y;
+		}
+
+		.stage::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+			background-size: 34px 34px;
+			mask-image: radial-gradient(ellipse at 50% 50%, #000 10%, transparent 72%);
+			-webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 10%, transparent 72%);
+			pointer-events: none;
+		}
+
+		.stage canvas {
+			position: absolute;
+			inset: 0;
+			display: block;
+			width: 100% !important;
+			height: 100% !important;
+			opacity: 0;
+			transition: opacity .7s ease;
+		}
+
+		.stage.is-live canvas {
+			opacity: 1;
+		}
+
+		.stage__fallback {
+			position: absolute;
+			inset: 0;
+			display: grid;
+			place-items: center;
+			transition: opacity .45s ease;
+			pointer-events: none;
+		}
+
+		.stage.is-live .stage__fallback {
+			opacity: 0;
+		}
+
+		.stage__fallback svg {
+			width: 44%;
+			max-width: 190px;
+			height: auto;
+			filter: drop-shadow(0 26px 42px rgba(0, 0, 0, .6));
+		}
+
+		.stage__hint,
+		.stage__tag {
+			position: absolute;
+			z-index: 2;
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 6px 11px;
+			border-radius: 999px;
+			border: 1px solid var(--line);
+			background: rgba(8, 14, 26, .7);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			font-size: 12px;
+			color: var(--muted);
+			pointer-events: none;
+		}
+
+		.stage__hint {
+			left: 14px;
+			top: 14px;
+		}
+
+		.stage__tag {
+			right: 14px;
+			bottom: 14px;
+			color: #8fdcb6;
+			border-color: rgba(62, 224, 143, .22);
+		}
+
+		.stage__hint svg {
+			width: 13px;
+			height: 13px;
+		}
+
+		/* ========== 重要提示 ========== */
+		.notice {
+			display: flex;
+			gap: 15px;
+			align-items: flex-start;
+			margin-top: clamp(6px, 1.5vw, 14px);
+			padding: clamp(15px, 2.4vw, 20px);
+			border-radius: 18px;
+			border: 1px solid rgba(255, 200, 87, .30);
+			background:
+				linear-gradient(135deg, rgba(255, 200, 87, .15), rgba(255, 120, 80, .07) 58%, rgba(255, 255, 255, .02));
+		}
+
+		.notice img {
+			width: 46px;
+			height: 46px;
+			flex: none;
+			filter: drop-shadow(0 6px 16px rgba(255, 60, 60, .4));
+		}
+
+		.notice h2 {
+			margin: 0 0 5px;
+			font-size: clamp(15px, 2.6vw, 17px);
+			font-weight: 700;
+			color: #ffe6b8;
+		}
+
+		.notice p {
+			margin: 0;
+			font-size: clamp(13.5px, 2.4vw, 15px);
+			color: #ffd6a0;
+			line-height: 1.75;
+		}
+
+		.notice p strong {
+			color: #fff3dd;
+			font-weight: 700;
+		}
+
+		.notice a {
+			color: #ffe6b8;
+			text-decoration-color: rgba(255, 230, 184, .5);
+			text-underline-offset: 3px;
+			font-weight: 600;
+			white-space: nowrap;
+		}
+
+		/* ========== 文档目录 ========== */
+		.section-head {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 16px;
+			flex-wrap: wrap;
+			margin: clamp(38px, 6vw, 68px) 0 20px;
+		}
+
+		.section-head h2 {
+			margin: 6px 0 0;
+			font-size: clamp(21px, 3.8vw, 29px);
+			letter-spacing: -.01em;
+			font-weight: 800;
+		}
+
+		#docs {
+			scroll-margin-top: 88px;
+		}
+
+		.label {
+			display: block;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .26em;
+			color: var(--mint);
+			text-transform: uppercase;
+		}
+
+		.section-head__note {
+			font-size: 13.5px;
+			color: var(--muted);
+			padding-bottom: 4px;
+			margin: 0;
+		}
+
+		.cards {
+			display: grid;
+			gap: clamp(12px, 2vw, 18px);
+			grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+		}
+
+		.card {
+			--accent: var(--mint);
+			--accent-soft: rgba(62, 224, 143, .18);
+			--accent-glow: rgba(62, 224, 143, .30);
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+			padding: clamp(18px, 2.6vw, 24px);
+			border-radius: var(--radius);
+			border: 1px solid var(--line);
+			background: linear-gradient(180deg, rgba(255, 255, 255, .058), rgba(255, 255, 255, .016));
+			text-decoration: none;
+			color: inherit;
+			overflow: hidden;
+			transition: transform .28s cubic-bezier(.2, .7, .3, 1), border-color .28s, box-shadow .28s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.card::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			z-index: -1;
+			background: radial-gradient(300px 150px at 50% 0%, var(--accent-soft), transparent 72%);
+			opacity: 0;
+			transition: opacity .28s;
+			pointer-events: none;
+		}
+
+		.card--amber {
+			--accent: var(--amber);
+			--accent-soft: rgba(255, 200, 87, .16);
+			--accent-glow: rgba(255, 200, 87, .26);
+		}
+
+		.card--violet {
+			--accent: var(--violet);
+			--accent-soft: rgba(180, 147, 255, .16);
+			--accent-glow: rgba(180, 147, 255, .26);
+		}
+
+		.card__num {
+			position: absolute;
+			top: 14px;
+			right: 16px;
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: .16em;
+			color: rgba(255, 255, 255, .22);
+			font-variant-numeric: tabular-nums;
+		}
+
+		.card__top {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			min-height: 46px;
+		}
+
+		.card__icon {
+			display: grid;
+			place-items: center;
+			width: 46px;
+			height: 46px;
+			flex: none;
+			border-radius: 14px;
+			color: var(--accent);
+			border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+			background: linear-gradient(180deg, var(--accent-soft), rgba(255, 255, 255, .02));
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+		}
+
+		.card__icon svg {
+			width: 23px;
+			height: 23px;
+		}
+
+		.card__badge {
+			align-self: flex-start;
+			padding: 3px 9px;
+			border-radius: 999px;
+			font-size: 11.5px;
+			font-weight: 700;
+			letter-spacing: .04em;
+			color: var(--accent);
+			background: color-mix(in srgb, var(--accent) 13%, transparent);
+			border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+			white-space: nowrap;
+		}
+
+		.card h3 {
+			margin: 2px 0 0;
+			font-size: clamp(18px, 3vw, 21px);
+			font-weight: 700;
+			letter-spacing: -.01em;
+		}
+
+		.card__list {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: grid;
+			gap: 7px;
+		}
+
+		.card__list li {
+			position: relative;
+			padding-left: 17px;
+			font-size: 14.5px;
+			color: var(--muted);
+			line-height: 1.6;
+		}
+
+		.card__list li::before {
+			content: "";
+			position: absolute;
+			left: 2px;
+			top: .68em;
+			width: 6px;
+			height: 6px;
+			border-radius: 1px;
+			background: var(--accent);
+			opacity: .65;
+		}
+
+		.card__cta {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			margin-top: auto;
+			padding-top: 16px;
+			font-size: 14.5px;
+			font-weight: 700;
+			color: var(--accent);
+		}
+
+		.card__cta svg {
+			width: 16px;
+			height: 16px;
+			transition: transform .25s;
+		}
+
+		/* ========== 页脚 ========== */
+		.site-footer {
+			margin-top: clamp(48px, 8vw, 84px);
+			padding: 26px 0 calc(34px + env(safe-area-inset-bottom));
+			border-top: 1px solid var(--line);
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 14px 24px;
+			font-size: 13.5px;
+			color: var(--muted);
+		}
+
+		.site-footer p {
+			margin: 0;
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			flex-wrap: wrap;
+		}
+
+		.site-footer code {
+			font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+			font-size: 12.5px;
+			padding: 2px 7px;
+			border-radius: 6px;
+			background: var(--panel-hi);
+			color: #b9cbff;
+		}
+
+		.footer-links {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px 6px;
+		}
+
+		.footer-links a {
+			padding: 6px 10px;
+			border-radius: 8px;
+			color: var(--muted);
+			text-decoration: none;
+			transition: color .2s, background-color .2s;
+		}
+
+		.footer-links a:hover {
+			color: var(--text);
+			background: var(--panel-hi);
+		}
+
+		/* ========== 入场动画 ========== */
+		@keyframes rise {
+			from { opacity: 0; transform: translateY(14px); }
+			to { opacity: 1; transform: none; }
+		}
+
+		@media (prefers-reduced-motion: no-preference) {
+			.hero__copy > *,
+			.stage,
+			.notice,
+			.cards > * {
+				animation: rise .72s cubic-bezier(.2, .7, .3, 1) both;
+			}
+
+			.stage { animation-delay: .08s; }
+			.notice { animation-delay: .16s; }
+			.cards > *:nth-child(1) { animation-delay: .2s; }
+			.cards > *:nth-child(2) { animation-delay: .27s; }
+			.cards > *:nth-child(3) { animation-delay: .34s; }
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+			.card:hover {
+				transform: translateY(-5px);
+				border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+				box-shadow: 0 26px 50px -28px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, .12);
+			}
+
+			.card:hover::after { opacity: 1; }
+
+			.card:hover .card__cta svg { transform: translateX(4px); }
+		}
+
+		.card:active {
+			transform: translateY(-1px) scale(.995);
+		}
+
+		/* ========== 响应式 ========== */
+		@media (max-width: 900px) {
+			.hero {
+				grid-template-columns: 1fr;
+				padding-top: clamp(26px, 6vw, 44px);
+			}
+
+			.stage {
+				height: clamp(260px, 52vw, 400px);
+			}
+
+			.hero__meta { margin-top: 16px; }
+		}
+
+		@media (max-width: 720px) {
+			.nav { display: none; }
+			.site-header__inner { min-height: 58px; }
+			.stage { height: clamp(240px, 62vw, 360px); }
+			.stage__hint { display: none; }
+			.notice img { width: 40px; height: 40px; }
+			.section-head { margin-top: 40px; }
+			.section-head__note { display: none; }
+		}
+
+		@media (max-width: 560px) {
+			.stage__tag { display: none; }
+		}
+
+		/* 触屏没有悬停拖动，提示语没有意义 */
+		@media (pointer: coarse) {
+			.stage__hint { display: none; }
+		}
+
+		@media (max-width: 480px) {
+			.brand__sub { display: none; }
+			.stage { height: min(92vw, 380px); }
+			.hero__actions .btn { flex: 1 1 100%; justify-content: center; }
+			.card { border-radius: 18px; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			html { scroll-behavior: auto; }
+			* { animation-duration: .001s !important; animation-delay: 0s !important; transition-duration: .001s !important; }
 		}
 	</style>
+</head>
 
-	<body>
+<body>
+	<a class="sr-skip" href="#docs">跳到文档目录</a>
 
-		<header id="header">
-			<div class="inner">
-				<div style="height: 13px;"></div>
-				<div id="topmenu">
-					<span>命&emsp;令&emsp;模&emsp;拟&emsp;器&emsp;帮&emsp;助&emsp;文&emsp;档</span>
-				</div>
-			</div>
-		</header>
-
-		<div class="cb_window" id="cb_window"></div>
-		
-		<div style="padding-top: 50px;"></div>
-		<div class="help">
-			<img src="./picture/tutorial/warning.png" alt="" width="120" height="120">
-			<span style="color: red;">请仔细阅读帮助文档的内容，否则你将无从下手。安卓用户需要将浏览器设置成小窗模式，并且将Pydroid 3变为前台模式，才能正常访问帮助文档。</span>
+	<header class="site-header">
+		<div class="wrap site-header__inner">
+			<a class="brand" href="./" aria-label="命令模拟器帮助文档 首页">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<path d="M16 3.2 28.6 10.4v11.2L16 28.8 3.4 21.6V10.4Z" fill="#0d2a19" stroke="#3ee08f" stroke-width="1.5" stroke-linejoin="round" />
+					<path d="M16 3.2 28.6 10.4 16 17.6 3.4 10.4Z" fill="#2f8d55" />
+					<path d="M16 17.6v11.2L3.4 21.6V10.4Z" fill="#0f3d23" />
+					<path d="M16 17.6 28.6 10.4v11.2L16 28.8Z" fill="#186b3a" />
+					<path d="M11.4 9.1 16 6.5l4.6 2.6-4.6 2.6Z" fill="#c8f3d9" opacity=".85" />
+				</svg>
+				<span class="brand__name">命令模拟器</span>
+				<span class="brand__sub">帮助文档</span>
+			</a>
+			<nav class="nav" aria-label="主导航">
+				<a class="is-out" href="https://commandsimulator.great-site.net" target="_blank" rel="noopener noreferrer">官网 ↗</a>
+			</nav>
 		</div>
+	</header>
 
-		<div class="table_1">
-			<div class="table_2_0">
-				<div class="table_3">
-					<div style="padding: 15px 0px; font-size: 40px; font-weight: 700;">使用须知<samp style="color: red;">(重要)</samp></div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">模拟器的使用说明书</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">请务必观看此条目</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">避免在使用时踩坑</div>
-					<div style="padding: 6px 0px; font-size: 25px; font-weight: 400; width: 50%; margin: 3% auto;
-					background-color: rgb(170, 231, 255); border-radius: 10px;" onclick="jump_1()">点击查看 ➔</div>
-				</div>
+	<main class="wrap">
+		<section class="hero">
+			<div class="hero__copy">
+				<p class="eyebrow"><span class="eyebrow__dot"></span>命令模拟器 · 本地帮助文档</p>
+				<h1>让每条命令<br><em>先跑通，再进游戏</em></h1>
+				<p class="hero__lead">
+					使用须知、世界配置、命令调试——三篇文档覆盖从第一次启动到写出复杂命令的全过程。
+					<b>手机也能正常浏览</b>，遇到报错时随时回来查。
+				</p>
 			</div>
-			<div class="table_2_0">
-				<div class="table_3">
-					<div style="padding: 15px 0px; font-size: 40px; font-weight: 700;">世界配置</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">学习如何修改世界配置</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">解决世界配置的疑问</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">预防在开始时出错</div>
-					<div style="padding: 6px 0px; font-size: 25px; font-weight: 400; width: 50%; margin: 3% auto;
-					background-color: rgb(170, 231, 255); border-radius: 10px;" onclick="jump_2()">点击查看 ➔</div>
+
+			<div class="stage" id="stage" role="img" aria-label="旋转展示的命令方块、连锁命令方块与循环命令方块">
+				<div class="stage__fallback" aria-hidden="true">
+					<svg viewBox="0 0 120 120">
+						<defs>
+							<linearGradient id="cubeTop" x1="0" y1="0" x2="1" y2="1">
+								<stop offset="0" stop-color="#7ef2b4" />
+								<stop offset="1" stop-color="#2e9d63" />
+							</linearGradient>
+						</defs>
+						<path d="M60 10 108 38v44L60 110 12 82V38Z" fill="#0c2116" stroke="#3ee08f" stroke-opacity=".55" stroke-width="2" />
+						<path d="M60 10 108 38 60 66 12 38Z" fill="url(#cubeTop)" />
+						<path d="M12 38v44l48 28V66Z" fill="#0f4a29" />
+						<path d="M108 38v44L60 110V66Z" fill="#1f7a49" />
+						<path d="M60 34 82 47 60 60 38 47Z" fill="#eafff4" opacity=".9" />
+					</svg>
 				</div>
+				<span class="stage__hint">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="m3 11 18-8-8 18-2.5-7.5Z" />
+					</svg>
+					拖动旋转
+				</span>
+				<span class="stage__tag">命令方块 · Command Block</span>
 			</div>
-		</div>
+		</section>
 
-		<div class="table_1">
-			<div class="table_2_0">
-				<div class="table_3">
-					<div style="padding: 15px 0px; font-size: 40px; font-weight: 700;">命令调试</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">专属模拟器的调试命令</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">还原MC命令系统的架构</div>
-					<div style="padding: 3px 0px; font-size: 25px; font-weight: 400;">预先发现命令错误</div>
-					<div style="padding: 6px 0px; font-size: 25px; font-weight: 400; width: 50%; margin: 3% auto;
-					background-color: rgb(170, 231, 255); border-radius: 10px;" onclick="jump_3()">点击查看 ➔</div>
+		<section class="notice" role="note" aria-labelledby="notice-title">
+			<img src="./picture/tutorial/warning.png" alt="" width="46" height="46" loading="lazy" decoding="async">
+			<div>
+				<h2 id="notice-title">请仔细阅读帮助文档的内容，否则你将无从下手</h2>
+				<p>
+					安卓用户需要将浏览器设置成<strong>小窗模式</strong>，并且将 <strong>Pydroid 3 变为前台模式</strong>，才能正常访问帮助文档。
+					尚未安装依赖软件的话，先看 <a href="./tutorial/Instructions.html">使用须知</a> 里的安装步骤。
+				</p>
+			</div>
+		</section>
+
+		<section id="docs">
+			<div class="section-head">
+				<div>
+					<span class="label">Documents</span>
+					<h2>文档目录</h2>
 				</div>
+				<p class="section-head__note">按顺序阅读，能避开大部分新手问题。</p>
 			</div>
-		</div>
 
-		<div class="cb_window" id="cb_window"></div>
+			<div class="cards">
+				<a class="card card--amber" href="./tutorial/Instructions.html">
+					<span class="card__num">01</span>
+					<span class="card__top">
+						<span class="card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M12 7v14" />
+								<path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3Z" />
+							</svg>
+						</span>
+						<span class="card__badge">重要</span>
+					</span>
+					<h3>使用须知</h3>
+					<ul class="card__list">
+						<li>模拟器的使用说明书</li>
+						<li>请务必观看此条目</li>
+						<li>避免在使用时踩坑</li>
+					</ul>
+					<span class="card__cta">
+						点击查看
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
 
-  	</body>
-	
-	<script>
-		function fast_jump_1(){window.location.href='http://localhost:32323/command_load.html';}
-		function fast_jump_2(){window.location.href='http://localhost:32323/command_block_view.html';}
-		function fast_jump_3(){window.location.href='http://localhost:32323/command_respones.html';}
-		function fast_jump_4(){window.location.href='https://commandsimulator.great-site.net';}
+				<a class="card" href="./tutorial/WorldConfig.html">
+					<span class="card__num">02</span>
+					<span class="card__top">
+						<span class="card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<circle cx="12" cy="12" r="9" />
+								<path d="M3 12h18" />
+								<path d="M12 3c2.5 2.4 3.8 5.6 3.8 9S14.5 18.6 12 21c-2.5-2.4-3.8-5.6-3.8-9S9.5 5.4 12 3Z" />
+							</svg>
+						</span>
+						<span class="card__badge">入门</span>
+					</span>
+					<h3>世界配置</h3>
+					<ul class="card__list">
+						<li>学习如何修改世界配置</li>
+						<li>解决世界配置的疑问</li>
+						<li>预防在开始时出错</li>
+					</ul>
+					<span class="card__cta">
+						点击查看
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
 
-		function jump_1(){window.location.href='http://localhost:32323/tutorial/Instructions.html';}
-		function jump_2(){window.location.href='http://localhost:32323/tutorial/WorldConfig.html';}
-		function jump_3(){window.location.href='http://localhost:32323/tutorial/CommandDebug.html';}
-		function jump_4(){window.location.href='http://localhost:32323/tutorial/ExpandPack.html';}
-		function jump_5(){window.location.href='http://localhost:32323/tutorial/';}
-		function jump_6(){window.location.href='http://localhost:32323/tutorial/';}
-	</script>
+				<a class="card card--violet" href="./tutorial/CommandDebug.html">
+					<span class="card__num">03</span>
+					<span class="card__top">
+						<span class="card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="m4 17 6-6-6-6" />
+								<path d="M12 19h8" />
+							</svg>
+						</span>
+						<span class="card__badge">进阶</span>
+					</span>
+					<h3>命令调试</h3>
+					<ul class="card__list">
+						<li>专属模拟器的调试命令</li>
+						<li>还原 MC 命令系统的架构</li>
+						<li>预先发现命令错误</li>
+					</ul>
+					<span class="card__cta">
+						点击查看
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
+			</div>
+		</section>
 
-  	<script type="module">
-		import * as THREE from "/js/three.module.js";
-		import {OrbitControls} from "/js/OrbitControls.js";
+		<footer class="site-footer">
+			<p>
+				命令模拟器 · 帮助文档
+				<span>本地服务</span>
+			</p>
+		</footer>
+	</main>
 
-		function creat_block (texture_list) {
-			var material_list = [];//上下左右前后
-			for (let index1 = 0; index1 < 6; index1++) {
-				const texture1 = new THREE.TextureLoader().load(texture_list[index1]);
-				const material1 = new THREE.MeshLambertMaterial( {color:0xffffff,map: texture1} );
-				material1.transparent = true;
-				texture1.magFilter = THREE.NearestFilter;
-				material_list.push(material1)
-			}
-			const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			const cube = new THREE.Mesh( geometry, [material_list[2],material_list[3],material_list[0],material_list[1],material_list[4],material_list[5]] );
-			return cube
+	<script type="module">
+		import * as THREE from './js/three.module.js';
+		import { OrbitControls } from './js/OrbitControls.js';
+
+		const stage = document.getElementById('stage');
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+
+		function createBlock(list) {
+			// 面顺序：+x, -x, +y, -y, +z(正面), -z(背面)
+			const faces = [list[2], list[3], list[0], list[1], list[4], list[5]];
+			const materials = faces.map(function (url) {
+				const texture = new THREE.TextureLoader().load(url);
+				texture.magFilter = THREE.NearestFilter;
+				texture.encoding = THREE.sRGBEncoding;
+				return new THREE.MeshLambertMaterial({ map: texture, transparent: true });
+			});
+			return new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials);
 		}
 
-		
-		const width1 = document.getElementById('cb_window').clientWidth;
-		const height1 = 400;
+		function start() {
+			let renderer;
+			try {
+				renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+			} catch (error) {
+				return; // 保留首屏 SVG 方块
+			}
+			if (!renderer || !renderer.getContext()) return;
 
-		const scene = new THREE.Scene();
-		const camera = new THREE.PerspectiveCamera( 75, width1/height1, 0.1, 1000 );
+			renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+			renderer.outputEncoding = THREE.sRGBEncoding;
+			stage.appendChild(renderer.domElement);
 
-		const renderer = new THREE.WebGLRenderer({antialias: true});
-		renderer.setSize( width1, height1 );
-		document.body.appendChild( renderer.domElement );
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 200);
 
-		// 环境光
-		const light = new THREE.AmbientLight(0xfaffff); // soft white light
-		scene.add(light);
+			scene.add(new THREE.AmbientLight(0xdce8ff, 1.05));
+			const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+			keyLight.position.set(3, 6, 5);
+			scene.add(keyLight);
+			const rimLight = new THREE.DirectionalLight(0x9fd8ff, 0.42);
+			rimLight.position.set(-5, -2, -4);
+			scene.add(rimLight);
 
-		// 平行光源
-		const directionalLight = new THREE.DirectionalLight(0xffffff, .6);
-		directionalLight.position.set(0, 1000, 0);
-		scene.add(directionalLight); 
+			const basePath = './picture/block/';
+			const group = new THREE.Group();
+			scene.add(group);
 
-		
-		const controls = new OrbitControls( camera, renderer.domElement );
-		controls.minDistance = 5;
-		
-		const cube1 = creat_block(['picture/block/command_block_front_mipmap.png','picture/block/command_block_back_mipmap.png',
-		'picture/block/command_block_side_mipmap.png','picture/block/command_block_side_mipmap.png',
-		'picture/block/command_block_side_mipmap.png','picture/block/command_block_side_mipmap.png'])
-		scene.add(cube1);
-		const cube2 = creat_block(['picture/block/command_block_front_mipmap.png','picture/block/command_block_back_mipmap.png',
-		'picture/block/command_block_conditional_mipmap.png','picture/block/command_block_conditional_mipmap.png',
-		'picture/block/command_block_conditional_mipmap.png','picture/block/command_block_conditional_mipmap.png'])
-		scene.add(cube2);
-		const cube3 = creat_block(['picture/block/chain_command_block_front_mipmap.png','picture/block/chain_command_block_back_mipmap.png',
-		'picture/block/chain_command_block_side_mipmap.png','picture/block/chain_command_block_side_mipmap.png',
-		'picture/block/chain_command_block_side_mipmap.png','picture/block/chain_command_block_side_mipmap.png'])
-		scene.add(cube3);
-		const cube4 = creat_block(['picture/block/chain_command_block_front_mipmap.png','picture/block/chain_command_block_back_mipmap.png',
-		'picture/block/chain_command_block_conditional_mipmap.png','picture/block/chain_command_block_conditional_mipmap.png',
-		'picture/block/chain_command_block_conditional_mipmap.png','picture/block/chain_command_block_conditional_mipmap.png'])
-		scene.add(cube4);
-		const cube5 = creat_block(['picture/block/repeating_command_block_front_mipmap.png','picture/block/repeating_command_block_back_mipmap.png',
-		'picture/block/repeating_command_block_side_mipmap.png','picture/block/repeating_command_block_side_mipmap.png',
-		'picture/block/repeating_command_block_side_mipmap.png','picture/block/repeating_command_block_side_mipmap.png'])
-		scene.add(cube5);
-		const cube6 = creat_block(['picture/block/repeating_command_block_front_mipmap.png','picture/block/repeating_command_block_back_mipmap.png',
-		'picture/block/repeating_command_block_conditional_mipmap.png','picture/block/repeating_command_block_conditional_mipmap.png',
-		'picture/block/repeating_command_block_conditional_mipmap.png','picture/block/repeating_command_block_conditional_mipmap.png'])
-		scene.add(cube6);
+			const cubes = [
+				['command_block_front_mipmap.png', 'command_block_back_mipmap.png', 'command_block_side_mipmap.png', 'command_block_side_mipmap.png', 'command_block_side_mipmap.png', 'command_block_side_mipmap.png'],
+				['command_block_front_mipmap.png', 'command_block_back_mipmap.png', 'command_block_conditional_mipmap.png', 'command_block_conditional_mipmap.png', 'command_block_conditional_mipmap.png', 'command_block_conditional_mipmap.png'],
+				['chain_command_block_front_mipmap.png', 'chain_command_block_back_mipmap.png', 'chain_command_block_side_mipmap.png', 'chain_command_block_side_mipmap.png', 'chain_command_block_side_mipmap.png', 'chain_command_block_side_mipmap.png'],
+				['chain_command_block_front_mipmap.png', 'chain_command_block_back_mipmap.png', 'chain_command_block_conditional_mipmap.png', 'chain_command_block_conditional_mipmap.png', 'chain_command_block_conditional_mipmap.png', 'chain_command_block_conditional_mipmap.png'],
+				['repeating_command_block_front_mipmap.png', 'repeating_command_block_back_mipmap.png', 'repeating_command_block_side_mipmap.png', 'repeating_command_block_side_mipmap.png', 'repeating_command_block_side_mipmap.png', 'repeating_command_block_side_mipmap.png'],
+				['repeating_command_block_front_mipmap.png', 'repeating_command_block_back_mipmap.png', 'repeating_command_block_conditional_mipmap.png', 'repeating_command_block_conditional_mipmap.png', 'repeating_command_block_conditional_mipmap.png', 'repeating_command_block_conditional_mipmap.png']
+			];
 
-		camera.position.z = 5;
-		cube1.rotation.x = 0.55;
-		cube1.position.y = 1.5;
-		cube2.rotation.x = 0.25;
-		cube2.position.y = -1.5;
+			const meshes = cubes.map(function (list, index) {
+				const mesh = createBlock(list.map(function (name) { return basePath + name; }));
+				mesh.rotation.x = 0.22;
+				mesh.rotation.y = -0.5 + index * 0.06;
+				group.add(mesh);
+				return mesh;
+			});
 
-		cube3.rotation.x = 0.55;
-		cube3.position.x = -2.85;
-		cube3.position.y = 1.5;
-		cube4.rotation.x = 0.25;
-		cube4.position.x = -2.5;
-		cube4.position.y = -1.5;
+			// 贴图到达后再淡入，避免白屏闪烁
+			new THREE.TextureLoader().load(basePath + 'command_block_front_mipmap.png', function () {
+				stage.classList.add('is-live');
+			});
 
-		cube5.rotation.x = 0.55;
-		cube5.position.x = 2.85;
-		cube5.position.y = 1.5;
-		cube6.rotation.x = 0.25;
-		cube6.position.x = 2.5;
-		cube6.position.y = -1.5;
+			const baseY = new Array(meshes.length).fill(0);
 
-		function animate() {
-			requestAnimationFrame( animate );
-			cube1.rotation.y += 0.01;
-			cube2.rotation.y += 0.01;
-			cube3.rotation.y += 0.01;
-			cube4.rotation.y += 0.01;
-			cube5.rotation.y += 0.01;
-			cube6.rotation.y += 0.01;
-			controls.target.x = 0
-			controls.target.y = 0
-			controls.target.z = 0
-			renderer.render( scene, camera );
-		};
+			function layout() {
+				const wide = stage.clientWidth / stage.clientHeight >= 1.2;
+				meshes.forEach(function (mesh, index) {
+					if (wide) {
+						const column = Math.floor(index / 2); // 0 中, 1 左, 2 右
+						const x = [0, -2.62, 2.62][column];
+						const y = index % 2 === 0 ? 1.42 : -1.42;
+						mesh.position.set(x + (index % 2 === 0 ? -0.16 : 0.16), y, 0);
+					} else {
+						const x = index % 2 === 0 ? -1.16 : 1.16;
+						const y = 1.95 - Math.floor(index / 2) * 1.95;
+						mesh.position.set(x, y, 0);
+					}
+					baseY[index] = mesh.position.y;
+				});
+			}
 
-		animate();
+			let controls = null;
+
+			function fitCamera() {
+				const xs = meshes.map(function (m) { return m.position.x; });
+				const ys = meshes.map(function (m) { return m.position.y; });
+				// 0.6 ≈ 方块旋转后投影半径（0.5 边长 × 对角线），0.7 是方块前表面到中心的深度
+				const halfWidth = (Math.max.apply(null, xs) - Math.min.apply(null, xs)) / 2 + 0.6;
+				const halfHeight = (Math.max.apply(null, ys) - Math.min.apply(null, ys)) / 2 + 0.6;
+				const depth = 0.7;
+
+				const vFov = THREE.MathUtils.degToRad(camera.fov);
+				const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+				const distance = Math.max(
+					halfHeight / Math.tan(vFov / 2),
+					halfWidth / Math.tan(hFov / 2)
+				) + depth;
+
+				camera.position.set(0, 0, distance * 1.03);
+				camera.lookAt(0, 0, 0);
+				if (controls) controls.update();
+			}
+
+			if (!coarsePointer && !reduceMotion) {
+				controls = new OrbitControls(camera, renderer.domElement);
+				controls.enableZoom = false;
+				controls.enablePan = false;
+				controls.enableDamping = true;
+				controls.dampingFactor = 0.08;
+				controls.rotateSpeed = 0.55;
+				controls.minPolarAngle = Math.PI * 0.3;
+				controls.maxPolarAngle = Math.PI * 0.66;
+			}
+
+			function resize() {
+				const width = Math.max(stage.clientWidth, 1);
+				const height = Math.max(stage.clientHeight, 1);
+				renderer.setSize(width, height, false);
+				camera.aspect = width / height;
+				camera.updateProjectionMatrix();
+				layout();
+				fitCamera();
+			}
+
+			resize();
+
+			let idle = false;
+			let elapsed = 0;
+			let last = performance.now();
+
+			function frame(now) {
+				requestAnimationFrame(frame);
+				const delta = Math.min((now - last) / 1000, 0.05);
+				last = now;
+				if (idle) return;
+
+				if (!reduceMotion) {
+					elapsed += delta;
+					meshes.forEach(function (mesh, index) {
+						mesh.rotation.y += delta * 0.5;
+						mesh.position.y = baseY[index] + Math.sin(elapsed * 0.85 + index * 1.1) * 0.07;
+					});
+				}
+				if (controls) controls.update();
+				renderer.render(scene, camera);
+			}
+
+			requestAnimationFrame(frame);
+
+			if ('ResizeObserver' in window) {
+				new ResizeObserver(resize).observe(stage);
+			} else {
+				window.addEventListener('resize', resize);
+			}
+
+			// 页面不可见时停止渲染，手机省电
+			document.addEventListener('visibilitychange', function () {
+				idle = document.hidden;
+				last = performance.now();
+			});
+
+			if ('IntersectionObserver' in window) {
+				new IntersectionObserver(function (entries) {
+					idle = !entries[0].isIntersecting;
+					last = performance.now();
+				}, { threshold: 0.02 }).observe(stage);
+			}
+		}
+
+		try {
+			start();
+		} catch (error) {
+			// 任何异常都保留首屏 SVG 方块
+		}
 	</script>
+</body>
 
 </html>

@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="color-scheme" content="dark">
+	<meta name="theme-color" content="#070c16">
+	<meta name="description" content="Minecraft 命令实验室：用五个可交互的演示，把坐标、命令上下文、目标选择器、区块加载和 rawtext 文本组件讲清楚。">
+	<title>命令实验室 · 命令模拟器</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070c16'/%3E%3Cpath d='M16 5 27 11.4v9.2L16 27 5 20.6v-9.2z' fill='%232f8d55'/%3E%3Cpath d='M5 11.4 16 17.8l11-6.4v9.2L16 27z' fill='%230f3d23'/%3E%3Cpath d='M16 5 27 11.4 16 17.8 5 11.4z' fill='%233ee08f'/%3E%3C/svg%3E">
+
+	<style>
+		:root {
+			--panel: rgba(255, 255, 255, .045);
+			--panel-hi: rgba(255, 255, 255, .08);
+			--line: rgba(255, 255, 255, .10);
+			--line-hi: rgba(255, 255, 255, .2);
+			--text: #eaf1fb;
+			--body: #c2d0e2;
+			--muted: #93a5bf;
+			--mint: #3ee08f;
+			--amber: #ffc857;
+			--violet: #b493ff;
+			--sky: #7fb2ff;
+			--pink: #ff9ecb;
+			--teal: #5fe0d2;
+			--gutter: clamp(20px, 5vw, 64px);
+			--header-h: 62px;
+			--radius: 22px;
+			--font: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+				"Microsoft YaHei", "Noto Sans SC", sans-serif;
+			--mono: ui-monospace, "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html {
+			scroll-behavior: smooth;
+			-webkit-text-size-adjust: 100%;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100dvh;
+			font-family: var(--font);
+			font-size: 16px;
+			line-height: 1.9;
+			color: var(--text);
+			background:
+				radial-gradient(1000px 600px at 10% -10%, rgba(62, 224, 143, .18), transparent 62%),
+				radial-gradient(900px 560px at 100% 0%, rgba(180, 147, 255, .14), transparent 58%),
+				radial-gradient(900px 600px at 50% 110%, rgba(127, 178, 255, .10), transparent 62%),
+				linear-gradient(180deg, #070c16 0%, #0a1120 46%, #060a12 100%);
+			background-repeat: no-repeat;
+			-webkit-font-smoothing: antialiased;
+			overflow-x: clip;
+		}
+
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			z-index: -1;
+			pointer-events: none;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px);
+			background-size: 52px 52px;
+			mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+			-webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+		}
+
+		::selection {
+			background: rgba(62, 224, 143, .3);
+			color: #fff;
+		}
+
+		:focus-visible {
+			outline: 2px solid var(--mint);
+			outline-offset: 3px;
+			border-radius: 8px;
+		}
+
+		a {
+			color: var(--mint);
+			text-decoration-color: rgba(62, 224, 143, .45);
+			text-underline-offset: 3px;
+		}
+
+		.wrap {
+			width: min(1140px, 100% - var(--gutter));
+			margin-inline: auto;
+		}
+
+		.skip {
+			position: absolute;
+			left: -9999px;
+			top: 8px;
+			z-index: 99;
+			padding: 10px 16px;
+			border-radius: 10px;
+			background: var(--mint);
+			color: #04140b;
+			font-weight: 700;
+			text-decoration: none;
+		}
+
+		.skip:focus {
+			left: 12px;
+		}
+
+		/* ========== 顶部 ========== */
+		.header {
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			background: rgba(7, 12, 22, .78);
+			border-bottom: 1px solid var(--line);
+			backdrop-filter: blur(16px) saturate(160%);
+			-webkit-backdrop-filter: blur(16px) saturate(160%);
+			padding-left: env(safe-area-inset-left);
+			padding-right: env(safe-area-inset-right);
+		}
+
+		.header__inner {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			height: var(--header-h);
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			text-decoration: none;
+			color: var(--text);
+			flex: none;
+			min-height: 40px;
+		}
+
+		.brand svg {
+			width: 26px;
+			height: 26px;
+			filter: drop-shadow(0 0 12px rgba(62, 224, 143, .45));
+		}
+
+		.brand b {
+			font-size: 15px;
+			letter-spacing: .02em;
+			white-space: nowrap;
+		}
+
+		.crumb {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			color: var(--muted);
+			font-size: 13.5px;
+			white-space: nowrap;
+			overflow: hidden;
+		}
+
+		.crumb::before {
+			content: "/";
+			color: rgba(255, 255, 255, .3);
+		}
+
+		.back {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			height: 38px;
+			padding: 0 14px;
+			border-radius: 11px;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			color: var(--text);
+			font-size: 13.5px;
+			text-decoration: none;
+			white-space: nowrap;
+			transition: background-color .2s, border-color .2s, transform .2s;
+		}
+
+		.back:hover {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.back svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		/* ========== 首屏 ========== */
+		.hero {
+			display: grid;
+			grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+			gap: clamp(26px, 4vw, 56px);
+			align-items: center;
+			padding: clamp(30px, 5vw, 66px) 0 clamp(24px, 4vw, 44px);
+		}
+
+		.eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			margin: 0 0 18px;
+			padding: 6px 13px 6px 10px;
+			border: 1px solid rgba(62, 224, 143, .28);
+			border-radius: 999px;
+			background: rgba(62, 224, 143, .08);
+			color: #9ff0c6;
+			font-size: 12px;
+			font-weight: 600;
+			letter-spacing: .14em;
+		}
+
+		.eyebrow__dot {
+			width: 7px;
+			height: 7px;
+			border-radius: 2px;
+			background: var(--mint);
+			box-shadow: 0 0 0 4px rgba(62, 224, 143, .16);
+		}
+
+		h1 {
+			margin: 0;
+			font-size: clamp(29px, 5.6vw, 50px);
+			line-height: 1.2;
+			letter-spacing: -.02em;
+			font-weight: 800;
+		}
+
+		h1 em {
+			font-style: normal;
+			background: linear-gradient(96deg, #9dffc9 0%, var(--mint) 44%, var(--amber) 100%);
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+		}
+
+		.hero__lead {
+			margin: 16px 0 0;
+			max-width: 48ch;
+			font-size: clamp(15px, 2.6vw, 17px);
+			color: var(--muted);
+		}
+
+		.hero__lead b {
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		.hero__actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: clamp(20px, 3vw, 28px);
+		}
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			min-height: 48px;
+			padding: 12px 20px;
+			border-radius: 14px;
+			font-size: 15px;
+			font-weight: 600;
+			text-decoration: none;
+			transition: transform .2s, box-shadow .25s, background-color .25s, border-color .25s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.btn svg {
+			width: 17px;
+			height: 17px;
+			flex: none;
+			transition: transform .25s;
+		}
+
+		.btn--primary {
+			color: #04150c;
+			background: linear-gradient(180deg, #63f0a6, #2fcf80);
+			box-shadow: 0 12px 30px -14px rgba(62, 224, 143, .85), inset 0 1px 0 rgba(255, 255, 255, .45);
+		}
+
+		.btn--primary:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 18px 36px -16px rgba(62, 224, 143, .95), inset 0 1px 0 rgba(255, 255, 255, .5);
+		}
+
+		.btn--primary:hover svg {
+			transform: translateX(3px);
+		}
+
+		.btn--ghost {
+			color: var(--text);
+			background: var(--panel-hi);
+			border: 1px solid var(--line);
+		}
+
+		.btn--ghost:hover {
+			background: rgba(255, 255, 255, .13);
+			border-color: var(--line-hi);
+			transform: translateY(-2px);
+		}
+
+		.hero__meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px 18px;
+			margin: 20px 0 0;
+			padding: 0;
+			list-style: none;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.hero__meta li {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.hero__meta li::before {
+			content: "";
+			width: 5px;
+			height: 5px;
+			border-radius: 1px;
+			background: var(--mint);
+			opacity: .7;
+		}
+
+		/* ========== 命令示例卡 ========== */
+		.cmdshow {
+			position: relative;
+			border: 1px solid var(--line);
+			border-radius: 24px;
+			background:
+				radial-gradient(120% 90% at 50% 0%, rgba(62, 224, 143, .14), transparent 62%),
+				linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .015));
+			box-shadow: 0 30px 70px -34px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .08);
+			overflow: hidden;
+		}
+
+		.cmdshow::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+			background-size: 34px 34px;
+			mask-image: radial-gradient(ellipse at 50% 40%, #000 10%, transparent 75%);
+			-webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 10%, transparent 75%);
+			pointer-events: none;
+		}
+
+		.cmdshow__bar {
+			position: relative;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 11px 16px;
+			border-bottom: 1px solid var(--line);
+			font-family: var(--mono);
+			font-size: 11.5px;
+			letter-spacing: .1em;
+			color: var(--muted);
+		}
+
+		.cmdshow__bar::before {
+			content: "";
+			width: 7px;
+			height: 7px;
+			border-radius: 50%;
+			background: rgba(62, 224, 143, .7);
+			box-shadow: 14px 0 0 rgba(255, 200, 87, .55), 28px 0 0 rgba(255, 120, 80, .45);
+			margin-right: 24px;
+		}
+
+		.cmdshow__code {
+			position: relative;
+			margin: 0;
+			padding: 22px 16px 16px;
+			font-family: var(--mono);
+			font-size: clamp(13px, 2.4vw, 15px);
+			line-height: 2.1;
+			color: #cfe0f5;
+			white-space: pre-wrap;
+			word-break: break-word;
+		}
+
+		.tok {
+			padding: 2px 6px;
+			border-radius: 7px;
+			font-weight: 600;
+		}
+
+		.tok--as {
+			color: #8df3bd;
+			background: rgba(62, 224, 143, .13);
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .24);
+		}
+
+		.tok--at {
+			color: #cbb8ff;
+			background: rgba(180, 147, 255, .14);
+			box-shadow: inset 0 0 0 1px rgba(180, 147, 255, .24);
+		}
+
+		.tok--run {
+			color: #ffd98a;
+			background: rgba(255, 200, 87, .13);
+			box-shadow: inset 0 0 0 1px rgba(255, 200, 87, .22);
+		}
+
+		.cmdshow__legend {
+			position: relative;
+			margin: 0;
+			padding: 4px 18px 18px;
+			list-style: none;
+			display: grid;
+			gap: 8px;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.cmdshow__legend li {
+			display: flex;
+			align-items: baseline;
+			gap: 9px;
+		}
+
+		.cmdshow__legend b {
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		.dot {
+			flex: none;
+			width: 6px;
+			height: 6px;
+			border-radius: 2px;
+			margin-top: .55em;
+		}
+
+		.dot--as { background: var(--mint); }
+		.dot--at { background: var(--violet); }
+		.dot--run { background: var(--amber); }
+
+		/* ========== 区块标题 ========== */
+		.section-head {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 16px;
+			flex-wrap: wrap;
+			margin: clamp(36px, 6vw, 64px) 0 20px;
+		}
+
+		.label {
+			display: block;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .26em;
+			color: var(--mint);
+			text-transform: uppercase;
+		}
+
+		.section-head h2 {
+			margin: 6px 0 0;
+			font-size: clamp(21px, 3.8vw, 29px);
+			letter-spacing: -.01em;
+			font-weight: 800;
+		}
+
+		.section-head__note {
+			margin: 0;
+			padding-bottom: 4px;
+			font-size: 13.5px;
+			color: var(--muted);
+		}
+
+		/* ========== 演示卡片 ========== */
+		.cards {
+			display: grid;
+			gap: clamp(12px, 2vw, 18px);
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		}
+
+		.lab {
+			--c: var(--mint);
+			--c-soft: rgba(62, 224, 143, .16);
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			padding: 20px;
+			border: 1px solid var(--line);
+			border-radius: 20px;
+			background: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .016));
+			color: inherit;
+			text-decoration: none;
+			overflow: hidden;
+			transition: transform .28s cubic-bezier(.2, .7, .3, 1), border-color .28s, box-shadow .28s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.lab::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			z-index: -1;
+			background: radial-gradient(300px 150px at 50% 0%, var(--c-soft), transparent 72%);
+			opacity: 0;
+			transition: opacity .28s;
+			pointer-events: none;
+		}
+
+		.lab--violet {
+			--c: var(--violet);
+			--c-soft: rgba(180, 147, 255, .16);
+		}
+
+		.lab--amber {
+			--c: var(--amber);
+			--c-soft: rgba(255, 200, 87, .15);
+		}
+
+		.lab--sky {
+			--c: var(--sky);
+			--c-soft: rgba(127, 178, 255, .16);
+		}
+
+		.lab--pink {
+			--c: var(--pink);
+			--c-soft: rgba(255, 158, 203, .15);
+		}
+
+		.lab--teal {
+			--c: var(--teal);
+			--c-soft: rgba(95, 224, 210, .16);
+		}
+
+		.lab__head {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.lab__icon {
+			display: grid;
+			place-items: center;
+			width: 44px;
+			height: 44px;
+			flex: none;
+			border-radius: 13px;
+			color: var(--c);
+			border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+			background: linear-gradient(180deg, var(--c-soft), rgba(255, 255, 255, .02));
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+		}
+
+		.lab__icon svg {
+			width: 22px;
+			height: 22px;
+		}
+
+		.lab__no {
+			margin-left: auto;
+			font-family: var(--mono);
+			font-size: 12px;
+			letter-spacing: .16em;
+			color: rgba(255, 255, 255, .22);
+		}
+
+		.lab h3 {
+			margin: 2px 0 0;
+			font-size: 18px;
+			font-weight: 700;
+			letter-spacing: -.01em;
+		}
+
+		.lab__tag {
+			display: inline-block;
+			align-self: flex-start;
+			margin-bottom: 2px;
+			padding: 1px 9px;
+			border-radius: 999px;
+			font-size: 11.5px;
+			font-weight: 700;
+			color: var(--c);
+			background: color-mix(in srgb, var(--c) 12%, transparent);
+			border: 1px solid color-mix(in srgb, var(--c) 26%, transparent);
+		}
+
+		.lab__desc {
+			margin: 0;
+			font-size: 14.5px;
+			line-height: 1.85;
+			color: var(--body);
+		}
+
+		.lab__points {
+			margin: 2px 0 0;
+			padding: 0;
+			list-style: none;
+			display: grid;
+			gap: 6px;
+		}
+
+		.lab__points li {
+			position: relative;
+			padding-left: 17px;
+			font-size: 13.5px;
+			line-height: 1.7;
+			color: var(--muted);
+		}
+
+		.lab__points li::before {
+			content: "";
+			position: absolute;
+			left: 2px;
+			top: .66em;
+			width: 6px;
+			height: 6px;
+			border-radius: 1px;
+			background: var(--c);
+			opacity: .62;
+		}
+
+		.lab__cta {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			margin-top: auto;
+			padding-top: 14px;
+			font-size: 14px;
+			font-weight: 700;
+			color: var(--c);
+		}
+
+		.lab__cta svg {
+			width: 15px;
+			height: 15px;
+			transition: transform .25s;
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+			.lab:hover {
+				transform: translateY(-5px);
+				border-color: color-mix(in srgb, var(--c) 42%, transparent);
+				box-shadow: 0 26px 50px -28px var(--c-soft), inset 0 1px 0 rgba(255, 255, 255, .12);
+			}
+
+			.lab:hover::after { opacity: 1; }
+			.lab:hover .lab__cta svg { transform: translateX(4px); }
+		}
+
+		.lab:active {
+			transform: translateY(-1px) scale(.995);
+		}
+
+		/* ========== 为什么用演示 ========== */
+		.why {
+			margin-top: clamp(44px, 7vw, 76px);
+			padding: clamp(20px, 3vw, 32px);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .012));
+		}
+
+		.why h2 {
+			margin: 0 0 6px;
+			font-size: clamp(19px, 3.4vw, 25px);
+			letter-spacing: -.01em;
+			font-weight: 800;
+		}
+
+		.why__lead {
+			margin: 0 0 20px;
+			max-width: 62ch;
+			font-size: 15px;
+			color: var(--muted);
+		}
+
+		.why__grid {
+			display: grid;
+			gap: 12px;
+			grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		}
+
+		.why__item {
+			padding: 16px;
+			border: 1px solid var(--line);
+			border-radius: 15px;
+			background: rgba(255, 255, 255, .025);
+		}
+
+		.why__item b {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			margin-bottom: 6px;
+			font-size: 14.5px;
+			color: var(--text);
+		}
+
+		.why__item b span {
+			display: grid;
+			place-items: center;
+			width: 20px;
+			height: 20px;
+			border-radius: 6px;
+			background: rgba(62, 224, 143, .13);
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .25);
+			color: var(--mint);
+			font-family: var(--mono);
+			font-size: 11px;
+		}
+
+		.why__item p {
+			margin: 0;
+			font-size: 14px;
+			line-height: 1.85;
+			color: var(--body);
+		}
+
+		/* ========== 页脚 ========== */
+		.footer {
+			margin-top: clamp(40px, 6vw, 70px);
+			padding: 24px 0 calc(40px + env(safe-area-inset-bottom));
+			border-top: 1px solid var(--line);
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px 22px;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.footer p {
+			margin: 0;
+		}
+
+		.footer nav {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+		}
+
+		.footer nav a {
+			padding: 6px 10px;
+			border-radius: 8px;
+			color: var(--muted);
+			text-decoration: none;
+			transition: color .2s, background-color .2s;
+		}
+
+		.footer nav a:hover {
+			color: var(--text);
+			background: var(--panel-hi);
+		}
+
+		/* ========== 响应式 ========== */
+		@media (max-width: 980px) {
+			.hero {
+				grid-template-columns: 1fr;
+				padding-top: clamp(26px, 6vw, 44px);
+			}
+
+			.hero__lead { max-width: none; }
+		}
+
+		@media (max-width: 620px) {
+			:root { --header-h: 56px; }
+
+			.crumb { display: none; }
+			.back { padding: 0 11px; }
+			.back span { display: none; }
+			.section-head__note { display: none; }
+			.hero__actions .btn { flex: 1 1 100%; justify-content: center; }
+			.lab { border-radius: 18px; padding: 18px; }
+			.why { border-radius: 18px; }
+			.footer nav a { padding: 6px 8px; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			html { scroll-behavior: auto; }
+
+			* {
+				transition-duration: .001s !important;
+				animation-duration: .001s !important;
+			}
+		}
+	</style>
+</head>
+
+<body id="top">
+	<a class="skip" href="#labs">跳到演示列表</a>
+
+	<header class="header">
+		<div class="wrap header__inner">
+			<a class="brand" href="../index.html">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<path d="M16 3.2 28.6 10.4v11.2L16 28.8 3.4 21.6V10.4Z" fill="#0d2a19" stroke="#3ee08f" stroke-width="1.5" stroke-linejoin="round" />
+					<path d="M16 3.2 28.6 10.4 16 17.6 3.4 10.4Z" fill="#2f8d55" />
+					<path d="M16 17.6v11.2L3.4 21.6V10.4Z" fill="#0f3d23" />
+					<path d="M16 17.6 28.6 10.4v11.2L16 28.8Z" fill="#186b3a" />
+					<path d="M11.4 9.1 16 6.5l4.6 2.6-4.6 2.6Z" fill="#c8f3d9" opacity=".85" />
+				</svg>
+				<b>命令模拟器</b>
+			</a>
+			<div class="crumb"><span>帮助文档 / 命令实验室</span></div>
+			<a class="back" href="../index.html">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M4 11.5 12 4l8 7.5V20H4z" />
+					<path d="M9.5 20v-5.5h5V20" />
+				</svg>
+				<span>返回主页</span>
+			</a>
+		</div>
+	</header>
+
+	<main class="wrap">
+		<section class="hero">
+			<div class="hero__copy">
+				<p class="eyebrow"><span class="eyebrow__dot"></span>MINECRAFT COMMAND LAB</p>
+				<h1>把命令里<br><em>看不见的规则</em>画出来</h1>
+				<p class="hero__lead">
+					命令怎么解析、坐标从哪儿算、上下文怎么换、选择器到底选中了谁、区块为什么停在那儿，把命令里最容易含糊的概念变成看得见的东西。
+				</p>
+				<p class="hero__lead">这些内容适用于Minecraft基岩版或网易版</p>
+			</div>
+
+			<div class="cmdshow">
+				<div class="cmdshow__bar">execute · 上下文示例</div>
+				<pre class="cmdshow__code"><span class="tok tok--as">as @a</span> <span class="tok tok--at">at @s</span> run <span class="tok tok--run">tp ~ ~1 ~</span></pre>
+				<ul class="cmdshow__legend">
+					<li><i class="dot dot--as"></i><span><b>谁在跑</b>：让每个玩家依次成为 @s</span></li>
+					<li><i class="dot dot--at"></i><span><b>在哪跑</b>：执行位置与朝向换成该玩家的</span></li>
+					<li><i class="dot dot--run"></i><span><b>做什么</b>：相对自己的位置向上传送 1 格</span></li>
+				</ul>
+			</div>
+		</section>
+
+		<section id="labs">
+			<div class="section-head">
+				<div>
+					<span class="label">Labs</span>
+					<h2>演示这几个绕不开的概念</h2>
+				</div>
+				<p class="section-head__note">按顺序看最顺，也可以直接挑卡住你的那一个。</p>
+			</div>
+
+			<div class="cards">
+				<!-- 命令解析执行 -->
+				<a class="lab lab--teal" href="./CommandJourney.html">
+					<span class="lab__head">
+						<span class="lab__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<rect x="3" y="3" width="7" height="7" rx="2" />
+								<rect x="14" y="14" width="7" height="7" rx="2" />
+								<path d="M6.5 10v3.5a2.5 2.5 0 0 0 2.5 2.5h5" />
+							</svg>
+						</span>
+						<span class="lab__no">01</span>
+					</span>
+					<span class="lab__tag">执行流程</span>
+					<h3>命令旅程</h3>
+					<p class="lab__desc">
+						一条命令先被拆成词块、检查语法，再整理成可复用的执行对象存进缓存；
+						真正执行时，它和上下文一起交给执行环节，最后拿到反馈或者错误。
+					</p>
+					<ul class="lab__points">
+						<li>拆词 → 语法 → 编译 → 执行，逐段播放整条流水线</li>
+						<li>五种结果：成功、缓存命中、语法错误、编译错误、运行失败</li>
+						<li>错在哪一层，反馈就长什么样</li>
+					</ul>
+					<span class="lab__cta">
+						进入演示
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
+
+				<!-- 坐标 -->
+				<a class="lab" href="./Coordinate3D.html">
+					<span class="lab__head">
+						<span class="lab__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M12 3v18" />
+								<path d="M3 12h18" />
+								<path d="m9 6 3-3 3 3" />
+								<path d="m9 18 3 3 3-3" />
+								<circle cx="12" cy="12" r="2.2" />
+							</svg>
+						</span>
+						<span class="lab__no">02</span>
+					</span>
+					<span class="lab__tag">坐标系</span>
+					<h3>坐标实验室</h3>
+					<p class="lab__desc">
+						把点 P 丢进 3D 空间，一键切换绝对、相对、局部三种坐标，
+						看同一个位置被三种写法指向的差别。
+					</p>
+					<ul class="lab__points">
+						<li>绝对坐标从世界原点量起</li>
+						<li>~ 跟着执行位置走，^ 跟着执行朝向走</li>
+						<li>可以拖动旋转，从任意角度看 P</li>
+					</ul>
+					<span class="lab__cta">
+						进入演示
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
+
+				<!-- 上下文 -->
+				<a class="lab lab--violet" href="./CommandContext.html">
+					<span class="lab__head">
+						<span class="lab__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<circle cx="12" cy="12" r="9" />
+								<path d="M12 8v8" />
+								<path d="M8 12h8" />
+							</svg>
+						</span>
+						<span class="lab__no">03</span>
+					</span>
+					<span class="lab__tag">执行规则</span>
+					<h3>命令上下文</h3>
+					<p class="lab__desc">
+						一条命令凭什么「知道」自己在哪生效？~ 的原点、^ 的朝向、@s 的指向，
+						配上动画一次讲透。
+					</p>
+					<ul class="lab__points">
+						<li>~ ^ @s 逐个拆开讲</li>
+						<li>as @a / at @s 的「分身」怎么算</li>
+						<li>动画可开关，跟着节奏看</li>
+					</ul>
+					<span class="lab__cta">
+						进入演示
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
+
+				<!-- 选择器 -->
+				<a class="lab lab--amber" href="./SelectorParams.html">
+					<span class="lab__head">
+						<span class="lab__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<circle cx="12" cy="12" r="3" />
+								<circle cx="12" cy="12" r="8" stroke-dasharray="3 3" />
+								<rect x="6" y="6" width="12" height="12" rx="1.5" stroke-dasharray="3 3" />
+							</svg>
+						</span>
+						<span class="lab__no">04</span>
+					</span>
+					<span class="lab__tag">目标筛选</span>
+					<h3>目标选择器</h3>
+					<p class="lab__desc">
+						r / rm 用「离原点多远」画一个球，dx dy dz 用「三个轴上的范围」画一个盒子——
+						滑块一拖，谁被选中一目了然。
+					</p>
+					<ul class="lab__points">
+						<li>r 与 rm：球形范围的上下界</li>
+						<li>dx dy dz：碰撞箱与盒子相交</li>
+						<li>参数实时联动，边调边看</li>
+					</ul>
+					<span class="lab__cta">
+						进入演示
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
+
+				<!-- 区块 -->
+				<a class="lab lab--sky" href="./ChunkAtlas.html">
+					<span class="lab__head">
+						<span class="lab__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+								<rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+								<rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+								<rect x="13.5" y="13.5" width="7" height="7" rx="1.5" opacity=".35" />
+							</svg>
+						</span>
+						<span class="lab__no">05</span>
+					</span>
+					<span class="lab__tag">世界机制</span>
+					<h3>区块地图</h3>
+					<p class="lab__desc">
+						加载区块跟着玩家跑，重生点缓存钉在原地。模拟距离、传送加载、选择器变慢，
+						都能从这两块区域里找到答案。
+					</p>
+					<ul class="lab__points">
+						<li>加载区块 vs 重生点缓存</li>
+						<li>模拟距离 4 ~ 12 可调</li>
+						<li>缓存的代价：内存、方块、选择器</li>
+					</ul>
+					<span class="lab__cta">
+						进入演示
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
+
+				<!-- 文本 -->
+				<a class="lab lab--pink" href="./RawtextJson.html">
+					<span class="lab__head">
+						<span class="lab__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M4 6h16" />
+								<path d="M4 12h10" />
+								<path d="M4 18h13" />
+								<path d="M18 11v6" />
+							</svg>
+						</span>
+						<span class="lab__no">06</span>
+					</span>
+					<span class="lab__tag">文本输出</span>
+					<h3>Rawtext 文本组件</h3>
+					<p class="lab__desc">
+						rawtext 是一个列表，text、translate、score、selector 四种元素一段段接成一句话，
+						translate 则像一道填空题。
+					</p>
+					<ul class="lab__points">
+						<li>四种元素分别能写什么</li>
+						<li>translate 的填空式结构</li>
+						<li>§ 格式化与分段拼接</li>
+					</ul>
+					<span class="lab__cta">
+						进入演示
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M4 12h15" />
+							<path d="m13 6 6 6-6 6" />
+						</svg>
+					</span>
+				</a>
+			</div>
+		</section>
+
+		<section class="why">
+			<h2>为什么用「能拖的演示」学命令</h2>
+			<p class="why__lead">
+				命令不是靠背出来的。语法照抄只能应付抄来的那一条，理解了执行规则，才能自己写出需要的效果。
+			</p>
+			<div class="why__grid">
+				<div class="why__item">
+					<b><span>01</span>概念变成模型</b>
+					<p>坐标轴、球形范围、区块边界都做成可以拖动的图形，比静态截图更容易在脑子里留下位置感。</p>
+				</div>
+				<div class="why__item">
+					<b><span>02</span>错了知道为什么</b>
+					<p>看懂 r 与 dx/dy/dz 的差别，就不会再出现「明明写了却一个都没选中」的困惑。</p>
+				</div>
+				<div class="why__item">
+					<b><span>03</span>随时对照</b>
+					<p>五个页面都是纯前端、离线可开，调命令时放在旁边当参照，改一个参数就能看到结果。</p>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer class="footer wrap">
+		<p>命令模拟器</p>
+		<nav aria-label="页脚导航">
+			<a href="https://commandsimulator.great-site.net" target="_blank" rel="noopener noreferrer">官网 ↗</a>
+		</nav>
+	</footer>
+</body>
+
+</html>

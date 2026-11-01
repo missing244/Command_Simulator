@@ -1,0 +1,3021 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061018">
+  <title>区块加载与重生点缓存 · 交互演示</title>
+  <meta name="description" content="用动画解释 Minecraft Bedrock 的加载区块、重生点缓存、构建时机与性能代价。">
+  <style>
+/* =========================================================
+   CHUNK ATLAS — 区块加载与重生点缓存
+   单一主题、无外部依赖、移动端优先的轻量动效
+   ========================================================= */
+
+:root {
+  --bg: #061018;
+  --bg-soft: #081720;
+  --panel: rgba(10, 27, 37, .82);
+  --panel-2: rgba(7, 18, 26, .72);
+  --line: rgba(126, 214, 232, .13);
+  --line-strong: rgba(126, 214, 232, .22);
+  --text: #e9f7fb;
+  --muted: #8faab5;
+  --cyan: #4de3ff;
+  --cyan-deep: #1bb6d8;
+  --amber: #ffb454;
+  --amber-deep: #ff8a3d;
+  --pink: #ff5d8f;
+  --green: #7dffb2;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 30px 80px rgba(0, 0, 0, .35);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 620px at 10% -5%, rgba(77, 227, 255, .13), transparent 62%),
+    radial-gradient(880px 620px at 94% 12%, rgba(255, 180, 84, .09), transparent 58%),
+    radial-gradient(760px 520px at 52% 105%, rgba(255, 93, 143, .055), transparent 62%);
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(126, 214, 232, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126, 214, 232, .045) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .62) 58%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .62) 58%, transparent 100%);
+}
+
+.noscript {
+  margin: 0 auto;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255, 180, 84, .22);
+  background: rgba(255, 180, 84, .08);
+  color: var(--amber);
+  text-align: center;
+  font-size: 12px;
+}
+
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+img, svg { display: block; max-width: 100%; }
+h1, h2, h3, h4, p { margin-top: 0; }
+p { margin-bottom: 0; }
+ul, ol { margin: 0; }
+
+::selection {
+  background: rgba(77, 227, 255, .28);
+  color: #fff;
+}
+
+code {
+  padding: 1px 5px;
+  border: 1px solid rgba(77, 227, 255, .14);
+  border-radius: 5px;
+  background: rgba(77, 227, 255, .07);
+  color: #c9f6ff;
+  font-family: var(--mono);
+  font-size: .9em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- layout ---------- */
+
+main,
+.site-header,
+.site-footer { position: relative; z-index: 1; }
+
+.section {
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
+  padding-block: clamp(64px, 9vw, 118px);
+  scroll-margin-top: 76px;
+}
+
+.hero {
+  min-height: calc(100vh - 64px);
+  min-height: calc(100svh - 64px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+  padding-top: clamp(34px, 7vh, 76px);
+  padding-bottom: clamp(40px, 7vh, 80px);
+}
+
+/* ---------- header ---------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 13px clamp(16px, 4vw, 48px);
+  border-bottom: 1px solid rgba(126, 214, 232, .1);
+  background: rgba(6, 16, 24, .92);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+  width: 23px;
+  height: 23px;
+}
+
+.brand-mark i {
+  border-radius: 2px;
+  background: var(--cyan);
+  opacity: .9;
+}
+
+.brand-mark i:nth-child(2) { background: var(--amber); }
+.brand-mark i:nth-child(3) { background: rgba(77, 227, 255, .34); }
+.brand-mark i:nth-child(4) { background: rgba(255, 180, 84, .44); }
+
+.nav {
+  display: flex;
+  gap: clamp(12px, 2vw, 26px);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.nav a { transition: color .2s ease; }
+.nav a:hover { color: var(--text); }
+
+.header-tag {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+
+/* ---------- type ---------- */
+
+h1 {
+  margin-bottom: 22px;
+  font-size: clamp(43px, 7.1vw, 84px);
+  font-weight: 750;
+  line-height: 1.02;
+  letter-spacing: -.045em;
+}
+
+h2 {
+  margin-bottom: 14px;
+  font-size: clamp(30px, 4.3vw, 52px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -.035em;
+}
+
+h3 {
+  margin-bottom: 8px;
+  font-size: clamp(20px, 2.2vw, 27px);
+  line-height: 1.3;
+  letter-spacing: -.02em;
+}
+
+h4 { margin-bottom: 4px; font-size: 15px; }
+
+.eyebrow,
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 14px var(--cyan);
+  animation: pulse 2.8s ease-in-out infinite;
+}
+
+.kicker { color: var(--amber); margin-bottom: 12px; }
+
+.grad {
+  background: linear-gradient(100deg, var(--cyan), #b7f8ff 42%, var(--amber));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lede {
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: clamp(15px, 1.5vw, 18px);
+  line-height: 1.9;
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+  background: var(--cyan);
+  color: #04222a;
+  box-shadow: 0 10px 30px rgba(77, 227, 255, .18);
+}
+
+.btn-ghost {
+  border-color: rgba(77, 227, 255, .26);
+  background: rgba(77, 227, 255, .04);
+  color: var(--text);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(18px, 3vw, 36px);
+  margin-top: 38px;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-stats li { display: flex; flex-direction: column; gap: 2px; }
+
+.hero-stats strong {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: clamp(17px, 2vw, 23px);
+  font-weight: 600;
+  letter-spacing: -.03em;
+}
+
+.hero-stats span { color: var(--muted); font-size: 11px; }
+
+/* ---------- hero map ---------- */
+
+.hero-visual { position: relative; }
+
+.map-frame {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  margin-left: auto;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(77, 227, 255, .18);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(77, 227, 255, .075), transparent 56%),
+    #07141b;
+  box-shadow: var(--shadow), inset 0 0 80px rgba(77, 227, 255, .03);
+}
+
+.map-grid {
+  position: absolute;
+  inset: 7%;
+  display: grid;
+  grid-template-columns: repeat(25, 1fr);
+  grid-template-rows: repeat(25, 1fr);
+  gap: 1.5px;
+}
+
+.map-grid .cell {
+  min-width: 0;
+  min-height: 0;
+  border-radius: 2px;
+  background: rgba(126, 214, 232, .035);
+}
+
+.map-grid .cell.spawn { background: rgba(255, 180, 84, .24); }
+.map-grid .cell.on { background: rgba(77, 227, 255, .58); }
+.map-grid .cell.on.spawn {
+  background: linear-gradient(135deg, rgba(77, 227, 255, .58), rgba(255, 180, 84, .52));
+}
+
+.map-cache {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(86% * .6);
+  height: calc(86% * .6);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border: 1px solid rgba(255, 180, 84, .58);
+  border-radius: 4px;
+  background: rgba(255, 180, 84, .035);
+  box-shadow: inset 0 0 0 1px rgba(255, 180, 84, .06);
+}
+
+.map-cache span {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  color: rgba(255, 180, 84, .8);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.map-player {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgba(77, 227, 255, .2),
+    0 0 22px rgba(77, 227, 255, .9);
+}
+
+.map-scan {
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  left: 8%;
+  z-index: 2;
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(77, 227, 255, .55), transparent);
+  box-shadow: 0 0 12px rgba(77, 227, 255, .35);
+  opacity: 0;
+  animation: scanMap 7s ease-in-out infinite;
+}
+
+.map-player::after {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  border: 1px solid rgba(77, 227, 255, .5);
+  border-radius: 50%;
+  animation: playerPulse 3.2s ease-out infinite;
+}
+
+.map-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 52%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(77, 227, 255, .12);
+  border-radius: 50%;
+  animation: breathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.map-tag {
+  position: absolute;
+  z-index: 5;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(6, 16, 24, .88);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.tag-cyan { top: 9%; right: 8%; color: var(--cyan); }
+.tag-amber { bottom: 8%; left: 7%; color: var(--amber); }
+
+.map-caption {
+  max-width: 560px;
+  margin: 12px 0 0 auto;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+/* ---------- section heads ---------- */
+
+.section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 32px;
+}
+
+.section-head > p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+/* ---------- concept cards ---------- */
+
+.concept-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.concept-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .72));
+}
+
+.concept-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(500px 220px at 8% 0%, var(--glow, rgba(77, 227, 255, .12)), transparent 62%);
+}
+
+.concept-card.cyan {
+  --accent: var(--cyan);
+  --accent-soft: rgba(77, 227, 255, .1);
+  --accent-border: rgba(77, 227, 255, .32);
+  --glow: rgba(77, 227, 255, .13);
+}
+
+.concept-card.amber {
+  --accent: var(--amber);
+  --accent-soft: rgba(255, 180, 84, .1);
+  --accent-border: rgba(255, 180, 84, .3);
+  --glow: rgba(255, 180, 84, .12);
+}
+
+.card-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.card-icon {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: 1px solid var(--accent-border, var(--line));
+  border-radius: 10px;
+  background: var(--accent-soft, rgba(77, 227, 255, .1));
+}
+
+.card-icon i {
+  border-radius: 1px;
+  background: var(--accent, var(--cyan));
+  opacity: .82;
+}
+
+.chip {
+  padding: 4px 8px;
+  border: 1px solid var(--accent-border, var(--line));
+  border-radius: 999px;
+  background: var(--accent-soft, rgba(77, 227, 255, .1));
+  color: var(--accent, var(--cyan));
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .14em;
+}
+
+.concept-card h3,
+.concept-card p,
+.concept-card ul { position: relative; z-index: 1; }
+
+.concept-card h3 { margin-top: 4px; }
+.concept-card p { color: var(--muted); font-size: 14px; line-height: 1.85; }
+
+.card-sub {
+  margin-bottom: 10px;
+  color: var(--accent, var(--cyan)) !important;
+  font-family: var(--mono);
+  font-size: 10px !important;
+  letter-spacing: .08em;
+}
+
+.mini-list {
+  display: grid;
+  gap: 5px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mini-list li {
+  position: relative;
+  padding-left: 14px;
+}
+
+.mini-list li::before {
+  content: "";
+  position: absolute;
+  top: .72em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: var(--accent, var(--cyan));
+  opacity: .8;
+}
+
+.card-viz {
+  position: relative;
+  height: 108px;
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background:
+    linear-gradient(rgba(126, 214, 232, .06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126, 214, 232, .06) 1px, transparent 1px),
+    rgba(6, 16, 24, .4);
+  background-size: 18px 18px;
+}
+
+.viz-caption {
+  position: absolute;
+  right: 10px;
+  bottom: 7px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+}
+
+.load-viz .viz-player {
+  position: absolute;
+  top: 50%;
+  left: 18%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgba(77, 227, 255, .18),
+    0 0 18px rgba(77, 227, 255, .8);
+  animation: vizMove 6s ease-in-out infinite;
+}
+
+.viz-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 1px solid rgba(77, 227, 255, .22);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: breathe 5s ease-in-out infinite;
+}
+
+.viz-ring.r1 { width: 54%; aspect-ratio: 1; }
+.viz-ring.r2 {
+  width: 78%;
+  aspect-ratio: 1;
+  border-color: rgba(77, 227, 255, .1);
+  animation-delay: -2.4s;
+}
+
+.cache-viz .viz-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 54%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 1px dashed rgba(255, 180, 84, .6);
+  border-radius: 4px;
+  background: rgba(255, 180, 84, .06);
+  animation: framePulse 5s ease-in-out infinite;
+}
+
+.cache-viz .viz-pin {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 16px rgba(255, 180, 84, .8);
+}
+
+.cache-viz .viz-pin::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 1px;
+  height: 18px;
+  transform: translateX(-50%);
+  background: linear-gradient(var(--amber), transparent);
+}
+
+.purpose-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.purpose {
+  padding: 16px 18px;
+  border-left: 2px solid var(--line-strong);
+  background: rgba(255, 255, 255, .015);
+}
+
+.purpose .num {
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.purpose h4 { margin-top: 4px; }
+.purpose p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+
+/* ---------- simulation ---------- */
+
+.sim-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, .88fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  padding: clamp(16px, 2.4vw, 26px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .72));
+}
+
+.sim-toolbar { margin-bottom: 16px; }
+
+.sim-toolbar label {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sim-toolbar strong {
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sim-toolbar strong small {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: .08em;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid rgba(77, 227, 255, .55);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--cyan) 0%,
+    var(--cyan) var(--p, 50%),
+    rgba(126, 214, 232, .14) var(--p, 50%),
+    rgba(126, 214, 232, .14) 100%
+  );
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border: 3px solid var(--cyan);
+  border-radius: 50%;
+  background: #e9fdff;
+  box-shadow: 0 0 0 6px rgba(77, 227, 255, .12);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(126, 214, 232, .14);
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--cyan);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--cyan);
+  border-radius: 50%;
+  background: #e9fdff;
+}
+
+.range-ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+  margin-top: -4px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+html,
+body { overscroll-behavior-x: none; }
+
+.sim-presets {
+  display: none;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.sim-preset {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .02);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
+}
+
+.sim-preset:hover {
+  border-color: rgba(77, 227, 255, .32);
+  color: var(--text);
+}
+
+.sim-preset:active { transform: scale(.97); }
+
+.sim-preset.is-active {
+  border-color: var(--cyan);
+  background: rgba(77, 227, 255, .14);
+  color: var(--cyan);
+  box-shadow: inset 0 0 0 1px rgba(77, 227, 255, .12);
+}
+
+.sim-preset:focus-visible {
+  outline: 2px solid rgba(77, 227, 255, .55);
+  outline-offset: 3px;
+}
+
+.mobile-hint {
+  display: none;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (max-width: 980px), (pointer: coarse) {
+  .sim-toolbar input[type="range"],
+  .sim-toolbar .range-ticks { display: none; }
+
+  .sim-presets { display: grid; }
+  .mobile-hint { display: block; }
+  .sim-toolbar { margin-bottom: 14px; }
+  .sim-toolbar label { margin-bottom: 10px; }
+}
+
+.chunk-map {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(25, 1fr);
+  grid-template-rows: repeat(25, 1fr);
+  gap: 1.5px;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 6px;
+  border: 1px solid rgba(126, 214, 232, .1);
+  border-radius: 12px;
+  background: #061119;
+  touch-action: manipulation;
+}
+
+.chunk-map .cell {
+  min-width: 0;
+  min-height: 0;
+  border-radius: 2px;
+  background: rgba(126, 214, 232, .035);
+  transition: background-color .38s ease, opacity .38s ease;
+  transition-delay: calc(var(--d, 0) * 6ms);
+}
+
+.chunk-map .cell.on { background: rgba(77, 227, 255, .62); }
+.chunk-map .cell.center { background: #fff; }
+
+.cell-readout {
+  min-height: 20px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.map-legend,
+.stage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.map-legend span,
+.stage-legend span { display: inline-flex; align-items: center; }
+
+.map-legend i,
+.stage-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 2px;
+}
+
+.map-legend .dot-cyan,
+.stage-legend .dot-active { background: var(--cyan); }
+.map-legend .dot-dim { background: rgba(126, 214, 232, .12); }
+.map-legend .dot-white { background: #fff; }
+.stage-legend .dot-cached { background: var(--amber); }
+.stage-legend .dot-empty {
+  border: 1px dashed rgba(255, 180, 84, .35);
+  background: rgba(255, 180, 84, .12);
+}
+
+.sim-readout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.readout {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .02);
+}
+
+.readout strong {
+  display: block;
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: clamp(15px, 2vw, 20px);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.readout small { color: var(--muted); font-size: 9px; }
+
+.sim-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formula-card {
+  padding: 18px;
+  border: 1px solid rgba(77, 227, 255, .16);
+  border-radius: 16px;
+  background: #07141b;
+}
+
+.formula-card .card-top { margin-bottom: 12px; }
+
+.formula-label {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+}
+
+.formula-card pre {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  border: 1px solid rgba(126, 214, 232, .08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .22);
+  color: #c9f6ff;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.85;
+  -webkit-overflow-scrolling: touch;
+}
+
+.formula-card code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  white-space: pre;
+}
+
+.c-muted { color: #6f8d99; }
+.c-amber { color: var(--amber); }
+
+.note-card {
+  padding: 15px 16px;
+  border: 1px dashed rgba(77, 227, 255, .2);
+  border-radius: 14px;
+  background: rgba(77, 227, 255, .03);
+}
+
+.note-card.amber {
+  border-color: rgba(255, 180, 84, .24);
+  background: rgba(255, 180, 84, .035);
+}
+
+.note-card strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.note-card p {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.85;
+}
+
+/* ---------- spawn ---------- */
+
+.spawn-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.spawn-stage {
+  position: relative;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #07141b;
+}
+
+.stage-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(19, 1fr);
+  grid-template-rows: repeat(19, 1fr);
+  gap: 2px;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.stage-grid .cell {
+  min-width: 0;
+  min-height: 0;
+  border-radius: 2px;
+  background: rgba(126, 214, 232, .04);
+  transition: background-color .45s ease, opacity .45s ease;
+}
+
+.stage-grid .cell.in-frame { background: transparent; }
+.stage-grid .cell.active { background: rgba(77, 227, 255, .55); }
+
+.stage-grid.cache-on .cell.in-frame { background: rgba(255, 180, 84, .08); }
+.stage-grid.cache-on .cell.in-frame:not(.cached) {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 180, 84, .1) 0 4px,
+      rgba(255, 180, 84, .025) 4px 8px
+    );
+}
+.stage-grid.cache-on .cell.cached {
+  background: linear-gradient(135deg, rgba(77, 227, 255, .62), rgba(255, 180, 84, .68));
+}
+
+.stage-grid.leaving .cell.cached {
+  background: rgba(255, 180, 84, .62);
+  opacity: 1;
+}
+
+.spawn-stage[data-step="3"] {
+  border-color: rgba(255, 180, 84, .32);
+}
+
+.spawn-stage:focus-visible {
+  outline: 2px solid rgba(255, 180, 84, .55);
+  outline-offset: 4px;
+}
+
+.spawn-stage[data-step="3"] .stage-frame-label {
+  color: var(--amber);
+  animation: labelPulse 2.2s ease-in-out infinite;
+}
+
+.stage-player {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgba(77, 227, 255, .18),
+    0 0 18px rgba(77, 227, 255, .85);
+  transition: left .9s ease, top .9s ease, opacity .6s ease;
+}
+
+.stage-player.leave {
+  top: 12%;
+  left: 90%;
+  opacity: .22;
+}
+
+.stage-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 180, 84, .25);
+  border-radius: 999px;
+  background: rgba(6, 16, 24, .86);
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.stage-frame-label {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  z-index: 5;
+  color: rgba(255, 180, 84, .74);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .04em;
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+
+.spawn-stage[data-step="2"] .stage-frame-label,
+.spawn-stage[data-step="3"] .stage-frame-label,
+.spawn-stage[data-step="4"] .stage-frame-label { opacity: 1; }
+
+.stage-caption {
+  min-height: 4.6em;
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-left: 2px solid var(--amber);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 180, 84, .04);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.stage-caption strong { color: var(--text); }
+
+.steps-title {
+  margin-bottom: 12px;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.spawn-steps ol {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.spawn-steps li {
+  position: relative;
+  padding: 12px 14px 12px 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .015);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+  transition: border-color .3s ease, background .3s ease, color .3s ease;
+}
+
+.spawn-steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  top: 13px;
+  left: 12px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.spawn-steps li.active {
+  border-color: rgba(255, 180, 84, .4);
+  background: rgba(255, 180, 84, .05);
+  color: var(--text);
+}
+
+.spawn-steps li.active::before {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.spawn-steps code { font-size: 11px; }
+
+.trigger-note {
+  display: flex;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed rgba(255, 180, 84, .24);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.trigger-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber);
+}
+
+/* ---------- multiplayer ---------- */
+
+.multi-panel {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: clamp(18px, 3vw, 32px);
+  align-items: center;
+  margin-top: 18px;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(13, 32, 42, .8), rgba(7, 18, 26, .65));
+}
+
+.multi-copy h3 { margin-bottom: 10px; }
+.multi-copy p { color: var(--muted); font-size: 13.5px; line-height: 1.85; }
+
+.multi-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 2px;
+  vertical-align: 0;
+}
+
+.legend-dot.cyan { background: var(--cyan); }
+.legend-dot.amber { background: var(--amber); }
+.legend-dot.pink { background: var(--pink); }
+
+.multi-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.35;
+  overflow: hidden;
+  border: 1px solid rgba(126, 214, 232, .1);
+  border-radius: 12px;
+  background-color: #061119;
+  background-image:
+    linear-gradient(rgba(126, 214, 232, .07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126, 214, 232, .07) 1px, transparent 1px);
+  background-size: 4% 4%;
+}
+
+.multi-frame {
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  border: 1px solid rgba(255, 180, 84, .55);
+  border-radius: 6px;
+  background: rgba(255, 180, 84, .055);
+}
+
+.frame-a { top: 4%; left: 4%; }
+.frame-b { top: 40%; left: 40%; }
+
+.multi-overlap {
+  position: absolute;
+  top: 40%;
+  left: 40%;
+  width: 24%;
+  height: 24%;
+  border: 1px dashed rgba(255, 93, 143, .58);
+  border-radius: 4px;
+  background: rgba(255, 93, 143, .08);
+}
+
+.multi-dot {
+  position: absolute;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgba(77, 227, 255, .18),
+    0 0 16px rgba(77, 227, 255, .8);
+  animation: floatDot 5s ease-in-out infinite;
+}
+
+.dot-a { top: 34%; left: 34%; }
+.dot-b {
+  top: 70%;
+  left: 70%;
+  box-shadow:
+    0 0 0 4px rgba(255, 180, 84, .16),
+    0 0 16px rgba(255, 180, 84, .8);
+  animation-delay: -2.5s;
+}
+
+.multi-label {
+  position: absolute;
+  z-index: 3;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.label-a { top: 2%; left: 5%; color: var(--cyan); }
+.label-b { right: 4%; bottom: 3%; color: var(--amber); }
+
+/* ---------- warning ---------- */
+
+.warning-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.warning-visual {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 640 / 380;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #07141b;
+}
+
+.warning-visual svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sim-shape {
+  fill: rgba(77, 227, 255, .12);
+  stroke: rgba(77, 227, 255, .72);
+  stroke-width: 1.5;
+}
+
+.cache-shape {
+  fill: rgba(255, 180, 84, .1);
+  stroke: rgba(255, 180, 84, .76);
+  stroke-width: 1.5;
+}
+
+.dash-line {
+  stroke: rgba(255, 93, 143, .55);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+}
+
+.svg-label {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: .06em;
+}
+
+.cyan-label { fill: var(--cyan); }
+.amber-label { fill: var(--amber); }
+
+.svg-small {
+  fill: rgba(255, 93, 143, .82);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.lock-icon rect,
+.lock-icon path {
+  fill: none;
+  stroke: rgba(255, 180, 84, .8);
+  stroke-width: 1.6;
+}
+
+.radar-wrap {
+  position: absolute;
+  top: 31.58%;
+  left: 67.19%;
+  width: 21.875%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.radar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 300deg,
+    rgba(255, 93, 143, .38) 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 62%, transparent 63%);
+  mask-image: radial-gradient(circle, #000 62%, transparent 63%);
+  animation: spin 4.8s linear infinite;
+}
+
+.entity {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 10px rgba(255, 93, 143, .9);
+  animation: entityPulse 2.4s ease-in-out infinite;
+}
+
+.entity.e1 { top: 32%; left: 38%; }
+.entity.e2 { top: 58%; left: 64%; animation-delay: -.8s; }
+.entity.e3 { top: 70%; left: 30%; animation-delay: -1.6s; }
+
+.scan-cost {
+  position: absolute;
+  right: 4%;
+  bottom: 5%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+  font-family: var(--mono);
+}
+
+.scan-cost span {
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+
+.scan-cost strong {
+  color: var(--pink);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.warning-cards {
+  display: grid;
+  gap: 10px;
+}
+
+.warn-card {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .02);
+}
+
+.warn-card.amber {
+  border-color: rgba(255, 180, 84, .22);
+  background: rgba(255, 180, 84, .035);
+}
+
+.warn-card.red,
+.warn-card.pink {
+  border-color: rgba(255, 93, 143, .22);
+  background: rgba(255, 93, 143, .035);
+}
+
+.warn-num {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+
+.warn-card h3 {
+  margin: 4px 0 6px;
+  font-size: 18px;
+}
+
+.warn-card p {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+
+.warn-card small {
+  display: block;
+  margin-top: 9px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .1em;
+}
+
+.meter {
+  height: 5px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(126, 214, 232, .1);
+}
+
+.meter span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--green), var(--amber));
+  animation: meter 6s ease-in-out infinite;
+}
+
+.meter.hot span {
+  background: linear-gradient(90deg, var(--amber), var(--pink));
+  animation-delay: -2.2s;
+}
+
+.freeze-badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 93, 143, .35);
+  border-radius: 4px;
+  color: var(--pink);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+
+.key-callout {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 17px 19px;
+  border: 1px solid rgba(255, 93, 143, .22);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 93, 143, .08), rgba(255, 180, 84, .04));
+}
+
+.key-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: var(--pink);
+  color: #1a0610;
+  font-family: var(--mono);
+  font-weight: 800;
+}
+
+.key-callout p { color: var(--text); font-size: 13.5px; }
+
+/* ---------- outro ---------- */
+
+.outro-inner {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(24px, 5vw, 54px);
+  border: 1px solid rgba(77, 227, 255, .16);
+  border-radius: 24px;
+  background:
+    radial-gradient(900px 400px at 8% 0%, rgba(77, 227, 255, .08), transparent 62%),
+    linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .8));
+}
+
+.outro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 26px 0;
+}
+
+.outro-card {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .02);
+}
+
+.outro-card > span {
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.outro-card h3 {
+  margin: 5px 0;
+  font-size: 17px;
+}
+
+.outro-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.outro-line {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.line-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber);
+}
+
+.outro-line p {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.85;
+}
+
+/* ---------- footer ---------- */
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 18px;
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
+  padding: 22px 0 38px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .08em;
+}
+
+/* ---------- motion ---------- */
+
+.js .reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .75s ease, transform .75s ease;
+}
+
+.js .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+.is-paused *,
+.is-paused *::before,
+.is-paused *::after {
+  animation-play-state: paused !important;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: .4; transform: scale(.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes scanMap {
+  0%, 100% { left: 8%; opacity: 0; }
+  12%, 88% { opacity: .55; }
+  50% { left: 92%; opacity: .55; }
+}
+
+@keyframes playerPulse {
+  0% { transform: scale(.55); opacity: .8; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(.9); opacity: .35; }
+  50% { transform: translate(-50%, -50%) scale(1.06); opacity: .7; }
+}
+
+@keyframes vizMove {
+  0%, 100% { left: 18%; }
+  50% { left: 72%; }
+}
+
+@keyframes framePulse {
+  0%, 100% { border-color: rgba(255, 180, 84, .42); }
+  50% { border-color: rgba(255, 180, 84, .82); }
+}
+
+@keyframes labelPulse {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
+}
+
+@keyframes floatDot {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(6px, -5px); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes entityPulse {
+  0%, 100% { transform: scale(.8); opacity: .55; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+@keyframes meter {
+  0%, 100% { transform: scaleX(.35); }
+  50% { transform: scaleX(.92); }
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 980px) {
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 40px;
+  }
+
+  .hero-copy { max-width: 720px; }
+
+  .map-frame { margin: 0 auto; }
+  .map-caption { margin-inline: auto; text-align: center; }
+
+  .sim-layout,
+  .spawn-layout,
+  .warning-layout,
+  .multi-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .multi-copy { order: 2; }
+  .multi-map { order: 1; }
+}
+
+@media (max-width: 720px) {
+  .site-header { padding-block: 11px; }
+  .nav { display: none; }
+  .header-tag { display: none; }
+
+  .section { width: calc(100% - 28px); }
+
+  .concept-grid,
+  .purpose-grid,
+  .outro-grid { grid-template-columns: 1fr; }
+
+  .section-head {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .section-head > p { max-width: 60ch; }
+
+  h1 { font-size: clamp(40px, 11vw, 60px); }
+
+  .hero { gap: 26px; }
+
+  .hero-stats {
+    gap: 14px 22px;
+    margin-top: 28px;
+  }
+
+  .hero-actions .btn { flex: 1 1 auto; }
+
+  .map-tag { font-size: 8px; padding: 3px 6px; }
+  .tag-cyan { top: 6%; right: 6%; }
+  .tag-amber { bottom: 5%; left: 5%; }
+
+  .panel { padding: 14px; }
+
+  .sim-readout { gap: 6px; }
+  .readout { padding: 9px 8px; }
+  .readout strong { font-size: 13px; line-height: 1.25; }
+
+  .chunk-map { gap: 1px; padding: 4px; }
+
+  input[type="range"] { height: 36px; }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    margin-top: -10px;
+  }
+
+  .spawn-stage { padding: 9px; }
+  .stage-grid { gap: 1.5px; }
+
+  .stage-caption { font-size: 12px; }
+
+  .multi-map { aspect-ratio: 1.2; }
+
+  .key-callout { padding: 14px; }
+
+  .site-footer {
+    flex-direction: column;
+    gap: 5px;
+    width: calc(100% - 28px);
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-stats li { min-width: 40%; }
+
+  .formula-card { padding: 13px; }
+  .formula-card pre { font-size: 10.5px; }
+
+  .warn-card { padding: 14px; }
+  .multi-legend { gap: 8px; }
+}
+
+/* 系统级减少动态效果：保留内容，去掉装饰性动画 */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* =========================================================
+   v2：条目 01 / 03 的新动画
+   ========================================================= */
+
+.card-viz { height: 190px; }
+
+.load-viz {
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.load-map {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  grid-template-rows: repeat(13, 1fr);
+  gap: 2px;
+}
+
+.load-map .cell {
+  min-width: 0;
+  min-height: 0;
+  border-radius: 1px;
+  background: rgba(126, 214, 232, .045);
+  transition: background-color .45s ease, opacity .45s ease;
+}
+
+.load-map .cell.on { background: rgba(77, 227, 255, .55); }
+.load-map .cell.just-unloaded { background: rgba(255, 180, 84, .38); }
+
+.load-player {
+  position: absolute;
+  z-index: 4;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 4px rgba(77, 227, 255, .18),
+    0 0 16px rgba(77, 227, 255, .8);
+  transition: left .85s ease, top .85s ease;
+}
+
+.load-label {
+  position: absolute;
+  z-index: 5;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(6, 16, 24, .8);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .04em;
+}
+
+.load-label-in { top: 9px; right: 9px; color: var(--cyan); }
+.load-label-out { bottom: 9px; left: 9px; color: var(--amber); }
+
+.formula-note {
+  margin: 12px 2px 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.8;
+}
+
+.formula-note code { font-size: .95em; }
+
+.spawn-stage2 { padding: 14px; }
+
+.spawn-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 31 / 21;
+  display: grid;
+  grid-template-columns: repeat(31, 1fr);
+  grid-template-rows: repeat(21, 1fr);
+  gap: 1.5px;
+}
+
+.spawn-map .cell {
+  min-width: 0;
+  min-height: 0;
+  border-radius: 1px;
+  background: rgba(126, 214, 232, .04);
+  transition: background-color .45s ease, opacity .45s ease;
+}
+
+.spawn-map .cell.in-frame { background: transparent; }
+
+.spawn-stage2.frame-on .spawn-map .cell.in-frame {
+  background: rgba(255, 180, 84, .07);
+}
+
+.spawn-stage2.frame-on .spawn-map .cell.in-frame:not(.cached) {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 180, 84, .1) 0 4px,
+      rgba(255, 180, 84, .02) 4px 8px
+    );
+}
+
+.spawn-map .cell.active { background: rgba(77, 227, 255, .52); }
+.spawn-map .cell.cached { background: rgba(255, 180, 84, .6); }
+.spawn-map .cell.active.cached {
+  background: linear-gradient(135deg, rgba(77, 227, 255, .55), rgba(255, 180, 84, .65));
+}
+
+.anchor-frame {
+  position: absolute;
+  left: 48.387%;
+  top: 14.2857%;
+  width: 48.387%;
+  height: 71.4286%;
+  z-index: 2;
+  border: 1px dashed rgba(255, 180, 84, .7);
+  border-radius: 4px;
+  background: rgba(255, 180, 84, .03);
+  opacity: 0;
+  transform: scale(.98);
+  transition: opacity .4s ease, transform .4s ease;
+  pointer-events: none;
+}
+
+.spawn-stage2.frame-on .anchor-frame {
+  opacity: 1;
+  transform: none;
+}
+
+.anchor-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow:
+    0 0 0 4px rgba(255, 180, 84, .14),
+    0 0 16px rgba(255, 180, 84, .8);
+}
+
+.anchor-pin::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 1px;
+  height: 18px;
+  transform: translateX(-50%);
+  background: linear-gradient(var(--amber), transparent);
+}
+
+.anchor-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 180, 84, .25);
+  border-radius: 999px;
+  background: rgba(6, 16, 24, .86);
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.spawn-player {
+  position: absolute;
+  z-index: 5;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 4px rgba(77, 227, 255, .2),
+    0 0 18px rgba(77, 227, 255, .85);
+  transition: left .9s ease, top .9s ease, opacity .4s ease;
+}
+
+.trigger-list,
+.flow-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.trigger-list li,
+.flow-list li {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .015);
+}
+
+.trigger-list strong,
+.flow-list strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.trigger-list span,
+.flow-list span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.trigger-list code { font-size: 11px; }
+
+.flow-list { counter-reset: flow; }
+
+.flow-list li {
+  position: relative;
+  padding-left: 40px;
+  counter-increment: flow;
+}
+
+.flow-list li::before {
+  content: counter(flow);
+  position: absolute;
+  top: 11px;
+  left: 12px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255, 180, 84, .3);
+  border-radius: 50%;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.spawn-steps .steps-title + .trigger-list { margin-top: 0; }
+.spawn-steps .steps-title ~ .steps-title { margin-top: 18px; }
+
+@media (max-width: 720px) {
+  .card-viz { height: 180px; }
+  .load-viz { height: 180px; }
+  .load-map { width: 140px; height: 140px; }
+  .spawn-map { gap: 1px; }
+  .spawn-stage2 { padding: 9px; }
+  .anchor-label { top: -20px; font-size: 8px; }
+  .trigger-list li,
+  .flow-list li { padding: 9px 10px; }
+  .flow-list li { padding-left: 36px; }
+}
+
+</style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="回到顶部">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span>CHUNK ATLAS</span>
+    </a>
+    <span class="header-tag">BEDROCK · 交互演示</span>
+  </header>
+
+  <noscript>
+    <div class="noscript">本页的区块网格与缓存时间轴需要 JavaScript。启用后即可查看完整动画。</div>
+  </noscript>
+
+  <main id="top">
+    <section class="hero section" id="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span> CHUNK SYSTEM / 01</p>
+        <h1>加载区块与<br><span class="grad">重生区块缓存</span></h1>
+        <p class="lede">同样是“留在内存里”的两个区块范围，一个跟着玩家移动，一个钉在重生点不动。看懂这两块区域，就能看懂模拟距离、传送加载和选择器选择目标变多的根源。</p>
+      </div>
+
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="map-frame">
+          <div class="map-grid" id="heroGrid"></div>
+          <div class="map-scan"></div>
+          <div class="map-player"></div>
+          <div class="map-pulse"></div>
+          <div class="map-cache"><span>15×15</span></div>
+          <span class="map-tag tag-cyan">加载区</span>
+          <span class="map-tag tag-amber">重生点缓存</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="basics">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">01 / 两种区块</p>
+          <h2>一个跟着你跑，<br>一个钉在原地</h2>
+        </div>
+        <p>加载区块负责“即时计算”，重生点缓存负责“快速热加载”。它们都占内存，但行为完全不同。</p>
+      </div>
+
+      <div class="concept-grid">
+        <article class="concept-card cyan reveal">
+          <div class="card-top">
+            <span class="card-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="chip">ACTIVE</span>
+          </div>
+          <h3>加载区块</h3>
+          <p class="card-sub">模拟区 · 跟着玩家走</p>
+          <p>玩家周围正在被模拟的区块。实体、方块、红石、随机刻都在这里发生。跟着玩家移动、加载、卸载。</p>
+          <ul class="mini-list">
+            <li>形状：方形切角，不是圆</li>
+            <li>范围：由模拟距离 R 决定</li>
+            <li>作用：命令可以访问/修改到区块内的方块和实体</li>
+          </ul>
+          <div class="card-viz load-viz" aria-hidden="true">
+            <div class="load-map" id="loadMap">
+              <span class="load-player" id="loadPlayer"></span>
+            </div>
+            <span class="load-label load-label-in">前方加载 →</span>
+            <span class="load-label load-label-out">← 后方卸载</span>
+            <span class="viz-caption">玩家移动 · 加载区跟随</span>
+          </div>
+        </article>
+
+        <article class="concept-card amber reveal">
+          <div class="card-top">
+            <span class="card-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="chip">CACHED</span>
+          </div>
+          <h3>重生点缓存</h3>
+          <p class="card-sub">15×15 · 钉在锚点</p>
+          <p>锚点周围的保留区。它不参与模拟，只把锚点框选范围内“已经加载过”的区块留在内存里，不卸载。重生点缓存让重生、传送回重生点附近时少一次冷加载(磁盘读取)。</p>
+          <ul class="mini-list">
+            <li>形状：15×15 的锚点框</li>
+            <li>触发：进入世界 / 玩家重生 / 玩家设置重生点</li>
+            <li>作用：命令可以访问区块内的实体，无法访问/修改方块</li>
+          </ul>
+          <div class="card-viz cache-viz" aria-hidden="true">
+            <span class="viz-frame"></span>
+            <span class="viz-pin"></span>
+            <span class="viz-caption">locked / 保留</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="sim">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">02 / 加载逻辑</p>
+          <h2>先框正方形，<br>再把四个角切掉</h2>
+        </div>
+        <p>拖动模拟距离，看看加载区怎样一层层长出来。它不是圆，也不是纯菱形，而是切角八边形。</p>
+      </div>
+
+      <div class="sim-layout">
+        <div class="panel sim-panel reveal">
+          <div class="sim-toolbar">
+            <label for="simRange">模拟距离 <strong><span id="simValue">8</span> <small>chunks</small></strong></label>
+            <input id="simRange" type="range" min="4" max="12" step="2" value="8" aria-label="模拟距离">
+            <div class="range-ticks" aria-hidden="true"><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span></div>
+            <div class="sim-presets" role="group" aria-label="模拟距离快捷选择">
+              <button type="button" class="sim-preset" data-distance="4" aria-pressed="false">4</button>
+              <button type="button" class="sim-preset" data-distance="6" aria-pressed="false">6</button>
+              <button type="button" class="sim-preset is-active" data-distance="8" aria-pressed="true">8</button>
+              <button type="button" class="sim-preset" data-distance="10" aria-pressed="false">10</button>
+              <button type="button" class="sim-preset" data-distance="12" aria-pressed="false">12</button>
+            </div>
+            <p class="mobile-hint">移动端点选距离，避免横向拖动触发返回手势</p>
+          </div>
+          <div class="chunk-map" id="simGrid" role="img" aria-label="加载区块网格示意"></div>
+          <div class="cell-readout" id="cellReadout">悬停 / 点按格子查看 dx、dz</div>
+          <div class="map-legend" aria-hidden="true">
+            <span><i class="dot-cyan"></i>加载</span>
+            <span><i class="dot-dim"></i>未加载</span>
+            <span><i class="dot-white"></i>玩家</span>
+          </div>
+          <div class="sim-readout">
+            <div class="readout"><strong id="simCount">177</strong><small>个加载区块</small></div>
+            <div class="readout"><strong id="simSide">17×17</strong><small>外框</small></div>
+            <div class="readout"><strong id="simShape">切角八边形</strong><small>形状</small></div>
+          </div>
+        </div>
+
+        <div class="sim-side reveal">
+          <div class="formula-card">
+            <div class="card-top"><span class="chip">FORMULA</span><span class="formula-label">加载判定</span></div>
+            <pre><code><span class="c-muted"># 玩家所在区块为原点</span>
+dx = chunkX - playerChunkX
+dz = chunkZ - playerChunkZ
+
+axis  = (dx == 0 or dz == 0)
+limit = R if axis else R + 1
+
+loaded = |dx| + |dz| ≤ limit</code></pre>
+            <p class="formula-note">轴方向（同一行/列）上限是 <code>R</code>；斜方向是 <code>R+1</code>。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="spawn">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">03 / 缓存构建</p>
+          <h2>不是预加载，<br>是“收留已经加载过的”</h2>
+        </div>
+        <p>每个锚点建立一个 15×15 的保留框；框里的区块必须先被加载过，才会进入缓存。</p>
+      </div>
+
+      <div class="spawn-layout">
+        <div class="spawn-visual reveal">
+          <div class="spawn-stage spawn-stage2" id="spawnStage2" data-step="1">
+            <div class="spawn-map" id="spawnMap">
+              <div class="anchor-frame" id="anchorFrame">
+                <span class="anchor-pin"></span>
+                <span class="anchor-label">15×15 锚点框</span>
+              </div>
+              <span class="spawn-player" id="spawnPlayer2"></span>
+            </div>
+            <span class="stage-badge" id="spawnBadge2">1 / 9</span>
+          </div>
+          <div class="stage-caption" id="spawnCaption2"><strong>远处：</strong>玩家在很远的地方，锚点还没有划定。</div>
+          <div class="stage-legend" aria-hidden="true">
+            <span><i class="dot-active"></i>加载区</span>
+            <span><i class="dot-cached"></i>缓存</span>
+            <span><i class="dot-empty"></i>框内未加载</span>
+          </div>
+        </div>
+
+        <div class="spawn-steps reveal">
+          <p class="steps-title">什么时候触发锚点区域构建？</p>
+          <ul class="trigger-list">
+            <li><strong>首次进入世界</strong><span>锚点通常在世界出生点；实测重进世界时会落在进入世界后的玩家位置。</span></li>
+            <li><strong>死亡后重生</strong><span>在重生点重新建立锚点视图。</span></li>
+            <li><strong>设置重生点</strong><span>床、重生锚、<code>/spawnpoint</code> 都会移动锚点；玩家在很远的地方也可以设置。</span></li>
+            <li><strong>关闭世界后重新进入</strong><span>游戏重新建立锚点视图，锚点跟着进入世界时的位置。</span></li>
+          </ul>
+          <p class="steps-title">然后发生什么？</p>
+          <ol class="flow-list">
+            <li><strong>在远处设置重生点</strong><span>玩家可以离锚点很远；设置后锚点位置就固定下来。</span></li>
+            <li><strong>划定 15×15 锚点框</strong><span>框只是保留范围，不会主动加载区块。</span></li>
+            <li><strong>玩家靠近，区块先加载</strong><span>青色加载区跟着玩家移动；框外照常加载/卸载。</span></li>
+            <li><strong>框内已加载区块进入缓存</strong><span>没加载过的格子不会凭空出现；它们保持空框。</span></li>
+            <li><strong>玩家离开</strong><span>框内缓存常驻内存；框外旧区块正常卸载。</span></li>
+          </ol>
+          <div class="trigger-note">
+            <span class="trigger-dot"></span>
+            关键：缓存是“先加载，后收留”。锚点框不会替玩家加载区块；它只决定哪些已加载区块不卸载。
+          </div>
+        </div>
+      </div>
+
+      <div class="multi-panel reveal">
+        <div class="multi-copy">
+          <p class="kicker">MULTIPLAYER</p>
+          <h3>多个玩家 = 多个锚点框</h3>
+          <p>每个玩家按自己的锚点建立 15×15 缓存。缓存框不会主动加载新区块，只收留已经加载过的；多个玩家就有多个框，重叠区域共用。</p>
+          <ul class="multi-legend">
+            <li><span class="legend-dot cyan"></span>玩家的进入世界点/重生点</li>
+            <li><span class="legend-dot amber"></span>缓存框</li>
+            <li><span class="legend-dot pink"></span>重叠区共享</li>
+          </ul>
+        </div>
+        <div class="multi-map" aria-hidden="true">
+          <div class="multi-frame frame-a"></div>
+          <div class="multi-frame frame-b"></div>
+          <div class="multi-overlap"></div>
+          <span class="multi-dot dot-a"></span>
+          <span class="multi-dot dot-b"></span>
+          <span class="multi-label label-a">A</span>
+          <span class="multi-label label-b">B</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="warning">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">04 / 性能代价</p>
+          <h2>缓存的代价：<br>内存、冻结、选择器</h2>
+        </div>
+        <p>重生点缓存超出模拟距离也不会卸载。它会一直占着内存，并且改变选择器的扫描成本。</p>
+      </div>
+
+      <div class="warning-layout">
+        <div class="warning-visual reveal" aria-hidden="true">
+          <svg viewBox="0 0 640 380" role="img" aria-label="模拟区与重生点缓存">
+            <defs>
+              <pattern id="wgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M20 0H0V20" fill="none" stroke="rgba(126,214,232,.08)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="640" height="380" fill="url(#wgrid)"/>
+            <polygon class="sim-shape" points="120,130 150,100 230,100 260,130 260,250 230,280 150,280 120,250"/>
+            <text class="svg-label cyan-label" x="190" y="310">模拟区</text>
+            <rect class="cache-shape" x="430" y="120" width="140" height="140" rx="8"/>
+            <text class="svg-label amber-label" x="500" y="290">重生点缓存</text>
+            <line class="dash-line" x1="270" y1="190" x2="420" y2="190"/>
+            <text class="svg-small" x="345" y="177" text-anchor="middle">超出模拟距离</text>
+            <g class="lock-icon" transform="translate(470,140)">
+              <rect x="0" y="10" width="24" height="18" rx="3"/>
+              <path d="M6 10V7a6 6 0 0 1 12 0v3"/>
+            </g>
+          </svg>
+
+          <div class="radar-wrap">
+            <div class="radar"></div>
+            <span class="entity e1"></span>
+            <span class="entity e2"></span>
+            <span class="entity e3"></span>
+          </div>
+
+          <div class="scan-cost"><span>SELECTOR SCAN</span><strong>+ 扫描区块</strong></div>
+        </div>
+
+        <div class="warning-cards reveal">
+          <article class="warn-card amber">
+            <span class="warn-num">01</span>
+            <h3>内存常驻</h3>
+            <p>只要世界会话还在，缓存区块就会永久常驻——不会因为超出模拟距离而卸载。玩家走远，它仍然留在内存里。</p>
+            <div class="meter"><span></span></div>
+            <small>MEMORY / 会话内不释放</small>
+          </article>
+
+          <article class="warn-card red">
+            <span class="warn-num">02</span>
+            <h3>方块改不了</h3>
+            <p>缓存区块不参与模拟。即使它还在内存里，<code>/setblock</code>、<code>/fill</code> 等修改也不会生效——你看到的是“冻结”的地形。</p>
+            <div class="freeze-badge">FROZEN</div>
+          </article>
+
+          <article class="warn-card pink">
+            <span class="warn-num">03</span>
+            <h3>选择器变慢</h3>
+            <p>即使区块不 tick，<code>@e</code> 仍然能选中缓存内的实体。搜索范围越大，扫描的区块越多，选择器越慢。</p>
+            <div class="meter hot"><span></span></div>
+            <small>SELECTOR / 扫描成本上升</small>
+          </article>
+        </div>
+      </div>
+
+      <div class="key-callout reveal">
+        <span class="key-icon">!</span>
+        <p><strong>一句话记住：</strong>重生点缓存是“内存里的冻结区”——方块不动，实体还在，选择器找得到。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <span>CHUNK ATLAS</span>
+    <span>加载区块 · 重生点缓存 · 交互演示</span>
+    <span>动画只在可见时运行 · LOW CPU</span>
+  </footer>
+
+  <script>
+(() => {
+  'use strict';
+
+  document.documentElement.classList.add('js');
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  const supportsObserver = 'IntersectionObserver' in window;
+
+  /* ---------------------------------------------------------
+     1. 入场显示 & 离开视口暂停 CSS 动画
+     --------------------------------------------------------- */
+
+  const revealEls = $$('.reveal');
+
+  if (supportsObserver) {
+    const revealObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.add('in');
+        revealObserver.unobserve(entry.target);
+      }
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+    revealEls.forEach((el) => revealObserver.observe(el));
+  } else {
+    revealEls.forEach((el) => el.classList.add('in'));
+  }
+
+  const spawnSection = $('#spawn');
+  let spawnVisible = false;
+  let spawnTimer = null;
+
+  const pauseObserver = supportsObserver
+    ? new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          entry.target.classList.toggle('is-paused', !entry.isIntersecting);
+
+          if (entry.target === spawnSection) {
+            spawnVisible = entry.isIntersecting;
+            if (spawnVisible) startSpawnTimeline();
+            else stopSpawnTimeline();
+          }
+        }
+      }, { threshold: 0.08 })
+    : null;
+
+  if (pauseObserver) $$('.section').forEach((section) => pauseObserver.observe(section));
+
+  /* ---------------------------------------------------------
+     2. Hero 地图
+     --------------------------------------------------------- */
+
+  const heroGrid = $('#heroGrid');
+
+  if (heroGrid) {
+    const fragment = document.createDocumentFragment();
+
+    for (let z = -12; z <= 12; z += 1) {
+      for (let x = -12; x <= 12; x += 1) {
+        const cell = document.createElement('span');
+        cell.className = 'cell';
+
+        const active =
+          Math.abs(x) <= 10 &&
+          Math.abs(z) <= 10 &&
+          Math.abs(x) + Math.abs(z) <= 11;
+
+        if (active) cell.classList.add('on');
+        if (Math.abs(x) <= 7 && Math.abs(z) <= 7) cell.classList.add('spawn');
+
+        fragment.appendChild(cell);
+      }
+    }
+
+    heroGrid.appendChild(fragment);
+  }
+
+  /* ---------------------------------------------------------
+     3. 加载区模拟器
+     --------------------------------------------------------- */
+
+  const simGrid = $('#simGrid');
+  const simRange = $('#simRange');
+  const simPresets = $$('.sim-preset');
+  const simValue = $('#simValue');
+  const simCount = $('#simCount');
+  const simSide = $('#simSide');
+  const simShape = $('#simShape');
+  const cellReadout = $('#cellReadout');
+  const simCells = [];
+
+  if (simGrid) {
+    const fragment = document.createDocumentFragment();
+
+    for (let z = -12; z <= 12; z += 1) {
+      for (let x = -12; x <= 12; x += 1) {
+        const cell = document.createElement('span');
+        cell.className = 'cell';
+        cell.dataset.dx = String(x);
+        cell.dataset.dz = String(z);
+        cell.style.setProperty('--d', String(Math.abs(x) + Math.abs(z)));
+
+        fragment.appendChild(cell);
+        simCells.push({ el: cell, x, z });
+      }
+    }
+
+    simGrid.appendChild(fragment);
+  }
+
+  function updateSimulation() {
+    if (!simRange || !simGrid) return;
+
+    const radius = Number(simRange.value);
+    let count = 0;
+
+    for (const { el, x, z } of simCells) {
+      const dx = x;
+      const dz = z;
+      const limit = (dx === 0 || dz === 0) ? radius : radius + 1;
+      const loaded = Math.abs(dx) + Math.abs(dz) <= limit;
+
+      el.classList.toggle('on', loaded);
+      el.classList.toggle('center', x === 0 && z === 0);
+
+      if (loaded) count += 1;
+    }
+
+    const side = radius * 2 + 1;
+
+    if (simValue) simValue.textContent = String(radius);
+    if (simCount) simCount.textContent = String(count);
+    if (simSide) simSide.textContent = `${side}×${side}`;
+    if (simShape) simShape.textContent = '切角八边形';
+
+    for (const button of simPresets) {
+      const active = Number(button.dataset.distance) === radius;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    }
+
+    simRange.style.setProperty('--p', `${((radius - 4) / 8) * 100}%`);
+    simGrid.setAttribute(
+      'aria-label',
+      `加载区块网格，模拟距离 ${radius}，共 ${count} 个加载区块`
+    );
+  }
+
+  if (simRange && simGrid) {
+    let pending = false;
+
+    const scheduleUpdate = () => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        pending = false;
+        updateSimulation();
+      });
+    };
+
+    simRange.addEventListener('input', scheduleUpdate, { passive: true });
+    updateSimulation();
+
+    for (const button of simPresets) {
+      button.addEventListener('click', () => {
+        const value = button.dataset.distance;
+        if (!value) return;
+        simRange.value = value;
+        updateSimulation();
+      });
+    }
+
+    const describeCell = (cell) => {
+      if (!cell || !cellReadout) return;
+      const dx = Number(cell.dataset.dx);
+      const dz = Number(cell.dataset.dz);
+      const state = cell.classList.contains('on') ? '加载' : '不加载';
+      cellReadout.textContent = `dx=${dx}  dz=${dz}  ·  ${state}`;
+    };
+
+    simGrid.addEventListener('pointerover', (event) => {
+      describeCell(event.target.closest('.cell'));
+    }, { passive: true });
+
+    simGrid.addEventListener('pointerdown', (event) => {
+      describeCell(event.target.closest('.cell'));
+    }, { passive: true });
+
+    simGrid.addEventListener('pointerleave', () => {
+      if (cellReadout) cellReadout.textContent = '悬停 / 点按格子查看 dx、dz';
+    });
+  }
+
+  /* ---------------------------------------------------------
+     4. 重生点缓存时间轴
+     --------------------------------------------------------- */
+
+  const spawnStage = $('#spawnStage');
+  const spawnGrid = $('#spawnGrid');
+  const stageBadge = $('#stageBadge');
+  const stageCaption = $('#stageCaption');
+  const stepItems = $$('.spawn-steps li');
+  const spawnPlayer = spawnStage ? spawnStage.querySelector('.stage-player') : null;
+
+  const captions = [
+    '<strong>先有加载。</strong> 玩家在锚点附近，青色加载区出现；缓存不会凭空生成。',
+    '<strong>触发构建。</strong> 首次进世界、死亡重生、设置重生点，或关闭世界后重新进入，15×15 框建立。',
+    '<strong>只收留已加载的。</strong> 框内但从未加载的格子不会进入缓存——缓存不是预加载。',
+    '<strong>玩家离开，缓存留下。</strong> 青色加载区卸载，琥珀色缓存仍留在内存里。'
+  ];
+
+  let spawnStep = 0;
+
+  if (spawnGrid) {
+    const fragment = document.createDocumentFragment();
+
+    for (let z = -9; z <= 9; z += 1) {
+      for (let x = -9; x <= 9; x += 1) {
+        const cell = document.createElement('span');
+        cell.className = 'cell';
+
+        const active =
+          Math.abs(x) <= 5 &&
+          Math.abs(z) <= 5 &&
+          Math.abs(x) + Math.abs(z) <= 6;
+
+        const inFrame = Math.abs(x) <= 7 && Math.abs(z) <= 7;
+
+        if (active) cell.classList.add('active');
+        if (inFrame) cell.classList.add('in-frame');
+        if (active && inFrame) cell.classList.add('cached');
+
+        fragment.appendChild(cell);
+      }
+    }
+
+    spawnGrid.appendChild(fragment);
+  }
+
+  function applySpawnStep() {
+    if (!spawnStage) return;
+
+    spawnStage.dataset.step = String(spawnStep + 1);
+    if (stageBadge) stageBadge.textContent = `${spawnStep + 1} / 4`;
+    if (stageCaption) stageCaption.innerHTML = captions[spawnStep];
+
+    stepItems.forEach((item, index) => {
+      item.classList.toggle('active', index === spawnStep);
+    });
+
+    if (spawnGrid) {
+      spawnGrid.classList.toggle('cache-on', spawnStep >= 1);
+      spawnGrid.classList.toggle('leaving', spawnStep === 3);
+    }
+
+    if (spawnPlayer) {
+      spawnPlayer.classList.toggle('leave', spawnStep === 3);
+    }
+  }
+
+  function nextSpawnStep() {
+    spawnStep = (spawnStep + 1) % 4;
+    applySpawnStep();
+  }
+
+  function startSpawnTimeline() {
+    if (!spawnStage || spawnTimer || document.hidden) return;
+    applySpawnStep();
+    spawnTimer = window.setInterval(nextSpawnStep, 3200);
+  }
+
+  function stopSpawnTimeline() {
+    if (!spawnTimer) return;
+    window.clearInterval(spawnTimer);
+    spawnTimer = null;
+  }
+
+  if (spawnStage) applySpawnStep();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopSpawnTimeline();
+    else if (spawnVisible) startSpawnTimeline();
+  });
+
+  if (!supportsObserver && spawnStage) {
+    spawnVisible = true;
+    startSpawnTimeline();
+  }
+
+  /* ---------------------------------------------------------
+     5. 键盘用户也可以手动推进时间轴（不显示额外按钮）
+     --------------------------------------------------------- */
+
+  if (spawnStage) {
+    spawnStage.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowRight' && event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      nextSpawnStep();
+    });
+    spawnStage.tabIndex = 0;
+    spawnStage.setAttribute('role', 'group');
+    spawnStage.setAttribute('aria-label', '重生点缓存构建动画，按右方向键或回车切换步骤');
+  }
+})();
+
+</script>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = (selector) => document.querySelector(selector);
+  const supportsObserver = 'IntersectionObserver' in window;
+
+  /* =========================================================
+     条目 01：玩家移动 → 前方加载 → 后方卸载
+     ========================================================= */
+
+  const loadMap = $('#loadMap');
+  const loadPlayer = $('#loadPlayer');
+  const loadCells = [];
+  const loadPath = [-3, -2, -1, 0, 1, 2, 3, 2, 1, 0, -1, -2];
+  const LOAD_R = 3;
+
+  let loadIndex = 0;
+  let loadTimer = null;
+  let loadVisible = false;
+  let loadUnloadTimer = null;
+
+  if (loadMap) {
+    const fragment = document.createDocumentFragment();
+    for (let z = -6; z <= 6; z += 1) {
+      for (let x = -6; x <= 6; x += 1) {
+        const cell = document.createElement('span');
+        cell.className = 'cell';
+        fragment.appendChild(cell);
+        loadCells.push({ el: cell, x, z });
+      }
+    }
+    loadMap.appendChild(fragment);
+  }
+
+  function renderLoad(px) {
+    if (!loadMap || !loadPlayer) return;
+
+    const pz = 0;
+    const turnedOff = [];
+
+    for (const { el, x, z } of loadCells) {
+      const wasOn = el.classList.contains('on');
+      const on =
+        Math.abs(x - px) <= LOAD_R &&
+        Math.abs(z - pz) <= LOAD_R &&
+        Math.abs(x - px) + Math.abs(z - pz) <= LOAD_R + 1;
+
+      if (wasOn && !on) turnedOff.push(el);
+      el.classList.toggle('on', on);
+      if (!on) el.classList.remove('just-unloaded');
+    }
+
+    for (const el of turnedOff) el.classList.add('just-unloaded');
+    if (loadUnloadTimer) window.clearTimeout(loadUnloadTimer);
+    loadUnloadTimer = window.setTimeout(() => {
+      for (const el of turnedOff) el.classList.remove('just-unloaded');
+    }, 600);
+
+    loadPlayer.style.left = `${((px + 6.5) / 13) * 100}%`;
+    loadPlayer.style.top = '50%';
+  }
+
+  function nextLoad() {
+    loadIndex = (loadIndex + 1) % loadPath.length;
+    renderLoad(loadPath[loadIndex]);
+  }
+
+  function startLoad() {
+    if (!loadMap || loadTimer) return;
+    renderLoad(loadPath[loadIndex]);
+    loadTimer = window.setInterval(nextLoad, 950);
+  }
+
+  function stopLoad() {
+    if (!loadTimer) return;
+    window.clearInterval(loadTimer);
+    loadTimer = null;
+  }
+
+  const basicsSection = $('#basics');
+  let basicsObserver = null;
+
+  if (supportsObserver && basicsSection) {
+    basicsObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target !== basicsSection) continue;
+        loadVisible = entry.isIntersecting;
+        if (loadVisible) startLoad();
+        else stopLoad();
+      }
+    }, { threshold: 0.12 });
+    basicsObserver.observe(basicsSection);
+  }
+
+  /* =========================================================
+     条目 03：远处设重生点 → 划定锚点框 → 接近/进入/累积 → 离开
+     ========================================================= */
+
+  const spawnStage = $('#spawnStage2');
+  const spawnMap = $('#spawnMap');
+  const spawnPlayer = $('#spawnPlayer2');
+  const spawnBadge = $('#spawnBadge2');
+  const spawnCaption = $('#spawnCaption2');
+
+  const spawnCells = [];
+  const spawnCached = new Set();
+  const SPAWN_R = 6;
+  const FRAME = { x1: 0, x2: 14, z1: -7, z2: 7 };
+
+  const positions = [
+    { x: -14, z: 0 },
+    { x: -14, z: 0 },
+    { x: -9, z: 0 },
+    { x: -4, z: 0 },
+    { x: 1, z: 0 },
+    { x: 6, z: 0 },
+    { x: 10, z: 0 },
+    { x: 15, z: 0 },
+    { x: 15, z: 0 }
+  ];
+
+  const captions = [
+    '<strong>远处：</strong>玩家在很远的地方，锚点还没有划定。',
+    '<strong>设重生点：</strong>在远处设置重生点，15×15 锚点框被划定；框内还是空的。',
+    '<strong>接近：</strong>玩家向锚点移动，沿途区块开始加载。',
+    '<strong>碰到边缘：</strong>加载区进入锚点框，框内已加载的区块开始变成缓存。',
+    '<strong>进入：</strong>玩家走进锚点区域，缓存继续累积。',
+    '<strong>穿越：</strong>玩家继续移动，框内缓存越来越多。',
+    '<strong>另一侧：</strong>玩家到达锚点框右侧，框内缓存基本成形。',
+    '<strong>离开：</strong>玩家走出锚点框；框外的旧区块卸载，框内缓存留下。',
+    '<strong>结果：</strong>锚点框内是常驻内存的缓存；框外只保留玩家当前的加载区。'
+  ];
+
+  let spawnIndex = 0;
+  let spawnTimer = null;
+  let spawnVisible = false;
+
+  if (spawnMap) {
+    const fragment = document.createDocumentFragment();
+    for (let z = -10; z <= 10; z += 1) {
+      for (let x = -15; x <= 15; x += 1) {
+        const cell = document.createElement('span');
+        cell.className = 'cell';
+        const inFrame = x >= FRAME.x1 && x <= FRAME.x2 && z >= FRAME.z1 && z <= FRAME.z2;
+        if (inFrame) cell.classList.add('in-frame');
+        fragment.appendChild(cell);
+        spawnCells.push({ el: cell, x, z, inFrame });
+      }
+    }
+    spawnMap.appendChild(fragment);
+  }
+
+  function renderSpawn(index) {
+    if (!spawnStage || !spawnMap) return;
+
+    const pos = positions[index];
+    spawnStage.dataset.step = String(index + 1);
+    spawnStage.classList.toggle('frame-on', index >= 1);
+
+    if (spawnBadge) spawnBadge.textContent = `${index + 1} / 9`;
+    if (spawnCaption) spawnCaption.innerHTML = captions[index];
+
+    if (index === 0) spawnCached.clear();
+
+    for (const { el, x, z, inFrame } of spawnCells) {
+      const on =
+        Math.abs(x - pos.x) <= SPAWN_R &&
+        Math.abs(z - pos.z) <= SPAWN_R &&
+        Math.abs(x - pos.x) + Math.abs(z - pos.z) <= SPAWN_R + 1;
+
+      if (on && inFrame) spawnCached.add(`${x},${z}`);
+
+      el.classList.toggle('active', on);
+      el.classList.toggle('cached', spawnCached.has(`${x},${z}`));
+    }
+
+    if (spawnPlayer) {
+      spawnPlayer.style.left = `${((pos.x + 15.5) / 31) * 100}%`;
+      spawnPlayer.style.top = `${((pos.z + 10.5) / 21) * 100}%`;
+    }
+  }
+
+  function nextSpawn() {
+    spawnIndex = (spawnIndex + 1) % positions.length;
+    renderSpawn(spawnIndex);
+  }
+
+  function startSpawn() {
+    if (!spawnStage || spawnTimer) return;
+    renderSpawn(spawnIndex);
+    spawnTimer = window.setInterval(nextSpawn, 2500);
+  }
+
+  function stopSpawn() {
+    if (!spawnTimer) return;
+    window.clearInterval(spawnTimer);
+    spawnTimer = null;
+  }
+
+  const spawnSection = $('#spawn');
+  let spawnObserver = null;
+
+  if (supportsObserver && spawnSection) {
+    spawnObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target !== spawnSection) continue;
+        spawnVisible = entry.isIntersecting;
+        if (spawnVisible) startSpawn();
+        else stopSpawn();
+      }
+    }, { threshold: 0.1 });
+    spawnObserver.observe(spawnSection);
+  }
+
+  /* 初次渲染 + 页面不可见时暂停 */
+  if (loadMap) renderLoad(loadPath[0]);
+  if (spawnStage) renderSpawn(0);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopLoad();
+      stopSpawn();
+    } else {
+      if (loadVisible) startLoad();
+      if (spawnVisible) startSpawn();
+    }
+  });
+
+  if (!supportsObserver) {
+    loadVisible = true;
+    spawnVisible = true;
+    startLoad();
+    startSpawn();
+  }
+
+  /* 键盘用户也可以手动推进锚点时间轴 */
+  if (spawnStage) {
+    spawnStage.tabIndex = 0;
+    spawnStage.setAttribute('role', 'group');
+    spawnStage.setAttribute('aria-label', '锚点区域构建动画：远处设重生点、划定锚点框、玩家移动加载、缓存累积与离开。');
+    spawnStage.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowRight' && event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      nextSpawn();
+    });
+  }
+})();
+</script>
+</body>
+</html>

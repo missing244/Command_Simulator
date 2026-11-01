@@ -80,7 +80,8 @@ class PCFirstPersonControls extends EventDispatcher {
 		this.domElement = domElement
 
 		//KeyBindAndDefine
-		this.moveState = {forward: false, backward: false, left: false,
+		this.moveState = {plane:[0.0, 0.0], 
+			forward: false, backward: false, left: false,
 			right: false, up: false,  down: false};
 
 		/**
@@ -164,13 +165,6 @@ class PCFirstPersonControls extends EventDispatcher {
 	}
 
     update() {
-		const isMoving = () => {
-        	return this.moveState.forward || this.moveState.backward || 
-               this.moveState.left || this.moveState.right ||
-               this.moveState.up || this.moveState.down;
-    	}
-        if (!this.isLocked || !isMoving()) return null;
-
 		let deltaTime = Math.min(clock.getDelta(), 0.04)
         const speed = this.moveSpeed * deltaTime;
         
@@ -183,9 +177,6 @@ class PCFirstPersonControls extends EventDispatcher {
         // 垂直移动（controls 没有内置方法，需要自己处理）
         if (this.moveState.up) this.object.position.y += speed;
         if (this.moveState.down) this.object.position.y -= speed;
-
-        // 如果有移动，请求渲染
-		this.dispatchEvent( _changeEvent );
     }
 
 	/**
@@ -304,7 +295,7 @@ class PEFirstPersonControls extends EventDispatcher {
 		this.domElement = domElement;
 
 		//KeyBindAndDefine
-		this.moveState = {plane:[0.0, 0.0], up: false,  down: false};
+		this.moveState = {plane:[0.0, 0.0], up:false, down:false};
 
 		/**
 		 * Whether the controls move speed.
@@ -337,7 +328,7 @@ class PEFirstPersonControls extends EventDispatcher {
 		 * @type {number}
 		 * @default 1
 		 */
-		this.pointerSpeed = 2.3;
+		this.pointerSpeed = 5;
 		
 		this.createPad()
 		this.connect()
@@ -504,8 +495,8 @@ class PEFirstPersonControls extends EventDispatcher {
 				if (touch.identifier !== lookTouchId) continue;
 
 				_euler.setFromQuaternion( camera.quaternion );
-				_euler.y += (touch.clientX - lastX) * _MOUSE_SENSITIVITY * this.pointerSpeed;
-				_euler.x += (touch.clientY - lastY) * _MOUSE_SENSITIVITY * this.pointerSpeed;
+				_euler.y += (touch.clientX - lastX) * _MOUSE_SENSITIVITY * this.pointerSpeed * -1;
+				_euler.x += (touch.clientY - lastY) * _MOUSE_SENSITIVITY * this.pointerSpeed * -1;
 				_euler.x = Math.max( _PI_2 - this.maxPolarAngle, Math.min( _PI_2 - this.minPolarAngle, _euler.x ) );
 				camera.quaternion.setFromEuler( _euler );
 
@@ -528,15 +519,11 @@ class PEFirstPersonControls extends EventDispatcher {
 	}
 
     update() {
-		const planeMove = Math.abs(this.moveState.plane[0]) + Math.abs(this.moveState.plane[1])
-		const isMoving = () => planeMove > 0.001 || this.moveState.up || this.moveState.down
-        if (!isMoving()) return null;
-
 		const deltaTime = Math.min(clock.getDelta(), 0.04)
         const moveSpeedX = this.moveSpeed * this.moveState.plane[0] * deltaTime;
         const moveSpeedY = this.moveSpeed * this.moveState.plane[1] * deltaTime;
         const riseSpeed = this.moveSpeed * deltaTime;
-        
+
         // 使用 controls 的移动方法
         this.moveForward(moveSpeedY);
         this.moveRight(moveSpeedX);
@@ -544,9 +531,6 @@ class PEFirstPersonControls extends EventDispatcher {
         // 垂直移动（controls 没有内置方法，需要自己处理）
         if (this.moveState.up) this.object.position.y += riseSpeed;
         if (this.moveState.down) this.object.position.y -= riseSpeed;
-
-        // 如果有移动，请求渲染
-		this.dispatchEvent( _changeEvent );
     }
 
 	/**

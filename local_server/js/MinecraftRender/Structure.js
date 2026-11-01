@@ -3,7 +3,12 @@ import {THREE} from "./__init__.js"
 
 const BlockTexturePath = new URL('./texture/blocks.png', import.meta.url).href
 const BlockTexture = new THREE.TextureLoader().load(BlockTexturePath)
-BlockTexture.minFilter = THREE.NearestMipmapNearestFilter
+// 合并面用 fract 重复采样，格子边界处 uv 会跳变；
+// 如果保留 mipmap，GPU 会在边界选到低层级，混入相邻图集的透明像素，
+// 再被 alphaTest 丢掉，看起来就是每个方块之间有一条透明细线。
+// 这里直接关掉 mipmap，保证每个格子只采样自己的 16x16 小图。
+BlockTexture.minFilter = THREE.NearestFilter
+BlockTexture.generateMipmaps = false
 BlockTexture.magFilter = THREE.NearestFilter
 const BlockMaterial = new THREE.MeshBasicMaterial({map:BlockTexture, transparent:true, alphaTest:0.6})
 
@@ -15,9 +20,59 @@ const PlantMaterial = new THREE.MeshBasicMaterial({map:PlantTexture, transparent
 
 const TransparentTexturePath = new URL('./texture/transparent.png', import.meta.url).href
 const TransparentTexture = new THREE.TextureLoader().load(TransparentTexturePath)
-TransparentTexture.minFilter = THREE.NearestMipmapNearestFilter
+// 透明合并面同样用 fract 重复采样，也需要关闭 mipmap，避免格子边界混入相邻透明图块。
+TransparentTexture.minFilter = THREE.NearestFilter
+TransparentTexture.generateMipmaps = false
 TransparentTexture.magFilter = THREE.NearestFilter
 const TransparentMaterial = new THREE.MeshBasicMaterial({map: TransparentTexture, transparent: true, depthWrite:false, depthTest: true})
+
+/**
+ * 让 single / transparent 材质支持合并面 UV。
+ * 合并面把图集列号/行号写到 uv 整数部分，把 0..w/0..h 的局部坐标写到小数部分。
+ * 这里用 floor/fract 解码，再用 fract(local) 在当前 16x16 小图内重复采样。
+ */
+const addMergedUvDecode = (material, atlasWidth, atlasHeight) => {
+    material.onBeforeCompile = (shader) => {
+        shader.uniforms.uAtlasSize = { value: new THREE.Vector2(atlasWidth, atlasHeight) }
+
+        shader.vertexShader = `
+attribute float aAO;
+varying float vAO;
+varying vec2 vMergedUv;
+` + shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `#include <begin_vertex>
+            vMergedUv = uv;
+            vAO = aAO;`
+        )
+
+        shader.fragmentShader = `
+uniform vec2 uAtlasSize;
+varying float vAO;
+varying vec2 vMergedUv;
+` + shader.fragmentShader.replace(
+            '#include <map_fragment>',
+            `#ifdef USE_MAP
+            vec2 atlasUv;
+            if (vMergedUv.x > 2.0) {
+                vec2 tile = floor(vMergedUv) - vec2(10.0);
+                vec2 local = fract(vMergedUv) * 1024.0;
+                vec2 tileLocal = fract(local);
+                atlasUv = (tile * 16.0 + tileLocal * 16.0) / uAtlasSize;
+            } else {
+                atlasUv = vUv;
+            }
+            vec4 sampledDiffuseColor = texture2D( map, atlasUv );
+            diffuseColor *= sampledDiffuseColor;
+            diffuseColor.rgb *= vAO;
+            #endif`
+        )
+    }
+    material.customProgramCacheKey = () => `MergedUvDecode-${atlasWidth}x${atlasHeight}`
+}
+
+addMergedUvDecode(BlockMaterial, 256 * 16, 64 * 16)
+addMergedUvDecode(TransparentMaterial, 256 * 16, 16 * 16)
 
 
 
@@ -164,7 +219,13 @@ class BlockIndexArray {
             this.indexs.push(new Uint16Array(ArraySize))
         }
     }
-    
+
+    get length() {
+        let total = 0;
+        for (const arr of this.indexs) total += arr.length;
+        return total;
+    }
+
     getIndex(index) {
         const remainder = index % this.data_length;
         const quotient = (index - remainder) / this.data_length;
@@ -196,7 +257,45 @@ class BlockIndexArray {
             return combined;
         }
     }
-    
+    /**
+     * 用同一个值填充整个（或指定区间的）BlockIndexArray
+     * 语义等价于 Uint16Array.prototype.fill，但跨所有分块。
+     * @param {Number} value       填充值
+     * @param {Number} [start=0]   起始索引（支持负数，从末尾数）
+     * @param {Number} [end]       结束索引（不含，支持负数；默认到末尾）
+     * @returns {BlockIndexArray}  this
+     */
+    fill(value, start = 0, end = undefined) {
+        const total = this.length;
+        if (end === undefined) end = total;
+
+        // 归一化负索引 / 越界索引（和原生 fill 行为一致）
+        start = start < 0 ? Math.max(0, total + start) : Math.min(start, total);
+        end   = end   < 0 ? Math.max(0, total + end)   : Math.min(end,   total);
+
+        if (start >= end) return this;   // 空区间，什么都不做
+
+        // 逐分块填充，只处理与 [start, end) 有交集的分块
+        let blockStart = 0;
+        for (const arr of this.indexs) {
+            const blockEnd = blockStart + arr.length;
+
+            if (blockEnd <= start) {          // 这个分块完全在区间左边
+                blockStart = blockEnd;
+                continue;
+            }
+            if (blockStart >= end) break;     // 后面分块都在区间右边
+
+            const localStart = Math.max(0, start - blockStart);
+            const localEnd   = Math.min(arr.length, end - blockStart);
+            arr.fill(value, localStart, localEnd);
+
+            blockStart = blockEnd;
+        }
+
+        return this;
+    }
+
 }
 
 class Structure {
@@ -350,9 +449,16 @@ class Structure {
      * @param {Number} startZ - z坐标
      */
     getRenderObject(startX, startY, startZ, 
-        {single_positions, single_uvs, single_indices,
+        {single_positions, single_uvs, single_indices, single_ao,
         double_positions, double_uvs, double_indices,
-        transparent_positions, transparent_uvs, transparent_indices }){
+        transparent_positions, transparent_uvs, transparent_indices, transparent_ao }){
+        // 兼容旧版 Worker：没有 AO 时默认全 1.0
+        if (!single_ao || single_ao.length !== single_positions.length / 3) {
+            single_ao = new Float32Array(single_positions.length / 3).fill(1)
+        }
+        if (!transparent_ao || transparent_ao.length !== transparent_positions.length / 3) {
+            transparent_ao = new Float32Array(transparent_positions.length / 3).fill(1)
+        }
         const RenderObject = new ChunkRenderObject()
         RenderObject.origin[0] = startX
         RenderObject.origin[1] = startY
@@ -362,6 +468,7 @@ class Structure {
             const geometry = new THREE.BufferGeometry()
             geometry.setAttribute( 'position', new THREE.BufferAttribute(single_positions, 3))
             geometry.setAttribute( 'uv', new THREE.BufferAttribute(single_uvs, 2))
+            geometry.setAttribute( 'aAO', new THREE.BufferAttribute(single_ao, 1))
             geometry.setIndex(new THREE.Uint32BufferAttribute(single_indices, 1))
             const MeshObject = new THREE.Mesh(geometry, BlockMaterial)
             MeshObject.renderOrder = 0
@@ -383,6 +490,7 @@ class Structure {
             const geometry = new THREE.BufferGeometry()
             geometry.setAttribute( 'position', new THREE.BufferAttribute(transparent_positions, 3))
             geometry.setAttribute( 'uv', new THREE.BufferAttribute(transparent_uvs, 2))
+            geometry.setAttribute( 'aAO', new THREE.BufferAttribute(transparent_ao, 1))
             geometry.setIndex(new THREE.Uint32BufferAttribute(transparent_indices, 1))
             const MeshObject = new THREE.Mesh(geometry, TransparentMaterial)
             MeshObject.renderOrder = 1000
@@ -396,6 +504,6 @@ class Structure {
 }
 
 
-export {Block, ChunkRenderObject, Structure}
+export {Block, AirBlock, ChunkRenderObject, Structure}
 
 //

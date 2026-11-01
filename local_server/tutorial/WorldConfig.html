@@ -1,118 +1,1135 @@
 <!DOCTYPE html>
+<html lang="zh-CN">
 
-<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="color-scheme" content="dark">
+	<meta name="theme-color" content="#070c16">
+	<meta name="description" content="命令模拟器世界配置文档：世界类型与区块模板、加载区块范围、游戏刻的执行顺序。">
+	<title>世界配置 · 命令模拟器帮助文档</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070c16'/%3E%3Cpath d='M16 5 27 11.4v9.2L16 27 5 20.6v-9.2z' fill='%232f8d55'/%3E%3Cpath d='M5 11.4 16 17.8l11-6.4v9.2L16 27z' fill='%230f3d23'/%3E%3Cpath d='M16 5 27 11.4 16 17.8 5 11.4z' fill='%233ee08f'/%3E%3C/svg%3E">
 
-	<head>
-		<meta charset="utf-8">
-		<title> 命令模拟器世界配置文档 </title>
-        <link href="../css/wendang.css" rel="stylesheet" type="text/css" media="all" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	</head>
-        
-    <body style="width: 80%; margin: 0px auto;">
-        <div class="menu">
-            <div id="menu_1">
-                <div class="menu_1">
-                    <div onclick="display_thing('main_1');">世界类型</div>
-                    <div onclick="display_thing('main_2');">加载区块</div>
-                    <div onclick="display_thing('main_3');">游戏刻</div>
-                </div>
-            </div>
-            <div style="text-align: center; background-color: rgb(62, 94, 7); color: white; display: flex;">
-                <div onclick="close_menu()" style="padding: 3px 0px; width: 50%; border-right: 3px solid white;" id="button_1">点击收入菜单</div>
-                <div onclick="website1()" style="padding: 3px 0px; width: 50%;">点击返回主页</div>
-            </div>
-        </div>
+	<style>
+		/* ========== 基础变量 ========== */
+		:root {
+			--bg: #070c16;
+			--panel: rgba(255, 255, 255, .045);
+			--panel-hi: rgba(255, 255, 255, .08);
+			--line: rgba(255, 255, 255, .10);
+			--line-hi: rgba(255, 255, 255, .2);
+			--text: #eaf1fb;
+			--body: #c2d0e2;
+			--muted: #93a5bf;
+			--mint: #3ee08f;
+			--mint-dim: #2bbd76;
+			--amber: #ffc857;
+			--violet: #b493ff;
+			--gutter: clamp(20px, 5vw, 64px);
+			--header-h: 62px;
+			--radius: 22px;
+			--font: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+				"Microsoft YaHei", "Noto Sans SC", sans-serif;
+			--mono: ui-monospace, "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+		}
 
-        <div id="top_blank" style="height: 80px;"></div>
+		* {
+			box-sizing: border-box;
+		}
 
-        <div id="main_text" style="width: 95%; margin: 0px auto;">
-            
-            <div id="main_1">
-                <h1 style="text-align: center;">世界类型</h1>
-                <p>
-                    &emsp;&emsp;命令模拟器并不会依照柏林噪声生成一个和Minecraft一模一样的世界，使用柏林噪声生成的时间消耗过大。
-                    为了加快世界生成的速度，命令模拟器使用了预设的区块模板。
-                </p>
-                <p>
-                    &emsp;&emsp;在基岩版下，如果你选择flat世界类型，主世界维度的每个区块按以下模板顺序生成：
-                    <samp class="red_text">1层基岩(y=-64)、2层泥土、1层草方块、380层空气</samp>
-                </p>
-                <p>
-                    &emsp;&emsp;如果你选择infinity世界类型，主世界维度的每个区块按以下模板顺序生成：
-                    <samp class="red_text">1层基岩(y=-64)、8层石头(可能有中空区域)、2层泥土、1层草方块，372层空气</samp>
-                </p>
-                <p>
-                    &emsp;&emsp;下界维度的每个区块按以下模板顺序生成：<samp class="red_text">1层基岩(y=0)、8层地狱岩、118层空气、1层基岩</samp>
-                </p>
-                <p>
-                    &emsp;&emsp;末地维度的每个区块按以下模板顺序生成：<samp class="red_text">一层空气(y=0)、8层末地石、119层空气</samp>
-                </p>
-            </div>
+		html {
+			scroll-behavior: smooth;
+			-webkit-text-size-adjust: 100%;
+		}
 
-            <div id="main_2" style="display: none;" >
-                <h1 style="text-align: center;">加载区块</h1>
-                <p>
-                    &emsp;&emsp;命令模拟器在进入世界时会在世界原点附近生成4个玩家，每个玩家都以玩家所在的区块为中心，     
-                    以模拟区块距离为曼哈顿距离，计算需要加载的区块。
-                <p>
-                    &emsp;&emsp;超出加载区块的位置会影响clone、setblock等方块处理命令。
-                    并且在命令模拟器中，超出加载区块的实体在下一个游戏刻将不会被读取和搜索。
-                </p>
-            </div>
-            
-            <div id="main_3" style="display: none;" >
-                <h1 style="text-align: center;">游戏刻</h1>
-                <p>
-                    &emsp;&emsp;命令模拟器的生成的世界将按照顺序执行执行以下事件：<br>
-                    &emsp;&emsp;①更新需要加载的区块<br>
-                    &emsp;&emsp;②更新实体的相关数据<br>
-                    &emsp;&emsp;③运行终端中被发送的命令<samp class="red_text">(命令的执行者是某个玩家，执行位置是玩家的位置)</samp><br>
-                    &emsp;&emsp;④运行预设的延时和循环命令<samp class="red_text">(命令的执行者是服务器，执行位置是世界原点)</samp><br>
-                    &emsp;&emsp;⑤运行命令方块<samp class="red_text">(命令的执行者是命令方块，执行位置是命令方块的中心)</samp><br>
-                    &emsp;&emsp;⑥运行预设的延时和循环函数<samp class="red_text">(命令的执行者是服务器，执行位置是世界原点)</samp><br>
-                </p>
-                <p>
-                    &emsp;&emsp;由于命令模拟器还在开发初期，很多Minecraft的特性需要根据玩家的反馈进行更新，
-                    所以现在为止世界中所有的实体都是静止的，不会更新运动状态，许多条件需要用户在命令栏中自行创造调试。
-                </p>
-            </div>
-            
-        </div>
-        
-        <div style="height: 30px;"></div>
+		body {
+			margin: 0;
+			min-height: 100dvh;
+			font-family: var(--font);
+			font-size: 16px;
+			line-height: 1.95;
+			color: var(--text);
+			background:
+				radial-gradient(900px 520px at 8% -8%, rgba(62, 224, 143, .16), transparent 62%),
+				radial-gradient(800px 520px at 100% 0%, rgba(180, 147, 255, .13), transparent 58%),
+				linear-gradient(180deg, #070c16 0%, #0a1120 46%, #060a12 100%);
+			background-repeat: no-repeat;
+			-webkit-font-smoothing: antialiased;
+			/* clip 不会创建滚动容器，否则 position: sticky 会失效 */
+			overflow-x: clip;
+		}
 
-    </body>
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			z-index: -1;
+			pointer-events: none;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px);
+			background-size: 52px 52px;
+			mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+			-webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+		}
 
-    <script>
-        var count_1 = 0 ;
-        function close_menu(){
-            if (count_1 == 0){
-                document.getElementById('menu_1').style.display = "none";
-                document.getElementById('button_1').innerHTML = "点击展开菜单";
-                document.getElementById('top_blank').style.height = "20px";
-            }
-            else{
-                document.getElementById('menu_1').style.display = "";
-                document.getElementById('button_1').innerHTML = "点击收入菜单"
-                document.getElementById('top_blank').style.height = (document.getElementById('menu_1').clientHeight + 20).toString() + "px"
-            }
-            count_1 ++; count_1 %= 2;
-        }
-        function website1(){window.location.href='http://localhost:32323';}
-    </script>
+		::selection {
+			background: rgba(62, 224, 143, .3);
+			color: #fff;
+		}
 
-    <script>
-        if (window.innerWidth > 700) {document.getElementById('main_text').style.width = "700px";}  
-        function display_thing(id1){
-            array1 = ['main_1','main_2','main_3','main_4','main_5'];
-            document.body.scrollTop = 0; 
-            document.documentElement.scrollTop = 0;
-            for (let index = 0; index < array1.length; index++) {
-                if (id1 == array1[index]) document.getElementById(array1[index]).style.display = "";
-                else document.getElementById(array1[index]).style.display = "none";
-            }
-        }
-    </script>
+		:focus-visible {
+			outline: 2px solid var(--mint);
+			outline-offset: 3px;
+			border-radius: 8px;
+		}
+
+		a {
+			color: var(--mint);
+			text-decoration-color: rgba(62, 224, 143, .45);
+			text-underline-offset: 3px;
+		}
+
+		a:hover {
+			color: #8dffc3;
+		}
+
+		.wrap {
+			width: min(1120px, 100% - var(--gutter));
+			margin-inline: auto;
+		}
+
+		.skip {
+			position: absolute;
+			left: -9999px;
+			top: 8px;
+			z-index: 99;
+			padding: 10px 16px;
+			border-radius: 10px;
+			background: var(--mint);
+			color: #04140b;
+			font-weight: 700;
+			text-decoration: none;
+		}
+
+		.skip:focus {
+			left: 12px;
+		}
+
+		/* ========== 顶部 ========== */
+		.header {
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			background: rgba(7, 12, 22, .78);
+			border-bottom: 1px solid var(--line);
+			backdrop-filter: blur(16px) saturate(160%);
+			-webkit-backdrop-filter: blur(16px) saturate(160%);
+			padding-left: env(safe-area-inset-left);
+			padding-right: env(safe-area-inset-right);
+		}
+
+		.header__inner {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			height: var(--header-h);
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			text-decoration: none;
+			color: var(--text);
+			flex: none;
+			min-height: 40px;
+		}
+
+		.brand svg {
+			width: 26px;
+			height: 26px;
+			filter: drop-shadow(0 0 12px rgba(62, 224, 143, .45));
+		}
+
+		.brand b {
+			font-size: 15px;
+			letter-spacing: .02em;
+			white-space: nowrap;
+		}
+
+		.crumb {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			color: var(--muted);
+			font-size: 13.5px;
+			white-space: nowrap;
+			overflow: hidden;
+		}
+
+		.crumb::before {
+			content: "/";
+			color: rgba(255, 255, 255, .3);
+		}
+
+		.crumb span {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.back {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			height: 38px;
+			padding: 0 14px;
+			border-radius: 11px;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			color: var(--text);
+			font-size: 13.5px;
+			text-decoration: none;
+			white-space: nowrap;
+			transition: background-color .2s, border-color .2s, transform .2s;
+		}
+
+		.back:hover {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.back svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		/* ========== 主体两栏 ========== */
+		.layout {
+			display: grid;
+			grid-template-columns: 226px minmax(0, 1fr);
+			gap: clamp(22px, 3vw, 44px);
+			align-items: start;
+			padding: clamp(22px, 3.4vw, 40px) 0 48px;
+		}
+
+		.side__inner {
+			position: sticky;
+			top: calc(var(--header-h) + 20px);
+		}
+
+		.side__label {
+			margin: 0 0 10px 12px;
+			font-size: 10.5px;
+			font-weight: 700;
+			letter-spacing: .26em;
+			text-transform: uppercase;
+			color: var(--mint);
+		}
+
+		.toc {
+			display: flex;
+			flex-direction: column;
+			gap: 3px;
+		}
+
+		.toc button {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			width: 100%;
+			padding: 10px 12px;
+			border: 0;
+			border-radius: 11px;
+			background: transparent;
+			color: var(--muted);
+			font: inherit;
+			font-size: 14.5px;
+			text-align: left;
+			cursor: pointer;
+			transition: color .18s, background-color .18s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.toc button .num {
+			font-family: var(--mono);
+			font-size: 11px;
+			color: rgba(255, 255, 255, .28);
+			letter-spacing: .04em;
+		}
+
+		.toc button:hover {
+			color: var(--text);
+			background: var(--panel);
+		}
+
+		.toc button.is-active {
+			color: var(--mint);
+			background: rgba(62, 224, 143, .13);
+			font-weight: 700;
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .28), 0 8px 22px -16px rgba(62, 224, 143, .9);
+		}
+
+		.toc button.is-active .num {
+			color: rgba(62, 224, 143, .8);
+		}
+
+		.side__foot {
+			margin-top: 18px;
+			padding: 14px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: var(--panel);
+			font-size: 12.5px;
+			line-height: 1.8;
+			color: var(--muted);
+		}
+
+		.side__foot b {
+			display: block;
+			margin-bottom: 4px;
+			color: var(--text);
+			font-size: 13px;
+		}
+
+		.side__foot a {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			margin-top: 6px;
+			font-size: 13px;
+			text-decoration: none;
+			color: var(--mint);
+		}
+
+		/* ========== 正文卡片 ========== */
+		.doc {
+			position: relative;
+			min-width: 0;
+			padding: clamp(20px, 3.2vw, 40px);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: linear-gradient(180deg, rgba(255, 255, 255, .042), rgba(255, 255, 255, .012));
+			box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .06);
+		}
+
+		.doc__eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			margin: 0 0 12px;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .18em;
+			color: var(--mint);
+			text-transform: uppercase;
+		}
+
+		.doc__eyebrow::before {
+			content: "";
+			width: 18px;
+			height: 1px;
+			background: var(--mint);
+			opacity: .7;
+		}
+
+		.doc h1 {
+			margin: 0;
+			font-size: clamp(27px, 5vw, 38px);
+			line-height: 1.25;
+			letter-spacing: -.02em;
+			font-weight: 800;
+		}
+
+		.doc__lead {
+			margin: 12px 0 18px;
+			max-width: 60ch;
+			color: var(--muted);
+			font-size: 15.5px;
+			line-height: 1.85;
+		}
+
+		.doc__meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 5px;
+			margin: 0 0 26px;
+			padding: 0 0 20px;
+			border-bottom: 1px solid var(--line);
+			list-style: none;
+			font-size: 12.5px;
+			color: var(--muted);
+		}
+
+		.doc__meta li {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			padding: 4px 10px 4px 8px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: rgba(255, 255, 255, .03);
+		}
+
+		.doc__meta li::before {
+			content: "";
+			width: 5px;
+			height: 5px;
+			border-radius: 1px;
+			background: var(--mint);
+			opacity: .75;
+		}
+
+		/* ========== 章节排版 ========== */
+		.panel[hidden] {
+			display: none;
+		}
+
+		.panel > h2 {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			margin: 0 0 16px;
+			font-size: clamp(20px, 3.2vw, 26px);
+			line-height: 1.4;
+			letter-spacing: -.01em;
+			font-weight: 800;
+		}
+
+		.panel > h2::before {
+			content: "";
+			flex: none;
+			width: 4px;
+			height: 1.05em;
+			border-radius: 2px;
+			background: linear-gradient(180deg, var(--mint), var(--mint-dim));
+			box-shadow: 0 0 12px rgba(62, 224, 143, .55);
+		}
+
+		.panel p {
+			margin: 0 0 15px;
+			color: var(--body);
+			font-size: 15.5px;
+			line-height: 1.95;
+		}
+
+		.panel p:last-child {
+			margin-bottom: 0;
+		}
+
+		.panel strong {
+			color: var(--text);
+			font-weight: 700;
+		}
+
+		mark {
+			padding: 1px 6px;
+			margin: 0 1px;
+			border-radius: 6px;
+			background: rgba(255, 200, 87, .14);
+			box-shadow: inset 0 0 0 1px rgba(255, 200, 87, .22);
+			color: #ffd98a;
+			font-weight: 600;
+		}
+
+		code {
+			font-family: var(--mono);
+			font-size: .875em;
+			padding: 2px 6px;
+			border-radius: 6px;
+			background: rgba(140, 170, 255, .13);
+			box-shadow: inset 0 0 0 1px rgba(140, 170, 255, .16);
+			color: #bcd0ff;
+			white-space: nowrap;
+		}
+
+		/* 区块模板链条 */
+		.chain {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 7px;
+			margin: -4px 0 22px;
+			padding: 2px 0 2px 13px;
+			border-left: 2px solid rgba(62, 224, 143, .32);
+		}
+
+		.bit {
+			display: inline-flex;
+			align-items: baseline;
+			gap: 6px;
+			padding: 5px 10px;
+			border: 1px solid var(--line);
+			border-radius: 9px;
+			background: rgba(255, 255, 255, .045);
+			color: var(--text);
+			font-size: 13.5px;
+			line-height: 1.5;
+			white-space: nowrap;
+		}
+
+		.bit em {
+			font-style: normal;
+			font-family: var(--mono);
+			font-size: 11.5px;
+			color: var(--muted);
+		}
+
+		.bit.air {
+			color: var(--muted);
+			background: rgba(255, 255, 255, .02);
+		}
+
+		/* 箭头作为下一个方块的 ::before，换行时不会单独留在行尾 */
+		.bit + .bit::before {
+			content: "→";
+			margin-right: 8px;
+			color: rgba(255, 255, 255, .25);
+			font-size: 12px;
+		}
+
+		/* 游戏刻步骤 */
+		.steps {
+			list-style: none;
+			margin: 6px 0 22px;
+			padding: 0;
+			display: grid;
+			gap: 8px;
+		}
+
+		.step {
+			display: flex;
+			gap: 13px;
+			padding: 12px 15px;
+			border: 1px solid var(--line);
+			border-radius: 13px;
+			background: rgba(255, 255, 255, .026);
+		}
+
+		.step__num {
+			flex: none;
+			width: 26px;
+			height: 26px;
+			display: grid;
+			place-items: center;
+			border-radius: 8px;
+			background: rgba(62, 224, 143, .12);
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .25);
+			color: var(--mint);
+			font-family: var(--mono);
+			font-size: 11.5px;
+			font-weight: 700;
+		}
+
+		.step__body {
+			min-width: 0;
+		}
+
+		.step__title {
+			margin: 0;
+			color: var(--text);
+			font-size: 15px;
+			font-weight: 600;
+			line-height: 1.7;
+		}
+
+		.step__meta {
+			margin: 2px 0 0;
+			color: var(--muted);
+			font-size: 12.5px;
+			line-height: 1.7;
+		}
+
+		/* 提示块 */
+		.callout {
+			display: flex;
+			gap: 11px;
+			margin: 18px 0;
+			padding: 14px 16px;
+			border: 1px solid rgba(255, 200, 87, .26);
+			border-radius: 14px;
+			background: linear-gradient(135deg, rgba(255, 200, 87, .12), rgba(255, 120, 80, .05));
+			font-size: 14.5px;
+			line-height: 1.85;
+			color: #ffd9a2;
+		}
+
+		.callout svg {
+			flex: none;
+			width: 18px;
+			height: 18px;
+			margin-top: 4px;
+			color: var(--amber);
+		}
+
+		.callout b {
+			color: #ffe9c4;
+		}
+
+		/* 说明块（非警告） */
+		.note {
+			display: flex;
+			gap: 11px;
+			margin: 18px 0 0;
+			padding: 14px 16px;
+			border: 1px solid rgba(180, 147, 255, .26);
+			border-radius: 14px;
+			background: linear-gradient(135deg, rgba(180, 147, 255, .12), rgba(120, 140, 255, .05));
+			font-size: 14.5px;
+			line-height: 1.85;
+			color: #d9ccff;
+		}
+
+		.note svg {
+			flex: none;
+			width: 18px;
+			height: 18px;
+			margin-top: 4px;
+			color: var(--violet);
+		}
+
+		/* 章节翻页 */
+		.pager {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 10px;
+			margin-top: 30px;
+			padding-top: 20px;
+			border-top: 1px solid var(--line);
+		}
+
+		.pager button {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			min-height: 44px;
+			padding: 0 16px;
+			border: 1px solid var(--line);
+			border-radius: 12px;
+			background: var(--panel);
+			color: var(--text);
+			font: inherit;
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: background-color .2s, border-color .2s, transform .2s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.pager button:hover:not(:disabled) {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.pager button:disabled {
+			opacity: .34;
+			cursor: not-allowed;
+		}
+
+		.pager button.next {
+			margin-left: auto;
+			color: #04150c;
+			border-color: transparent;
+			background: linear-gradient(180deg, #63f0a6, #2fcf80);
+			box-shadow: 0 10px 26px -14px rgba(62, 224, 143, .9);
+		}
+
+		.pager button.next:hover:not(:disabled) {
+			background: linear-gradient(180deg, #74f6b3, #37d98a);
+		}
+
+		.pager svg {
+			width: 15px;
+			height: 15px;
+		}
+
+		/* ========== 页脚 ========== */
+		.footer {
+			padding: 24px 0 calc(40px + env(safe-area-inset-bottom));
+			border-top: 1px solid var(--line);
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px 22px;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.footer p {
+			margin: 0;
+		}
+
+		.footer nav {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+		}
+
+		.footer nav a {
+			padding: 6px 10px;
+			border-radius: 8px;
+			color: var(--muted);
+			text-decoration: none;
+			transition: color .2s, background-color .2s;
+		}
+
+		.footer nav a:hover {
+			color: var(--text);
+			background: var(--panel-hi);
+		}
+
+		/* ========== 响应式 ========== */
+		@media (max-width: 980px) {
+			.layout {
+				display: block;
+				padding-top: 0;
+			}
+
+			/* 侧栏变成吸顶的横向标签条 */
+			.side {
+				position: sticky;
+				top: var(--header-h);
+				z-index: 30;
+				margin: 0 calc(var(--gutter) / -2);
+				padding: 10px calc(var(--gutter) / 2);
+				background: rgba(7, 12, 22, .88);
+				border-bottom: 1px solid var(--line);
+				backdrop-filter: blur(14px);
+				-webkit-backdrop-filter: blur(14px);
+			}
+
+			.side__inner {
+				position: static;
+			}
+
+			.side__label,
+			.side__foot {
+				display: none;
+			}
+
+			.toc {
+				flex-direction: row;
+				gap: 7px;
+				overflow-x: auto;
+				scrollbar-width: none;
+				-ms-overflow-style: none;
+				scroll-behavior: smooth;
+			}
+
+			.toc::-webkit-scrollbar {
+				display: none;
+			}
+
+			.toc button {
+				width: auto;
+				flex: none;
+				padding: 9px 14px;
+				border: 1px solid var(--line);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, .035);
+				font-size: 13.5px;
+				white-space: nowrap;
+			}
+
+			.toc button.is-active {
+				border-color: rgba(62, 224, 143, .32);
+				background: rgba(62, 224, 143, .14);
+				box-shadow: 0 8px 20px -14px rgba(62, 224, 143, .9);
+			}
+
+			.doc {
+				margin-top: 18px;
+			}
+		}
+
+		@media (max-width: 620px) {
+			:root {
+				--header-h: 56px;
+			}
+
+			.crumb {
+				display: none;
+			}
+
+			.back {
+				padding: 0 11px;
+			}
+
+			.back span {
+				display: none;
+			}
+
+			.doc {
+				padding: 18px 16px 22px;
+				border-radius: 18px;
+			}
+
+			.doc__lead {
+				font-size: 14.5px;
+			}
+
+			.panel p {
+				font-size: 15px;
+				line-height: 1.95;
+			}
+
+			.chain {
+				padding-left: 10px;
+			}
+
+			.bit {
+				font-size: 13px;
+				padding: 4px 9px;
+			}
+
+			.step {
+				padding: 11px 13px;
+			}
+
+			.pager button {
+				flex: 1 1 auto;
+				justify-content: center;
+			}
+
+			.pager button.next {
+				margin-left: 0;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			html {
+				scroll-behavior: auto;
+			}
+
+			* {
+				transition-duration: .001s !important;
+				animation-duration: .001s !important;
+			}
+		}
+	</style>
+</head>
+
+<body id="top">
+	<a class="skip" href="#main_1">跳到正文</a>
+
+	<header class="header">
+		<div class="wrap header__inner">
+			<a class="brand" href="../index.html">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<path d="M16 3.2 28.6 10.4v11.2L16 28.8 3.4 21.6V10.4Z" fill="#0d2a19" stroke="#3ee08f" stroke-width="1.5" stroke-linejoin="round" />
+					<path d="M16 3.2 28.6 10.4 16 17.6 3.4 10.4Z" fill="#2f8d55" />
+					<path d="M16 17.6v11.2L3.4 21.6V10.4Z" fill="#0f3d23" />
+					<path d="M16 17.6 28.6 10.4v11.2L16 28.8Z" fill="#186b3a" />
+					<path d="M11.4 9.1 16 6.5l4.6 2.6-4.6 2.6Z" fill="#c8f3d9" opacity=".85" />
+				</svg>
+				<b>命令模拟器</b>
+			</a>
+			<div class="crumb"><span>帮助文档 / 世界配置</span></div>
+			<a class="back" href="../index.html">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M4 11.5 12 4l8 7.5V20H4z" />
+					<path d="M9.5 20v-5.5h5V20" />
+				</svg>
+				<span>返回主页</span>
+			</a>
+		</div>
+	</header>
+
+	<div class="wrap layout">
+		<aside class="side">
+			<div class="side__inner">
+				<p class="side__label">本页目录</p>
+				<nav class="toc" aria-label="本页目录">
+					<button type="button" data-target="main_1"><span class="num">01</span>世界类型</button>
+					<button type="button" data-target="main_2"><span class="num">02</span>加载区块</button>
+					<button type="button" data-target="main_3"><span class="num">03</span>游戏刻</button>
+				</nav>
+				<div class="side__foot">
+					<b>都读完了？</b>
+					下一步可以看命令调试，或者回首页挑一篇文档。
+					<a href="../index.html">← 回到文档首页</a>
+				</div>
+			</div>
+		</aside>
+
+		<article class="doc">
+
+			<!-- ============ 01 世界类型 ============ -->
+			<section class="panel" id="main_1" aria-labelledby="t-main_1">
+				<h2 id="t-main_1">世界类型</h2>
+				<p>
+					命令模拟器并不会依照柏林噪声生成一个和 Minecraft 一模一样的世界，使用柏林噪声生成的时间消耗过大。
+					为了加快世界生成的速度，命令模拟器使用了预设的区块模板。
+				</p>
+
+				<p>在基岩版下，如果你选择 <strong>flat</strong> 世界类型，主世界维度的每个区块按以下模板顺序生成：</p>
+				<div class="chain">
+					<span class="bit">1 层基岩<em>y = -64</em></span>
+					<span class="bit">2 层泥土</span>
+					<span class="bit">1 层草方块</span>
+					<span class="bit air">380 层空气</span>
+				</div>
+
+				<p>如果你选择 <strong>infinity</strong> 世界类型，主世界维度的每个区块按以下模板顺序生成：</p>
+				<div class="chain">
+					<span class="bit">1 层基岩<em>y = -64</em></span>
+					<span class="bit">8 层石头<em>可能有中空区域</em></span>
+					<span class="bit">2 层泥土</span>
+					<span class="bit">1 层草方块</span>
+					<span class="bit air">372 层空气</span>
+				</div>
+
+				<p>下界维度的每个区块按以下模板顺序生成：</p>
+				<div class="chain">
+					<span class="bit">1 层基岩<em>y = 0</em></span>
+					<span class="bit">8 层地狱岩</span>
+					<span class="bit air">118 层空气</span>
+					<span class="bit">1 层基岩</span>
+				</div>
+
+				<p>末地维度的每个区块按以下模板顺序生成：</p>
+				<div class="chain">
+					<span class="bit air">一层空气<em>y = 0</em></span>
+					<span class="bit">8 层末地石</span>
+					<span class="bit air">119 层空气</span>
+				</div>
+			</section>
+
+			<!-- ============ 02 加载区块 ============ -->
+			<section class="panel" id="main_2" aria-labelledby="t-main_2" hidden>
+				<h2 id="t-main_2">加载区块</h2>
+				<p>
+					命令模拟器在进入世界时会在世界原点附近生成 4 个玩家，每个玩家都以玩家所在的区块为中心，
+					以模拟区块距离为曼哈顿距离，计算需要加载的区块。
+				</p>
+				<p>
+					超出加载区块的位置会影响 <code>clone</code>、<code>setblock</code> 等方块处理命令。
+					并且在命令模拟器中，超出加载区块的实体在下一个游戏刻将不会被读取和搜索。
+				</p>
+
+				<div class="callout">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 9v4" />
+						<path d="M12 17h.01" />
+						<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+					</svg>
+					<div>
+						<b>注意：</b>方块命令和实体读取都只在加载区块内有效，调试世界规模较大的工程时，
+						把操作位置放在玩家附近可以避开这类问题。
+					</div>
+				</div>
+			</section>
+
+			<!-- ============ 03 游戏刻 ============ -->
+			<section class="panel" id="main_3" aria-labelledby="t-main_3" hidden>
+				<h2 id="t-main_3">游戏刻</h2>
+				<p>命令模拟器生成的世界将按顺序执行以下事件：</p>
+
+				<ol class="steps">
+					<li class="step">
+						<span class="step__num">01</span>
+						<div class="step__body">
+							<p class="step__title">更新需要加载的区块</p>
+						</div>
+					</li>
+					<li class="step">
+						<span class="step__num">02</span>
+						<div class="step__body">
+							<p class="step__title">更新实体的相关数据</p>
+						</div>
+					</li>
+					<li class="step">
+						<span class="step__num">03</span>
+						<div class="step__body">
+							<p class="step__title">运行终端中被发送的命令</p>
+							<p class="step__meta">命令的执行者是某个玩家，执行位置是玩家的位置</p>
+						</div>
+					</li>
+					<li class="step">
+						<span class="step__num">04</span>
+						<div class="step__body">
+							<p class="step__title">运行预设的延时和循环命令</p>
+							<p class="step__meta">命令的执行者是服务器，执行位置是世界原点</p>
+						</div>
+					</li>
+					<li class="step">
+						<span class="step__num">05</span>
+						<div class="step__body">
+							<p class="step__title">运行命令方块</p>
+							<p class="step__meta">命令的执行者是命令方块，执行位置是命令方块的中心</p>
+						</div>
+					</li>
+					<li class="step">
+						<span class="step__num">06</span>
+						<div class="step__body">
+							<p class="step__title">运行预设的延时和循环函数</p>
+							<p class="step__meta">命令的执行者是服务器，执行位置是世界原点</p>
+						</div>
+					</li>
+				</ol>
+
+				<div class="note">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<circle cx="12" cy="12" r="9" />
+						<path d="M12 11v5" />
+						<path d="M12 8h.01" />
+					</svg>
+					<div>
+						由于命令模拟器还在开发初期，很多 Minecraft 的特性需要根据玩家的反馈进行更新，
+						所以现在为止世界中所有的实体都是静止的，不会更新运动状态，
+						许多条件需要用户在命令栏中自行创造调试。
+					</div>
+				</div>
+			</section>
+
+			<div class="pager">
+				<button type="button" class="prev" id="pager-prev">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M20 12H5" />
+						<path d="m11 18-6-6 6-6" />
+					</svg>
+					<span>上一节</span>
+				</button>
+				<button type="button" class="next" id="pager-next">
+					<span>下一节</span>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 12h15" />
+						<path d="m13 6 6 6-6 6" />
+					</svg>
+				</button>
+			</div>
+		</article>
+	</div>
+
+	<footer class="footer wrap">
+		<p>命令模拟器 · 世界配置</p>
+		<nav aria-label="页脚导航">
+			<a href="../index.html">文档首页</a>
+			<a href="./Instructions.html">使用须知</a>
+			<a href="./CommandDebug.html">命令调试</a>
+			<a href="https://commandsimulator.great-site.net" target="_blank" rel="noopener noreferrer">官网 ↗</a>
+		</nav>
+	</footer>
+
+	<script>
+		(function () {
+			var ORDER = ['main_1', 'main_2', 'main_3'];
+			var TITLES = {
+				main_1: '世界类型',
+				main_2: '加载区块',
+				main_3: '游戏刻'
+			};
+			var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			var tabs = Array.prototype.slice.call(document.querySelectorAll('.toc [data-target]'));
+			var prevBtn = document.getElementById('pager-prev');
+			var nextBtn = document.getElementById('pager-next');
+			var navigated = false;
+
+			function jumpTop() {
+				var root = document.documentElement;
+				var previous = root.style.scrollBehavior;
+				root.style.scrollBehavior = 'auto';
+				window.scrollTo(0, 0);
+				root.style.scrollBehavior = previous;
+			}
+
+			function updatePager(id) {
+				var index = ORDER.indexOf(id);
+				var prevName = index > 0 ? TITLES[ORDER[index - 1]] : '';
+				var nextName = index < ORDER.length - 1 ? TITLES[ORDER[index + 1]] : '';
+
+				prevBtn.disabled = index === 0;
+				nextBtn.disabled = index === ORDER.length - 1;
+				prevBtn.setAttribute('data-target', index > 0 ? ORDER[index - 1] : '');
+				nextBtn.setAttribute('data-target', index < ORDER.length - 1 ? ORDER[index + 1] : '');
+				prevBtn.querySelector('span').textContent = prevName ? '上一节 · ' + prevName : '已经是第一节';
+				nextBtn.querySelector('span').textContent = nextName ? '下一节 · ' + nextName : '已经是最后一节';
+			}
+
+			function display_thing(id, options) {
+				options = options || {};
+				if (ORDER.indexOf(id) < 0) id = ORDER[0];
+
+				ORDER.forEach(function (key) {
+					var el = document.getElementById(key);
+					if (el) el.hidden = key !== id;
+				});
+
+				tabs.forEach(function (btn) {
+					var active = btn.getAttribute('data-target') === id;
+					btn.classList.toggle('is-active', active);
+					if (active) btn.setAttribute('aria-current', 'true');
+					else btn.removeAttribute('aria-current');
+				});
+
+				updatePager(id);
+				document.title = TITLES[id] + ' · 命令模拟器帮助文档';
+
+				if (options.initial) {
+					jumpTop();
+				} else {
+					if (history.replaceState) history.replaceState(null, '', '#' + id);
+					else location.hash = id;
+					window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+				}
+
+				if (window.matchMedia('(max-width: 980px)').matches) {
+					var bar = document.querySelector('.toc');
+					var active = tabs.filter(function (b) { return b.getAttribute('data-target') === id; })[0];
+					if (bar && active) {
+						bar.scrollTo({
+							left: active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2,
+							behavior: reduceMotion ? 'auto' : 'smooth'
+						});
+					}
+				}
+			}
+
+			tabs.forEach(function (btn) {
+				btn.addEventListener('click', function () {
+					navigated = true;
+					display_thing(btn.getAttribute('data-target'));
+				});
+			});
+
+			[prevBtn, nextBtn].forEach(function (btn) {
+				btn.addEventListener('click', function () {
+					var target = btn.getAttribute('data-target');
+					if (target) {
+						navigated = true;
+						display_thing(target);
+					}
+				});
+			});
+
+			window.addEventListener('hashchange', function () {
+				var id = decodeURIComponent(location.hash.replace('#', ''));
+				if (ORDER.indexOf(id) >= 0) display_thing(id, { initial: true });
+			});
+
+			window.display_thing = display_thing;
+			window.close_menu = function () { };
+			window.website1 = function () { window.location.href = '../index.html'; };
+
+			var initial = decodeURIComponent(location.hash.replace('#', ''));
+			var deepLink = ORDER.indexOf(initial) >= 0;
+			display_thing(deepLink ? initial : ORDER[0], { initial: true });
+
+			// 去掉地址里的锚点，避免浏览器随后自己跳到该位置
+			if (deepLink && history.replaceState) {
+				history.replaceState(null, '', location.pathname + location.search);
+			}
+
+			window.addEventListener('load', function () {
+				if (!navigated) jumpTop();
+			});
+		}());
+	</script>
+</body>
 
 </html>

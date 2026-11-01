@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061018">
+  <title>命令旅程 · 从文字到执行对象</title>
+  <meta name="description" content="用动画讲命令的拆词、语法、编译、执行对象缓存、上下文执行、执行反馈和三类错误。">
+  <style>
+    :root {
+      --bg: #061018;
+      --line: rgba(126, 214, 232, .14);
+      --text: #e9f7fb;
+      --muted: #8faab5;
+      --cyan: #4de3ff;
+      --amber: #ffb454;
+      --green: #7dffb2;
+      --pink: #ff5d8f;
+      --violet: #b8a6ff;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; color-scheme: dark; }
+    body {
+      margin: 0; min-width: 320px; overflow-x: hidden;
+      background: var(--bg); color: var(--text);
+      font-family: var(--sans); line-height: 1.75;
+    }
+    html, body { overscroll-behavior-x: none; }
+    body::before {
+      content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+      background:
+        radial-gradient(900px 600px at 8% -5%, rgba(77, 227, 255, .13), transparent 62%),
+        radial-gradient(800px 560px at 94% 12%, rgba(255, 180, 84, .09), transparent 58%),
+        radial-gradient(700px 500px at 50% 105%, rgba(184, 166, 255, .06), transparent 62%);
+    }
+    .bg-grid {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(126, 214, 232, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126, 214, 232, .045) 1px, transparent 1px);
+      background-size: 54px 54px;
+      -webkit-mask-image: linear-gradient(to bottom, #000, rgba(0, 0, 0, .6) 60%, transparent);
+      mask-image: linear-gradient(to bottom, #000, rgba(0, 0, 0, .6) 60%, transparent);
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    p { margin-bottom: 0; }
+    code {
+      padding: 1px 5px; border: 1px solid rgba(77, 227, 255, .14); border-radius: 5px;
+      background: rgba(77, 227, 255, .07); color: #c9f6ff;
+      font-family: var(--mono); font-size: .9em; overflow-wrap: anywhere;
+    }
+    ::selection { background: rgba(77, 227, 255, .28); color: #fff; }
+
+    .site-header {
+      position: sticky; top: 0; z-index: 50; display: flex; align-items: center;
+      justify-content: space-between; gap: 22px; padding: 13px clamp(16px, 4vw, 48px);
+      border-bottom: 1px solid rgba(126, 214, 232, .1); background: rgba(6, 16, 24, .93);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--mono); font-size: 11px; letter-spacing: .14em; white-space: nowrap;
+    }
+    .brand-mark { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; width: 23px; height: 23px; }
+    .brand-mark i { border-radius: 2px; background: var(--cyan); }
+    .brand-mark i:nth-child(2) { background: var(--amber); }
+    .brand-mark i:nth-child(3) { background: rgba(77, 227, 255, .34); }
+    .brand-mark i:nth-child(4) { background: rgba(255, 180, 84, .44); }
+    .nav { display: flex; gap: clamp(12px, 2vw, 24px); color: var(--muted); font-size: 13px; }
+    .nav a:hover { color: var(--text); }
+    .header-tag {
+      padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px;
+      color: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: .12em; white-space: nowrap;
+    }
+
+    main, .site-header, .site-footer { position: relative; z-index: 1; }
+    .section {
+      width: min(1160px, calc(100% - 40px)); margin-inline: auto;
+      padding-block: clamp(62px, 8vw, 104px); scroll-margin-top: 76px;
+    }
+    .hero {
+      min-height: calc(100vh - 64px); min-height: calc(100svh - 64px);
+      display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(0, .96fr);
+      gap: clamp(28px, 5vw, 62px); align-items: center;
+      padding-top: clamp(34px, 7vh, 72px); padding-bottom: clamp(40px, 7vh, 76px);
+    }
+    h1 {
+      margin-bottom: 20px; font-size: clamp(40px, 6.6vw, 78px);
+      font-weight: 760; line-height: 1.04; letter-spacing: -.045em;
+    }
+    h2 {
+      margin-bottom: 14px; font-size: clamp(30px, 4.2vw, 50px);
+      font-weight: 720; line-height: 1.14; letter-spacing: -.035em;
+    }
+    h3 { margin-bottom: 7px; font-size: clamp(19px, 2.1vw, 26px); line-height: 1.3; }
+    .kicker {
+      margin-bottom: 12px; color: var(--amber); font-family: var(--mono);
+      font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    }
+    .eyebrow {
+      display: flex; align-items: center; gap: 9px; margin-bottom: 16px;
+      color: var(--cyan); font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
+    }
+    .eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--cyan);
+      box-shadow: 0 0 14px var(--cyan); animation: pulse 2.8s ease-in-out infinite;
+    }
+    .grad {
+      background: linear-gradient(100deg, var(--cyan), #c5fbff 42%, var(--amber));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .lede {
+      max-width: 58ch; color: var(--muted);
+      font-size: clamp(15px, 1.5vw, 18px); line-height: 1.9;
+    }
+    .section-head {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+      gap: 24px; align-items: end; margin-bottom: 28px;
+    }
+    .section-head > p { color: var(--muted); font-size: 14px; line-height: 1.9; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+      padding: 9px 16px; border: 1px solid transparent; border-radius: 999px;
+      font-size: 13px; font-weight: 650; cursor: pointer; touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary { background: var(--cyan); color: #04222a; box-shadow: 0 10px 30px rgba(77, 227, 255, .18); }
+    .btn-ghost { border-color: rgba(77, 227, 255, .26); background: rgba(77, 227, 255, .04); color: var(--text); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .hero-stats { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 26px; }
+    .hero-stats span {
+      padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px;
+      color: var(--muted); font-family: var(--mono); font-size: 10px;
+    }
+
+    .disclaimer {
+      max-width: 62ch; margin-top: 16px; padding-left: 11px;
+      border-left: 2px solid rgba(255, 180, 84, .45);
+      color: var(--muted); font-size: 11.5px; line-height: 1.8;
+    }
+
+    .hero-visual { display: grid; gap: 12px; }
+    .hero-command {
+      border: 1px solid var(--line); border-radius: 18px; background: #07141b;
+      overflow: hidden; transform: rotate(-1deg);
+    }
+    .mini-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 13px; border-bottom: 1px solid var(--line);
+      color: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+    }
+    .mini-head .dotline { display: flex; gap: 4px; }
+    .mini-head .dotline i { width: 6px; height: 6px; border-radius: 50%; background: rgba(126, 214, 232, .3); }
+    .mini-head .dotline i:first-child { background: var(--cyan); }
+    .mini-head .dotline i:nth-child(2) { background: var(--amber); }
+    .mini-head .dotline i:nth-child(3) { background: var(--pink); }
+    .hero-command-code {
+      padding: 16px; color: var(--green); font-family: var(--mono);
+      font-size: clamp(12px, 1.4vw, 15px); line-height: 1.8;
+      white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .hero-flow {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px;
+      padding: 14px; border: 1px solid var(--line); border-radius: 18px;
+      background: rgba(255, 255, 255, .018);
+    }
+    .hero-flow span {
+      display: flex; align-items: center; justify-content: center; min-height: 34px;
+      padding: 4px 6px; border: 1px solid rgba(77, 227, 255, .16); border-radius: 8px;
+      color: var(--muted); font-family: var(--mono); font-size: 9px; text-align: center;
+    }
+    .hero-flow span:nth-child(1), .hero-flow span:nth-child(2) { color: var(--cyan); border-color: rgba(77, 227, 255, .3); }
+    .hero-flow span:nth-child(5), .hero-flow span:nth-child(6) { color: var(--amber); border-color: rgba(255, 180, 84, .25); }
+    .hero-flow span:nth-child(7), .hero-flow span:nth-child(8) { color: var(--green); border-color: rgba(125, 255, 178, .2); }
+
+    .panel {
+      border: 1px solid var(--line); border-radius: 20px;
+      background: linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .74));
+      min-width: 0;
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 15px; border-bottom: 1px solid var(--line);
+      color: var(--muted); font-family: var(--mono); font-size: 10px; letter-spacing: .07em;
+    }
+    .chip {
+      display: inline-flex; align-items: center; padding: 3px 8px;
+      border: 1px solid rgba(77, 227, 255, .24); border-radius: 999px;
+      background: rgba(77, 227, 255, .08); color: var(--cyan);
+      font-family: var(--mono); font-size: 9px; white-space: nowrap;
+    }
+    .chip.amber { border-color: rgba(255, 180, 84, .26); background: rgba(255, 180, 84, .08); color: var(--amber); }
+    .chip.green { border-color: rgba(125, 255, 178, .26); background: rgba(125, 255, 178, .07); color: var(--green); }
+    .chip.pink { border-color: rgba(255, 93, 143, .26); background: rgba(255, 93, 143, .08); color: var(--pink); }
+
+    .player-shell { display: contents; }
+    .scenario-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .scenario-tab {
+      min-height: 40px; padding: 7px 12px; border: 1px solid var(--line);
+      border-radius: 999px; background: rgba(255, 255, 255, .02); color: var(--muted);
+      font-family: var(--mono); font-size: 10px; cursor: pointer;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .scenario-tab.active {
+      border-color: rgba(77, 227, 255, .42); background: rgba(77, 227, 255, .09); color: var(--cyan);
+    }
+    .journey-card {
+      padding: 14px; border: 1px solid var(--line); border-radius: 22px;
+      background: linear-gradient(160deg, rgba(13, 32, 42, .88), rgba(7, 18, 26, .78));
+    }
+    .stage-rail { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; margin-bottom: 13px; }
+    .rail-node {
+      position: relative; min-height: 46px; padding: 7px 5px;
+      border: 1px solid var(--line); border-radius: 9px;
+      background: rgba(255, 255, 255, .015); color: var(--muted);
+      font-family: var(--mono); font-size: 8.5px; text-align: center;
+      transition: border-color .25s, background .25s, color .25s, opacity .25s;
+    }
+    .rail-node b { display: block; margin-bottom: 2px; font-size: 8px; font-weight: 500; opacity: .65; }
+    .rail-node.done { border-color: rgba(125, 255, 178, .25); background: rgba(125, 255, 178, .04); color: var(--green); }
+    .rail-node.active {
+      border-color: rgba(77, 227, 255, .55); background: rgba(77, 227, 255, .09);
+      color: var(--cyan); box-shadow: 0 0 18px rgba(77, 227, 255, .08);
+      animation: activeNode 1.8s ease-in-out infinite;
+    }
+    .rail-node.hit { border-color: rgba(255, 180, 84, .5); background: rgba(255, 180, 84, .08); color: var(--amber); animation-name: hitNode; }
+    .rail-node.error { border-color: rgba(255, 93, 143, .55); background: rgba(255, 93, 143, .09); color: var(--pink); animation-name: errorNode; }
+    .rail-node.skipped { opacity: .27; }
+    .workbench { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); gap: 12px; align-items: stretch; }
+    .stage-panel { display: flex; flex-direction: column; min-height: 400px; }
+    .stage-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 12px 15px; border-bottom: 1px solid var(--line);
+    }
+    .stage-head h3 { margin: 0; font-family: var(--mono); font-size: 14px; }
+    .stage-body { flex: 1; padding: 15px; min-width: 0; }
+    .side-panel { display: grid; gap: 10px; align-content: start; }
+    .side-block { border: 1px solid var(--line); border-radius: 14px; background: rgba(0, 0, 0, .11); overflow: hidden; }
+    .side-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 9px 12px; border-bottom: 1px solid var(--line);
+      color: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: .06em;
+    }
+    .side-body { padding: 10px 12px; }
+
+    .command-code {
+      padding: 12px; border: 1px solid rgba(125, 255, 178, .16); border-radius: 10px;
+      background: rgba(0, 0, 0, .2); color: var(--green); font-family: var(--mono);
+      font-size: 12px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .token-source {
+      margin-bottom: 9px;
+      padding: 6px 9px;
+      border-left: 2px solid rgba(125, 255, 178, .35);
+      border-radius: 0 7px 7px 0;
+      background: rgba(125, 255, 178, .035);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+      animation: microIn .35s ease both;
+    }
+
+    .token-row { display: flex; flex-wrap: wrap; gap: 7px; align-items: stretch; }
+    .token-chip {
+      display: flex; flex-direction: column; gap: 2px; min-width: 68px;
+      padding: 7px 8px; border: 1px solid rgba(77, 227, 255, .22); border-radius: 8px;
+      background: rgba(77, 227, 255, .05); animation: pop .32s ease both;
+    }
+    .token-chip .token-type { color: var(--cyan); font-family: var(--mono); font-size: 8px; }
+    .token-chip code { padding: 0; border: 0; background: none; color: var(--text); font-size: 11px; }
+    .token-chip small { color: var(--muted); font-family: var(--mono); font-size: 8px; }
+    .token-chip.pos { border-color: rgba(255, 180, 84, .24); background: rgba(255, 180, 84, .05); }
+    .token-chip.pos .token-type { color: var(--amber); }
+    .token-chip.block { border-color: rgba(125, 255, 178, .22); background: rgba(125, 255, 178, .05); }
+    .token-chip.block .token-type { color: var(--green); }
+    .token-chip.missing { border-style: dashed; border-color: rgba(255, 93, 143, .55); background: rgba(255, 93, 143, .06); color: var(--pink); }
+    .token-chip.missing .token-type { color: var(--pink); }
+    .route { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+    .route-step {
+      padding: 5px 8px; border: 1px solid rgba(77, 227, 255, .2); border-radius: 7px;
+      background: rgba(77, 227, 255, .04); color: var(--cyan); font-family: var(--mono); font-size: 9px;
+    }
+    .route-arrow { color: var(--muted); font-family: var(--mono); font-size: 10px; }
+    .success-strip, .warn-strip, .error-strip {
+      margin-top: 12px; padding: 10px 12px; border: 1px solid rgba(125, 255, 178, .22);
+      border-radius: 9px; background: rgba(125, 255, 178, .04); color: var(--green);
+      font-family: var(--mono); font-size: 10px; line-height: 1.7; overflow-wrap: anywhere;
+    }
+    .warn-strip { border-color: rgba(255, 180, 84, .28); background: rgba(255, 180, 84, .05); color: var(--amber); }
+    .error-strip { border-color: rgba(255, 93, 143, .32); background: rgba(255, 93, 143, .06); color: var(--pink); }
+    .capsule {
+      margin-top: 4px; padding: 12px; border: 1px solid rgba(184, 166, 255, .3); border-radius: 12px;
+      background: radial-gradient(180px 80px at 8% 0%, rgba(184, 166, 255, .12), transparent 70%), rgba(184, 166, 255, .035);
+    }
+    .capsule-title {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin-bottom: 8px; color: var(--violet); font-family: var(--mono); font-size: 11px;
+    }
+    .capsule-fields { display: grid; gap: 5px; }
+    .capsule-field {
+      display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 7px;
+      padding: 5px 7px; border-radius: 6px; background: rgba(255, 255, 255, .02);
+      font-family: var(--mono); font-size: 9.5px;
+    }
+    .capsule-field span { color: var(--muted); }
+    .capsule-field code { padding: 0; border: 0; background: none; color: var(--violet); font-size: 9.5px; }
+    .cache-key {
+      padding: 8px 10px; border: 1px dashed rgba(255, 180, 84, .28); border-radius: 8px;
+      background: rgba(255, 180, 84, .03); color: var(--amber);
+      font-family: var(--mono); font-size: 9.5px; line-height: 1.7; overflow-wrap: anywhere;
+    }
+    .cache-key b { color: var(--muted); font-weight: 500; }
+    .cache-slots { display: grid; gap: 6px; margin-top: 8px; }
+    .cache-slot {
+      display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 7px; align-items: center;
+      padding: 6px 7px; border: 1px solid var(--line); border-radius: 7px;
+      background: rgba(255, 255, 255, .015); font-family: var(--mono); font-size: 9px;
+      transition: border-color .25s, background .25s;
+    }
+    .cache-slot > span { color: var(--muted); }
+    .cache-slot > code {
+      padding: 0; border: 0; background: none; color: var(--text); font-size: 9px;
+      white-space: normal; overflow-wrap: anywhere;
+    }
+    .cache-slot.occupied { border-color: rgba(125, 255, 178, .24); background: rgba(125, 255, 178, .04); }
+    .cache-slot.occupied > code { color: var(--green); }
+    .cache-slot.error { border-color: rgba(255, 93, 143, .3); background: rgba(255, 93, 143, .05); }
+    .cache-slot.error > code { color: var(--pink); }
+    .cache-slot.active { box-shadow: 0 0 0 1px rgba(77, 227, 255, .28); }
+    .context-card { display: grid; gap: 5px; }
+    .context-field {
+      display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 6px;
+      font-family: var(--mono); font-size: 9px; line-height: 1.55;
+    }
+    .context-field span { color: var(--muted); }
+    .context-field code { padding: 0; border: 0; background: none; color: var(--text); font-size: 9px; }
+    .context-empty { color: var(--muted); font-family: var(--mono); font-size: 9.5px; line-height: 1.7; }
+    .result-card {
+      padding: 12px; border: 1px solid rgba(125, 255, 178, .25); border-radius: 11px;
+      background: rgba(125, 255, 178, .035);
+    }
+    .result-card.fail { border-color: rgba(255, 180, 84, .28); background: rgba(255, 180, 84, .04); }
+    .result-card.error { border-color: rgba(255, 93, 143, .32); background: rgba(255, 93, 143, .055); }
+    .result-title {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin-bottom: 7px; font-family: var(--mono); font-size: 11px; color: var(--green);
+    }
+    .result-card.fail .result-title { color: var(--amber); }
+    .result-card.error .result-title { color: var(--pink); }
+    .result-fields { display: grid; gap: 5px; }
+    .result-field {
+      display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: 7px;
+      font-family: var(--mono); font-size: 9.5px; line-height: 1.6;
+    }
+    .result-field span { color: var(--muted); }
+    .result-field code { padding: 0; border: 0; background: none; color: var(--text); font-size: 9.5px; white-space: normal; overflow-wrap: anywhere; }
+    .object-mini {
+      display: flex; align-items: center; gap: 8px; margin: 10px 0; padding: 9px 10px;
+      border: 1px solid rgba(184, 166, 255, .24); border-radius: 9px;
+      background: rgba(184, 166, 255, .035); color: var(--violet); font-family: var(--mono); font-size: 10px;
+    }
+    .object-mini .gear {
+      width: 18px; height: 18px; border: 2px dashed rgba(184, 166, 255, .55);
+      border-radius: 50%; animation: spin 9s linear infinite;
+    }
+    .stage-empty { color: var(--muted); font-family: var(--mono); font-size: 10px; line-height: 1.8; }
+
+    /* ---------- cinematic stage details ---------- */
+
+    .rail-track { position: relative; height: 14px; margin: -2px 4px 12px; }
+    .rail-line { position: absolute; left: 0; right: 0; top: 5px; height: 2px; border-radius: 999px; background: rgba(126, 214, 232, .1); }
+    .rail-progress { position: absolute; left: 0; top: 5px; height: 2px; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--amber)); box-shadow: 0 0 12px rgba(77, 227, 255, .35); transition: width .55s ease; }
+    .rail-packet { position: absolute; left: 0; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 4px rgba(77, 227, 255, .12), 0 0 20px var(--cyan); transform: translateX(-50%); transition: left .55s ease, background .3s ease, box-shadow .3s ease; }
+    .rail-packet.hit { background: var(--amber); box-shadow: 0 0 0 4px rgba(255, 180, 84, .14), 0 0 22px var(--amber); }
+    .rail-packet.error { background: var(--pink); box-shadow: 0 0 0 4px rgba(255, 93, 143, .16), 0 0 24px var(--pink); }
+
+    .micro-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 12px; }
+    .micro-flow span { padding: 3px 7px; border: 1px solid rgba(77, 227, 255, .16); border-radius: 999px; background: rgba(77, 227, 255, .035); color: var(--muted); font-family: var(--mono); font-size: 8.5px; animation: microIn .35s ease both; animation-delay: var(--d, 0s); }
+    .micro-flow i { color: var(--muted); font-style: normal; font-size: 9px; opacity: .45; }
+
+    .stage-body.stage-enter { animation: stageFade .38s ease both; }
+    .stage-panel.is-error { border-color: rgba(255, 93, 143, .38); box-shadow: 0 0 28px rgba(255, 93, 143, .05); }
+    .stage-body.is-error .error-strip { animation: errorShake .45s ease both; }
+
+    .command-code.scanning { position: relative; overflow: hidden; }
+    .command-code.scanning::after { content: ""; position: absolute; top: 0; bottom: 0; left: -30%; width: 26%; background: linear-gradient(90deg, transparent, rgba(125, 255, 178, .16), transparent); animation: scanCommand 2.2s ease-in-out infinite; }
+
+    .stage-body .token-chip { animation: tokenIn .4s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0s); }
+    .route-step { animation: routeIn .35s ease both; animation-delay: var(--d, 0s); }
+    .capsule-field { animation: fieldIn .35s ease both; animation-delay: var(--d, 0s); }
+    .capsule-title > span:first-child { display: inline-flex; align-items: center; gap: 7px; }
+    .mini-gear { width: 12px; height: 12px; border: 2px dashed rgba(184, 166, 255, .65); border-radius: 50%; animation: spin 7s linear infinite; }
+    .cache-key.key-pulse { animation: keyPulse .65s ease both; }
+    .cache-slot.just-added { animation: slotDrop .48s cubic-bezier(.2, .8, .2, 1) both; }
+
+    .energy-line { position: relative; height: 20px; margin: 7px 0; }
+    .energy-line::before { content: ""; position: absolute; left: 10%; right: 10%; top: 9px; height: 2px; background: linear-gradient(90deg, transparent, rgba(77, 227, 255, .45), transparent); }
+    .energy-line i { position: absolute; top: 4px; left: 10%; width: 9px; height: 9px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); animation: energyRun 1.05s linear infinite; }
+    .result-card { animation: resultIn .45s ease both; }
+    .context-field { animation: fieldIn .35s ease both; }
+    .context-field:nth-child(2) { animation-delay: .05s; }
+    .context-field:nth-child(3) { animation-delay: .1s; }
+    .context-field:nth-child(4) { animation-delay: .15s; }
+    .result-field { animation: fieldIn .35s ease both; }
+    .result-field:nth-child(2) { animation-delay: .04s; }
+    .result-field:nth-child(3) { animation-delay: .08s; }
+    .result-field:nth-child(4) { animation-delay: .12s; }
+    .result-field:nth-child(5) { animation-delay: .16s; }
+    .result-field:nth-child(6) { animation-delay: .2s; }
+
+    @keyframes microIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+    @keyframes stageFade { from { opacity: .3; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+    @keyframes scanCommand { 0% { left: -30%; opacity: 0; } 25% { opacity: 1; } 100% { left: 110%; opacity: 0; } }
+    @keyframes tokenIn { from { opacity: 0; transform: translateY(-12px) rotate(-2deg) scale(.9); } to { opacity: 1; transform: none; } }
+    @keyframes routeIn { from { opacity: 0; transform: translateX(-7px); } to { opacity: 1; transform: none; } }
+    @keyframes fieldIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+    @keyframes keyPulse { 0%, 100% { box-shadow: none; } 45% { box-shadow: 0 0 0 1px rgba(255, 180, 84, .45), 0 0 20px rgba(255, 180, 84, .12); } }
+    @keyframes slotDrop { from { opacity: 0; transform: translateY(-9px) scale(.95); } to { opacity: 1; transform: none; } }
+    @keyframes energyRun { from { left: 10%; } to { left: 90%; } }
+    @keyframes resultIn { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    @keyframes errorShake { 0%, 100% { transform: none; } 20% { transform: translateX(-5px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+
+    @keyframes activeNode { 0%, 100% { box-shadow: 0 0 12px rgba(77, 227, 255, .06); } 50% { box-shadow: 0 0 26px rgba(77, 227, 255, .2); } }
+    @keyframes caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+    @keyframes hitNode { 0%, 100% { box-shadow: 0 0 12px rgba(255, 180, 84, .08); } 50% { box-shadow: 0 0 26px rgba(255, 180, 84, .24); } }
+    @keyframes errorNode { 0%, 100% { box-shadow: 0 0 12px rgba(255, 93, 143, .1); } 50% { box-shadow: 0 0 28px rgba(255, 93, 143, .28); } }
+
+    .stage-nav { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .step-btn {
+      display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+      min-width: 0; min-height: 36px; padding: 7px 12px;
+      border: 1px solid rgba(77, 227, 255, .34); border-radius: 9px;
+      background: rgba(77, 227, 255, .07); color: #c9f6ff;
+      font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+      cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      box-shadow: inset 0 0 0 1px rgba(77, 227, 255, .03);
+      transition: border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    #stepNext {
+      border-color: rgba(77, 227, 255, .58);
+      background: linear-gradient(135deg, rgba(77, 227, 255, .24), rgba(77, 227, 255, .08));
+      color: #e9feff; font-weight: 700;
+      box-shadow: 0 0 0 1px rgba(77, 227, 255, .08), 0 0 18px rgba(77, 227, 255, .13);
+    }
+    .step-btn:not(:disabled):hover {
+      border-color: rgba(77, 227, 255, .75);
+      background: rgba(77, 227, 255, .16);
+      box-shadow: 0 0 0 1px rgba(77, 227, 255, .1), 0 0 22px rgba(77, 227, 255, .18);
+      transform: translateY(-1px);
+    }
+    .step-btn:not(:disabled):active { transform: translateY(0); }
+    .step-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .step-btn:disabled {
+      opacity: .42; cursor: default; box-shadow: none;
+      border-color: rgba(126, 214, 232, .16); background: rgba(255, 255, 255, .02);
+    }
+    .stage-caption {
+      margin: 0; padding: 7px 15px; border-bottom: 1px solid var(--line);
+      background: rgba(0, 0, 0, .08); color: var(--muted);
+      font-size: 10.5px; line-height: 1.65;
+    }
+    .stage-caption:empty { display: none; }
+
+    .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .detail-card {
+      padding: 16px; border: 1px solid var(--line); border-radius: 16px;
+      background: linear-gradient(160deg, rgba(13, 32, 42, .86), rgba(7, 18, 26, .7));
+    }
+    .detail-card h3 { color: var(--cyan); }
+    .detail-card p { color: var(--muted); font-size: 12.5px; line-height: 1.85; }
+    .detail-card ul { margin: 9px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.9; }
+    .detail-card li { margin-bottom: 3px; }
+    .detail-card strong { color: var(--text); }
+    .mini-code {
+      margin: 9px 0; padding: 9px 10px; border: 1px solid rgba(126, 214, 232, .08);
+      border-radius: 8px; background: rgba(0, 0, 0, .17); color: #c9f6ff;
+      font-family: var(--mono); font-size: 10px; line-height: 1.7;
+      white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .anim-code {
+      margin: 10px 0; padding: 10px 11px; border: 1px solid rgba(126, 214, 232, .12);
+      border-radius: 8px; background: rgba(0, 0, 0, .18); color: #c9f6ff;
+      font-family: var(--mono); font-size: 10.5px; line-height: 1.9;
+      cursor: pointer; outline: none;
+    }
+    .anim-code:hover, .anim-code:focus-visible { border-color: rgba(77, 227, 255, .32); }
+    .anim-line {
+      display: grid; grid-template-columns: minmax(0, 1fr) 16px auto;
+      gap: 6px; align-items: baseline; min-height: 1.9em;
+    }
+    .anim-src { color: #c9f6ff; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .anim-src::after {
+      content: ""; display: none; width: 5px; height: 1em; margin-left: 2px;
+      background: var(--cyan); vertical-align: -2px;
+      animation: caret 1s steps(2) infinite;
+    }
+    .anim-line.is-typing .anim-src::after { display: inline-block; }
+    .anim-arrow, .anim-type {
+      opacity: 0; transform: translateX(-4px);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .anim-arrow { color: var(--cyan); }
+    .anim-type { color: var(--muted); white-space: nowrap; }
+    .anim-line.done .anim-arrow, .anim-line.done .anim-type { opacity: 1; transform: none; }
+    .anim-code.tree .anim-line { display: block; padding-left: calc(var(--level, 0) * 14px); }
+    .anim-code.tree .tree-arrow {
+      color: var(--cyan); opacity: 0; margin-right: 4px;
+      transition: opacity .25s ease;
+    }
+    .anim-code.tree .anim-line.done .tree-arrow { opacity: 1; }
+    .error-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+    .error-card {
+      padding: 15px; border: 1px solid var(--line); border-radius: 15px;
+      background: rgba(255, 255, 255, .016);
+    }
+    .error-card h3 { font-size: 17px; }
+    .error-card p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+    .error-card .error-tag {
+      display: inline-block; margin-bottom: 7px; padding: 2px 7px;
+      border: 1px solid rgba(255, 93, 143, .28); border-radius: 4px;
+      color: var(--pink); font-family: var(--mono); font-size: 8px;
+    }
+    .error-card.runtime .error-tag { color: var(--amber); border-color: rgba(255, 180, 84, .3); }
+    .cache-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .cache-table th, .cache-table td {
+      padding: 9px 10px; border-bottom: 1px solid var(--line);
+      text-align: left; vertical-align: top;
+    }
+    .cache-table th { color: var(--muted); font-family: var(--mono); font-size: 9px; font-weight: 500; }
+    .cache-table td { color: var(--text); }
+    .cache-table td code { font-size: 10px; }
+
+    .site-footer {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 18px;
+      width: min(1160px, calc(100% - 40px)); margin-inline: auto; padding: 22px 0 38px;
+      border-top: 1px solid var(--line); color: var(--muted);
+      font-family: var(--mono); font-size: 8.5px; letter-spacing: .08em;
+    }
+    .js .reveal { opacity: 0; transform: translateY(16px); transition: opacity .75s ease, transform .75s ease; }
+    .js .reveal.in { opacity: 1; transform: none; }
+    .is-paused *, .is-paused *::before, .is-paused *::after { animation-play-state: paused !important; }
+    @keyframes pulse { 0%, 100% { opacity: .4; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
+    @keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 38px; }
+      .hero-copy { max-width: 720px; }
+      .hero-visual { max-width: 620px; }
+      .section-head { grid-template-columns: 1fr; }
+      .workbench { grid-template-columns: 1fr; }
+      .stage-panel { min-height: 0; }
+      .error-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+      .site-header { padding-block: 11px; }
+      .nav { display: none; }
+      .header-tag { display: none; }
+      .section { width: calc(100% - 28px); }
+      .hero { gap: 26px; }
+      h1 { font-size: clamp(38px, 11vw, 58px); }
+      .hero-actions .btn { flex: 1 1 auto; }
+      .hero-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stage-rail { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .rail-node { min-height: 42px; font-size: 8px; }
+      .journey-card { padding: 10px; }
+      .stage-body { padding: 12px; }
+      .token-chip { min-width: 60px; }
+      .token-chip code { font-size: 10px; }
+      .capsule-field { grid-template-columns: 66px minmax(0, 1fr); }
+      .result-field { grid-template-columns: 80px minmax(0, 1fr); }
+      .step-btn { min-height: 44px; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px) {
+      .scenario-tab { min-height: 44px; }
+      .cache-slot { grid-template-columns: 68px minmax(0, 1fr); }
+    }
+    /* 竖屏紧凑：整个演示卡片塞进一屏，内容区内部滚动 */
+    @media (max-width: 700px) {
+      .anim-code { padding: 8px 9px; font-size: 9.5px; line-height: 1.8; }
+      .anim-line { grid-template-columns: minmax(0, 1fr) 14px auto; gap: 5px; }
+      .anim-code.tree .anim-line { padding-left: calc(var(--level, 0) * 11px); }
+      #journey .player-shell {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 50px);
+        height: calc(100dvh - 50px);
+        min-height: 0;
+        scroll-margin-top: 50px;
+      }
+      #journey .journey-card {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        max-height: none;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        overflow: hidden;
+      }
+      #journey .scenario-tabs { flex: 0 0 auto; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+      #journey .scenario-tabs::-webkit-scrollbar { display: none; }
+      #journey .scenario-tab { flex: 0 0 auto; min-height: 34px; padding: 4px 7px; font-size: 9px; }
+      #journey .stage-rail { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; margin-bottom: 4px; }
+      #journey .rail-node { min-height: 32px; padding: 4px 2px; font-size: 7px; }
+      #journey .rail-node b { display: none; }
+      #journey .rail-track { margin: -2px 2px 6px; }
+      #journey .workbench, #journey .stage-panel, #journey .stage-body, #journey .side-panel, #journey .token-row { min-width: 0; }
+      #journey .stage-body { overflow-x: hidden; }
+      #journey .token-row { width: 100%; }
+      #journey .token-chip { flex: 1 1 72px; min-width: 0; max-width: 100%; }
+      #journey .token-chip code { overflow-wrap: anywhere; word-break: break-word; }
+      #journey .capsule, #journey .result-card, #journey .mini-code { max-width: 100%; }
+      #journey .workbench {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 6px;
+        min-height: 0;
+      }
+      #journey .stage-panel { min-height: 0; }
+      #journey .stage-head { padding: 7px 9px; }
+      #journey .stage-head h3 { font-size: 12px; }
+      #journey .stage-nav { gap: 4px; }
+      #journey .stage-nav .step-btn { min-height: 38px; padding: 6px 9px; font-size: 10px; }
+      #journey .stage-caption { padding: 6px 9px; font-size: 9px; line-height: 1.5; }
+      #journey .stage-body { padding: 8px; overflow: auto; -webkit-overflow-scrolling: touch; }
+      #journey .micro-flow { margin-bottom: 6px; gap: 3px; }
+      #journey .micro-flow span { padding: 2px 5px; font-size: 7px; }
+      #journey .side-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+      #journey .side-head { padding: 5px 7px; font-size: 8px; }
+      #journey .side-body { padding: 6px 7px; }
+      #journey .cache-key { padding: 5px 6px; font-size: 8px; }
+      #journey .side-panel .cache-key { display: none; }
+      #journey .cache-slot { grid-template-columns: 52px minmax(0, 1fr); padding: 4px 5px; font-size: 7.5px; }
+      #journey .cache-slot > code { font-size: 7.5px; }
+      #journey .context-field { grid-template-columns: 45px minmax(0, 1fr); font-size: 7.5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="回到顶部"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>CMD LAB</span></a>
+  </header>
+
+  <main id="top">
+    <section class="hero section" id="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span> COMMAND LIFECYCLE / 01</p>
+        <h1>一条命令，<br><span class="grad">如何变成一次执行？</span></h1>
+        <p class="lede">命令先是一段文字，然后被拆成词块并检查语法；通过后整理成可复用的执行对象，存进缓存；执行时把它和上下文一起交给执行环节，最后得到反馈或错误。</p>
+        <p class="disclaimer">说明：下面是一套通用的命令处理模型，用来说明“一段文字如何变成一次执行”；不同游戏或框架（包括 Minecraft）的内部实现细节可能不同。</p>
+      </div>
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="hero-command">
+          <div class="mini-head"><span class="dotline"><i></i><i></i><i></i></span><span>command</span></div>
+          <div class="hero-command-code">setblock 10 64 10 minecraft:stone</div>
+        </div>
+        <div class="hero-flow"><span>文本</span><span>词块</span><span>语法</span><span>生成对象</span><span>缓存</span><span>上下文</span><span>执行</span><span>反馈</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="tokens">
+      <div class="section-head reveal">
+        <div><p class="kicker">01 / 拆词与语法</p><h2>先把一句话<br>拆成可识别的片段</h2></div>
+        <p>命令不是简单按空格切开。处理流程会根据命令规则识别每一段是什么：命令名、坐标、方块、选择器、数字或文本。</p>
+      </div>
+      <div class="detail-grid">
+        <article class="detail-card reveal">
+          <h3>词块：一段文字 + 一个身份</h3>
+          <p>拆词的结果通常是一串“词块”。每个词块除了原文，还知道自己属于哪种参数、在命令里的哪个位置。</p>
+          <div class="anim-code" data-anim aria-label="setblock 是命令名；10 64 10 是三个坐标；minecraft:stone 是方块" title="点击重播" tabindex="0">
+            <div class="anim-line"><span class="anim-src" data-type="setblock"></span><span class="anim-arrow">→</span><span class="anim-type">命令名</span></div>
+            <div class="anim-line"><span class="anim-src" data-type="10 64 10"></span><span class="anim-arrow">→</span><span class="anim-type">三个坐标</span></div>
+            <div class="anim-line"><span class="anim-src" data-type="minecraft:stone"></span><span class="anim-arrow">→</span><span class="anim-type">方块</span></div>
+          </div>
+          <ul>
+            <li><strong>空格不是唯一分隔：</strong>选择器、引号文本、JSON 都有自己的切分规则。</li>
+            <li><strong>类型决定下一步：</strong>同样是数字，可能是坐标，也可能是数量或等级。</li>
+            <li><strong>先识别，不求值：</strong>相对坐标、选择器要等执行时才知道具体结果。</li>
+          </ul>
+        </article>
+        <article class="detail-card reveal">
+          <h3>语法：只检查“能不能接上”</h3>
+          <p>拆出来的词块要按命令规定的顺序排好。语法检查只关心组合是否合法，不关心方块是否真的存在、目标是否真的在线。</p>
+          <div class="anim-code tree" data-anim aria-label="setblock 接三个坐标，再接方块，再可选模式，最后结束" title="点击重播" tabindex="0">
+            <div class="anim-line" style="--level:0"><span class="tree-arrow">↳</span><span class="anim-src" data-type="setblock"></span></div>
+            <div class="anim-line" style="--level:1"><span class="tree-arrow">↳</span><span class="anim-src" data-type="坐标 ×3"></span></div>
+            <div class="anim-line" style="--level:2"><span class="tree-arrow">↳</span><span class="anim-src" data-type="方块"></span></div>
+            <div class="anim-line" style="--level:3"><span class="tree-arrow">↳</span><span class="anim-src" data-type="[模式]"></span></div>
+            <div class="anim-line" style="--level:4"><span class="tree-arrow">↳</span><span class="anim-src" data-type="结束"></span></div>
+          </div>
+          <ul>
+            <li><strong>语法错误：</strong>例如 <code>setblock 10 64</code> 少了方块，流程在这里就停止。</li>
+            <li><strong>没有执行对象：</strong>语法没通过，就不会进入生成执行对象的阶段。</li>
+            <li><strong>可以为空：</strong>有些参数有默认值；有些参数必须显式提供。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="compile">
+      <div class="section-head reveal">
+        <div><p class="kicker">02 / 生成执行对象</p><h2>从“看懂了”<br>到“可以执行了”</h2></div>
+        <p>语法通过后，流程会把参数整理成一个执行对象。它不只是原始文字，而是已经知道要做什么、需要哪些参数、哪些要等执行时再结合上下文计算。</p>
+      </div>
+      <div class="detail-grid">
+        <article class="detail-card reveal">
+          <h3>执行对象里通常有什么</h3>
+          <div class="capsule">
+            <div class="capsule-title"><span>setblock 执行对象</span><span>可缓存</span></div>
+            <div class="capsule-fields">
+              <div class="capsule-field"><span>动作</span><code>setblock</code></div>
+              <div class="capsule-field"><span>原始命令</span><code>完整保留，方便回显</code></div>
+              <div class="capsule-field"><span>坐标</span><code>执行时结合上下文计算</code></div>
+              <div class="capsule-field"><span>方块</span><code>已确认存在</code></div>
+              <div class="capsule-field"><span>模式</span><code>replace</code></div>
+            </div>
+          </div>
+          <ul>
+            <li><strong>能提前检查的：</strong>方块 ID 是否存在、参数范围是否合理、目标类型是否匹配。</li>
+            <li><strong>要留到执行的：</strong>相对坐标、选择器命中了谁、当前世界状态。</li>
+            <li><strong>所以能复用：</strong>同一个执行对象换一个上下文，仍然可以执行。</li>
+          </ul>
+        </article>
+        <article class="detail-card reveal">
+          <h3>编译错误：语法对了，内容不对</h3>
+          <p>命令的形状没问题，但参数在语义上不合法，例如方块不存在、选择器范围矛盾、玩家专用参数用在了非玩家命令上。</p>
+          <div class="mini-code">语法：✓ 通过
+编译：✗ 方块不存在
+      minecraft:not_a_block
+      位置：方块参数</div>
+          <ul>
+            <li><strong>停在生成执行对象之前：</strong>不会得到可执行的对象。</li>
+            <li><strong>能定位参数：</strong>错误通常能指出是哪一段、哪个范围。</li>
+            <li><strong>不是运行错误：</strong>命令还没有真正开始执行。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="cache">
+      <div class="section-head reveal">
+        <div><p class="kicker">03 / 执行对象缓存</p><h2>同样的命令，<br>不必每次重新准备</h2></div>
+        <p>第一次处理一条命令时，拆词、语法和生成执行对象都要做一遍。得到执行对象后，可以把它存起来；下一次同样的命令文本可以直接复用。</p>
+      </div>
+      <div class="detail-grid">
+        <article class="detail-card reveal">
+          <h3>缓存里放什么</h3>
+          <p>为了区分“成功”和失败，缓存通常不只有一格：</p>
+          <div class="cache-table-wrap">
+            <table class="cache-table">
+              <thead><tr><th>缓存区</th><th>放什么</th></tr></thead>
+              <tbody>
+                <tr><td>执行对象</td><td>成功生成的执行对象</td></tr>
+                <tr><td>语法错误</td><td>语法检查失败的结果</td></tr>
+                <tr><td>编译错误</td><td>生成执行对象失败的原因</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin-top:10px">错误也可以缓存。同样的错误命令再次进来，可以直接返回上次的结果，不必重新走完整流程。</p>
+        </article>
+        <article class="detail-card reveal">
+          <h3>缓存只保存“做法”，不保存“这一次的情况”</h3>
+          <p>可以把缓存想成一张菜谱：它告诉流程“这道菜怎么做”，但不记录今天是谁下厨、站在哪里、锅里已经有什么。</p>
+          <ul>
+            <li><strong>不保存执行者：</strong>同一个执行对象可以交给不同玩家或实体使用。</li>
+            <li><strong>不保存位置和朝向：</strong>相对坐标要等真正执行时才计算。</li>
+            <li><strong>不保存世界状态：</strong>方块、实体、分数在执行时才读取。</li>
+          </ul>
+          <div class="mini-code">缓存：这条命令该怎么做
+不缓存：谁执行 · 在哪执行 · 世界现在怎样</div>
+          <p>所以同一条命令换一个执行者、换一个位置，仍然可以复用同一份执行对象。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="errors">
+      <div class="section-head reveal">
+        <div><p class="kicker">04 / 三类错误</p><h2>错在哪一层，<br>反馈就长什么样</h2></div>
+        <p>越早发现的错误，越不需要进入后面的阶段。语法错误停在拆词/语法，编译错误停在生成执行对象，运行问题才发生在执行时。</p>
+      </div>
+      <div class="error-grid">
+        <article class="error-card reveal">
+          <span class="error-tag">语法</span>
+          <h3>语法错误</h3>
+          <p>词块排不进命令规则，或者命令还没写完。此时连执行对象都不会生成。</p>
+          <div class="mini-code">setblock 10 64
+→ 缺少方块参数
+→ 流程停止</div>
+          <p><strong>反馈：</strong>指出出错位置和可能缺少的部分。</p>
+        </article>
+        <article class="error-card reveal">
+          <span class="error-tag">编译</span>
+          <h3>编译错误</h3>
+          <p>命令形状正确，但参数在语义上不合法，例如未知方块、非法范围、目标类型不匹配。</p>
+          <div class="mini-code">setblock 10 64 10
+  minecraft:not_a_block
+→ 方块不存在
+→ 没有执行对象</div>
+          <p><strong>反馈：</strong>指出出错参数和原因。</p>
+        </article>
+        <article class="error-card runtime reveal">
+          <span class="error-tag">运行</span>
+          <h3>运行失败</h3>
+          <p>执行对象已经生成，但执行时没有完成目标操作。流程正常结束，但返回的是失败反馈。</p>
+          <div class="mini-code">执行对象已生成
+→ 执行没有完成目标
+→ 返回失败反馈</div>
+          <p><strong>缓存：</strong>已经生成的执行对象通常仍然保留。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="result">
+      <div class="section-head reveal">
+        <div><p class="kicker">05 / 执行与反馈</p><h2>执行对象 + 上下文<br>→ 执行反馈</h2></div>
+        <p>执行对象只说明“准备怎么做”；上下文告诉它“谁、在哪、朝哪做”；世界提供实际状态。执行完成后，反馈把结果带回调用者。</p>
+      </div>
+      <div class="detail-grid">
+        <article class="detail-card reveal">
+          <h3>上下文通常包含</h3>
+          <div class="mini-code">谁在执行：玩家 / 实体 / 服务器
+在哪个维度
+在什么坐标
+朝哪个方向</div>
+          <p>同一个执行对象换一个上下文，结果可能完全不同。缓存里不保存这些信息。</p>
+        </article>
+        <article class="detail-card reveal">
+          <h3>执行反馈通常包含</h3>
+          <div class="mini-code">成功 / 失败
+文字输出
+附加数据(实体数/命令结果)</div>
+          <p>成功和失败都通过反馈返回；调用者根据结果决定下一步。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="journey">
+      <div class="section-head reveal">
+        <div><p class="kicker">06 / 全流程回放</p><h2>跟着一条命令<br>走完整条流水线</h2></div>
+        <p>选择场景，然后一步一步看它经过哪些阶段。成功、缓存命中、语法错误、编译错误、运行失败，走的是不同的分支。</p>
+      </div>
+      <div class="player-shell" id="player">
+      <div class="scenario-tabs reveal" role="tablist" aria-label="命令场景">
+        <button class="scenario-tab active" type="button" data-scenario="ok">成功</button>
+        <button class="scenario-tab" type="button" data-scenario="hit">缓存命中</button>
+        <button class="scenario-tab" type="button" data-scenario="syntax">语法错误</button>
+        <button class="scenario-tab" type="button" data-scenario="compileError">编译错误</button>
+        <button class="scenario-tab" type="button" data-scenario="runtimeFail">运行失败</button>
+      </div>
+      <div class="journey-card reveal">
+        <div class="stage-rail" id="stageRail" aria-hidden="true"></div>
+        <div class="rail-track" aria-hidden="true"><div class="rail-line"></div><div class="rail-progress" id="railProgress"></div><div class="rail-packet" id="railPacket"></div></div>
+        <div class="workbench">
+          <div class="panel stage-panel">
+            <div class="stage-head">
+              <h3 id="stageTitle">文本</h3>
+              <div class="stage-nav">
+                <button class="step-btn" id="stepPrev" type="button">‹ 播放上一步</button>
+                <button class="step-btn" id="stepNext" type="button">播放下一步 ›</button>
+              </div>
+            </div>
+            <p class="stage-caption" id="stepCaption"></p>
+            <div class="stage-body" id="stageBody"></div>
+          </div>
+          <div class="side-panel">
+            <div class="side-block"><div class="side-head"><span>缓存架</span><span id="cacheBadge">未命中</span></div><div class="side-body" id="cacheSide"></div></div>
+            <div class="side-block"><div class="side-head"><span>上下文</span><span id="contextBadge">等待</span></div><div class="side-body" id="contextSide"></div></div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>CMD LAB</span><span>动画只讲流程，不替代实际命令文档</span></footer>
+
+  <script>
+    (() => {
+      'use strict';
+
+      document.documentElement.classList.add('js');
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+      const supportsObserver = 'IntersectionObserver' in window;
+      const STAGES = ['text', 'cache', 'tokens', 'parse', 'compile', 'store', 'execute', 'result'];
+      const STAGE_INDEX = Object.fromEntries(STAGES.map((stage, index) => [stage, index]));
+
+      if (supportsObserver) {
+        const revealObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('in');
+            revealObserver.unobserve(entry.target);
+          }
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+        $$('.reveal').forEach((el) => revealObserver.observe(el));
+
+        const pauseObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) entry.target.classList.toggle('is-paused', !entry.isIntersecting);
+        }, { threshold: 0.08 });
+        $$('.section').forEach((section) => pauseObserver.observe(section));
+      } else {
+        $$('.reveal').forEach((el) => el.classList.add('in'));
+      }
+
+      const escapeHTML = (value) => String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function completeAnimCode(root) {
+        $$('.anim-line', root).forEach((line) => {
+          line.classList.remove('is-typing');
+          line.classList.add('done');
+          $$('[data-type]', line).forEach((el) => { el.textContent = el.dataset.type || ''; });
+        });
+        root.dataset.playing = '0';
+      }
+
+      function playAnimCode(root) {
+        if (root.dataset.playing === '1') return;
+        const lines = $$('.anim-line', root);
+        if (prefersReducedMotion) {
+          completeAnimCode(root);
+          return;
+        }
+
+        root.dataset.playing = '1';
+        lines.forEach((line) => {
+          line.classList.remove('done', 'is-typing');
+          $$('[data-type]', line).forEach((el) => { el.textContent = ''; });
+        });
+
+        let lineIndex = 0;
+        const nextLine = () => {
+          if (lineIndex >= lines.length) {
+            root.dataset.playing = '0';
+            return;
+          }
+
+          const line = lines[lineIndex];
+          const typed = line.querySelector('[data-type]');
+          const text = typed ? (typed.dataset.type || '') : '';
+          if (!typed) {
+            line.classList.add('done');
+            lineIndex += 1;
+            setTimeout(nextLine, 80);
+            return;
+          }
+
+          line.classList.add('is-typing');
+          let charIndex = 0;
+          const type = () => {
+            if (charIndex <= text.length) {
+              typed.textContent = text.slice(0, charIndex);
+              charIndex += 1;
+              setTimeout(type, 28);
+            } else {
+              line.classList.remove('is-typing');
+              line.classList.add('done');
+              lineIndex += 1;
+              setTimeout(nextLine, 140);
+            }
+          };
+          type();
+        };
+        nextLine();
+      }
+
+      const animCodes = $$('[data-anim]');
+      const animObserver = supportsObserver
+        ? new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              playAnimCode(entry.target);
+              animObserver.unobserve(entry.target);
+            });
+          }, { threshold: 0.45 })
+        : null;
+
+      animCodes.forEach((root) => {
+        if (animObserver) animObserver.observe(root);
+        else completeAnimCode(root);
+        root.addEventListener('click', () => playAnimCode(root));
+        root.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            playAnimCode(root);
+          }
+        });
+      });
+
+      const scenarios = {
+        ok: {
+          command: 'setblock 10 64 10 minecraft:stone',
+          tokens: [
+            { text: 'setblock', type: '命令名', range: '0–8', kind: '' },
+            { text: '10', type: '坐标', range: '9–11', kind: 'pos' },
+            { text: '64', type: '坐标', range: '12–14', kind: 'pos' },
+            { text: '10', type: '坐标', range: '15–17', kind: 'pos' },
+            { text: 'minecraft:stone', type: '方块', range: '18–33', kind: 'block' }
+          ],
+          parse: { ok: true, route: ['setblock', '坐标 ×3', '方块'] },
+          compile: {
+            ok: true,
+            object: [
+              ['原始命令', 'setblock 10 64 10 minecraft:stone'],
+              ['坐标', '执行时结合上下文计算'],
+              ['方块', 'minecraft:stone'],
+              ['模式', 'replace']
+            ]
+          },
+          cacheInitial: 'miss',
+          context: { executor: 'Steve', dimension: '主世界', location: '(10.5, 64, 10.5)', rotation: '(0°, 0°)' },
+          runtime: {
+            kind: 'ok',
+            result: {
+              success: true,
+              command: 'setblock 10 64 10 minecraft:stone',
+              output: '已在 (10, 64, 10) 放置了指定的方块',
+              history: '1 个上下文',
+              entities: '0 个实体',
+              blocks: '方块操作记录：setblock @ (10,64,10)'
+            }
+          },
+          steps: [
+            { stage: 'text', caption: '先把命令原样读入；此时还不认识命令名、坐标或方块。' },
+            { stage: 'cache', caption: '用命令文本查缓存；未命中意味着要从头准备。' },
+            { stage: 'tokens', caption: '扫描字符，按命令规则切出词块；每个词块带类型和位置。' },
+            { stage: 'parse', caption: '词块按 setblock 的规则排队：命令名 → 三个坐标 → 方块；这一步只检查形状。' },
+            { stage: 'compile', caption: '生成执行对象：方块提前确认，坐标和选择器留到执行时结合上下文；固定参数被记住。' },
+            { stage: 'store', caption: '把这个执行对象存进缓存；下次同样的命令文本可以直接取用。' },
+            { stage: 'execute', caption: '把上下文（谁、在哪、朝哪）交给执行对象，读取世界并执行动作。' },
+            { stage: 'result', caption: '返回反馈：成功/失败、文字输出、上下文记录、受影响的实体和方块。' }
+          ]
+        },
+
+        hit: {
+          command: 'setblock ~ ~ ~ minecraft:stone',
+          tokens: [
+            { text: 'setblock', type: '命令名', range: '0–8', kind: '' },
+            { text: '~', type: '相对坐标', range: '9–10', kind: 'pos' },
+            { text: '~', type: '相对坐标', range: '11–12', kind: 'pos' },
+            { text: '~', type: '相对坐标', range: '13–14', kind: 'pos' },
+            { text: 'minecraft:stone', type: '方块', range: '15–30', kind: 'block' }
+          ],
+          parse: { ok: true, route: ['setblock', '相对坐标 ×3', '方块'] },
+          compile: {
+            ok: true,
+            object: [
+              ['原始命令', 'setblock ~ ~ ~ minecraft:stone'],
+              ['坐标', '执行时结合上下文计算'],
+              ['方块', 'minecraft:stone'],
+              ['模式', 'replace']
+            ]
+          },
+          cacheInitial: 'hit',
+          previousContext: { executor: 'Steve', dimension: '主世界', location: '(10, 64, 10)', rotation: '(0°, 0°)' },
+          context: { executor: 'Alex', dimension: '下界', location: '(100, 70, 100)', rotation: '(90°, 0°)' },
+          runtime: {
+            kind: 'ok',
+            result: {
+              success: true,
+              command: 'setblock ~ ~ ~ minecraft:stone',
+              output: '已在 (100, 70, 100) 放置了指定的方块',
+              history: '1 个上下文',
+              entities: '0 个实体',
+              blocks: '方块操作记录：setblock @ (100,70,100)'
+            }
+          },
+          steps: [
+            { stage: 'text', caption: '同一条命令文本，之前已经生成过执行对象。' },
+            { stage: 'cache', caption: '缓存命中：直接把执行对象取出来，拆词、语法、生成全部跳过。' },
+            { stage: 'execute', caption: '换成 Alex、下界和新的坐标；相对坐标在此时才结合新上下文计算，执行对象本身不变。' },
+            { stage: 'result', caption: '同一个执行对象，在不同的上下文里得到新的反馈。' }
+          ]
+        },
+
+        syntax: {
+          command: 'setblock 10 64',
+          tokens: [
+            { text: 'setblock', type: '命令名', range: '0–8', kind: '' },
+            { text: '10', type: '坐标', range: '9–11', kind: 'pos' },
+            { text: '64', type: '坐标', range: '12–14', kind: 'pos' }
+          ],
+          parse: { ok: false, message: '命令树没有走完：setblock 还缺“方块 ID”参数。', at: '字符 14 · 末尾', possible: '方块' },
+          compile: { ok: false },
+          cacheInitial: 'miss',
+          steps: [
+            { stage: 'text', caption: '命令写到一半：有命令名和两个坐标，但还没有方块。' },
+            { stage: 'cache', caption: '先查缓存，未命中。' },
+            { stage: 'tokens', caption: '拆词只产出已有的三个词块；方块位置是空的。' },
+            { stage: 'parse', caption: '命令树走到方块位置时没有词块可接，语法检查在这里停下。' },
+            { stage: 'store', storeKind: 'syntax', caption: '语法失败结果也会被记录；同样的错误命令下次可以直接返回。' },
+            { stage: 'result', caption: '没有执行对象，也没有执行反馈；只返回语法失败的位置和原因。' }
+          ]
+        },
+
+        compileError: {
+          command: 'setblock 10 64 10 minecraft:not_a_block',
+          tokens: [
+            { text: 'setblock', type: '命令名', range: '0–8', kind: '' },
+            { text: '10', type: '坐标', range: '9–11', kind: 'pos' },
+            { text: '64', type: '坐标', range: '12–14', kind: 'pos' },
+            { text: '10', type: '坐标', range: '15–17', kind: 'pos' },
+            { text: 'minecraft:not_a_block', type: '方块', range: '18–39', kind: 'block' }
+          ],
+          parse: { ok: true, route: ['setblock', '坐标 ×3', '方块'] },
+          compile: { ok: false, message: '不存在的方块 ID: minecraft:not_a_block', range: '第 4 个参数 · 字符 18–39' },
+          cacheInitial: 'miss',
+          steps: [
+            { stage: 'text', caption: '文本完整，但最后一个方块名字不存在。' },
+            { stage: 'cache', caption: '先查缓存，未命中。' },
+            { stage: 'tokens', caption: '词块都能切出来，包括那个不存在的方块名。' },
+            { stage: 'parse', caption: '语法检查通过：形状正确，但它不知道方块是否真实存在。' },
+            { stage: 'compile', caption: '生成执行对象时检查方块，发现不存在，在这一步停下并标出参数位置。' },
+            { stage: 'store', storeKind: 'compile', caption: '失败原因被记录；不会产生可执行对象。' },
+            { stage: 'result', caption: '返回编译失败原因；流程不会进入执行。' }
+          ]
+        },
+
+        runtimeFail: {
+          command: 'setblock 999999 64 999999 minecraft:stone',
+          tokens: [
+            { text: 'setblock', type: '命令名', range: '0–8', kind: '' },
+            { text: '999999', type: '坐标', range: '9–15', kind: 'pos' },
+            { text: '64', type: '坐标', range: '16–18', kind: 'pos' },
+            { text: '999999', type: '坐标', range: '19–25', kind: 'pos' },
+            { text: 'minecraft:stone', type: '方块', range: '26–41', kind: 'block' }
+          ],
+          parse: { ok: true, route: ['setblock', '坐标 ×3', '方块'] },
+          compile: {
+            ok: true,
+            object: [
+              ['原始命令', 'setblock 999999 64 999999 minecraft:stone'],
+              ['坐标', '执行时结合上下文计算'],
+              ['方块', 'minecraft:stone'],
+              ['模式', 'replace']
+            ]
+          },
+          cacheInitial: 'miss',
+          context: { executor: 'Steve', dimension: '主世界', location: '(999999.5, 64, 999999.5)', rotation: '(0°, 0°)' },
+          runtime: {
+            kind: 'fail',
+            result: {
+              success: false,
+              command: 'setblock 999999 64 999999 minecraft:stone',
+              output: '区块 (62499, 62499) 未载入内存',
+              history: '1 个上下文',
+              entities: '0 个实体',
+              blocks: '无方块改动'
+            }
+          },
+          steps: [
+            { stage: 'text', caption: '语法和生成都能通过：坐标是数字，方块存在。' },
+            { stage: 'cache', caption: '先查缓存，未命中。' },
+            { stage: 'tokens', caption: '词块正常切出。' },
+            { stage: 'parse', caption: '命令树正常匹配。' },
+            { stage: 'compile', caption: '执行对象生成成功。' },
+            { stage: 'store', caption: '执行对象进入缓存。' },
+            { stage: 'execute', caption: '执行时发现目标区块没有载入；动作没有完成，但流程正常返回。' },
+            { stage: 'result', caption: '反馈为失败；执行对象仍留在缓存里。' }
+          ]
+        }
+      };
+
+      const stageLabels = { text: '文本', cache: '缓存', tokens: '拆词', parse: '语法', compile: '生成对象', store: '记录', execute: '执行', result: '反馈' };
+      const microSteps = {
+        text: ['读取原始命令'],
+        cache: ['计算缓存键', '查缓存', '判定命中'],
+        tokens: ['扫描字符', '识别类型', '切分词块'],
+        parse: ['匹配命令', '匹配参数', '检查完整'],
+        compile: ['收集参数', '检查语义', '打包对象'],
+        store: ['计算键', '写入缓存'],
+        execute: ['绑定上下文', '读取世界', '执行动作'],
+        result: ['汇总状态', '返回反馈']
+      };
+
+      const rail = $('#stageRail');
+      const railProgress = $('#railProgress');
+      const railPacket = $('#railPacket');
+      const stageTitle = $('#stageTitle');
+      const stageBody = $('#stageBody');
+      const cacheBadge = $('#cacheBadge');
+      const cacheSide = $('#cacheSide');
+      const contextBadge = $('#contextBadge');
+      const contextSide = $('#contextSide');
+      const stepCaption = $('#stepCaption');
+      const stepPrev = $('#stepPrev');
+      const stepNext = $('#stepNext');
+      const tabs = $$('.scenario-tab');
+
+      let currentKey = 'ok';
+      let currentStep = 0;
+
+      const scenario = () => scenarios[currentKey];
+      const currentFrame = () => scenario().steps[currentStep];
+
+      STAGES.forEach((stage, index) => {
+        const node = document.createElement('div');
+        node.className = 'rail-node';
+        node.dataset.stage = stage;
+        node.innerHTML = `<b>${String(index + 1).padStart(2, '0')}</b>${stageLabels[stage]}`;
+        rail.appendChild(node);
+      });
+
+      function isErrorStage(s, stage) {
+        if (stage === 'parse') return !s.parse.ok;
+        if (stage === 'compile') return !s.compile.ok;
+        if (stage === 'result') return !s.parse.ok || !s.compile.ok;
+        return false;
+      }
+
+      function renderRail() {
+        const s = scenario();
+        const frame = currentFrame();
+        const included = new Set(s.steps.map((step) => step.stage));
+        const currentIndex = STAGE_INDEX[frame.stage];
+
+        $$('.rail-node', rail).forEach((node) => {
+          const stage = node.dataset.stage;
+          const index = STAGE_INDEX[stage];
+          const active = stage === frame.stage;
+          const done = included.has(stage) && index < currentIndex;
+          const skipped = !included.has(stage);
+          const error = active && (isErrorStage(s, stage) || (stage === 'store' && frame.storeKind));
+          const hit = active && stage === 'cache' && s.cacheInitial === 'hit';
+          node.classList.toggle('active', active);
+          node.classList.toggle('done', done);
+          node.classList.toggle('skipped', skipped);
+          node.classList.toggle('error', error);
+          node.classList.toggle('hit', hit);
+        });
+
+        const ratio = currentIndex / (STAGES.length - 1);
+        if (railProgress) railProgress.style.width = `${ratio * 100}%`;
+        if (railPacket) {
+          railPacket.style.left = `${ratio * 100}%`;
+          railPacket.classList.toggle('hit', frame.stage === 'cache' && s.cacheInitial === 'hit');
+          railPacket.classList.toggle('error', isErrorStage(s, frame.stage) || (frame.stage === 'store' && frame.storeKind));
+        }
+      }
+
+      function tokenHTML(token, index = 0) {
+        return `<div class="token-chip ${token.kind || ''}" style="--d:${index * 0.08}s"><span class="token-type">${escapeHTML(token.type)}</span><code>${escapeHTML(token.text)}</code><small>${escapeHTML(token.range || '')}</small></div>`;
+      }
+
+      function objectHTML(object) {
+        return `<div class="capsule"><div class="capsule-title"><span><span class="mini-gear"></span>执行对象</span><span>可缓存</span></div><div class="capsule-fields">${object.map(([key, value], index) => `<div class="capsule-field" style="--d:${index * 0.07}s"><span>${escapeHTML(key)}</span><code>${escapeHTML(value)}</code></div>`).join('')}</div></div>`;
+      }
+
+      function resultHTML(result, kind = '') {
+        return `<div class="result-card ${kind}"><div class="result-title"><span>执行反馈</span><span>${result.success ? '成功' : '失败'}</span></div><div class="result-fields">
+          <div class="result-field"><span>结果</span><code>${result.success ? '成功' : '失败'}</code></div>
+          <div class="result-field"><span>原始命令</span><code>${escapeHTML(result.command)}</code></div>
+          <div class="result-field"><span>文字输出</span><code>${escapeHTML(result.output)}</code></div>
+          <div class="result-field"><span>上下文记录</span><code>${escapeHTML(result.history)}</code></div>
+          <div class="result-field"><span>受影响实体</span><code>${escapeHTML(result.entities)}</code></div>
+          <div class="result-field"><span>受影响方块</span><code>${escapeHTML(result.blocks)}</code></div>
+        </div></div>`;
+      }
+
+      function renderStage() {
+        const s = scenario();
+        const frame = currentFrame();
+        let html = '';
+
+        if (frame.stage === 'text') {
+          html = `<div class="command-code scanning">${escapeHTML(s.command)}</div><div class="success-strip">这是调用者传进来的原始命令。还没有拆词，也没有执行对象。</div>`;
+        } else if (frame.stage === 'cache') {
+          const hit = s.cacheInitial === 'hit';
+          html = `<div class="cache-key"><b>缓存键：</b>${escapeHTML(s.command)}</div>
+            <div class="${hit ? 'success-strip' : 'warn-strip'}">${hit ? '命中执行对象缓存：取出上次生成好的执行对象，跳过拆词、语法和生成。' : '未命中：缓存区里还没有这条命令，继续拆词和编译。'}</div>
+            ${hit ? objectHTML(s.compile.object) : '<div class="stage-empty">缓存架里还没有这条命令的对象。</div>'}`;
+        } else if (frame.stage === 'tokens') {
+          html = `<div class="token-source">源命令：${escapeHTML(s.command)}</div><div class="token-row">${s.tokens.map((token, index) => tokenHTML(token, index)).join('')}</div>
+            ${s.parse.ok ? '' : '<div class="token-row" style="margin-top:8px"><div class="token-chip missing" style="--d:.35s"><span class="token-type">缺失</span><code>方块 ?</code><small>命令不完整</small></div></div>'}
+            <div class="success-strip">词块的身份决定下一步能走哪条语法分支。坐标虽然是三个词块，但生成执行对象时会被合成一个坐标计算方式。</div>`;
+        } else if (frame.stage === 'parse') {
+          html = s.parse.ok
+            ? `<div class="success-strip">语法检查通过 · ${s.tokens.length} 个词块全部进入命令树</div><div class="route">${s.parse.route.map((step, index) => `<span class="route-step" style="--d:${index * 0.14}s">${escapeHTML(step)}</span>${index < s.parse.route.length - 1 ? '<span class="route-arrow">→</span>' : ''}`).join('')}</div><div class="stage-empty" style="margin-top:10px">语法只检查“形状”；方块是否存在、选择器是否合法，要到生成执行对象阶段才知道。</div>`
+            : `<div class="error-strip"><strong>语法检查未通过</strong><br>${escapeHTML(s.parse.message)}<br>位置：${escapeHTML(s.parse.at)}<br>可能的下一节点：<code>${escapeHTML(s.parse.possible)}</code></div><div class="stage-empty" style="margin-top:10px">命令树停在这里。没有执行对象，也不会进入生成对象 / 执行。</div>`;
+        } else if (frame.stage === 'compile') {
+          html = s.compile.ok
+            ? objectHTML(s.compile.object) + '<div class="success-strip">生成完成：坐标和选择器留到执行时结合上下文计算，方块提前确认，其余固定参数被记住。</div>'
+            : `<div class="error-strip"><strong>编译错误</strong><br>${escapeHTML(s.compile.message)}<br>范围：${escapeHTML(s.compile.range)}</div><div class="stage-empty" style="margin-top:10px">语法已经通过，但语义检查失败。不会生成执行对象。</div>`;
+        } else if (frame.stage === 'store') {
+          const kind = frame.storeKind || 'object';
+          if (kind === 'syntax') {
+            html = `<div class="cache-key"><b>写入：</b>语法错误缓存<br><b>缓存键：</b>${escapeHTML(s.command)}</div><div class="error-strip">语法错误已存入语法错误缓存。</div>`;
+          } else if (kind === 'compile') {
+            html = `<div class="cache-key"><b>写入：</b>编译错误缓存<br><b>缓存键：</b>${escapeHTML(s.command)}</div><div class="error-strip">编译失败原因已记录在缓存里。</div>`;
+          } else {
+            html = `<div class="cache-key"><b>写入：</b>执行对象缓存<br><b>缓存键：</b>${escapeHTML(s.command)}</div>${objectHTML(s.compile.object)}<div class="success-strip">执行对象已存入缓存。之后同样的命令文本会直接复用它。</div>`;
+          }
+        } else if (frame.stage === 'execute') {
+          if (s.runtime.kind === 'fail') {
+            html = `<div class="object-mini"><span class="gear"></span><span>执行对象 + 执行上下文</span></div><div class="energy-line"><i></i></div>${resultHTML(s.runtime.result, 'fail')}<div class="warn-strip">执行完成，但结果是失败。这是正常的失败反馈。</div>`;
+          } else {
+            html = `<div class="object-mini"><span class="gear"></span><span>执行对象 + 执行上下文</span></div><div class="energy-line"><i></i></div>${resultHTML(s.runtime.result)}<div class="success-strip">执行环节读取上下文和世界，返回了执行反馈。</div>`;
+          }
+        } else if (frame.stage === 'result') {
+          if (!s.parse.ok) {
+            html = `<div class="error-strip"><strong>返回：语法检查未通过</strong><br>${escapeHTML(s.parse.message)}<br>位置：${escapeHTML(s.parse.at)}</div><div class="stage-empty" style="margin-top:10px">调用者只拿到解析失败结果；没有执行反馈。</div>`;
+          } else if (!s.compile.ok) {
+            html = `<div class="error-strip"><strong>返回：编译失败</strong><br>${escapeHTML(s.compile.message)}<br>范围：${escapeHTML(s.compile.range)}</div><div class="stage-empty" style="margin-top:10px">调用者拿到编译失败对象；没有执行对象，也没有执行反馈。</div>`;
+          } else if (s.runtime.kind === 'fail') {
+            html = resultHTML(s.runtime.result, 'fail') + '<div class="warn-strip">这是执行反馈失败：命令逻辑正常结束，只是没有完成目标。</div>';
+          } else {
+            html = resultHTML(s.runtime.result) + '<div class="success-strip">这就是调用者最终拿到的反馈结果。</div>';
+          }
+        }
+
+        const micro = microSteps[frame.stage] || [];
+        const microHTML = micro.length
+          ? `<div class="micro-flow">${micro.map((item, index) => `<span style="--d:${index * 0.12}s">${item}</span>`).join('<i>→</i>')}</div>`
+          : '';
+
+        if (stageTitle) stageTitle.textContent = stageLabels[frame.stage];
+        if (stageBody) {
+          stageBody.innerHTML = microHTML + html;
+          stageBody.scrollTop = 0;
+          const errorNow = isErrorStage(s, frame.stage) || (frame.stage === 'store' && frame.storeKind);
+          stageBody.classList.remove('stage-enter', 'is-error');
+          void stageBody.offsetWidth;
+          stageBody.classList.add('stage-enter');
+          stageBody.classList.toggle('is-error', errorNow);
+          const panel = stageBody.closest('.stage-panel');
+          if (panel) panel.classList.toggle('is-error', errorNow);
+        }
+        if (stepCaption) stepCaption.innerHTML = frame.caption;
+        if (stepPrev) stepPrev.disabled = currentStep === 0;
+        if (stepNext) stepNext.disabled = currentStep === s.steps.length - 1;
+        tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.scenario === currentKey));
+        renderRail();
+        renderSide();
+      }
+
+      function renderSide() {
+        const s = scenario();
+        const frame = currentFrame();
+        const stepIndex = STAGE_INDEX[frame.stage];
+        const storedObject = s.cacheInitial === 'hit' || s.steps.some((step) => step.stage === 'store' && !step.storeKind && STAGE_INDEX[step.stage] <= stepIndex);
+        const syntaxStored = s.steps.some((step) => step.stage === 'store' && step.storeKind === 'syntax' && STAGE_INDEX[step.stage] <= stepIndex);
+        const compileStored = s.steps.some((step) => step.stage === 'store' && step.storeKind === 'compile' && STAGE_INDEX[step.stage] <= stepIndex);
+        const hitNow = frame.stage === 'cache' && s.cacheInitial === 'hit';
+
+        const keyPulse = frame.stage === 'cache' || frame.stage === 'store';
+        const objectJust = hitNow || (frame.stage === 'store' && !frame.storeKind);
+        const syntaxJust = frame.stage === 'store' && frame.storeKind === 'syntax';
+        const compileJust = frame.stage === 'store' && frame.storeKind === 'compile';
+
+        if (cacheBadge) cacheBadge.textContent = hitNow ? '命中' : (storedObject || syntaxStored || compileStored ? '已缓存' : '未命中');
+        if (cacheSide) {
+          cacheSide.innerHTML = `<div class="cache-key${keyPulse ? ' key-pulse' : ''}"><b>缓存键：</b>${escapeHTML(s.command)}</div><div class="cache-slots">
+            <div class="cache-slot ${storedObject ? 'occupied' : ''} ${objectJust ? 'just-added' : ''} ${hitNow ? 'active' : ''}"><span>执行对象</span><code>${storedObject ? 'setblock 执行对象' : '—'}</code></div>
+            <div class="cache-slot ${syntaxStored ? 'error' : ''} ${syntaxJust ? 'just-added' : ''} ${syntaxJust ? 'active' : ''}"><span>语法错误</span><code>${syntaxStored ? '语法错误' : '—'}</code></div>
+            <div class="cache-slot ${compileStored ? 'error' : ''} ${compileJust ? 'just-added' : ''} ${compileJust ? 'active' : ''}"><span>编译错误</span><code>${compileStored ? '编译错误' : '—'}</code></div>
+          </div>`;
+        }
+
+        let contextHTML = '';
+        let badge = '等待';
+        if (s.runtime && (frame.stage === 'execute' || frame.stage === 'result')) {
+          badge = frame.stage === 'execute' ? '执行中' : (s.runtime.kind === 'fail' ? '失败' : '完成');
+          contextHTML = `<div class="context-card">
+            <div class="context-field"><span>执行者</span><code>${escapeHTML(s.context.executor)}</code></div>
+            <div class="context-field"><span>维度</span><code>${escapeHTML(s.context.dimension)}</code></div>
+            <div class="context-field"><span>坐标</span><code>${escapeHTML(s.context.location)}</code></div>
+            <div class="context-field"><span>朝向</span><code>${escapeHTML(s.context.rotation)}</code></div>
+          </div>`;
+        } else if (s.cacheInitial === 'hit' && s.previousContext) {
+          badge = '命中后待执行';
+          contextHTML = `<div class="context-empty">上次：${escapeHTML(s.previousContext.executor)} · ${escapeHTML(s.previousContext.location)}<br>这次：${escapeHTML(s.context.executor)} · ${escapeHTML(s.context.location)}<br><br>执行对象不变，上下文换了。</div>`;
+        } else if (frame.stage === 'execute' || frame.stage === 'result') {
+          badge = '未执行';
+          contextHTML = '<div class="context-empty">这次没有进入执行阶段，所以没有上下文快照。</div>';
+        } else {
+          contextHTML = '<div class="context-empty">执行对象还没有拿到上下文。拆词、语法、生成执行对象阶段都不会读取世界。</div>';
+        }
+
+        if (contextBadge) contextBadge.textContent = badge;
+        if (contextSide) contextSide.innerHTML = contextHTML;
+      }
+
+      function goToStep(next) {
+        currentStep = Math.max(0, Math.min(scenario().steps.length - 1, next));
+        renderStage();
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          currentKey = tab.dataset.scenario;
+          currentStep = 0;
+          renderStage();
+        });
+      });
+
+      if (stepPrev) stepPrev.addEventListener('click', () => goToStep(currentStep - 1));
+      if (stepNext) stepNext.addEventListener('click', () => goToStep(currentStep + 1));
+
+      renderStage();
+    })();
+  </script>
+</body>
+</html>

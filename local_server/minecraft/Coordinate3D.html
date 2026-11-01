@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050910">
+<meta name="color-scheme" content="dark">
+<title>坐标实验室 · 世界 / 相对 / 局部坐标系</title>
+<style>
+  :root{
+    --bg:#050910;
+    --bg-2:#081321;
+    --panel:rgba(10,18,32,.86);
+    --panel-solid:#0a1220;
+    --line:rgba(145,175,222,.14);
+    --line-strong:rgba(145,175,222,.25);
+    --text:#e9f2ff;
+    --muted:#8ea4c3;
+    --dim:#637896;
+    --cyan:#4be0ff;
+    --amber:#fbbf24;
+    --lime:#a3e635;
+    --violet:#a78bfa;
+    --pink:#f472b6;
+    --x:#ff6b6b;
+    --y:#7ee787;
+    --z:#5aa9ff;
+    --accent:var(--cyan);
+    --radius:22px;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  html{background:var(--bg);scroll-behavior:smooth}
+  body{
+    min-height:100svh;
+    color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%;
+    -webkit-tap-highlight-color:transparent;
+    overflow-x:hidden;
+    background:
+      radial-gradient(1000px 700px at 15% -8%, rgba(75,224,255,.10), transparent 60%),
+      radial-gradient(900px 620px at 92% 5%, rgba(167,139,250,.10), transparent 58%),
+      radial-gradient(800px 600px at 55% 110%, rgba(163,230,53,.05), transparent 60%),
+      linear-gradient(180deg,#050910 0%,#07101c 56%,#04070d 100%);
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:.42;
+    background-image:
+      linear-gradient(rgba(120,160,255,.055) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(120,160,255,.055) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.85) 55%,transparent 100%);
+  }
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.42) 100%);
+  }
+  button,input{font:inherit}
+  button{color:inherit}
+  a{color:var(--cyan)}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+  .app{position:relative;z-index:1;width:min(1640px,100%);margin:0 auto;padding:14px}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    display:grid;
+    grid-template-columns:minmax(210px,1fr) auto minmax(120px,1fr);
+    align-items:center;
+    gap:20px;
+    width:100%;
+    min-width:0;
+    min-height:70px;
+    padding:8px 10px 10px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:0;justify-self:start}
+  .logo{
+    width:42px;height:46px;flex:0 0 auto;
+    filter:drop-shadow(0 8px 18px rgba(75,224,255,.20));
+  }
+  .brand-copy{min-width:0}
+  .brand-kicker{
+    margin:0 0 2px;
+    font:600 10px/1.2 ui-monospace,Consolas,monospace;
+    letter-spacing:.24em;
+    color:rgba(75,224,255,.78);
+    white-space:nowrap;
+  }
+  .brand h1{
+    margin:0;
+    font-size:clamp(20px,2.2vw,27px);
+    line-height:1.15;
+    letter-spacing:.03em;
+    font-weight:800;
+    white-space:nowrap;
+    background:linear-gradient(92deg,#f4fbff 0%,#a9e9ff 45%,#b9adff 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .tabs{
+    display:flex;
+    justify-self:center;
+    gap:4px;
+    min-width:0;
+    max-width:100%;
+    padding:4px;
+    border:1px solid var(--line);
+    border-radius:15px;
+    background:rgba(8,15,28,.66);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 30px -24px #000;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    appearance:none;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--muted);
+    border-radius:11px;
+    padding:7px 16px 8px;
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+    min-width:104px;
+    transition:color .18s,border-color .18s,background .18s,transform .18s;
+    white-space:nowrap;
+  }
+  .tab:hover{color:#dff4ff;background:rgba(255,255,255,.035)}
+  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tab .tab-kicker{
+    font:600 9px/1.25 ui-monospace,Consolas,monospace;
+    letter-spacing:.14em;
+    opacity:.72;
+  }
+  .tab .tab-label{font-size:14px;font-weight:700;letter-spacing:.02em}
+  .tab[aria-selected="true"]{
+    color:#f2fdff;
+    border-color:color-mix(in srgb,var(--accent) 42%,transparent);
+    background:
+      linear-gradient(180deg,color-mix(in srgb,var(--accent) 17%,transparent),rgba(255,255,255,.02));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 24px -14px var(--accent);
+  }
+  .tab[aria-selected="true"] .tab-kicker{color:var(--accent);opacity:1}
+  .icon-btn{
+    flex:0 0 auto;
+    justify-self:end;
+    appearance:none;
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 13px;
+    border:1px solid var(--line-strong);
+    border-radius:11px;
+    background:rgba(9,16,29,.72);
+    color:var(--muted);
+    font-size:12px;font-weight:650;
+    cursor:pointer;
+    transition:.18s;
+  }
+  .icon-btn:hover{color:#f0fbff;border-color:rgba(75,224,255,.42);background:rgba(75,224,255,.08)}
+  .icon-btn:active{transform:translateY(1px)}
+  .icon-btn svg{width:15px;height:15px}
+
+  /* ---------- 主布局 ---------- */
+  .workspace{
+    display:grid;
+    grid-template-columns:minmax(0,1.55fr) minmax(340px,.78fr);
+    gap:14px;
+    align-items:start;
+  }
+  .stage-card{
+    position:relative;
+    height:clamp(540px,calc(100svh - 108px),820px);
+    min-height:540px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse at 52% 38%,rgba(38,78,119,.25),transparent 62%),
+      linear-gradient(160deg,rgba(15,28,49,.86),rgba(5,10,18,.97));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.04),
+      0 32px 80px -42px rgba(0,0,0,.95);
+    isolation:isolate;
+  }
+  .stage-card::before{
+    content:"";
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:
+      linear-gradient(90deg,rgba(75,224,255,.02),transparent 24%,transparent 76%,rgba(167,139,250,.025)),
+      radial-gradient(ellipse at 50% 46%,transparent 52%,rgba(0,0,0,.35) 100%);
+  }
+  .stage-card::after{
+    content:"";
+    position:absolute;left:0;right:0;top:0;height:1px;z-index:3;pointer-events:none;
+    background:linear-gradient(90deg,transparent,rgba(75,224,255,.40),transparent);
+    opacity:.65;
+  }
+  .canvas-host{position:absolute;inset:0;z-index:0}
+  .canvas-host canvas{display:block;width:100%;height:100%;outline:none;cursor:grab}
+  .canvas-host canvas:active{cursor:grabbing}
+
+  /* ---------- 舞台叠加层 ---------- */
+  .stage-ui{position:absolute;inset:0;z-index:2;pointer-events:none}
+  .stage-head{
+    position:absolute;left:18px;top:16px;
+    max-width:calc(100% - 128px);
+  }
+  .stage-eyebrow{
+    display:flex;align-items:center;gap:8px;
+    margin:0 0 5px;
+    font:700 9px/1.2 ui-monospace,Consolas,monospace;
+    letter-spacing:.22em;
+    color:var(--accent);
+    text-transform:uppercase;
+  }
+  .stage-eyebrow::before{
+    content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--accent);box-shadow:0 0 12px var(--accent);
+  }
+  .stage-title{
+    margin:0;
+    font-size:clamp(17px,1.7vw,22px);
+    line-height:1.25;
+    letter-spacing:.01em;
+    font-weight:800;
+    text-shadow:0 4px 22px rgba(0,0,0,.45);
+  }
+  .stage-coord{
+    display:inline-flex;align-items:center;gap:8px;
+    max-width:100%;
+    margin-top:8px;
+    padding:5px 10px 6px;
+    border:1px solid rgba(251,191,36,.24);
+    border-radius:8px;
+    background:rgba(7,12,22,.72);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    color:#ffe5a3;
+    font:650 11px/1.2 ui-monospace,Consolas,monospace;
+    letter-spacing:.02em;
+    backdrop-filter:blur(8px);
+    flex-wrap:wrap;
+  }
+  .stage-coord .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--amber);box-shadow:0 0 9px rgba(251,191,36,.9);
+  }
+  .stage-coord .coord-sub{color:var(--dim);font-weight:500}
+
+  /* 罗盘 */
+  .compass{
+    position:absolute;right:16px;top:14px;
+    width:104px;height:118px;
+    display:flex;justify-content:center;
+    filter:drop-shadow(0 8px 18px rgba(0,0,0,.35));
+  }
+  .compass-ring{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:92px;height:92px;border-radius:50%;
+    border:1px solid rgba(145,175,222,.22);
+    background:
+      radial-gradient(circle at 50% 50%,rgba(9,17,30,.72) 0 28%,transparent 29%),
+      repeating-conic-gradient(from 0deg,rgba(145,175,222,.28) 0 1deg,transparent 1deg 15deg);
+    box-shadow:inset 0 0 24px rgba(75,224,255,.04);
+  }
+  .compass-ring::before{
+    content:"";position:absolute;inset:12px;border-radius:50%;
+    border:1px dashed rgba(145,175,222,.15);
+  }
+  .compass-core{
+    position:absolute;left:50%;top:46px;width:5px;height:5px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 11px var(--accent);
+  }
+  .compass-view{
+    position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+    color:var(--accent);font-size:11px;line-height:1;
+    text-shadow:0 0 9px currentColor;
+    opacity:.9;
+  }
+  .compass-dir{
+    position:absolute;left:50%;top:46px;
+    transform:translate(-50%,-50%);
+    display:flex;flex-direction:column;align-items:center;
+    font:700 10px/1.02 "Microsoft YaHei",sans-serif;
+    color:#d7e8ff;
+    text-shadow:0 1px 6px #000;
+    will-change:left,top;
+  }
+  .compass-dir small{
+    margin-top:2px;
+    font:600 7px/1 ui-monospace,Consolas,monospace;
+    letter-spacing:.06em;
+    color:var(--dim);
+  }
+  .compass-dir[data-bearing="90"]{color:var(--x)}
+  .compass-dir[data-bearing="180"]{color:var(--z)}
+  .compass-dir[data-bearing="90"] small{color:rgba(255,107,107,.65)}
+  .compass-dir[data-bearing="180"] small{color:rgba(90,169,255,.65)}
+  .compass-caption{
+    position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+    font:600 8px/1 ui-monospace,Consolas,monospace;
+    letter-spacing:.16em;color:var(--dim);
+    white-space:nowrap;
+  }
+
+  /* 图例 */
+  .stage-legend{
+    position:absolute;left:18px;bottom:47px;
+    display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+    max-width:calc(100% - 36px);
+  }
+  .legend-item{
+    display:inline-flex;align-items:center;gap:6px;
+    min-height:24px;
+    padding:3px 8px;
+    border:1px solid rgba(145,175,222,.13);
+    border-radius:7px;
+    background:rgba(7,13,24,.64);
+    color:#b6c7df;
+    font:600 9px/1.2 ui-monospace,Consolas,monospace;
+    backdrop-filter:blur(8px);
+  }
+  .legend-item i{
+    display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--c,#8ea4c3);box-shadow:0 0 8px color-mix(in srgb,var(--c,#8ea4c3) 50%,transparent);
+  }
+  .legend-item.guide i{
+    width:14px;height:0;border-radius:0;background:none;
+    border-top:1px dashed #b9c8dc;box-shadow:none;
+  }
+  .stage-hint{
+    position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+    color:rgba(167,188,216,.72);
+    font-size:10px;letter-spacing:.03em;
+    white-space:nowrap;
+    text-shadow:0 1px 5px #000;
+  }
+  .stage-hint kbd{
+    display:inline-block;padding:1px 4px;margin:0 2px;
+    border:1px solid rgba(145,175,222,.18);border-radius:4px;
+    background:rgba(8,15,28,.6);
+    font:600 9px/1.2 ui-monospace,Consolas,monospace;
+    color:#b7c8de;
+  }
+  .webgl-error{
+    position:absolute;inset:0;z-index:5;
+    display:grid;place-items:center;
+    padding:30px;text-align:center;
+    background:rgba(5,9,16,.92);
+  }
+  .webgl-error[hidden]{display:none}
+  .webgl-error strong{display:block;color:var(--amber);font-size:18px;margin-bottom:8px}
+  .webgl-error p{max-width:440px;margin:0;color:var(--muted);font-size:13px}
+
+  /* ---------- 右侧面板 ---------- */
+  .panel{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    height:clamp(540px,calc(100svh - 108px),820px);
+    min-height:540px;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding-right:2px;
+    scrollbar-gutter:stable;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(75,224,255,.22) transparent;
+  }
+  .panel::-webkit-scrollbar{width:6px}
+  .panel::-webkit-scrollbar-thumb{background:rgba(75,224,255,.18);border-radius:99px}
+  .panel::-webkit-scrollbar-track{background:transparent}
+  .sheet-handle{display:none}
+  .panel-card{
+    position:relative;
+    flex-shrink:0;
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.025),transparent 26%),
+      var(--panel);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 18px 45px -36px #000;
+    backdrop-filter:blur(12px);
+    overflow:hidden;
+  }
+  .panel-intro{padding:17px 18px 15px}
+  .intro-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .mode-tag{
+    display:inline-flex;align-items:center;gap:7px;
+    margin-bottom:8px;
+    color:var(--accent);
+    font:700 9px/1.2 ui-monospace,Consolas,monospace;
+    letter-spacing:.18em;
+  }
+  .mode-tag .mode-index{
+    display:inline-grid;place-items:center;
+    width:20px;height:20px;border-radius:6px;
+    border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);
+    background:color-mix(in srgb,var(--accent) 8%,transparent);
+    font-size:9px;letter-spacing:0;
+  }
+  .mode-formula{
+    flex:0 0 auto;
+    padding:5px 9px;
+    border:1px solid color-mix(in srgb,var(--accent) 26%,transparent);
+    border-radius:7px;
+    background:rgba(5,11,20,.58);
+    color:#dff9ff;
+    font:700 11px/1.2 ui-monospace,Consolas,monospace;
+    white-space:nowrap;
+  }
+  .mode-title{margin:0 0 7px;font-size:22px;line-height:1.2;font-weight:800;letter-spacing:.01em}
+  .mode-desc{margin:0;color:var(--muted);font-size:12.5px;line-height:1.75}
+  .mode-desc b{color:#f2f9ff}
+  .mode-facts{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+  .fact{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 7px;border:1px solid var(--line);border-radius:6px;
+    background:rgba(5,11,20,.45);
+    color:#b7c9e0;font:600 9px/1.3 ui-monospace,Consolas,monospace;
+  }
+  .fact::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 7px var(--accent)}
+  .source-line{
+    display:flex;align-items:center;gap:6px;
+    margin-top:12px;padding-top:10px;border-top:1px solid rgba(145,175,222,.10);
+    color:var(--dim);font-size:10px;
+  }
+  .source-line a{color:rgba(75,224,255,.8);text-decoration:none;border-bottom:1px dotted rgba(75,224,255,.4)}
+  .source-line a:hover{color:#c9f6ff}
+
+  .controls{padding:12px}
+  .control-block{
+    padding:11px 11px 12px;
+    border:1px solid rgba(145,175,222,.11);
+    border-radius:12px;
+    background:rgba(5,11,20,.38);
+  }
+  .control-block + .control-block{margin-top:8px}
+  .block-head{
+    display:flex;align-items:center;gap:8px;
+    margin-bottom:10px;
+  }
+  .block-head .bh-mark{
+    width:6px;height:16px;border-radius:2px;
+    background:linear-gradient(180deg,var(--block-accent,var(--accent)),transparent);
+    box-shadow:0 0 12px color-mix(in srgb,var(--block-accent,var(--accent)) 35%,transparent);
+  }
+  .block-head h3{margin:0;font-size:12px;line-height:1.2;font-weight:800;letter-spacing:.02em}
+  .block-head .bh-hint{
+    margin-left:auto;color:var(--dim);
+    font:600 8px/1.2 ui-monospace,Consolas,monospace;
+    letter-spacing:.08em;
+    white-space:nowrap;
+  }
+  .range-row + .range-row{margin-top:9px}
+  .range-head{display:flex;align-items:center;gap:7px;min-width:0}
+  .axis-tag{
+    display:inline-grid;place-items:center;
+    flex:0 0 auto;
+    min-width:25px;height:20px;padding:0 5px;
+    border-radius:5px;
+    border:1px solid color-mix(in srgb,var(--axis) 36%,transparent);
+    background:color-mix(in srgb,var(--axis) 10%,transparent);
+    color:var(--axis);
+    font:800 9px/1 ui-monospace,Consolas,monospace;
+    letter-spacing:.02em;
+  }
+  .axis-tag.wide{min-width:32px}
+  .range-name{
+    min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    color:#c4d3e7;font-size:10.5px;font-weight:600;
+  }
+  .range-name small{color:var(--dim);font-size:9px;font-weight:500;margin-left:4px}
+  .value-box{
+    display:flex;align-items:center;gap:2px;
+    margin-left:auto;
+    flex:0 0 auto;
+    padding:2px 6px;
+    border:1px solid rgba(145,175,222,.14);
+    border-radius:6px;
+    background:rgba(3,8,15,.56);
+  }
+  .value-box:focus-within{border-color:color-mix(in srgb,var(--axis) 45%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--axis) 10%,transparent)}
+  .range-number{
+    width:43px;
+    padding:0;border:0;outline:0;background:transparent;
+    color:#f0f8ff;font:700 11px/1.4 ui-monospace,Consolas,monospace;
+    text-align:right;
+    appearance:textfield;-moz-appearance:textfield;
+  }
+  .range-number::-webkit-outer-spin-button,.range-number::-webkit-inner-spin-button{appearance:none;margin:0}
+  .value-unit{color:var(--dim);font:600 9px/1 ui-monospace,Consolas,monospace}
+  .range-track{display:flex;align-items:center;gap:6px;margin-top:5px}
+  .range-edge{
+    flex:0 0 auto;width:21px;
+    color:#52637b;
+    font:600 8px/1 ui-monospace,Consolas,monospace;
+  }
+  .range-edge:last-child{text-align:right}
+  .range{
+    --pct:50%;
+    appearance:none;-webkit-appearance:none;
+    width:100%;height:16px;margin:0;padding:0;
+    background:transparent;cursor:pointer;outline:none;
+  }
+  .range:focus-visible{outline:2px solid color-mix(in srgb,var(--axis) 62%,transparent);outline-offset:3px;border-radius:999px}
+  .range::-webkit-slider-runnable-track{
+    height:4px;border-radius:999px;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--axis) 82%,#fff 2%) 0 var(--pct),rgba(145,175,222,.17) var(--pct) 100%);
+    box-shadow:inset 0 1px 1px rgba(0,0,0,.3);
+  }
+  .range::-webkit-slider-thumb{
+    appearance:none;-webkit-appearance:none;
+    width:13px;height:13px;margin-top:-4.5px;
+    border-radius:50%;
+    border:2px solid #07101d;
+    background:var(--axis);
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--axis) 26%,transparent),0 0 12px color-mix(in srgb,var(--axis) 50%,transparent);
+    transition:transform .12s;
+  }
+  .range:hover::-webkit-slider-thumb,.range:focus-visible::-webkit-slider-thumb{transform:scale(1.15)}
+  .range::-moz-range-track{height:4px;border-radius:999px;background:rgba(145,175,222,.17)}
+  .range::-moz-range-progress{height:4px;border-radius:999px;background:var(--axis)}
+  .range::-moz-range-thumb{width:11px;height:11px;border:2px solid #07101d;border-radius:50%;background:var(--axis);box-shadow:0 0 9px color-mix(in srgb,var(--axis) 50%,transparent)}
+  .inline-note{
+    display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+    margin-top:9px;padding:7px 8px;
+    border:1px dashed rgba(145,175,222,.15);
+    border-radius:7px;
+    color:var(--dim);
+    font-size:9.5px;line-height:1.5;
+  }
+  .inline-note b{color:#d9e9ff;font-weight:700}
+  .inline-note .pill{
+    display:inline-block;padding:1px 5px;border-radius:4px;
+    background:color-mix(in srgb,var(--accent) 10%,transparent);
+    color:var(--accent);font:700 8px/1.4 ui-monospace,Consolas,monospace;
+  }
+
+  .footnote{
+    padding:0 4px 4px;
+    color:#4d5e75;
+    font-size:9px;line-height:1.6;
+    text-align:center;
+  }
+  .footnote a{color:#687d98;text-decoration:none}
+  .footnote a:hover{color:var(--cyan)}
+
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width:1180px){
+    .workspace{grid-template-columns:minmax(0,1.35fr) minmax(320px,.78fr)}
+    .brand{min-width:205px}
+    .tab{min-width:92px;padding-left:12px;padding-right:12px}
+  }
+  @media (max-width:980px){
+    .topbar{display:flex;flex-wrap:wrap;gap:10px;padding-bottom:12px}
+    .brand{flex:1 1 auto;min-width:0}
+    .icon-btn{flex:0 0 auto;margin-left:auto}
+    .tabs{order:3;flex:0 0 100%;width:100%;max-width:100%;min-width:0;justify-content:stretch;overflow-x:auto}
+    .tab{flex:1 1 0;min-width:0;align-items:center;text-align:center}
+    .workspace{grid-template-columns:minmax(0,1fr);min-width:0}
+    .stage-card{height:calc(100svh - 148px);min-height:480px;min-width:0;border-radius:19px}
+    .stage-legend,.stage-hint{display:none}
+
+    /* 移动端：3D 舞台铺满，参数面板变成覆盖在底部的可推拉抽屉 */
+    .panel{
+      position:fixed;
+      z-index:70;
+      left:8px;
+      right:8px;
+      bottom:max(8px,env(safe-area-inset-bottom));
+      height:38svh;
+      min-height:46px;
+      max-height:calc(100svh - 148px);
+      padding:0 3px 10px;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+      touch-action:pan-y;
+      scroll-padding-top:44px;
+      border:1px solid var(--line-strong);
+      border-radius:20px;
+      background:linear-gradient(180deg,rgba(10,18,32,.985),rgba(6,12,22,.995));
+      box-shadow:0 -24px 70px rgba(0,0,0,.68),inset 0 1px 0 rgba(255,255,255,.045);
+      backdrop-filter:blur(18px);
+      min-width:0;
+    }
+    .panel::-webkit-scrollbar{width:5px}
+    .panel-card{backdrop-filter:blur(8px);border-radius:14px}
+
+    .sheet-handle{
+      position:sticky;
+      top:0;
+      z-index:30;
+      display:flex;
+      flex:0 0 32px;
+      align-items:center;
+      justify-content:center;
+      height:32px;
+      margin:0 0 2px;
+      padding:0;
+      border-radius:19px 19px 0 0;
+      border-bottom:1px solid rgba(145,175,222,.08);
+      background:linear-gradient(180deg,rgba(11,20,35,.995) 0%,rgba(11,20,35,.94) 100%);
+      cursor:grab;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action:none;
+      outline:none;
+    }
+    .sheet-handle:active{cursor:grabbing}
+    .sheet-handle:focus-visible{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 52%,transparent)}
+    .sheet-grip{
+      width:44px;height:4px;border-radius:99px;
+      background:rgba(164,190,226,.50);
+      box-shadow:0 0 12px rgba(75,224,255,.16);
+    }
+
+    .panel-intro{padding:12px 14px 10px}
+    .mode-title{font-size:19px;margin-bottom:5px}
+    .mode-tag{margin-bottom:5px}
+    .mode-desc{
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+      font-size:11.5px;
+      line-height:1.55;
+    }
+    .mode-facts{margin-top:8px}
+    .source-line{font-size:9px;margin-top:8px;padding-top:7px}
+    .source-line > span:last-child{display:none}
+    .controls{padding:8px}
+    .control-block{padding:9px 9px 10px}
+    .range-number{width:48px;font-size:16px}
+    .value-box{padding:3px 6px}
+    .footnote{font-size:8.5px;padding:0 10px 3px}
+  }
+  @media (max-width:640px){
+    .app{padding:8px}
+    .brand-kicker{display:none}
+    .brand h1{font-size:19px}
+    .brand{min-width:0;gap:9px}
+    .logo{width:34px;height:38px}
+    .icon-btn{padding:8px 10px}
+    .icon-btn span{display:none}
+    .tab{padding:7px 8px 8px}
+    .tab .tab-kicker{font-size:8px}
+    .tab .tab-label{font-size:12px}
+    .topbar{gap:7px;padding:4px 6px 9px}
+    .stage-card{height:calc(100svh - 138px);min-height:500px;border-radius:17px}
+    .stage-head{left:13px;top:12px;max-width:calc(100% - 100px)}
+    .stage-title{font-size:17px}
+    .stage-coord{font-size:10px;padding:4px 8px}
+    .stage-coord .coord-sub{display:none}
+    .compass{transform:scale(.84);transform-origin:top right;right:8px;top:8px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 54" aria-hidden="true">
+        <polygon points="24,2 45,13.5 24,25 3,13.5" fill="#72e9ff" opacity=".95"/>
+        <polygon points="3,13.5 24,25 24,51 3,39.5" fill="#2e9cc3"/>
+        <polygon points="45,13.5 24,25 24,51 45,39.5" fill="#17617e"/>
+        <polygon points="24,2 45,13.5 24,25 3,13.5" fill="none" stroke="#c4f7ff" stroke-width="1.2" opacity=".8"/>
+        <path d="M12 19.2 18 22.5v6.8l-6-3.3z" fill="#d8fbff" opacity=".9"/>
+        <path d="M24 25v8.5" stroke="#9af2ff" stroke-width="1.2" opacity=".55"/>
+      </svg>
+      <div class="brand-copy">
+        <p class="brand-kicker">MINECRAFT COMMAND LAB</p>
+        <h1>坐标实验室</h1>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="坐标系类型">
+      <button class="tab" type="button" role="tab" data-mode="absolute" aria-selected="true" aria-controls="coordinatePanel">
+        <span class="tab-kicker">X&nbsp;Y&nbsp;Z</span>
+        <span class="tab-label">绝对坐标</span>
+      </button>
+      <button class="tab" type="button" role="tab" data-mode="relative" aria-selected="false" aria-controls="coordinatePanel" tabindex="-1">
+        <span class="tab-kicker">~&nbsp;~&nbsp;~</span>
+        <span class="tab-label">相对坐标</span>
+      </button>
+      <button class="tab" type="button" role="tab" data-mode="local" aria-selected="false" aria-controls="coordinatePanel" tabindex="-1">
+        <span class="tab-kicker">^&nbsp;^&nbsp;^</span>
+        <span class="tab-label">局部坐标</span>
+      </button>
+    </nav>
+
+    <button class="icon-btn" type="button" id="resetView" title="重置 3D 视角">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 12a9 9 0 1 0 2.9-6.6"/><path d="M3 4v5h5"/><path d="M12 8v4l2.6 1.6"/>
+      </svg>
+      <span>重置视角</span>
+    </button>
+  </header>
+
+  <main class="workspace">
+    <section class="stage-card" aria-label="三维坐标演示">
+      <div class="canvas-host" id="canvasHost"></div>
+
+      <div class="stage-ui">
+        <div class="stage-head">
+          <p class="stage-eyebrow" id="stageEyebrow">WORLD / ABSOLUTE</p>
+          <h2 class="stage-title" id="stageTitle">点 P 的世界位置</h2>
+          <div class="stage-coord">
+            <span class="dot"></span>
+            <span id="stageCoord">P (5, 4, 3)</span>
+          </div>
+        </div>
+
+        <div class="compass" aria-label="世界方位罗盘">
+          <div class="compass-ring"></div>
+          <span class="compass-view">▲</span>
+          <span class="compass-dir" data-bearing="0">北<small>N</small></span>
+          <span class="compass-dir" data-bearing="90">东<small>E</small></span>
+          <span class="compass-dir" data-bearing="180">南<small>S</small></span>
+          <span class="compass-dir" data-bearing="270">西<small>W</small></span>
+          <span class="compass-core"></span>
+          <span class="compass-caption">世界方位</span>
+        </div>
+
+        <div class="stage-legend" aria-hidden="true">
+          <span class="legend-item" style="--c:var(--x)"><i></i><span id="legendX">X+ 东</span></span>
+          <span class="legend-item" style="--c:var(--y)"><i></i><span id="legendY">Y+ 上</span></span>
+          <span class="legend-item" style="--c:var(--z)"><i></i><span id="legendZ">Z+ 南</span></span>
+          <span class="legend-item guide"><i></i><span id="legendGuide">P → Y 垂足 → X/Z 平面</span></span>
+        </div>
+
+        <div class="stage-hint">
+          <span class="desktop-only">拖动旋转 · 滚轮缩放 · 双击</span><kbd>重置</kbd>
+        </div>
+      </div>
+
+      <div class="webgl-error" id="webglError" hidden>
+        <div>
+          <strong>无法启动 3D 渲染</strong>
+          <p>当前浏览器未能创建 WebGL 上下文。请尝试开启硬件加速，或使用较新的 Chrome / Edge / Firefox 打开本页。</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" id="coordinatePanel" aria-label="坐标参数与说明">
+      <div class="sheet-handle" id="sheetHandle" role="separator" aria-orientation="horizontal" aria-label="拖动调整参数面板高度" tabindex="0">
+        <span class="sheet-grip" aria-hidden="true"></span>
+      </div>
+
+      <section class="panel-card panel-intro">
+        <div class="intro-top">
+          <div>
+            <div class="mode-tag"><span class="mode-index" id="modeIndex">01</span><span id="modeTag">WORLD</span></div>
+            <h2 class="mode-title" id="modeTitle">绝对坐标</h2>
+          </div>
+          <code class="mode-formula" id="modeFormula">X Y Z</code>
+        </div>
+        <p class="mode-desc" id="modeDesc">世界坐标由 X、Y、Z 三个有向距离组成。X 轴正方向向东，Z 轴正方向向南，Y 轴正方向向上。</p>
+        <div class="mode-facts" id="modeFacts"></div>
+        <div class="source-line">
+          <span>依据</span>
+          <a href="https://zh.minecraft.wiki/w/%E5%9D%90%E6%A0%87" target="_blank" rel="noopener noreferrer">Minecraft Wiki · 坐标 / 命令</a>
+          <span style="margin-left:auto">拖动滑块观察</span>
+        </div>
+      </section>
+
+      <section class="panel-card controls" aria-label="坐标参数">
+        <div id="controlMount"></div>
+      </section>
+
+      <p class="footnote">局部坐标使用 <code>^</code>，相对坐标使用 <code>~</code>；两者不能混用。拖动滑块实时观察 3D 坐标变化。</p>
+    </aside>
+  </main>
+</div>
+
+<script type="module">
+import * as THREE from '/js/three.module.js';
+import { OrbitControls } from '/js/OrbitControls.js';
+
+/* ============================================================
+   基础状态与常量
+   ============================================================ */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+function showRuntimeError(error) {
+  const box = document.getElementById('webglError');
+  if (!box) return;
+  box.hidden = false;
+  const title = box.querySelector('strong');
+  const detail = box.querySelector('p');
+  if (title) title.textContent = '页面运行出错';
+  if (detail) {
+    const message = error && (error.message || error.reason && error.reason.message) || String(error || '未知错误');
+    detail.textContent = `${message}。请刷新页面重试。`;
+  }
+}
+window.addEventListener('error', (event) => {
+  if (event && /ResizeObserver loop/i.test(event.message || '')) return;
+  showRuntimeError(event.error || event.message);
+});
+window.addEventListener('unhandledrejection', (event) => {
+  showRuntimeError(event.reason);
+});
+
+const AXIS_COLOR_HEX = { x: 0xff6b6b, y: 0x7ee787, z: 0x5aa9ff };
+const AXIS_COLOR_CSS = { x: '#ff6b6b', y: '#7ee787', z: '#5aa9ff' };
+const COLORS = { cyan: 0x4be0ff, amber: 0xfbbf24, violet: 0xa78bfa, lime: 0xa3e635, muted: 0x8ea4c3, white: 0xffffff };
+const ZERO = new THREE.Vector3(0, 0, 0);
+const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const UP = V(0, 1, 0);
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const round1 = (v) => Math.round(v * 10) / 10;
+const fmt = (v) => {
+  const r = round1(v);
+  return Object.is(r, -0) ? '0' : String(r);
+};
+const deg = THREE.MathUtils.degToRad;
+
+const state = {
+  mode: 'absolute',
+  absolute: { x: 5, y: 4, z: 3 },
+  relative: {
+    origin: { x: -2, y: 1, z: 1 },
+    delta: { x: 5, y: 3, z: -4 }
+  },
+  local: {
+    origin: { x: -1, y: 1, z: 1 },
+    yaw: -40,
+    pitch: 0,
+    delta: { x: 4, y: 3, z: 3 }
+  }
+};
+
+const MOBILE_SHEET_MQ = window.matchMedia('(max-width: 980px)');
+
+const MODE_META = {
+  absolute: {
+    index: '01',
+    tag: 'WORLD / ABSOLUTE',
+    title: '绝对坐标',
+    formula: 'X  Y  Z',
+    stageTitle: '点 P 的世界位置',
+    accent: '#4be0ff',
+    desc: '以世界原点 <b>(0, 0, 0)</b> 为基准，X、Y、Z 分别记录点沿三条轴的有向距离。X 轴正方向向东，Z 轴正方向向南，Y 轴正方向向上，三者组成右手坐标系。',
+    facts: ['X+ 向东', 'Y+ 向上', 'Z+ 向南'],
+    legend: { x: 'X+ 东', y: 'Y+ 上', z: 'Z+ 南', guide: 'P → Y 垂足 → X/Z 平面' }
+  },
+  relative: {
+    index: '02',
+    tag: 'RELATIVE / TILDE',
+    title: '相对坐标',
+    formula: '~ΔX  ~ΔY  ~ΔZ',
+    stageTitle: '从执行原点 O 出发的偏量',
+    accent: '#a3e635',
+    desc: '<b>~</b> 后的数字表示相对执行位置的偏移量，坐标轴的方向仍然与世界坐标一致。单独一个 ~ 等于偏移 0，<b>~ ~ ~</b> 就是执行位置本身。',
+    facts: ['基准 = 执行原点 O', '轴向 = 世界轴', '~ ~ ~ = 执行位置'],
+    legend: { x: '~ΔX 沿世界 X', y: '~ΔY 沿世界 Y', z: '~ΔZ 沿世界 Z', guide: 'Y 垂足 → 执行原点 X/Z 平面' }
+  },
+  local: {
+    index: '03',
+    tag: 'LOCAL / CARET',
+    title: '局部坐标',
+    formula: '^ΔX  ^ΔY  ^ΔZ',
+    stageTitle: '随朝向旋转的本地轴',
+    accent: '#a78bfa',
+    desc: '<b>^X</b> 向左、<b>^Y</b> 向上、<b>^Z</b> 向前，三条本地轴随执行者朝向（以及俯仰）旋转。局部坐标不能与绝对坐标或相对坐标混用。',
+    facts: ['^X 向左', '^Y 向上', '^Z 向前', '轴随朝向旋转'],
+    legend: { x: '^X 本左', y: '^Y 本上', z: '^Z 本前', guide: 'Y 垂足 → 本地 X/Z 平面' }
+  }
+};
+
+const YAW_NAMES = ['南', '南偏西', '西南', '西偏南', '西', '西偏北', '西北', '北偏西', '北', '北偏东', '东北', '东偏北', '东', '东偏南', '东南', '南偏东'];
+function yawName(yaw) {
+  const n = ((yaw % 360) + 360) % 360;
+  return YAW_NAMES[Math.round(n / 22.5) % 16];
+}
+
+/* ============================================================
+   Three.js 场景
+   ============================================================ */
+const host = $('#canvasHost');
+let renderer, scene, camera, controls, compassNeedsUpdate = false;
+let sceneReady = false;
+let dirty = true;
+let userHasOrbited = false;
+
+const CAMERA_CFG = {
+  absolute: { span: 21.5, target: V(0, 2.2, 0), dir: V(0.72, 0.58, 1.0) },
+  relative: { span: 28, target: V(0, 2.6, 0), dir: V(0.72, 0.58, 1.0) },
+  local: { span: 28, target: V(0, 2.6, 0), dir: V(0.72, 0.58, 1.0) }
+};
+
+function initScene() {
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  } catch (err) {
+    $('#webglError').hidden = false;
+    return false;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.domElement.className = 'scene-canvas';
+  renderer.domElement.setAttribute('aria-label', '可旋转的三维坐标场景');
+  host.appendChild(renderer.domElement);
+
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x050910, 0.0115);
+
+  camera = new THREE.PerspectiveCamera(42, 1, 0.1, 180);
+  camera.position.set(15, 12, 20);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.075;
+  controls.rotateSpeed = 0.68;
+  controls.zoomSpeed = 0.86;
+  controls.enablePan = false;
+  controls.minPolarAngle = 0.03;
+  controls.maxPolarAngle = Math.PI * 0.92;
+  controls.target.copy(CAMERA_CFG.absolute.target);
+  controls.addEventListener('change', () => {
+    dirty = true;
+    compassNeedsUpdate = true;
+  });
+  controls.addEventListener('start', () => {
+    userHasOrbited = true;
+  });
+  renderer.domElement.addEventListener('dblclick', () => resetView(true));
+  renderer.domElement.addEventListener('pointerdown', () => { renderer.domElement.style.cursor = 'grabbing'; });
+  window.addEventListener('pointerup', () => { if (renderer) renderer.domElement.style.cursor = 'grab'; });
+
+  buildScene();
+  resizeStage();
+  sceneReady = true;
+  bindSceneUI();
+  animate();
+  return true;
+}
+
+function resizeStage() {
+  if (!renderer) return;
+  const w = host.clientWidth;
+  const h = host.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  dirty = true;
+}
+
+const resizeObserver = new ResizeObserver(() => {
+  if (!sceneReady) return;
+  resizeStage();
+  if (!userHasOrbited) resetView(false);
+  dirty = true;
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (!sceneReady) return;
+  const changed = controls.update();
+  if (changed) dirty = true;
+  if (compassNeedsUpdate) {
+    updateCompass();
+    compassNeedsUpdate = false;
+  }
+  if (dirty) {
+    renderer.render(scene, camera);
+    dirty = false;
+  }
+}
+
+function fitDistance(span) {
+  const vFov = deg(camera.fov);
+  const widthFactor = Math.max(0.42, camera.aspect);
+  const dV = span / (2 * Math.tan(vFov / 2));
+  const dH = span / (2 * Math.tan(vFov / 2) * widthFactor);
+  return Math.max(dV, dH) * 1.04;
+}
+
+function resetView(markDirty = true) {
+  if (!sceneReady) return;
+  const cfg = CAMERA_CFG[state.mode] || CAMERA_CFG.absolute;
+  const dist = fitDistance(cfg.span);
+  const target = cfg.target.clone();
+  // 移动端底部有推拉面板覆盖，把观察中心稍微下移，让坐标轴与点整体在屏幕上抬高。
+  if (MOBILE_SHEET_MQ.matches) target.y -= 2.2;
+  controls.target.copy(target);
+  camera.position.copy(target).addScaledVector(cfg.dir.clone().normalize(), dist);
+  controls.minDistance = Math.max(5, dist * 0.24);
+  controls.maxDistance = Math.max(40, dist * 2.2);
+  controls.update();
+  userHasOrbited = false;
+  compassNeedsUpdate = true;
+  if (markDirty) dirty = true;
+}
+
+/* ---------- 通用 3D 工具 ---------- */
+let glowTexture = null;
+function getGlowTexture() {
+  if (glowTexture) return glowTexture;
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.18, 'rgba(255,255,255,.8)');
+  g.addColorStop(0.44, 'rgba(255,255,255,.28)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  glowTexture = new THREE.CanvasTexture(c);
+  glowTexture.minFilter = THREE.LinearFilter;
+  glowTexture.magFilter = THREE.LinearFilter;
+  glowTexture.generateMipmaps = false;
+  return glowTexture;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+function makeLabel(text, color, options = {}) {
+  const {
+    height = 0.046,
+    bg = 'rgba(6,12,23,.84)',
+    border = null,
+    fontSize = 42,
+    fontWeight = 700
+  } = options;
+  const dpr = 2;
+  const padX = 17;
+  const padY = 10;
+  const font = `${fontWeight} ${fontSize}px "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif`;
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = font;
+  const textW = Math.ceil(measure.measureText(text).width);
+  const w = textW + padX * 2;
+  const h = fontSize + padY * 2;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(w * dpr);
+  canvas.height = Math.ceil(h * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.font = font;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (bg) {
+    ctx.fillStyle = bg;
+    roundRect(ctx, 1, 1, w - 2, h - 2, 10);
+    ctx.fill();
+  }
+  if (border) {
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+  }
+  ctx.fillStyle = color;
+  ctx.fillText(text, w / 2, h / 2 + 1);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    sizeAttenuation: false,
+    toneMapped: false,
+    fog: false
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(height * (w / h), height, 1);
+  sprite.renderOrder = 100;
+  return sprite;
+}
+
+function makeGlowSprite(color, scale = 1) {
+  const mat = new THREE.SpriteMaterial({
+    map: getGlowTexture(),
+    color,
+    transparent: true,
+    opacity: 0.58,
+    depthWrite: false,
+    depthTest: true,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+    fog: false
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(scale, scale, 1);
+  return sprite;
+}
+
+function addArrow(parent, direction, length, color, options = {}) {
+  const {
+    radius = 0.027,
+    headLength = 0.38,
+    headRadius = 0.105,
+    opacity = 1
+  } = options;
+  const dir = direction.clone().normalize();
+  const shaftLen = Math.max(0.02, length - headLength);
+  const transparent = opacity < 1;
+
+  const mat = new THREE.MeshBasicMaterial({ color, transparent, opacity, depthWrite: !transparent });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, shaftLen, 7), mat);
+  shaft.position.copy(dir).multiplyScalar(shaftLen / 2);
+  shaft.quaternion.setFromUnitVectors(UP, dir);
+  parent.add(shaft);
+
+  const head = new THREE.Mesh(new THREE.ConeGeometry(headRadius, headLength, 9), mat);
+  head.position.copy(dir).multiplyScalar(length - headLength / 2);
+  head.quaternion.setFromUnitVectors(UP, dir);
+  parent.add(head);
+  return { shaft, head, mat };
+}
+
+function createDashedLine(color, opacity = 0.8, dashSize = 0.24, gapSize = 0.16) {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+  const material = new THREE.LineDashedMaterial({
+    color,
+    transparent: true,
+    opacity,
+    dashSize,
+    gapSize,
+    depthWrite: false
+  });
+  const line = new THREE.Line(geometry, material);
+  line.frustumCulled = false;
+  line.computeLineDistances();
+  return line;
+}
+
+function setLine(line, a, b) {
+  if (!line) return;
+  const attr = line.geometry.attributes.position;
+  attr.setXYZ(0, a.x, a.y, a.z);
+  attr.setXYZ(1, b.x, b.y, b.z);
+  attr.needsUpdate = true;
+  line.geometry.computeBoundingSphere();
+  line.computeLineDistances();
+  line.visible = a.distanceToSquared(b) > 1e-5;
+}
+
+// 用短圆柱拼出有厚度的虚线，保证在深色三维场景里比普通细线更醒目。
+function createGuideLine(color, options = {}) {
+  const {
+    opacity = 0.95,
+    radius = 0.025,
+    dash = 0.27,
+    gap = 0.13,
+    maxDashes = 44
+  } = options;
+  const group = new THREE.Group();
+  const geometry = new THREE.CylinderGeometry(radius, radius, 1, 6);
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+    depthWrite: false
+  });
+  const dashes = new THREE.InstancedMesh(geometry, material, maxDashes);
+  dashes.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  dashes.frustumCulled = false;
+  dashes.renderOrder = 2;
+  group.add(dashes);
+
+  const direction = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  const dummy = new THREE.Object3D();
+  const step = dash + gap;
+
+  function set(a, b) {
+    const delta = b.clone().sub(a);
+    const length = delta.length();
+    if (length < 0.035) {
+      group.visible = false;
+      return;
+    }
+    group.visible = true;
+    direction.copy(delta).normalize();
+    quaternion.setFromUnitVectors(UP, direction);
+    const count = Math.min(maxDashes, Math.ceil((length + gap) / step));
+    for (let i = 0; i < maxDashes; i++) {
+      const start = i * step;
+      const segment = Math.min(dash, length - start);
+      const show = i < count && segment > 0.012;
+      if (show) {
+        dummy.position.copy(a).addScaledVector(direction, start + segment / 2);
+        dummy.quaternion.copy(quaternion);
+        dummy.scale.set(1, segment, 1);
+      } else {
+        dummy.position.set(0, 0, 0);
+        dummy.quaternion.identity();
+        dummy.scale.set(0, 0, 0);
+      }
+      dummy.updateMatrix();
+      dashes.setMatrixAt(i, dummy.matrix);
+    }
+    dashes.instanceMatrix.needsUpdate = true;
+  }
+
+  return { group, set };
+}
+
+function setPolyline(line, points) {
+  const pos = new Float32Array(points.length * 3);
+  points.forEach((p, i) => {
+    pos[i * 3] = p.x;
+    pos[i * 3 + 1] = p.y;
+    pos[i * 3 + 2] = p.z;
+  });
+  line.geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  line.geometry.computeBoundingSphere();
+  line.computeLineDistances();
+  line.frustumCulled = false;
+}
+
+function makeOriginMarker(text, color = COLORS.cyan) {
+  const group = new THREE.Group();
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.27, 0.35, 34),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.82, side: THREE.DoubleSide, depthWrite: false })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.018;
+  group.add(ring);
+
+  const dot = new THREE.Mesh(
+    new THREE.SphereGeometry(0.075, 14, 10),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.96 })
+  );
+  group.add(dot);
+
+  const glow = makeGlowSprite(color, 0.9);
+  glow.material.opacity = 0.36;
+  group.add(glow);
+
+  const label = makeLabel(text, '#dff7ff', {
+    height: 0.036,
+    border: 'rgba(75,224,255,.32)'
+  });
+  label.position.set(0, 0.58, 0);
+  group.add(label);
+  return { group, label };
+}
+
+function makePointMarker(text = 'P', color = COLORS.amber) {
+  const group = new THREE.Group();
+  const core = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.205, 0),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 })
+  );
+  core.rotation.set(0.22, 0.55, 0);
+  group.add(core);
+
+  const wire = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.31, 0),
+    new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.28, depthWrite: false })
+  );
+  wire.rotation.copy(core.rotation);
+  group.add(wire);
+
+  const glow = makeGlowSprite(color, 1.35);
+  glow.material.opacity = 0.65;
+  group.add(glow);
+
+  const label = makeLabel(text, '#ffe7a6', {
+    height: 0.043,
+    border: 'rgba(251,191,36,.42)'
+  });
+  label.position.set(0, 0.57, 0);
+  group.add(label);
+  return { group, core, wire, label };
+}
+
+function makeFootDot(color) {
+  return new THREE.Mesh(
+    new THREE.SphereGeometry(0.075, 12, 8),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.92 })
+  );
+}
+
+function makeFloorRing(color, radius = 0.29) {
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(radius * 0.68, radius, 28),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.014;
+  return ring;
+}
+
+function makeCircleLine(radius, color, opacity = 0.28, segments = 80) {
+  const pts = [];
+  for (let i = 0; i < segments; i++) {
+    const a = i / segments * Math.PI * 2;
+    pts.push(V(Math.sin(a) * radius, 0, Math.cos(a) * radius));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
+  return new THREE.LineLoop(geo, mat);
+}
+
+/* ---------- 坐标轴组 ---------- */
+function createAxesRig(options = {}) {
+  const {
+    length = 8,
+    negativeLength = 4.8,
+    labels = {
+      x: 'X+ 东', y: 'Y+ 上', z: 'Z+ 南'
+    },
+    negativeLabels = {},
+    opacity = 1,
+    labelHeight = 0.041
+  } = options;
+
+  const group = new THREE.Group();
+  const dirs = { x: V(1, 0, 0), y: V(0, 1, 0), z: V(0, 0, 1) };
+  const axes = {};
+
+  ['x', 'y', 'z'].forEach((key) => {
+    const dir = dirs[key];
+    const color = AXIS_COLOR_HEX[key];
+    const sub = new THREE.Group();
+
+    addArrow(sub, dir, length, color, { opacity });
+
+    const axisLabel = makeLabel(labels[key], AXIS_COLOR_CSS[key], {
+      height: labelHeight,
+      border: 'rgba(140,175,220,.20)'
+    });
+    axisLabel.position.copy(dir).multiplyScalar(length + 0.35);
+    axisLabel.position.y += 0.27;
+    sub.add(axisLabel);
+
+    const neg = createDashedLine(color, 0.30 * opacity, 0.2, 0.18);
+    setLine(neg, ZERO, dir.clone().multiplyScalar(-negativeLength));
+    sub.add(neg);
+
+    if (negativeLabels[key]) {
+      const negLabel = makeLabel(negativeLabels[key], '#8ea4c3', {
+        height: 0.032,
+        bg: 'rgba(6,12,23,.70)',
+        border: 'rgba(140,175,220,.14)'
+      });
+      negLabel.position.copy(dir).multiplyScalar(-(negativeLength + 0.4));
+      negLabel.position.y += 0.16;
+      sub.add(negLabel);
+    }
+
+    group.add(sub);
+    axes[key] = sub;
+  });
+
+  return { group, axes };
+}
+
+/* ---------- 世界网格与方位 ---------- */
+const baseGroup = new THREE.Group();
+let worldGhost = null;
+let axesAbs = null;
+let absOrigin = null;
+let absPoint = null;
+let absGuides = null;
+let absVector = null;
+let absPointFloor = null;
+
+function buildBase() {
+  const grid = new THREE.GridHelper(30, 30, 0x385a7e, 0x172538);
+  grid.position.y = -0.018;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.56;
+  grid.material.depthWrite = false;
+  baseGroup.add(grid);
+
+  const outerCircle = makeCircleLine(10.5, 0x3c5a7c, 0.22, 96);
+  outerCircle.position.y = -0.012;
+  baseGroup.add(outerCircle);
+
+  // 四个方位直接标在坐标轴正负两端，地面只保留网格与圆环，
+  // 以免地面文字在旋转视角时与点或执行原点标签重叠。
+  worldGhost = new THREE.Group();
+  const ghostRing = makeCircleLine(0.22, 0x5d7088, 0.45, 24);
+  ghostRing.position.y = 0.012;
+  worldGhost.add(ghostRing);
+  const ghostLabel = makeLabel('世界原点', '#7f93ad', {
+    height: 0.034,
+    bg: 'rgba(6,12,23,.64)',
+    border: 'rgba(145,175,222,.11)'
+  });
+  ghostLabel.position.set(0, 0.40, 0);
+  worldGhost.add(ghostLabel);
+  worldGhost.visible = false;
+  baseGroup.add(worldGhost);
+
+  scene.add(baseGroup);
+}
+
+/* ---------- 绝对坐标场景 ---------- */
+function buildAbsoluteScene() {
+  const group = new THREE.Group();
+  axesAbs = createAxesRig({ length: 9.2, negativeLength: 5.8 });
+  group.add(axesAbs.group);
+
+  absOrigin = makeOriginMarker('O', COLORS.cyan);
+  group.add(absOrigin.group);
+
+  absPoint = makePointMarker('P', COLORS.amber);
+  group.add(absPoint.group);
+
+  absGuides = {
+    x: { line: createGuideLine(AXIS_COLOR_HEX.x, { opacity: 0.92 }), foot: makeFootDot(AXIS_COLOR_HEX.x) },
+    y: { line: createGuideLine(AXIS_COLOR_HEX.y, { opacity: 0.92 }), foot: makeFootDot(AXIS_COLOR_HEX.y) },
+    z: { line: createGuideLine(AXIS_COLOR_HEX.z, { opacity: 0.92 }), foot: makeFootDot(AXIS_COLOR_HEX.z) }
+  };
+  Object.values(absGuides).forEach((g) => { group.add(g.line.group, g.foot); });
+
+  absVector = createDashedLine(0xdfefff, 0.22, 0.12, 0.22);
+  group.add(absVector);
+
+  absPointFloor = makeFloorRing(COLORS.amber, 0.30);
+  group.add(absPointFloor);
+
+  group.name = 'absoluteScene';
+  scene.add(group);
+  return group;
+}
+
+/* ---------- 相对坐标场景 ---------- */
+let relRoot = null;
+let relAxes = null;
+let relOrigin = null;
+let relPoint = null;
+let relGuides = null;
+let relVector = null;
+let relDrop = null;
+let relFloorRing = null;
+let relPointFloor = null;
+
+function buildRelativeScene() {
+  relRoot = new THREE.Group();
+  relAxes = createAxesRig({
+    length: 8.1,
+    negativeLength: 5.0,
+    labels: { x: 'X+ 东', y: 'Y+ 上', z: 'Z+ 南' }
+  });
+  relRoot.add(relAxes.group);
+
+  relOrigin = makeOriginMarker('O', COLORS.cyan);
+  relRoot.add(relOrigin.group);
+
+  relPoint = makePointMarker('P', COLORS.amber);
+  relRoot.add(relPoint.group);
+
+  relGuides = {
+    x: { line: createGuideLine(AXIS_COLOR_HEX.x, { opacity: 0.94 }), foot: makeFootDot(AXIS_COLOR_HEX.x) },
+    y: { line: createGuideLine(AXIS_COLOR_HEX.y, { opacity: 0.94 }), foot: makeFootDot(AXIS_COLOR_HEX.y) },
+    z: { line: createGuideLine(AXIS_COLOR_HEX.z, { opacity: 0.94 }), foot: makeFootDot(AXIS_COLOR_HEX.z) }
+  };
+  Object.values(relGuides).forEach((g) => { relRoot.add(g.line.group, g.foot); });
+
+  relVector = createDashedLine(COLORS.lime, 0.48, 0.17, 0.15);
+  relRoot.add(relVector);
+
+  relDrop = createDashedLine(0x93a8c4, 0.24, 0.14, 0.17);
+  relRoot.add(relDrop);
+
+  relFloorRing = makeFloorRing(COLORS.cyan, 0.34);
+  relRoot.add(relFloorRing);
+
+  relPointFloor = makeFloorRing(COLORS.amber, 0.28);
+  relRoot.add(relPointFloor);
+
+  relRoot.visible = false;
+  scene.add(relRoot);
+}
+
+/* ---------- 局部坐标场景 ---------- */
+let locRoot = null;
+let locAxes = null;
+let locOrigin = null;
+let locPoint = null;
+let locGuides = null;
+let locVector = null;
+let locDrop = null;
+let locFloorRing = null;
+let locPointFloor = null;
+let locYawCircle = null;
+let locYawArc = null;
+let locYawStart = null;
+let locYawEnd = null;
+
+function buildLocalScene() {
+  locRoot = new THREE.Group();
+
+  locAxes = createAxesRig({
+    length: 8.1,
+    negativeLength: 5.0,
+    labels: { x: '^X 左', y: '^Y 上', z: '^Z 前' },
+    negativeLabels: {}
+  });
+  locRoot.add(locAxes.group);
+
+  locOrigin = makeOriginMarker('O', COLORS.cyan);
+  locRoot.add(locOrigin.group);
+
+  locPoint = makePointMarker('P', COLORS.amber);
+  locRoot.add(locPoint.group);
+
+  locGuides = {
+    x: { line: createGuideLine(AXIS_COLOR_HEX.x, { opacity: 0.95 }), foot: makeFootDot(AXIS_COLOR_HEX.x) },
+    y: { line: createGuideLine(AXIS_COLOR_HEX.y, { opacity: 0.95 }), foot: makeFootDot(AXIS_COLOR_HEX.y) },
+    z: { line: createGuideLine(AXIS_COLOR_HEX.z, { opacity: 0.95 }), foot: makeFootDot(AXIS_COLOR_HEX.z) }
+  };
+  Object.values(locGuides).forEach((g) => { locRoot.add(g.line.group, g.foot); });
+
+  locVector = createDashedLine(COLORS.violet, 0.52, 0.17, 0.15);
+  locRoot.add(locVector);
+
+  locDrop = createDashedLine(0x93a8c4, 0.24, 0.14, 0.17);
+  locRoot.add(locDrop);
+
+  locFloorRing = makeFloorRing(COLORS.cyan, 0.34);
+  locRoot.add(locFloorRing);
+
+  locPointFloor = makeFloorRing(COLORS.amber, 0.28);
+  locRoot.add(locPointFloor);
+
+  locYawCircle = makeCircleLine(2.75, 0x6b86a6, 0.30, 80);
+  locYawCircle.position.y = 0.035;
+  locRoot.add(locYawCircle);
+
+  locYawStart = createDashedLine(0x93a8c4, 0.32, 0.16, 0.2);
+  locRoot.add(locYawStart);
+
+  locYawEnd = createDashedLine(COLORS.cyan, 0.62, 0.16, 0.16);
+  locRoot.add(locYawEnd);
+
+  const arcPts = [];
+  for (let i = 0; i <= 56; i++) arcPts.push(ZERO.clone());
+  const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
+  locYawArc = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({
+    color: COLORS.cyan,
+    transparent: true,
+    opacity: 0.72,
+    depthWrite: false
+  }));
+  locYawArc.frustumCulled = false;
+  locRoot.add(locYawArc);
+
+  locRoot.visible = false;
+  scene.add(locRoot);
+}
+
+let absRoot = null;
+function buildScene() {
+  buildBase();
+  absRoot = buildAbsoluteScene();
+  buildRelativeScene();
+  buildLocalScene();
+  refreshScene();
+}
+
+/* ---------- 几何计算 ---------- */
+function localBasis(yaw, pitch) {
+  const yawRad = deg(yaw);
+  const pitchRad = deg(pitch);
+  const x = V(Math.cos(yawRad), 0, Math.sin(yawRad));             // 本地 +X：左
+  const flat = V(-Math.sin(yawRad), 0, Math.cos(yawRad));         // 本地 +Z 的地面投影：前
+  const y = V(0, Math.cos(pitchRad), 0)
+    .addScaledVector(flat, Math.sin(pitchRad))
+    .normalize();                                                 // 本地 +Y：上
+  const z = flat.clone().multiplyScalar(Math.cos(pitchRad))
+    .add(V(0, -Math.sin(pitchRad), 0))
+    .normalize();                                                 // 本地 +Z：前
+  return { x, y, z, flat };
+}
+
+function applyGuideSet(guides, origin, basis, point) {
+  const offset = point.clone().sub(origin);
+  const cx = offset.dot(basis.x);
+  const cy = offset.dot(basis.y);
+  const cz = offset.dot(basis.z);
+
+  // Y 高度虚线：从 P 垂直落到 XZ 平面，垂足为 yFoot。
+  const yFoot = point.clone().addScaledVector(basis.y, -cy);
+  guides.y.line.set(point, yFoot);
+  guides.y.foot.position.copy(yFoot);
+  guides.y.foot.visible = point.distanceToSquared(yFoot) > 1e-5;
+
+  // X / Z 虚线从 Y 虚线的垂足开始，分别垂直落到 YZ / XY 平面。
+  const xFoot = yFoot.clone().addScaledVector(basis.x, -cx);
+  const zFoot = yFoot.clone().addScaledVector(basis.z, -cz);
+
+  guides.x.line.set(yFoot, xFoot);
+  guides.x.foot.position.copy(xFoot);
+  guides.x.foot.visible = yFoot.distanceToSquared(xFoot) > 1e-5;
+
+  guides.z.line.set(yFoot, zFoot);
+  guides.z.foot.position.copy(zFoot);
+  guides.z.foot.visible = yFoot.distanceToSquared(zFoot) > 1e-5;
+}
+
+function placeOrigin(origin, marker, axes, drop, ring) {
+  marker.group.position.copy(origin);
+  axes.group.position.copy(origin);
+  const floor = V(origin.x, 0.02, origin.z);
+  setLine(drop, origin, floor);
+  ring.position.copy(floor);
+  ring.position.y = 0.018;
+}
+
+function placePointFloor(point, ring, color) {
+  ring.position.set(point.x, 0.016, point.z);
+  ring.visible = Math.abs(point.y) > 0.05;
+}
+
+function updateAbsolute() {
+  const a = state.absolute;
+  const p = V(a.x, a.y, a.z);
+  absPoint.group.position.copy(p);
+  applyGuideSet(absGuides, ZERO, { x: V(1, 0, 0), y: V(0, 1, 0), z: V(0, 0, 1) }, p);
+  setLine(absVector, ZERO, p);
+  absVector.visible = p.lengthSq() > 0.06;
+  placePointFloor(p, absPointFloor, COLORS.amber);
+}
+
+function updateRelative() {
+  const r = state.relative;
+  const o = V(r.origin.x, r.origin.y, r.origin.z);
+  const d = V(r.delta.x, r.delta.y, r.delta.z);
+  const p = o.clone().add(d);
+
+  placeOrigin(o, relOrigin, relAxes, relDrop, relFloorRing);
+  relOrigin.group.position.copy(o);
+  relPoint.group.position.copy(p);
+  applyGuideSet(relGuides, o, { x: V(1, 0, 0), y: V(0, 1, 0), z: V(0, 0, 1) }, p);
+  setLine(relVector, o, p);
+  relVector.visible = d.lengthSq() > 0.06;
+  worldGhost.visible = o.lengthSq() > 9;
+  placePointFloor(p, relPointFloor, COLORS.amber);
+}
+
+function updateLocal() {
+  const l = state.local;
+  const o = V(l.origin.x, l.origin.y, l.origin.z);
+  const b = localBasis(l.yaw, l.pitch);
+  const d = V(l.delta.x, l.delta.y, l.delta.z);
+  const p = o.clone()
+    .addScaledVector(b.x, d.x)
+    .addScaledVector(b.y, d.y)
+    .addScaledVector(b.z, d.z);
+
+  placeOrigin(o, locOrigin, locAxes, locDrop, locFloorRing);
+  locOrigin.group.position.copy(o);
+  locAxes.group.position.copy(o);
+  locAxes.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(b.x, b.y, b.z));
+  locPoint.group.position.copy(p);
+
+  applyGuideSet(locGuides, o, b, p);
+  setLine(locVector, o, p);
+  locVector.visible = p.distanceToSquared(o) > 0.06;
+
+  // 地面投影与朝向圆弧
+  locYawCircle.position.set(o.x, 0.035, o.z);
+  locPointFloor.position.set(p.x, 0.016, p.z);
+  locPointFloor.visible = Math.abs(p.y) > 0.05;
+
+  const arcRadius = 2.75;
+  const start = V(o.x, 0.038, o.z + arcRadius);
+  const end = V(o.x + b.flat.x * arcRadius, 0.038, o.z + b.flat.z * arcRadius);
+  setLine(locYawStart, V(o.x, 0.038, o.z), start);
+  setLine(locYawEnd, V(o.x, 0.038, o.z), end);
+
+  const yawRad = deg(l.yaw);
+  const pts = [];
+  const steps = 56;
+  for (let i = 0; i <= steps; i++) {
+    const t = yawRad * (i / steps);
+    pts.push(V(
+      o.x - Math.sin(t) * arcRadius,
+      0.038,
+      o.z + Math.cos(t) * arcRadius
+    ));
+  }
+  setPolyline(locYawArc, pts);
+  locYawArc.visible = Math.abs(l.yaw) > 0.4;
+  locYawEnd.visible = Math.abs(l.yaw) > 0.4;
+
+  worldGhost.visible = o.lengthSq() > 9;
+}
+
+function refreshScene() {
+  if (!sceneReady && !absRoot) return;
+  if (state.mode === 'absolute') {
+    absRoot.visible = true;
+    relRoot.visible = false;
+    locRoot.visible = false;
+    worldGhost.visible = false;
+    updateAbsolute();
+  } else if (state.mode === 'relative') {
+    absRoot.visible = false;
+    relRoot.visible = true;
+    locRoot.visible = false;
+    worldGhost.visible = true;
+    updateRelative();
+  } else {
+    absRoot.visible = false;
+    relRoot.visible = false;
+    locRoot.visible = true;
+    worldGhost.visible = true;
+    updateLocal();
+  }
+  dirty = true;
+}
+
+/* ============================================================
+   UI / 交互
+   ============================================================ */
+const app = $('#app');
+const controlMount = $('#controlMount');
+
+function formatValue(v, step) {
+  if (step >= 1) return String(Math.round(v));
+  return fmt(v);
+}
+
+function sliderRow(opts) {
+  const {
+    axis, label, sub = '', min, max, step, value, color,
+    suffix = '', wide = false, decimals = null, onInput
+  } = opts;
+  const row = document.createElement('div');
+  row.className = 'range-row';
+  row.style.setProperty('--axis', color);
+
+  const head = document.createElement('div');
+  head.className = 'range-head';
+  const tag = document.createElement('span');
+  tag.className = 'axis-tag' + (wide ? ' wide' : '');
+  tag.textContent = axis;
+  tag.setAttribute('aria-hidden', 'true');
+  const name = document.createElement('span');
+  name.className = 'range-name';
+  name.innerHTML = `${label}${sub ? ` <small>${sub}</small>` : ''}`;
+  const valueBox = document.createElement('span');
+  valueBox.className = 'value-box';
+  const num = document.createElement('input');
+  num.className = 'range-number';
+  num.type = 'number';
+  num.min = String(min);
+  num.max = String(max);
+  num.step = String(step);
+  num.value = formatValue(value, decimals ?? step);
+  num.setAttribute('aria-label', `${label} 数值`);
+  const unit = document.createElement('span');
+  unit.className = 'value-unit';
+  unit.textContent = suffix;
+  valueBox.append(num, unit);
+  head.append(tag, name, valueBox);
+
+  const track = document.createElement('div');
+  track.className = 'range-track';
+  const edgeMin = document.createElement('span');
+  edgeMin.className = 'range-edge';
+  edgeMin.textContent = String(min);
+  const range = document.createElement('input');
+  range.className = 'range';
+  range.type = 'range';
+  range.min = String(min);
+  range.max = String(max);
+  range.step = String(step);
+  range.value = String(value);
+  range.setAttribute('aria-label', `${label} 拖动滑块`);
+  const edgeMax = document.createElement('span');
+  edgeMax.className = 'range-edge';
+  edgeMax.textContent = String(max);
+  track.append(edgeMin, range, edgeMax);
+
+  const paint = (v) => {
+    const pct = ((v - min) / (max - min)) * 100;
+    range.style.setProperty('--pct', `${clamp(pct, 0, 100)}%`);
+    num.value = formatValue(v, decimals ?? step);
+  };
+  const emit = (raw) => {
+    if (!Number.isFinite(raw)) return;
+    let v = clamp(raw, min, max);
+    v = Math.round(v / step) * step;
+    v = clamp(round1(v), min, max);
+    range.value = String(v);
+    paint(v);
+    onInput(v);
+  };
+
+  range.addEventListener('input', () => {
+    const v = Number(range.value);
+    paint(v);
+    onInput(v);
+  });
+  num.addEventListener('change', () => emit(Number(num.value)));
+  num.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); num.blur(); }
+  });
+  paint(value);
+
+  row.append(head, track);
+  row._setValue = (v) => paint(v);
+  return row;
+}
+
+function controlBlock(title, hint, accent, rows) {
+  const block = document.createElement('div');
+  block.className = 'control-block';
+  block.style.setProperty('--block-accent', accent);
+  const head = document.createElement('div');
+  head.className = 'block-head';
+  head.innerHTML = `<span class="bh-mark"></span><h3>${title}</h3><span class="bh-hint">${hint}</span>`;
+  block.appendChild(head);
+  rows.forEach((row) => block.appendChild(row));
+  return block;
+}
+
+function updateFacingNote(el) {
+  if (!el) return;
+  const l = state.local;
+  el.innerHTML = `当前面朝 <b>${yawName(l.yaw)}</b> <span class="pill">yaw ${fmt(l.yaw)}°</span> <span class="pill">pitch ${fmt(l.pitch)}°</span>`;
+}
+
+function buildControls() {
+  controlMount.innerHTML = '';
+  const mode = state.mode;
+
+  if (mode === 'absolute') {
+    const rows = [
+      sliderRow({
+        axis: 'X', label: '东西', sub: '东 + / 西 −', min: -8, max: 8, step: 0.1, value: state.absolute.x,
+        color: AXIS_COLOR_CSS.x,
+        onInput: (v) => { state.absolute.x = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: 'Y', label: '上下', sub: '上 + / 下 −', min: -4, max: 8, step: 0.1, value: state.absolute.y,
+        color: AXIS_COLOR_CSS.y,
+        onInput: (v) => { state.absolute.y = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: 'Z', label: '南北', sub: '南 + / 北 −', min: -8, max: 8, step: 0.1, value: state.absolute.z,
+        color: AXIS_COLOR_CSS.z,
+        onInput: (v) => { state.absolute.z = v; refreshScene(); updateReadout(); }
+      })
+    ];
+    controlMount.appendChild(controlBlock('点 P · 世界坐标', '拖动数值', 'var(--cyan)', rows));
+    const note = document.createElement('div');
+    note.className = 'inline-note';
+    note.innerHTML = '<span class="pill">右手系</span> X+ 东、Y+ 上、Z+ 南；Y 虚线垂直落到 XZ 平面，X / Z 虚线从 Y 垂足出发，分别落到 YZ / XY 平面。';
+    controlMount.appendChild(note);
+  }
+
+  if (mode === 'relative') {
+    const originRows = [
+      sliderRow({
+        axis: 'X', label: '执行原点 X', sub: '东 + / 西 −', min: -6, max: 6, step: 0.1, value: state.relative.origin.x,
+        color: AXIS_COLOR_CSS.x,
+        onInput: (v) => { state.relative.origin.x = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: 'Y', label: '执行原点 Y', sub: '上 + / 下 −', min: 0, max: 6, step: 0.1, value: state.relative.origin.y,
+        color: AXIS_COLOR_CSS.y,
+        onInput: (v) => { state.relative.origin.y = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: 'Z', label: '执行原点 Z', sub: '南 + / 北 −', min: -6, max: 6, step: 0.1, value: state.relative.origin.z,
+        color: AXIS_COLOR_CSS.z,
+        onInput: (v) => { state.relative.origin.z = v; refreshScene(); updateReadout(); }
+      })
+    ];
+
+    const deltaRows = [
+      sliderRow({
+        axis: '~X', wide: true, label: '偏量 ΔX', sub: '东 + / 西 −', min: -6, max: 6, step: 0.1, value: state.relative.delta.x,
+        color: AXIS_COLOR_CSS.x,
+        onInput: (v) => { state.relative.delta.x = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: '~Y', wide: true, label: '偏量 ΔY', sub: '上 + / 下 −', min: -4, max: 6, step: 0.1, value: state.relative.delta.y,
+        color: AXIS_COLOR_CSS.y,
+        onInput: (v) => { state.relative.delta.y = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: '~Z', wide: true, label: '偏量 ΔZ', sub: '南 + / 北 −', min: -6, max: 6, step: 0.1, value: state.relative.delta.z,
+        color: AXIS_COLOR_CSS.z,
+        onInput: (v) => { state.relative.delta.z = v; refreshScene(); updateReadout(); }
+      })
+    ];
+
+    controlMount.appendChild(controlBlock('执行原点 O · 世界坐标', '可修改', 'var(--cyan)', originRows));
+    controlMount.appendChild(controlBlock('执行偏量 · 相对坐标', '~ΔX ~ΔY ~ΔZ', 'var(--lime)', deltaRows));
+    const note = document.createElement('div');
+    note.className = 'inline-note';
+    note.innerHTML = '<span class="pill">~</span> Y 虚线落到执行原点的 XZ 平面；X / Z 虚线从 Y 垂足出发，分别落到 YZ / XY 平面。';
+    controlMount.appendChild(note);
+  }
+
+  if (mode === 'local') {
+    const originRows = [
+      sliderRow({
+        axis: 'X', label: '执行原点 X', sub: '东 + / 西 −', min: -6, max: 6, step: 0.1, value: state.local.origin.x,
+        color: AXIS_COLOR_CSS.x,
+        onInput: (v) => { state.local.origin.x = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: 'Y', label: '执行原点 Y', sub: '上 + / 下 −', min: 0, max: 6, step: 0.1, value: state.local.origin.y,
+        color: AXIS_COLOR_CSS.y,
+        onInput: (v) => { state.local.origin.y = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: 'Z', label: '执行原点 Z', sub: '南 + / 北 −', min: -6, max: 6, step: 0.1, value: state.local.origin.z,
+        color: AXIS_COLOR_CSS.z,
+        onInput: (v) => { state.local.origin.z = v; refreshScene(); updateReadout(); }
+      })
+    ];
+
+    const facingNote = document.createElement('div');
+    facingNote.className = 'inline-note';
+    updateFacingNote(facingNote);
+
+    const orientationRows = [
+      sliderRow({
+        axis: '↻', label: '水平视角 ry', sub: '0° = 南，90° = 西', min: -180, max: 180, step: 0.1, value: state.local.yaw,
+        color: '#4be0ff', suffix: '°',
+        onInput: (v) => {
+          state.local.yaw = v;
+          updateFacingNote(facingNote);
+          refreshScene();
+          updateReadout();
+        }
+      }),
+      sliderRow({
+        axis: '↕', label: '垂直视角 rx', sub: '向下为正', min: -80, max: 80, step: 0.1, value: state.local.pitch,
+        color: '#a78bfa', suffix: '°',
+        onInput: (v) => {
+          state.local.pitch = v;
+          updateFacingNote(facingNote);
+          refreshScene();
+          updateReadout();
+        }
+      }),
+      facingNote
+    ];
+
+    const deltaRows = [
+      sliderRow({
+        axis: '^X', wide: true, label: '局部偏量 ^X', sub: '左 + / 右 −', min: -6, max: 6, step: 0.1, value: state.local.delta.x,
+        color: AXIS_COLOR_CSS.x,
+        onInput: (v) => { state.local.delta.x = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: '^Y', wide: true, label: '局部偏量 ^Y', sub: '上 + / 下 −', min: -5, max: 6, step: 0.1, value: state.local.delta.y,
+        color: AXIS_COLOR_CSS.y,
+        onInput: (v) => { state.local.delta.y = v; refreshScene(); updateReadout(); }
+      }),
+      sliderRow({
+        axis: '^Z', wide: true, label: '局部偏量 ^Z', sub: '前 + / 后 −', min: -6, max: 6, step: 0.1, value: state.local.delta.z,
+        color: AXIS_COLOR_CSS.z,
+        onInput: (v) => { state.local.delta.z = v; refreshScene(); updateReadout(); }
+      })
+    ];
+
+    controlMount.appendChild(controlBlock('执行原点 O · 世界坐标', '可修改', 'var(--cyan)', originRows));
+    controlMount.appendChild(controlBlock('朝向 · 本地轴旋转', '拖动朝向', 'var(--violet)', orientationRows));
+    controlMount.appendChild(controlBlock('局部偏量 · 局部坐标', '^ΔX ^ΔY ^ΔZ', 'var(--violet)', deltaRows));
+    const note = document.createElement('div');
+    note.className = 'inline-note';
+    note.innerHTML = '<span class="pill">^</span> 本地 +X 向左、+Y 向上、+Z 向前；Y 虚线落到本地 XZ 平面，X / Z 虚线从 Y 垂足出发。';
+    controlMount.appendChild(note);
+  }
+}
+
+function updateMeta() {
+  const meta = MODE_META[state.mode];
+  app.style.setProperty('--accent', meta.accent);
+  $('#stageEyebrow').textContent = meta.tag;
+  $('#stageTitle').textContent = meta.stageTitle;
+  $('#modeIndex').textContent = meta.index;
+  $('#modeTag').textContent = meta.tag.split(' / ')[0];
+  $('#modeTitle').textContent = meta.title;
+  $('#modeFormula').textContent = meta.formula;
+  $('#modeDesc').innerHTML = meta.desc;
+  $('#modeFacts').innerHTML = meta.facts.map((f) => `<span class="fact">${f}</span>`).join('');
+  $('#legendX').textContent = meta.legend.x;
+  $('#legendY').textContent = meta.legend.y;
+  $('#legendZ').textContent = meta.legend.z;
+  $('#legendGuide').textContent = meta.legend.guide;
+}
+
+function coordText(p) {
+  return `(${fmt(p.x)}, ${fmt(p.y)}, ${fmt(p.z)})`;
+}
+
+function getCurrentPoint() {
+  if (state.mode === 'absolute') {
+    const a = state.absolute;
+    return V(a.x, a.y, a.z);
+  }
+  if (state.mode === 'relative') {
+    const r = state.relative;
+    return V(r.origin.x, r.origin.y, r.origin.z).add(V(r.delta.x, r.delta.y, r.delta.z));
+  }
+  const l = state.local;
+  const b = localBasis(l.yaw, l.pitch);
+  return V(l.origin.x, l.origin.y, l.origin.z)
+    .addScaledVector(b.x, l.delta.x)
+    .addScaledVector(b.y, l.delta.y)
+    .addScaledVector(b.z, l.delta.z);
+}
+
+function updateReadout() {
+  const p = getCurrentPoint();
+  const el = $('#stageCoord');
+  if (el) el.textContent = `P ${coordText(p)}`;
+}
+
+/* ---------- 罗盘 ---------- */
+function updateCompass() {
+  if (!camera || !controls) return;
+  const offset = camera.position.clone().sub(controls.target);
+  const azimuth = Math.atan2(offset.x, offset.z) * 180 / Math.PI;
+  const dirs = $$('.compass-dir');
+  const radius = 34;
+  dirs.forEach((el) => {
+    const bearing = Number(el.dataset.bearing);
+    const a = deg(azimuth + bearing);
+    const x = 50 + Math.sin(a) * radius;
+    const y = 50 - Math.cos(a) * radius;
+    el.style.left = `${x}%`;
+    el.style.top = `${y}%`;
+  });
+}
+
+/* ---------- 模式切换 ---------- */
+function setMode(mode, pushHash = true) {
+  if (!MODE_META[mode]) mode = 'absolute';
+  state.mode = mode;
+  const tabs = $$('.tab');
+  tabs.forEach((tab) => {
+    const on = tab.dataset.mode === mode;
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    tab.tabIndex = on ? 0 : -1;
+  });
+  updateMeta();
+  buildControls();
+  updateReadout();
+  refreshScene();
+  if (sceneReady) resetView(true);
+  if (pushHash) {
+    const next = `#${mode}`;
+    if (location.hash !== next) {
+      try { history.replaceState(null, '', next); } catch (e) { /* file:// 下忽略 */ }
+    }
+  }
+}
+
+/* ---------- 事件绑定 ---------- */
+function bindSceneUI() {
+  $('#resetView').addEventListener('click', () => resetView(true));
+}
+
+function bindTabs() {
+  const tabs = $$('.tab');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => setMode(tab.dataset.mode));
+    tab.addEventListener('keydown', (e) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+      e.preventDefault();
+      const idx = tabs.indexOf(tab);
+      let next = idx;
+      if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length;
+      if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+      if (e.key === 'Home') next = 0;
+      if (e.key === 'End') next = tabs.length - 1;
+      setMode(tabs[next].dataset.mode);
+      tabs[next].focus();
+    });
+  });
+}
+
+/* ---------- 移动端底部推拉面板 ---------- */
+function initSheet() {
+  const panel = $('#coordinatePanel');
+  const handle = $('#sheetHandle');
+  if (!panel || !handle) return;
+
+  const mq = MOBILE_SHEET_MQ;
+  const MIN_HEIGHT = 46;
+  const maxHeight = () => Math.max(MIN_HEIGHT, window.innerHeight - 148);
+  let dragging = false;
+  let startY = 0;
+  let startHeight = 0;
+
+  function setHeight(height) {
+    if (!mq.matches) return;
+    panel.style.height = `${clamp(height, MIN_HEIGHT, maxHeight())}px`;
+  }
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (!mq.matches) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true;
+    startY = e.clientY;
+    startHeight = panel.getBoundingClientRect().height;
+    try { handle.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    e.preventDefault();
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    setHeight(startHeight + startY - e.clientY);
+  });
+
+  function finishDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    try { handle.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  }
+
+  handle.addEventListener('pointerup', finishDrag);
+  handle.addEventListener('pointercancel', finishDrag);
+
+  handle.addEventListener('keydown', (e) => {
+    if (!mq.matches || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    e.preventDefault();
+    const step = e.key === 'ArrowUp' ? 24 : -24;
+    setHeight(panel.getBoundingClientRect().height + step);
+  });
+
+  const syncBreakpoint = () => {
+    if (!mq.matches) panel.style.height = '';
+  };
+  if (mq.addEventListener) mq.addEventListener('change', syncBreakpoint);
+  else if (mq.addListener) mq.addListener(syncBreakpoint);
+
+  let resizeRaf = 0;
+  window.addEventListener('resize', () => {
+    if (!mq.matches || !panel.style.height) return;
+    cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(() => {
+      setHeight(panel.getBoundingClientRect().height);
+    });
+  });
+}
+
+/* ============================================================
+   启动
+   ============================================================ */
+bindTabs();
+initSheet();
+const initial = MODE_META[location.hash.replace('#', '')] ? location.hash.replace('#', '') : 'absolute';
+
+if (initScene()) {
+  resizeObserver.observe(host);
+  setMode(initial, false);
+  updateCompass();
+  updateReadout();
+  requestAnimationFrame(() => {
+    resizeStage();
+    resetView(true);
+  });
+} else {
+  // 即使 WebGL 不可用，也让面板显示一份可读的坐标说明。
+  state.mode = initial;
+  updateMeta();
+  buildControls();
+  updateReadout();
+}
+
+</script>
+</body>
+</html>

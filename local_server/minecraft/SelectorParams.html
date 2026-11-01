@@ -1,0 +1,2311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061018">
+  <title>目标选择器实验室 · r/rm 与 dx/dy/dz</title>
+  <meta name="description" content="用动画解释 Minecraft 目标选择器的球形距离参数 r/rm 与长方体碰撞箱参数 dx/dy/dz。">
+  <style>
+    :root {
+      --bg: #061018;
+      --bg-soft: #081720;
+      --panel: rgba(10, 27, 37, .84);
+      --panel-2: rgba(7, 18, 26, .72);
+      --line: rgba(126, 214, 232, .14);
+      --line-strong: rgba(126, 214, 232, .24);
+      --text: #e9f7fb;
+      --muted: #8faab5;
+      --cyan: #4de3ff;
+      --amber: #ffb454;
+      --pink: #ff5d8f;
+      --green: #7dffb2;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      --radius: 20px;
+      --radius-sm: 12px;
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.7;
+    }
+
+    html,
+    body { overscroll-behavior-x: none; }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(900px 600px at 10% -5%, rgba(77, 227, 255, .13), transparent 62%),
+        radial-gradient(820px 560px at 94% 10%, rgba(255, 180, 84, .08), transparent 58%),
+        radial-gradient(760px 520px at 50% 105%, rgba(255, 93, 143, .05), transparent 62%);
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(126, 214, 232, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126, 214, 232, .045) 1px, transparent 1px);
+      background-size: 54px 54px;
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .62) 58%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .62) 58%, transparent 100%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+    img, svg { display: block; max-width: 100%; }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    p { margin-bottom: 0; }
+    ul, ol { margin: 0; }
+
+    ::selection {
+      background: rgba(77, 227, 255, .28);
+      color: #fff;
+    }
+
+    code {
+      padding: 1px 5px;
+      border: 1px solid rgba(77, 227, 255, .14);
+      border-radius: 5px;
+      background: rgba(77, 227, 255, .07);
+      color: #c9f6ff;
+      font-family: var(--mono);
+      font-size: .9em;
+      overflow-wrap: anywhere;
+    }
+
+    /* ---------- layout ---------- */
+
+    main,
+    .site-header,
+    .site-footer { position: relative; z-index: 1; }
+
+    .section {
+      width: min(1180px, calc(100% - 40px));
+      margin-inline: auto;
+      padding-block: clamp(62px, 8.5vw, 112px);
+      scroll-margin-top: 76px;
+    }
+
+    .hero {
+      min-height: calc(100vh - 64px);
+      min-height: calc(100svh - 64px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+      gap: clamp(28px, 5vw, 64px);
+      align-items: center;
+      padding-top: clamp(34px, 7vh, 74px);
+      padding-bottom: clamp(40px, 7vh, 78px);
+    }
+
+    /* ---------- header ---------- */
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 13px clamp(16px, 4vw, 48px);
+      border-bottom: 1px solid rgba(126, 214, 232, .1);
+      background: rgba(6, 16, 24, .92);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3px;
+      width: 23px;
+      height: 23px;
+    }
+
+    .brand-mark i {
+      border-radius: 2px;
+      background: var(--cyan);
+      opacity: .9;
+    }
+
+    .brand-mark i:nth-child(2) { background: var(--amber); }
+    .brand-mark i:nth-child(3) { background: rgba(77, 227, 255, .34); }
+    .brand-mark i:nth-child(4) { background: rgba(255, 180, 84, .44); }
+
+    .nav {
+      display: flex;
+      gap: clamp(12px, 2vw, 26px);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav a { transition: color .2s ease; }
+    .nav a:hover { color: var(--text); }
+
+    .header-tag {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+      white-space: nowrap;
+    }
+
+    /* ---------- type ---------- */
+
+    h1 {
+      margin-bottom: 22px;
+      font-size: clamp(42px, 6.8vw, 80px);
+      font-weight: 750;
+      line-height: 1.03;
+      letter-spacing: -.045em;
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: clamp(30px, 4.3vw, 52px);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -.035em;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: clamp(20px, 2.2vw, 27px);
+      line-height: 1.3;
+      letter-spacing: -.02em;
+    }
+
+    h4 { margin-bottom: 4px; font-size: 15px; }
+
+    .eyebrow,
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 16px;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 14px var(--cyan);
+      animation: pulse 2.8s ease-in-out infinite;
+    }
+
+    .kicker { color: var(--amber); margin-bottom: 12px; }
+
+    .grad {
+      background: linear-gradient(100deg, var(--cyan), #b7f8ff 42%, var(--amber));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lede {
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: clamp(15px, 1.5vw, 18px);
+      line-height: 1.9;
+    }
+
+    /* ---------- buttons ---------- */
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 18px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: #04222a;
+      box-shadow: 0 10px 30px rgba(77, 227, 255, .18);
+    }
+
+    .btn-ghost {
+      border-color: rgba(77, 227, 255, .26);
+      background: rgba(77, 227, 255, .04);
+      color: var(--text);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(18px, 3vw, 36px);
+      margin-top: 36px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .hero-stats li { display: flex; flex-direction: column; gap: 2px; }
+
+    .hero-stats strong {
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: clamp(17px, 2vw, 23px);
+      font-weight: 600;
+      letter-spacing: -.03em;
+    }
+
+    .hero-stats span { color: var(--muted); font-size: 11px; }
+
+    /* ---------- hero visual ---------- */
+
+    .hero-visual {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .hero-card {
+      position: relative;
+      min-height: 300px;
+      overflow: hidden;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background:
+        radial-gradient(420px 240px at 50% 40%, rgba(77, 227, 255, .08), transparent 64%),
+        #07141b;
+    }
+
+    .hero-card.amber {
+      background:
+        radial-gradient(420px 240px at 50% 40%, rgba(255, 180, 84, .08), transparent 64%),
+        #07141b;
+    }
+
+    .hero-card-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+
+    .hero-card-label .code { color: var(--cyan); }
+    .hero-card.amber .hero-card-label .code { color: var(--amber); }
+
+    .orb {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 130px;
+      height: 130px;
+      transform: translate(-50%, -46%);
+      border: 1px solid rgba(77, 227, 255, .45);
+      border-radius: 50%;
+      background: rgba(77, 227, 255, .06);
+      animation: orbBreathe 5s ease-in-out infinite;
+    }
+
+    .orb::before,
+    .orb::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed rgba(77, 227, 255, .25);
+    }
+
+    .orb::before { inset: 18px; }
+    .orb::after { inset: 38px; border-style: solid; border-color: rgba(255, 180, 84, .35); }
+
+    .orb-core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      margin: -4px 0 0 -4px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 18px rgba(77, 227, 255, .9);
+    }
+
+    .hero-card-caption {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 16px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .cuboid {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 96px;
+      transform: translate(-50%, -46%) skewY(-12deg);
+      border: 1px solid rgba(255, 180, 84, .55);
+      background: rgba(255, 180, 84, .05);
+      animation: cuboidBreathe 5s ease-in-out infinite;
+    }
+
+    .cuboid::before {
+      content: "";
+      position: absolute;
+      top: -18px;
+      right: -18px;
+      width: 100%;
+      height: 100%;
+      border: 1px dashed rgba(255, 180, 84, .25);
+      border-radius: 2px;
+    }
+
+    .cuboid::after {
+      content: "+1";
+      position: absolute;
+      right: -30px;
+      bottom: -14px;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .hero-card.amber .hero-card-caption { color: var(--muted); }
+
+    .hero-mini {
+      width: 100%;
+      height: 180px;
+      margin-top: 6px;
+    }
+
+    .hero-sphere-outer { fill: rgba(77, 227, 255, .08); }
+    .hero-sphere-inner { fill: rgba(6, 17, 25, .84); }
+
+    .hero-sphere-ring {
+      fill: none;
+      stroke: rgba(77, 227, 255, .72);
+      stroke-width: 1.2;
+    }
+
+    .hero-sphere-ring.inner {
+      stroke: rgba(255, 180, 84, .7);
+      stroke-dasharray: 4 4;
+    }
+
+    .hero-sphere-scan {
+      fill: none;
+      stroke: rgba(77, 227, 255, .28);
+      stroke-width: 1;
+      stroke-dasharray: 2 5;
+      animation: dashSpin 12s linear infinite;
+    }
+
+    .hero-entity .dot {
+      fill: #38515c;
+      stroke: rgba(126, 214, 232, .25);
+      stroke-width: 1;
+    }
+
+    .hero-entity .halo {
+      fill: none;
+      stroke: rgba(77, 227, 255, .45);
+      stroke-width: 1;
+      opacity: 0;
+    }
+
+    .hero-entity.selected .dot {
+      fill: var(--cyan);
+      stroke: #e9fdff;
+    }
+
+    .hero-entity.selected .halo {
+      opacity: 1;
+      animation: haloPulse 2.4s ease-out infinite;
+    }
+
+    .hero-entity.too-close .dot {
+      fill: var(--pink);
+      stroke: rgba(255, 93, 143, .55);
+    }
+
+    .hero-entity.outside .dot {
+      fill: #1a2a31;
+      stroke: rgba(126, 214, 232, .16);
+    }
+
+    .hero-entity-label {
+      fill: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      text-anchor: middle;
+    }
+
+    .hero-entity.selected .hero-entity-label { fill: var(--cyan); }
+    .hero-entity.too-close .hero-entity-label { fill: var(--pink); }
+
+    .hero-label {
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .hero-label.cyan { fill: var(--cyan); }
+    .hero-label.amber { fill: var(--amber); }
+
+    .hero-origin {
+      fill: #fff;
+      stroke: rgba(77, 227, 255, .55);
+      stroke-width: 1;
+    }
+
+    .hero-box-fill {
+      fill: rgba(77, 227, 255, .08);
+      stroke: rgba(77, 227, 255, .7);
+      stroke-width: 1.2;
+    }
+
+    .hero-box-raw {
+      fill: none;
+      stroke: rgba(255, 180, 84, .55);
+      stroke-width: 1;
+      stroke-dasharray: 4 3;
+    }
+
+    .hero-box-plus {
+      stroke: rgba(255, 180, 84, .65);
+      stroke-width: 3;
+      stroke-dasharray: 3 3;
+      animation: dashSpin 10s linear infinite;
+    }
+
+    .hero-hit rect {
+      fill: rgba(126, 214, 232, .08);
+      stroke: rgba(126, 214, 232, .25);
+      stroke-width: 1;
+    }
+
+    .hero-hit.selected rect {
+      fill: rgba(77, 227, 255, .3);
+      stroke: rgba(77, 227, 255, .9);
+    }
+
+    .hero-hit.outside rect {
+      fill: rgba(126, 214, 232, .03);
+      stroke: rgba(126, 214, 232, .12);
+    }
+
+    .hero-hit-label {
+      fill: var(--cyan);
+      font-family: var(--mono);
+      font-size: 9px;
+      text-anchor: middle;
+    }
+
+    /* ---------- section heads ---------- */
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 30px;
+    }
+
+    .section-head > p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    /* ---------- lab layout ---------- */
+
+    .lab-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .viz-card,
+    .controls-card,
+    .y-card,
+    .note-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .72));
+    }
+
+    .viz-card {
+      position: relative;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .viz-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border: 1px solid rgba(77, 227, 255, .25);
+      border-radius: 999px;
+      background: rgba(77, 227, 255, .08);
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+    }
+
+    .chip.amber {
+      border-color: rgba(255, 180, 84, .28);
+      background: rgba(255, 180, 84, .08);
+      color: var(--amber);
+    }
+
+    .viz-status {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .viz-svg {
+      width: 100%;
+      aspect-ratio: 1;
+      border: 1px solid rgba(126, 214, 232, .1);
+      border-radius: 12px;
+      background: #061119;
+      touch-action: manipulation;
+    }
+
+    .viz-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .viz-legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+    }
+
+    .legend-dot.amber { background: var(--amber); }
+    .legend-dot.pink { background: var(--pink); }
+    .legend-dot.dim { background: #38515c; }
+    .legend-ring {
+      width: 10px;
+      height: 10px;
+      border: 1px dashed var(--amber);
+      border-radius: 50%;
+    }
+
+    /* ---------- controls ---------- */
+
+    .controls-card {
+      padding: clamp(16px, 2.3vw, 24px);
+    }
+
+    .viz-controls {
+      margin-top: 12px;
+      padding-top: 4px;
+      border-top: 1px solid var(--line);
+    }
+
+    .viz-controls .control:first-child { margin-top: 0; }
+
+    .info-card .formula-card { margin-top: 0; }
+
+    @media (min-width: 981px) {
+      .info-card {
+        position: sticky;
+        top: 86px;
+        align-self: start;
+      }
+    }
+
+    .y-inline {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .y-inline .y-head { margin-bottom: 10px; }
+
+    .y-inline > .control {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+
+    .y-inline .y-svg { margin-top: 8px; }
+
+    .control + .control {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .control-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .control-head label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .control-head label code {
+      margin-right: 3px;
+      color: var(--cyan);
+    }
+
+    .control-value {
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 28px;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+      touch-action: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="range"]:focus-visible {
+      outline: 2px solid rgba(77, 227, 255, .55);
+      outline-offset: 4px;
+      border-radius: 999px;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(126, 214, 232, .16);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 22px;
+      height: 22px;
+      margin-top: -9px;
+      border: 3px solid var(--cyan);
+      border-radius: 50%;
+      background: #e9fdff;
+      box-shadow: 0 0 0 6px rgba(77, 227, 255, .1);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(126, 214, 232, .16);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border: 3px solid var(--cyan);
+      border-radius: 50%;
+      background: #e9fdff;
+    }
+
+    .stepper {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .stepper button {
+      flex: 1;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .025);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 18px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .stepper button:active { background: rgba(77, 227, 255, .12); }
+
+    .stepper span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .range-note {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .formula-card {
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid rgba(77, 227, 255, .16);
+      border-radius: 14px;
+      background: #07141b;
+    }
+
+    .formula-card .formula-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .formula-card pre {
+      margin: 0;
+      overflow-x: auto;
+      padding: 10px;
+      border: 1px solid rgba(126, 214, 232, .08);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .2);
+      color: #c9f6ff;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.75;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .formula-card code {
+      padding: 0;
+      border: 0;
+      background: none;
+      font-size: inherit;
+      white-space: pre;
+    }
+
+    .formula-help {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .c-muted { color: #6f8d99; }
+    .c-amber { color: var(--amber); }
+
+    .case-list {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 0;
+      list-style: none;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .case-list li {
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .015);
+    }
+
+    .case-list strong { color: var(--text); }
+
+    /* ---------- sphere svg ---------- */
+
+    .sphere-outer-fill { fill: rgba(77, 227, 255, .12); }
+    .sphere-inner-fill { fill: rgba(6, 17, 25, .82); }
+    .sphere-outer-ring {
+      fill: none;
+      stroke: rgba(77, 227, 255, .82);
+      stroke-width: .11;
+    }
+    .sphere-inner-ring {
+      fill: none;
+      stroke: rgba(255, 180, 84, .8);
+      stroke-width: .1;
+      stroke-dasharray: .5 .35;
+    }
+    .sphere-scan {
+      fill: none;
+      stroke: rgba(77, 227, 255, .28);
+      stroke-width: .08;
+      stroke-dasharray: 1 3;
+      animation: dashSpin 10s linear infinite;
+    }
+
+    .sphere-outer-fill,
+    .sphere-inner-fill,
+    .sphere-outer-ring,
+    .sphere-inner-ring,
+    .sphere-scan { transition: r .25s ease; }
+
+    .grid-line { stroke: rgba(126, 214, 232, .075); stroke-width: .035; }
+    .axis-line { stroke: rgba(126, 214, 232, .18); stroke-width: .06; }
+
+    .origin-dot {
+      fill: #fff;
+      stroke: rgba(77, 227, 255, .7);
+      stroke-width: .08;
+    }
+
+    .origin-label,
+    .ring-label,
+    .axis-label {
+      fill: var(--muted);
+      font-family: var(--mono);
+      font-size: .72px;
+      letter-spacing: .04em;
+    }
+
+    .ring-label.cyan { fill: var(--cyan); }
+    .ring-label.amber { fill: var(--amber); }
+
+    .entity .dot {
+      fill: #38515c;
+      stroke: rgba(126, 214, 232, .2);
+      stroke-width: .06;
+      transition: fill .25s ease, stroke .25s ease;
+    }
+
+    .entity .halo {
+      fill: none;
+      stroke: rgba(77, 227, 255, .5);
+      stroke-width: .07;
+      opacity: 0;
+      transition: opacity .25s ease;
+    }
+
+    .entity .entity-label {
+      fill: var(--muted);
+      font-family: var(--mono);
+      font-size: .72px;
+      text-anchor: middle;
+      transition: fill .25s ease;
+    }
+
+    .entity.selected .dot {
+      fill: var(--cyan);
+      stroke: #dffbff;
+    }
+
+    .entity.selected .halo {
+      opacity: 1;
+      animation: haloPulse 2.4s ease-out infinite;
+    }
+
+    .entity.selected .entity-label { fill: var(--cyan); }
+
+    .entity.too-close .dot {
+      fill: var(--pink);
+      stroke: rgba(255, 93, 143, .65);
+    }
+
+    .entity.too-close .entity-label { fill: var(--pink); }
+
+    .entity.outside .dot {
+      fill: #1a2a31;
+      stroke: rgba(126, 214, 232, .12);
+    }
+
+    .entity.outside .entity-label { fill: #59727d; }
+
+    /* ---------- box svg ---------- */
+
+    .box-fill {
+      fill: rgba(77, 227, 255, .1);
+      stroke: rgba(77, 227, 255, .8);
+      stroke-width: .12;
+      stroke-dasharray: 0;
+    }
+
+    .box-fill,
+    .box-raw { transition: x .2s ease, y .2s ease, width .2s ease, height .2s ease; }
+
+    .box-raw {
+      fill: none;
+      stroke: rgba(255, 180, 84, .5);
+      stroke-width: .08;
+      stroke-dasharray: .45 .3;
+    }
+
+    .box-point {
+      fill: var(--amber);
+      stroke: rgba(255, 180, 84, .4);
+      stroke-width: .12;
+    }
+
+    .box-plus-label {
+      fill: var(--amber);
+      font-family: var(--mono);
+      font-size: .7px;
+    }
+
+    .hitbox {
+      fill: rgba(126, 214, 232, .1);
+      stroke: rgba(126, 214, 232, .4);
+      stroke-width: .07;
+      transition: fill .25s ease, stroke .25s ease;
+    }
+
+    .hitbox.selected {
+      fill: rgba(77, 227, 255, .28);
+      stroke: rgba(77, 227, 255, .95);
+    }
+
+    .hitbox.xz-y-fail {
+      fill: rgba(255, 93, 143, .2);
+      stroke: rgba(255, 93, 143, .9);
+      animation: xzFailPulse 2.2s ease-in-out infinite;
+    }
+
+    .center-dot { fill: var(--muted); }
+    .center-dot.selected { fill: #fff; }
+    .center-dot.xz-y-fail { fill: var(--pink); }
+
+    .box-entity-label {
+      fill: var(--muted);
+      font-family: var(--mono);
+      font-size: .7px;
+      text-anchor: middle;
+      transition: fill .25s ease;
+    }
+
+    .box-entity-label.selected { fill: var(--cyan); }
+    .box-entity-label.xz-y-fail { fill: var(--pink); }
+
+    /* ---------- y chart ---------- */
+
+    .y-card {
+      margin-top: 18px;
+      padding: clamp(16px, 2.5vw, 26px);
+    }
+
+    .y-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .y-head h3 { margin-bottom: 4px; }
+    .y-head p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+
+    .y-svg {
+      width: 100%;
+      height: auto;
+      border: 1px solid rgba(126, 214, 232, .1);
+      border-radius: 12px;
+      background: #061119;
+    }
+
+    .y-band {
+      fill: rgba(255, 180, 84, .1);
+      stroke: rgba(255, 180, 84, .65);
+      stroke-width: 1.2;
+      stroke-dasharray: 5 4;
+      transition: x .2s ease, width .2s ease;
+    }
+
+    .y-bar {
+      fill: rgba(126, 214, 232, .18);
+      transition: fill .25s ease;
+    }
+
+    .y-bar.selected { fill: rgba(77, 227, 255, .8); }
+    .y-bar.y-overlap { fill: rgba(255, 180, 84, .55); }
+
+    .y-row-label,
+    .y-axis-label,
+    .y-axis-title {
+      fill: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .y-row-label.selected { fill: var(--cyan); }
+    .y-row-label.y-overlap { fill: var(--amber); }
+    .y-axis-title { fill: var(--amber); }
+
+    .y-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .y-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .y-swatch {
+      display: inline-block;
+      width: 14px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .y-swatch.band {
+      background: rgba(255, 180, 84, .1);
+      border: 1px dashed rgba(255, 180, 84, .65);
+    }
+
+    .y-swatch.selected { background: rgba(77, 227, 255, .8); }
+    .y-swatch.overlap { background: rgba(255, 180, 84, .55); }
+    .y-swatch.dim { background: rgba(126, 214, 232, .25); }
+
+    .box-hint {
+      margin: 10px 0 0;
+      padding: 9px 11px;
+      border-left: 2px solid var(--pink);
+      border-radius: 0 8px 8px 0;
+      background: rgba(255, 93, 143, .05);
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.75;
+    }
+
+    .box-hint[hidden] { display: none; }
+
+    /* ---------- notes ---------- */
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .note-card {
+      padding: 16px 18px;
+    }
+
+    .note-card .note-num {
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .note-card h4 { margin-top: 5px; }
+    .note-card p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+
+    .note-card.amber {
+      border-color: rgba(255, 180, 84, .2);
+      background: rgba(255, 180, 84, .035);
+    }
+
+    .note-card.amber .note-num { color: var(--amber); }
+
+    /* ---------- compare ---------- */
+
+    .compare-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(7, 18, 26, .6);
+      font-size: 13px;
+    }
+
+    .compare-table th,
+    .compare-table td {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .compare-table th {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .compare-table td:first-child {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .compare-table tr:last-child td { border-bottom: 0; }
+    .compare-table strong { color: var(--text); }
+
+    .compare-table .c-cyan { color: var(--cyan); }
+    .compare-table .c-amber { color: var(--amber); }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .outro {
+      margin-top: 26px;
+      padding: clamp(20px, 4vw, 40px);
+      border: 1px solid rgba(77, 227, 255, .16);
+      border-radius: 24px;
+      background:
+        radial-gradient(800px 400px at 8% 0%, rgba(77, 227, 255, .08), transparent 62%),
+        linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .8));
+    }
+
+    .outro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .outro-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .outro-card > span {
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+
+    .outro-card h3 { margin: 5px 0; font-size: 17px; }
+    .outro-card p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+
+    .outro-line {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .line-dot {
+      width: 7px;
+      height: 7px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+    }
+
+    .outro-line p { color: var(--muted); font-size: 12.5px; line-height: 1.85; }
+
+    /* ---------- footer ---------- */
+
+    .site-footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px 18px;
+      width: min(1180px, calc(100% - 40px));
+      margin-inline: auto;
+      padding: 22px 0 38px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: .08em;
+    }
+
+    /* ---------- motion ---------- */
+
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .75s ease, transform .75s ease;
+    }
+
+    .js .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    .is-paused *,
+    .is-paused *::before,
+    .is-paused *::after {
+      animation-play-state: paused !important;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .4; transform: scale(.85); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    @keyframes haloPulse {
+      0% { transform: scale(.7); opacity: .8; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    @keyframes dashSpin {
+      to { stroke-dashoffset: -24; }
+    }
+
+    @keyframes xzFailPulse {
+      0%, 100% { stroke-width: .07; }
+      50% { stroke-width: .16; }
+    }
+
+    @keyframes orbBreathe {
+      0%, 100% { transform: translate(-50%, -46%) scale(.94); opacity: .75; }
+      50% { transform: translate(-50%, -46%) scale(1.03); opacity: 1; }
+    }
+
+    @keyframes cuboidBreathe {
+      0%, 100% { transform: translate(-50%, -46%) skewY(-12deg) scale(.96); }
+      50% { transform: translate(-50%, -46%) skewY(-12deg) scale(1.03); }
+    }
+
+    /* ---------- responsive ---------- */
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        padding-top: 40px;
+      }
+
+      .hero-copy { max-width: 720px; }
+      .hero-visual { max-width: 640px; }
+
+      .lab-grid,
+      .section-head {
+        grid-template-columns: 1fr;
+      }
+
+      .notes-grid,
+      .outro-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 980px), (pointer: coarse) {
+      /* 触屏显示滑块，但由 Pointer Events 接管拖动并锁住页面手势 */
+      .control input[type="range"] {
+        display: block;
+        height: 40px;
+        touch-action: none;
+      }
+
+      .control input[type="range"]::-webkit-slider-thumb {
+        width: 26px;
+        height: 26px;
+        margin-top: -11px;
+      }
+
+      .control input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+      }
+
+      .stepper { display: none; }
+      .mobile-hint { display: block; }
+    }
+
+    @media (max-width: 720px) {
+      .site-header { padding-block: 11px; }
+      .nav { display: none; }
+      .header-tag { display: none; }
+
+      .section { width: calc(100% - 28px); }
+
+      .hero { gap: 26px; }
+      .hero-visual { grid-template-columns: 1fr; }
+      .hero-card { min-height: 250px; }
+      .hero-mini { height: 140px; }
+
+      h1 { font-size: clamp(40px, 11vw, 60px); }
+
+      .hero-stats { gap: 14px 22px; margin-top: 28px; }
+      .hero-actions .btn { flex: 1 1 auto; }
+
+      .viz-card { padding: 10px; }
+      .controls-card { padding: 14px; }
+
+      .formula-card pre,
+      .formula-card code {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .y-head { flex-direction: column; gap: 6px; }
+
+      .site-footer {
+        flex-direction: column;
+        gap: 5px;
+        width: calc(100% - 28px);
+      }
+    }
+
+    @media (max-width: 420px) {
+      .hero-stats li { min-width: 40%; }
+      .formula-card pre { font-size: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="回到顶部">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span>SELECTOR LAB</span>
+    </a>
+    <span class="header-tag">TARGET SELECTOR · 交互演示</span>
+  </header>
+
+  <main id="top">
+    <section class="hero section" id="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span> TARGET SELECTOR / 01</p>
+        <h1>球形距离<br><span class="grad">与长方体碰撞箱</span></h1>
+        <p class="lede">同样是筛选目标，<code>r/rm</code> 用“离原点多远”画一个球，<code>dx/dy/dz</code> 用“三个轴上的范围”画一个盒子。一个看实体位置，一个看实体碰撞箱。</p>
+        <ul class="hero-stats">
+          <li><strong>rm ≤ d ≤ r</strong><span>球形</span></li>
+          <li><strong>|d|+1</strong><span>长方体边长</span></li>
+          <li><strong>hitbox ∩ box</strong><span>碰撞箱相交</span></li>
+        </ul>
+      </div>
+
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="hero-card">
+          <div class="hero-card-label"><span>SPHERE</span><span class="code">r / rm</span></div>
+          <svg class="hero-mini" viewBox="0 0 220 180" aria-hidden="true">
+            <defs>
+              <pattern id="heroSphereGrid" width="18" height="18" patternUnits="userSpaceOnUse">
+                <path d="M18 0H0V18" fill="none" stroke="rgba(126,214,232,.09)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="220" height="180" fill="url(#heroSphereGrid)"/>
+            <circle class="hero-sphere-outer" cx="110" cy="90" r="58"/>
+            <circle class="hero-sphere-inner" cx="110" cy="90" r="31"/>
+            <circle class="hero-sphere-scan" cx="110" cy="90" r="58"/>
+            <circle class="hero-sphere-ring" cx="110" cy="90" r="58"/>
+            <circle class="hero-sphere-ring inner" cx="110" cy="90" r="31"/>
+            <text class="hero-label cyan" x="170" y="36">r</text>
+            <text class="hero-label amber" x="143" y="53">rm</text>
+            <g class="hero-entity too-close" transform="translate(122 82)">
+              <circle class="dot" r="5"/>
+              <text class="hero-entity-label" y="-8">近</text>
+            </g>
+            <g class="hero-entity selected" transform="translate(152 108)">
+              <circle class="halo" r="10"/>
+              <circle class="dot" r="5"/>
+              <text class="hero-entity-label" y="-8">选中</text>
+            </g>
+            <g class="hero-entity outside" transform="translate(188 55)">
+              <circle class="dot" r="5"/>
+              <text class="hero-entity-label" y="-8">远</text>
+            </g>
+            <circle class="hero-origin" cx="110" cy="90" r="2.5"/>
+          </svg>
+          <p class="hero-card-caption">同一高度截面：rm 内太近，rm～r 之间选中，r 外太远。</p>
+        </div>
+
+        <div class="hero-card amber">
+          <div class="hero-card-label"><span>BOX</span><span class="code">dx / dy / dz</span></div>
+          <svg class="hero-mini" viewBox="0 0 220 180" aria-hidden="true">
+            <defs>
+              <pattern id="heroBoxGrid" width="18" height="18" patternUnits="userSpaceOnUse">
+                <path d="M18 0H0V18" fill="none" stroke="rgba(126,214,232,.09)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="220" height="180" fill="url(#heroBoxGrid)"/>
+            <rect class="hero-box-fill" x="55" y="55" width="100" height="80"/>
+            <rect class="hero-box-raw" x="55" y="55" width="90" height="70"/>
+            <line class="hero-box-plus" x1="155" y1="55" x2="155" y2="135"/>
+            <line class="hero-box-plus" x1="55" y1="135" x2="155" y2="135"/>
+            <text class="hero-label amber" x="161" y="49">+1</text>
+            <g class="hero-hit selected" transform="translate(100 90)">
+              <rect x="-7" y="-7" width="14" height="14"/>
+            </g>
+            <g class="hero-hit selected edge" transform="translate(157 100)">
+              <rect x="-7" y="-7" width="14" height="14"/>
+            </g>
+            <g class="hero-hit outside" transform="translate(190 50)">
+              <rect x="-7" y="-7" width="14" height="14"/>
+            </g>
+            <text class="hero-hit-label" x="157" y="80">压线</text>
+            <circle class="hero-origin" cx="55" cy="55" r="2.5"/>
+          </svg>
+          <p class="hero-card-caption">盒子三个方向都与碰撞箱重叠才选中；碰撞箱压线也算。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sphere">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">01 / 球形选择区</p>
+          <h2><code>r</code> 与 <code>rm</code>：<br>按距离画一个球</h2>
+        </div>
+        <p>以原点参数为中心，计算实体到原点的欧几里得距离。r 是最大距离，rm 是最小距离。</p>
+      </div>
+
+      <div class="lab-grid">
+        <div class="viz-card reveal">
+          <div class="viz-top">
+            <span class="chip">SPHERE / 俯视截面</span>
+          </div>
+
+          <svg class="viz-svg" id="sphereSvg" viewBox="-11 -11 22 22" role="img" aria-label="球形选择区俯视示意">
+            <defs>
+              <pattern id="sphereGrid" width="2" height="2" patternUnits="userSpaceOnUse">
+                <path d="M2 0H0V2" fill="none" stroke="rgba(126,214,232,.08)" stroke-width=".035"/>
+              </pattern>
+            </defs>
+            <rect x="-11" y="-11" width="22" height="22" fill="url(#sphereGrid)"/>
+            <line class="axis-line" x1="-11" y1="0" x2="11" y2="0"/>
+            <line class="axis-line" x1="0" y1="-11" x2="0" y2="11"/>
+            <text class="axis-label" x="10" y=".7">X</text>
+            <text class="axis-label" x=".4" y="10.5">Z</text>
+
+            <circle class="sphere-outer-fill" id="sphereOuterFill" cx="0" cy="0" r="6"/>
+            <circle class="sphere-inner-fill" id="sphereInnerFill" cx="0" cy="0" r="2"/>
+            <circle class="sphere-scan" id="sphereScan" cx="0" cy="0" r="6"/>
+            <circle class="sphere-outer-ring" id="sphereOuterRing" cx="0" cy="0" r="6"/>
+            <circle class="sphere-inner-ring" id="sphereInnerRing" cx="0" cy="0" r="2"/>
+
+            <text class="ring-label cyan" id="outerLabel" x="6.4" y="-.4" text-anchor="end">r</text>
+            <text class="ring-label amber" id="innerLabel" x="2.4" y="-.4" text-anchor="end">rm</text>
+
+            <g id="sphereEntities"></g>
+
+            <circle class="origin-dot" cx="0" cy="0" r=".28"/>
+            <text class="origin-label" x=".5" y="-.45">原点</text>
+          </svg>
+
+          <div class="viz-legend">
+            <span><i class="legend-dot"></i>选中</span>
+            <span><i class="legend-dot pink"></i>太近（rm 内）</span>
+            <span><i class="legend-dot dim"></i>太远（r 外）</span>
+            <span><i class="legend-ring"></i>rm 内圈</span>
+          </div>
+
+          <div class="viz-controls">
+            <div class="control" data-control="r">
+              <div class="control-head">
+                <label for="rRange"><code>r</code> 最大距离</label>
+                <output class="control-value" id="rValue">6.0</output>
+              </div>
+              <input id="rRange" type="range" min="0" max="10" step="0.1" value="6" aria-label="r 最大距离">
+            </div>
+
+            <div class="control" data-control="rm">
+              <div class="control-head">
+                <label for="rmRange"><code>rm</code> 最小距离</label>
+                <output class="control-value" id="rmValue">2.0</output>
+              </div>
+              <input id="rmRange" type="range" min="0" max="10" step="0.1" value="2" aria-label="rm 最小距离">
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-card reveal info-card">
+          <div class="formula-card">
+            <div class="formula-title"><span>DISTANCE CHECK</span><span>欧几里得距离</span></div>
+            <pre><code>d = √((x - ox)² + (y - oy)² + (z - oz)²)
+
+selected =
+  (rm 未指定 <span class="c-amber">或</span> d ≥ rm)
+  <span class="c-amber">且</span> (r 未指定 <span class="c-amber">或</span> d ≤ r)</code></pre>
+          </div>
+
+          <ul class="case-list">
+            <li><strong>以谁为中心：</strong>选择器的 <code>x/y/z</code> 原点参数；没写就用命令执行位置。</li>
+            <li><strong>量谁的距离：</strong>实体位置，不是碰撞箱——这是和 <code>dx/dy/dz</code> 最大的区别。</li>
+            <li><strong>本演示：</strong>所有实体都在 y=0 的水平截面上，方便看圆；真实判定是三维球。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="box">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">02 / 长方体选择区</p>
+          <h2><code>dx</code> <code>dy</code> <code>dz</code>：<br>碰撞箱与盒子相交</h2>
+        </div>
+        <p>从执行位置到 <code>(x+dx, y+dy, z+dz)</code> 确定一个长方体，再把 max 侧各 +1。实体的碰撞箱只要和这个长方体相交，就会被选中。</p>
+      </div>
+
+      <div class="lab-grid">
+        <div class="viz-card reveal">
+          <div class="viz-top">
+            <span class="chip amber">BOX / 俯视 x-z</span>
+          </div>
+
+          <svg class="viz-svg" id="boxSvg" viewBox="-11 -11 22 22" role="img" aria-label="长方体选择区俯视 x-z 示意">
+            <defs>
+              <pattern id="boxGrid" width="2" height="2" patternUnits="userSpaceOnUse">
+                <path d="M2 0H0V2" fill="none" stroke="rgba(126,214,232,.08)" stroke-width=".035"/>
+              </pattern>
+            </defs>
+            <rect x="-11" y="-11" width="22" height="22" fill="url(#boxGrid)"/>
+            <line class="axis-line" x1="-11" y1="0" x2="11" y2="0"/>
+            <line class="axis-line" x1="0" y1="-11" x2="0" y2="11"/>
+            <text class="axis-label" x="10" y=".7">X</text>
+            <text class="axis-label" x=".4" y="10.5">Z</text>
+
+            <rect class="box-fill" id="boxFill" x="0" y="0" width="1" height="1"/>
+            <rect class="box-raw" id="boxRaw" x="0" y="0" width="0.02" height="0.02"/>
+            <line class="box-raw" id="boxDiagonal" x1="0" y1="0" x2="0" y2="0"/>
+            <circle class="box-point" id="boxOrigin" cx="0" cy="0" r=".16"/>
+            <circle class="box-point" id="boxEnd" cx="0" cy="0" r=".16"/>
+
+            <g id="boxEntities"></g>
+
+            <text class="box-plus-label" id="plusX" x="1.4" y="-.35">+1</text>
+            <text class="box-plus-label" id="plusZ" x="-.35" y="1.7">+1</text>
+          </svg>
+
+          <div class="viz-legend">
+            <span><i class="legend-dot"></i>选中</span>
+            <span><i class="legend-dot dim"></i>未选中</span>
+            <span><i class="legend-dot pink"></i>x/z 通过但 y 不通过</span>
+            <span><i class="legend-ring"></i>原始点到 max</span>
+            <span><i class="legend-dot amber"></i>+1 扩展边</span>
+          </div>
+
+          <div class="viz-controls">
+            <div class="control" data-control="dx">
+              <div class="control-head">
+                <label for="dxRange"><code>dx</code> x 方向长度</label>
+                <output class="control-value" id="dxValue">0.0</output>
+              </div>
+              <input id="dxRange" type="range" min="-6" max="6" step="0.1" value="0" aria-label="dx x 方向长度">
+              <div class="stepper" role="group" aria-label="调整 dx">
+                <button type="button" data-delta="-0.1" aria-label="减小 dx">−</button>
+                <span>0.1 / 次</span>
+                <button type="button" data-delta="0.1" aria-label="增大 dx">+</button>
+              </div>
+            </div>
+
+            <div class="control" data-control="dz">
+              <div class="control-head">
+                <label for="dzRange"><code>dz</code> z 方向长度</label>
+                <output class="control-value" id="dzValue">0.0</output>
+              </div>
+              <input id="dzRange" type="range" min="-6" max="6" step="0.1" value="0" aria-label="dz z 方向长度">
+              <div class="stepper" role="group" aria-label="调整 dz">
+                <button type="button" data-delta="-0.1" aria-label="减小 dz">−</button>
+                <span>0.1 / 次</span>
+                <button type="button" data-delta="0.1" aria-label="增大 dz">+</button>
+              </div>
+            </div>
+          </div>
+
+          <p class="box-hint" id="boxHint" hidden></p>
+
+          <div class="y-inline">
+            <div class="y-head">
+              <div>
+                <h3>Y 轴：dy 的区间</h3>
+                <p>青色 = 最终选中，琥珀 = y 通过但 x/z 不通过；灰色 = y 不通过，看上方俯视图的粉色碰撞箱。</p>
+              </div>
+              <span class="chip amber">Y / dy</span>
+            </div>
+
+            <div class="control" data-control="dy">
+              <div class="control-head">
+                <label for="dyRange"><code>dy</code> y 方向长度</label>
+                <output class="control-value" id="dyValue">0.0</output>
+              </div>
+              <input id="dyRange" type="range" min="-6" max="6" step="0.1" value="0" aria-label="dy y 方向长度">
+              <div class="stepper" role="group" aria-label="调整 dy">
+                <button type="button" data-delta="-0.1" aria-label="减小 dy">−</button>
+                <span>0.1 / 次</span>
+                <button type="button" data-delta="0.1" aria-label="增大 dy">+</button>
+              </div>
+            </div>
+
+            <svg class="y-svg" id="ySvg" viewBox="0 0 460 340" role="img" aria-label="Y 轴 dy 区间与实体碰撞箱相交示意">
+              <rect class="y-band" id="yBand" x="80" y="24" width="160" height="196"/>
+              <g id="yRows"></g>
+              <g id="yTicks"></g>
+              <text class="y-axis-title" x="80" y="334">dy 区间与碰撞箱高度</text>
+            </svg>
+
+            <div class="y-legend" aria-hidden="true">
+              <span><i class="y-swatch band"></i>dy 区间</span>
+              <span><i class="y-swatch selected"></i>最终选中</span>
+              <span><i class="y-swatch overlap"></i>y 通过 / x-z 不通过</span>
+              <span><i class="y-swatch dim"></i>y 不通过（看上方粉色）</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-card reveal info-card">
+          <div class="formula-card">
+            <div class="formula-title"><span>BOX CHECK</span><span>先算范围，再看三轴</span></div>
+            <pre><code><span class="c-muted"># 1. 先算盒子三个方向的范围</span>
+盒子.x1 = min(x, x+dx)
+盒子.x2 = max(x, x+dx) + 1
+
+盒子.y1 = min(y, y+dy)
+盒子.y2 = max(y, y+dy) + 1
+
+盒子.z1 = min(z, z+dz)
+盒子.z2 = max(z, z+dz) + 1
+
+<span class="c-muted"># 2. 碰撞箱三个方向都重叠，才选中</span>
+碰撞箱.x1 <= 盒子.x2  且
+碰撞箱.x2 >= 盒子.x1  且
+碰撞箱.y1 <= 盒子.y2  且
+碰撞箱.y2 >= 盒子.y1  且
+碰撞箱.z1 <= 盒子.z2  且
+碰撞箱.z2 >= 盒子.z1</code></pre>
+            <p class="formula-help">一句话：三个轴都重叠才算相交；任意一个轴不重叠，就不选中。</p>
+          </div>
+
+          <ul class="case-list">
+            <li><strong>缺省：</strong>只写 1 个或 2 个参数时，没写的默认为 0；但判定方盒边长仍然是 1，不是 0。</li>
+            <li><strong>负数：</strong>判定方盒向负方向延伸；+1 永远加在正方向侧，不是“朝负方向位置加”。</li>
+            <li><strong>不是看中心点：</strong>只要碰撞箱与方盒相交，仍然选中。</li>
+          </ul>
+        </div>
+      </div>
+
+    </section>
+
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>SELECTOR LAB</span>
+    <span>r/rm · dx/dy/dz · 交互演示</span>
+    <span>触屏拖动滑块调整 · LOW CPU</span>
+  </footer>
+
+  <script>
+    (() => {
+      'use strict';
+
+      document.documentElement.classList.add('js');
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+
+      const supportsObserver = 'IntersectionObserver' in window;
+
+      /* ---------------------------------------------------------
+         入场与离开视口暂停
+         --------------------------------------------------------- */
+      if (supportsObserver) {
+        const revealObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('in');
+            revealObserver.unobserve(entry.target);
+          }
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+        $$('.reveal').forEach((el) => revealObserver.observe(el));
+
+        const pauseObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            entry.target.classList.toggle('is-paused', !entry.isIntersecting);
+          }
+        }, { threshold: 0.08 });
+
+        $$('.section').forEach((section) => pauseObserver.observe(section));
+      } else {
+        $$('.reveal').forEach((el) => el.classList.add('in'));
+      }
+
+      /* ---------------------------------------------------------
+         控件工厂：桌面滑块 + 触屏 − / + 按钮
+         --------------------------------------------------------- */
+      function createControl(name, options) {
+        const root = document.querySelector(`[data-control="${name}"]`);
+        if (!root) return null;
+
+        const input = root.querySelector('input[type="range"]');
+        const output = root.querySelector('output');
+        const buttons = root.querySelectorAll('button[data-delta]');
+        let value = options.value;
+
+        function format(next) {
+          return Number(next).toFixed(1);
+        }
+
+        function clamp(next) {
+          const stepped = Math.round(next / options.step) * options.step;
+          const clean = Number(stepped.toFixed(2));
+          return Math.min(options.max, Math.max(options.min, clean));
+        }
+
+        function set(next, silent = false) {
+          value = clamp(next);
+          if (input) input.value = String(value);
+          if (output) output.textContent = format(value);
+          if (!silent && options.onChange) options.onChange(value);
+        }
+
+        if (input) {
+          input.addEventListener('input', () => set(Number(input.value)));
+        }
+
+        buttons.forEach((button) => {
+          button.addEventListener('click', () => {
+            set(value + Number(button.dataset.delta));
+          });
+        });
+
+        set(value, true);
+
+        return {
+          get value() { return value; },
+          set
+        };
+      }
+
+      /* ---------------------------------------------------------
+         r / rm 球形演示
+         --------------------------------------------------------- */
+      const sphereState = { r: 6, rm: 2 };
+      const sphereEntities = [
+        { id: 'A', x: 1.2, z: 0.8 },
+        { id: 'B', x: 2.2, z: -1.2 },
+        { id: 'C', x: -3.6, z: 2.4 },
+        { id: 'D', x: 4.6, z: 2.2 },
+        { id: 'E', x: 5.6, z: -1.8 },
+        { id: 'F', x: -6.2, z: -2.2 },
+        { id: 'G', x: 0.2, z: -7.2 }
+      ];
+
+      const sphereSvg = $('#sphereSvg');
+      const sphereEntitiesGroup = $('#sphereEntities');
+      const outerFill = $('#sphereOuterFill');
+      const innerFill = $('#sphereInnerFill');
+      const outerRing = $('#sphereOuterRing');
+      const innerRing = $('#sphereInnerRing');
+      const outerScan = $('#sphereScan');
+      const outerLabel = $('#outerLabel');
+      const innerLabel = $('#innerLabel');
+
+      const sphereEls = [];
+
+      function svgElement(tag, attrs = {}) {
+        const el = document.createElementNS(SVG_NS, tag);
+        for (const [key, val] of Object.entries(attrs)) {
+          el.setAttribute(key, String(val));
+        }
+        return el;
+      }
+
+      if (sphereEntitiesGroup) {
+        for (const entity of sphereEntities) {
+          const group = svgElement('g', {
+            class: 'entity',
+            transform: `translate(${entity.x} ${entity.z})`
+          });
+          const halo = svgElement('circle', { class: 'halo', r: 1.05 });
+          const dot = svgElement('circle', { class: 'dot', r: 0.38 });
+          const label = svgElement('text', { class: 'entity-label', y: -1.05 });
+          label.textContent = entity.id;
+          group.append(halo, dot, label);
+          sphereEntitiesGroup.appendChild(group);
+          sphereEls.push({ ...entity, group });
+        }
+      }
+
+      function updateSphere() {
+        const { r, rm } = sphereState;
+
+        for (const el of [outerFill, outerRing, outerScan]) {
+          if (el) el.setAttribute('r', String(r));
+        }
+        if (innerFill) innerFill.setAttribute('r', String(rm));
+        if (innerRing) innerRing.setAttribute('r', String(rm));
+
+        if (outerLabel) {
+          outerLabel.setAttribute('x', String(r + 0.4));
+          outerLabel.textContent = `r ${r.toFixed(1)}`;
+        }
+        if (innerLabel) {
+          innerLabel.setAttribute('x', String(rm + 0.4));
+          innerLabel.textContent = `rm ${rm.toFixed(1)}`;
+        }
+
+        let selected = 0;
+
+        for (const entity of sphereEls) {
+          const distance = Math.hypot(entity.x, entity.z);
+          const inside = distance >= rm - 0.0001 && distance <= r + 0.0001;
+          const tooClose = distance < rm - 0.0001;
+          const outside = distance > r + 0.0001;
+
+          entity.group.classList.toggle('selected', inside);
+          entity.group.classList.toggle('too-close', tooClose);
+          entity.group.classList.toggle('outside', outside);
+
+          if (inside) selected += 1;
+        }
+
+      }
+
+      let rmControl = null;
+
+      const rControl = createControl('r', {
+        min: 0,
+        max: 10,
+        step: 0.1,
+        value: sphereState.r,
+        onChange: (value) => {
+          sphereState.r = value;
+          if (sphereState.rm > value) {
+            sphereState.rm = value;
+            if (rmControl) rmControl.set(value, true);
+          }
+          updateSphere();
+        }
+      });
+
+      rmControl = createControl('rm', {
+        min: 0,
+        max: 10,
+        step: 0.1,
+        value: sphereState.rm,
+        onChange: (value) => {
+          sphereState.rm = Math.min(value, sphereState.r);
+          if (value > sphereState.r) rmControl.set(sphereState.rm, true);
+          updateSphere();
+        }
+      });
+
+      updateSphere();
+
+      /* ---------------------------------------------------------
+         dx / dy / dz 长方体演示
+         --------------------------------------------------------- */
+      const boxState = { dx: 0, dy: 0, dz: 0 };
+      const boxEntities = [
+        { id: 'A', x: 2, y: 0, z: 2, hw: 0.6, hh: 0.9, hd: 0.6 },
+        { id: 'B', x: 5.5, y: 0, z: 4.5, hw: 0.8, hh: 0.9, hd: 0.8 },
+        { id: 'C', x: -3, y: 0, z: -2, hw: 0.6, hh: 0.9, hd: 0.6 },
+        { id: 'D', x: 7, y: 2.5, z: 7, hw: 0.6, hh: 0.9, hd: 0.6 },
+        { id: 'E', x: 3, y: 4.4, z: 3, hw: 0.6, hh: 0.9, hd: 0.6 },
+        { id: 'F', x: 8, y: 0, z: 1, hw: 0.6, hh: 0.9, hd: 0.6 }
+      ];
+
+      const boxFill = $('#boxFill');
+      const boxRaw = $('#boxRaw');
+      const boxDiagonal = $('#boxDiagonal');
+      const boxOrigin = $('#boxOrigin');
+      const boxEnd = $('#boxEnd');
+      const boxEntitiesGroup = $('#boxEntities');
+      const boxHint = $('#boxHint');
+      const plusX = $('#plusX');
+      const plusZ = $('#plusZ');
+
+      const boxEls = [];
+
+      if (boxEntitiesGroup) {
+        for (const entity of boxEntities) {
+          const group = svgElement('g', { class: 'box-entity', 'data-id': entity.id });
+          const hitbox = svgElement('rect', {
+            class: 'hitbox',
+            x: entity.x - entity.hw,
+            y: entity.z - entity.hd,
+            width: entity.hw * 2,
+            height: entity.hd * 2
+          });
+          const center = svgElement('circle', {
+            class: 'center-dot',
+            cx: entity.x,
+            cy: entity.z,
+            r: 0.11
+          });
+          const label = svgElement('text', {
+            class: 'box-entity-label',
+            x: entity.x,
+            y: entity.z - entity.hd - 0.3
+          });
+          label.textContent = entity.id;
+          group.append(hitbox, center, label);
+          boxEntitiesGroup.appendChild(group);
+          boxEls.push({ ...entity, group, hitbox, center, label });
+        }
+      }
+
+      const yBand = $('#yBand');
+      const yRows = $('#yRows');
+      const yTicks = $('#yTicks');
+      const yDomain = { min: -7, max: 8 };
+      const yPlot = { left: 80, right: 430, top: 26, bottom: 304 };
+      const yRowEls = [];
+
+      function yToX(value) {
+        const t = (value - yDomain.min) / (yDomain.max - yDomain.min);
+        return yPlot.left + Math.max(0, Math.min(1, t)) * (yPlot.right - yPlot.left);
+      }
+
+      if (yTicks) {
+        for (let value = -6; value <= 8; value += 2) {
+          const x = yToX(value);
+          const text = svgElement('text', {
+            class: 'y-axis-label',
+            x,
+            y: 320,
+            'text-anchor': 'middle'
+          });
+          text.textContent = String(value);
+          yTicks.appendChild(text);
+          const line = svgElement('line', {
+            x1: x,
+            y1: yPlot.top,
+            x2: x,
+            y2: yPlot.bottom,
+            stroke: 'rgba(126,214,232,.08)',
+            'stroke-width': 1
+          });
+          yTicks.appendChild(line);
+        }
+      }
+
+      if (yRows) {
+        const rowHeight = 30;
+        const gap = 8;
+        boxEntities.forEach((entity, index) => {
+          const y = yPlot.top + 10 + index * (rowHeight + gap);
+          const label = svgElement('text', {
+            class: 'y-row-label',
+            x: 12,
+            y: y + 18
+          });
+          label.textContent = entity.id;
+          yRows.appendChild(label);
+
+          const bar = svgElement('rect', {
+            class: 'y-bar',
+            x: yToX(entity.y - entity.hh),
+            y,
+            width: Math.max(2, yToX(entity.y + entity.hh) - yToX(entity.y - entity.hh)),
+            height: rowHeight,
+            rx: 4
+          });
+          yRows.appendChild(bar);
+          yRowEls.push({ id: entity.id, label, bar });
+        });
+      }
+
+      function intersects(minA, maxA, minB, maxB) {
+        return maxA >= minB && minA <= maxB;
+      }
+
+      function updateBox() {
+        const { dx, dy, dz } = boxState;
+
+        const minX = Math.min(0, dx);
+        const maxX = Math.max(0, dx) + 1;
+        const minY = Math.min(0, dy);
+        const maxY = Math.max(0, dy) + 1;
+        const minZ = Math.min(0, dz);
+        const maxZ = Math.max(0, dz) + 1;
+
+        if (boxFill) {
+          boxFill.setAttribute('x', String(minX));
+          boxFill.setAttribute('y', String(minZ));
+          boxFill.setAttribute('width', String(maxX - minX));
+          boxFill.setAttribute('height', String(maxZ - minZ));
+        }
+
+        if (boxRaw) {
+          boxRaw.setAttribute('x', String(minX));
+          boxRaw.setAttribute('y', String(minZ));
+          boxRaw.setAttribute('width', String(Math.max(0.02, Math.abs(dx))));
+          boxRaw.setAttribute('height', String(Math.max(0.02, Math.abs(dz))));
+        }
+
+        if (boxDiagonal) {
+          boxDiagonal.setAttribute('x1', '0');
+          boxDiagonal.setAttribute('y1', '0');
+          boxDiagonal.setAttribute('x2', String(dx));
+          boxDiagonal.setAttribute('y2', String(dz));
+        }
+
+        if (boxEnd) {
+          boxEnd.setAttribute('cx', String(dx));
+          boxEnd.setAttribute('cy', String(dz));
+        }
+
+        if (plusX) {
+          plusX.setAttribute('x', String(maxX + 0.4));
+          plusX.setAttribute('y', String(minZ - 0.35));
+        }
+        if (plusZ) {
+          plusZ.setAttribute('x', String(minX - 0.35));
+          plusZ.setAttribute('y', String(maxZ + 0.7));
+        }
+
+        let selected = 0;
+        const boxSelection = new Map();
+
+        for (const entity of boxEls) {
+          const hit = {
+            minX: entity.x - entity.hw,
+            maxX: entity.x + entity.hw,
+            minY: entity.y - entity.hh,
+            maxY: entity.y + entity.hh,
+            minZ: entity.z - entity.hd,
+            maxZ: entity.z + entity.hd
+          };
+
+          const hitSelected =
+            intersects(hit.minX, hit.maxX, minX, maxX) &&
+            intersects(hit.minY, hit.maxY, minY, maxY) &&
+            intersects(hit.minZ, hit.maxZ, minZ, maxZ);
+
+          const xOverlap = intersects(hit.minX, hit.maxX, minX, maxX);
+          const zOverlap = intersects(hit.minZ, hit.maxZ, minZ, maxZ);
+          const yOverlap = intersects(hit.minY, hit.maxY, minY, maxY);
+          const xzYFail = xOverlap && zOverlap && !yOverlap && !hitSelected;
+
+          boxSelection.set(entity.id, hitSelected);
+
+          entity.group.classList.toggle('selected', hitSelected);
+          entity.hitbox.classList.toggle('selected', hitSelected);
+          entity.center.classList.toggle('selected', hitSelected);
+          entity.label.classList.toggle('selected', hitSelected);
+          entity.hitbox.classList.toggle('xz-y-fail', xzYFail);
+          entity.center.classList.toggle('xz-y-fail', xzYFail);
+          entity.label.classList.toggle('xz-y-fail', xzYFail);
+
+          if (hitSelected) selected += 1;
+        }
+
+        const yBandTop = yPlot.top;
+        const yBandBottom = yPlot.bottom;
+        if (yBand) {
+          yBand.setAttribute('x', String(yToX(minY)));
+          yBand.setAttribute('width', String(Math.max(2, yToX(maxY) - yToX(minY))));
+          yBand.setAttribute('y', String(yBandTop));
+          yBand.setAttribute('height', String(yBandBottom - yBandTop));
+        }
+
+        for (const row of yRowEls) {
+          const entity = boxEntities.find((item) => item.id === row.id);
+          if (!entity) continue;
+          const barStart = yToX(entity.y - entity.hh);
+          const barEnd = yToX(entity.y + entity.hh);
+          row.bar.setAttribute('x', String(barStart));
+          row.bar.setAttribute('width', String(Math.max(2, barEnd - barStart)));
+          const yOverlap = intersects(entity.y - entity.hh, entity.y + entity.hh, minY, maxY);
+          const fullSelected = boxSelection.get(row.id) || false;
+
+          row.bar.classList.toggle('selected', fullSelected);
+          row.bar.classList.toggle('y-overlap', yOverlap && !fullSelected);
+          row.label.classList.toggle('selected', fullSelected);
+          row.label.classList.toggle('y-overlap', yOverlap && !fullSelected);
+        }
+
+        if (boxHint) {
+          const yFailures = [];
+
+          for (const entity of boxEls) {
+            const xOverlap = intersects(entity.x - entity.hw, entity.x + entity.hw, minX, maxX);
+            const zOverlap = intersects(entity.z - entity.hd, entity.z + entity.hd, minZ, maxZ);
+            const yOverlap = intersects(entity.y - entity.hh, entity.y + entity.hh, minY, maxY);
+
+            if (xOverlap && zOverlap && !yOverlap) {
+              yFailures.push(`${entity.id}（碰撞箱 y ${fmt(entity.y - entity.hh)}~${fmt(entity.y + entity.hh)}）`);
+            }
+          }
+
+          if (yFailures.length) {
+            boxHint.textContent = `俯视图里粉色的 ${yFailures.join('、')}：x/z 已经重叠，但 y 不满足；当前盒子 y 是 ${fmt(minY)}~${fmt(maxY)}，所以没有选中。`;
+            boxHint.hidden = false;
+          } else {
+            boxHint.textContent = '';
+            boxHint.hidden = true;
+          }
+        }
+
+      }
+
+      function fmt(value) {
+        return Number(value).toFixed(1).replace(/\.0$/, '');
+      }
+
+      createControl('dx', {
+        min: -6, max: 6, step: 0.1, value: boxState.dx,
+        onChange: (value) => { boxState.dx = value; updateBox(); }
+      });
+      createControl('dy', {
+        min: -6, max: 6, step: 0.1, value: boxState.dy,
+        onChange: (value) => { boxState.dy = value; updateBox(); }
+      });
+      createControl('dz', {
+        min: -6, max: 6, step: 0.1, value: boxState.dz,
+        onChange: (value) => { boxState.dz = value; updateBox(); }
+      });
+
+      updateBox();
+
+      /* ---------------------------------------------------------
+         触屏滑块：自己接管拖动，锁住页面手势
+         --------------------------------------------------------- */
+      if ('PointerEvent' in window) {
+        $$('input[type="range"]').forEach((input) => {
+          let dragging = false;
+
+          const updateFromPointer = (event) => {
+            const rect = input.getBoundingClientRect();
+            if (!rect.width) return;
+
+            const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+            const min = Number(input.min);
+            const max = Number(input.max);
+            const step = Number(input.step) || 0.1;
+            const raw = min + ratio * (max - min);
+            const value = Math.round(raw / step) * step;
+
+            input.value = String(value);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          };
+
+          input.addEventListener('pointerdown', (event) => {
+            if (event.pointerType === 'mouse') return;
+            event.preventDefault();
+            dragging = true;
+            try {
+              input.setPointerCapture(event.pointerId);
+            } catch (error) {
+              /* 某些浏览器不支持捕获，仍可继续拖动 */
+            }
+            updateFromPointer(event);
+          });
+
+          input.addEventListener('pointermove', (event) => {
+            if (!dragging) return;
+            event.preventDefault();
+            updateFromPointer(event);
+          });
+
+          const stopDragging = () => {
+            dragging = false;
+          };
+
+          input.addEventListener('pointerup', stopDragging);
+          input.addEventListener('pointercancel', stopDragging);
+          input.addEventListener('lostpointercapture', stopDragging);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

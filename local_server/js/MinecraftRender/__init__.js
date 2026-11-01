@@ -15,7 +15,7 @@
 
 
 import * as THREE from "../three.module.js"
-import {Block, ChunkRenderObject, Structure} from "./Structure.js";
+import {Block, AirBlock, ChunkRenderObject, Structure} from "./Structure.js";
 import {DisplayManager} from "./Manager.js";
 
-export {THREE, Block, ChunkRenderObject, Structure, DisplayManager}
+export {THREE, Block, AirBlock, ChunkRenderObject, Structure, DisplayManager}

@@ -1,230 +1,1321 @@
 <!DOCTYPE html>
+<html lang="zh-CN">
 
-<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="color-scheme" content="dark">
+	<meta name="theme-color" content="#070c16">
+	<meta name="description" content="命令模拟器使用须知：辅助软件安装、本地文件与本地网站、文字输入操作、拓展包与软件更新。">
+	<title>使用须知 · 命令模拟器帮助文档</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070c16'/%3E%3Cpath d='M16 5 27 11.4v9.2L16 27 5 20.6v-9.2z' fill='%232f8d55'/%3E%3Cpath d='M5 11.4 16 17.8l11-6.4v9.2L16 27z' fill='%230f3d23'/%3E%3Cpath d='M16 5 27 11.4 16 17.8 5 11.4z' fill='%233ee08f'/%3E%3C/svg%3E">
 
-	<head>
-		<meta charset="utf-8">
-		<title> 命令模拟器使用说明文档 </title>
-        <link href="../css/wendang.css" rel="stylesheet" type="text/css" media="all" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	</head>
-        
-    <body style="width: 90%; margin: 0px auto;">
-        <div class="menu">
-            <div id="menu_1">
-                <div class="menu_1">
-                    <div onclick="display_thing('main_1');">软件使用</div>
-                    <div onclick="display_thing('main_2');">本地数据</div>
-                    <div onclick="display_thing('main_3');">文字输入</div>
-                    <div onclick="display_thing('main_4');">在线服务</div>
-                </div>
-                <div class="menu_1">
-                    <div onclick="display_thing('main_5');">软件更新</div>
-                </div>
-            </div>
-            <div style="text-align: center; background-color: rgb(62, 94, 7); color: white; display: flex;">
-                <div onclick="close_menu()" style="padding: 3px 0px; width: 50%; border-right: 3px solid white;" id="button_1">点击收入菜单</div>
-                <div onclick="website1()" style="padding: 3px 0px; width: 50%;">点击返回主页</div>
-            </div>
-        </div>
+	<style>
+		/* ========== 基础变量 ========== */
+		:root {
+			--bg: #070c16;
+			--panel: rgba(255, 255, 255, .045);
+			--panel-hi: rgba(255, 255, 255, .08);
+			--line: rgba(255, 255, 255, .10);
+			--line-hi: rgba(255, 255, 255, .2);
+			--text: #eaf1fb;
+			--body: #c2d0e2;
+			--muted: #93a5bf;
+			--mint: #3ee08f;
+			--mint-dim: #2bbd76;
+			--amber: #ffc857;
+			--violet: #b493ff;
+			--gutter: clamp(20px, 5vw, 64px);
+			--header-h: 62px;
+			--radius: 22px;
+			--font: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+				"Microsoft YaHei", "Noto Sans SC", sans-serif;
+			--mono: ui-monospace, "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+		}
 
-        <div id="top_blank" style="height: 90px;"></div>
+		* {
+			box-sizing: border-box;
+		}
 
-        <div id="main_text" style="width: 95%; margin: 0px auto;">
+		html {
+			scroll-behavior: smooth;
+			-webkit-text-size-adjust: 100%;
+		}
 
-            <div id="main_1" >
-                <h1 style="text-align: center;">软件使用</h1>
-                <p>
-                    &emsp;&emsp;本工具序需要与<samp class="red_text">文件管理器，浏览器</samp>组合使用才可以完整体验所有功能。
-                    如果您是安卓用户，请按照以下条目，安装对应的必要辅助软件。<samp class="red_text">安卓13及以上</samp>系统需额外安装
-                    <samp class="red_text">Shuziku</samp>。<br>
-                </p>
-                <p>
-                    &emsp;&emsp;MT文件管理器：<a href="https://mt2.cn/download/">点击下载</a><br>
-                    &emsp;&emsp;Shuziku下载：<a href="https://apt.izzysoft.de/fdroid/repo/moe.shizuku.privileged.api_1086.apk">点击下载</a>
-                </p>
-                <p>
-                    &emsp;&emsp;本调试程序只涉及<samp class="red_text">点击和输入文字操作</samp>。
-                    如果<samp class="red_text">安卓用户</samp>执意多次执行<samp class="red_text">返回操作</samp>，
-                    将会直接关闭此调试程序。注意：这不是刻意的设计，而是Pydroid 3在程序运行下的自身设定。
-                </p>
+		body {
+			margin: 0;
+			min-height: 100dvh;
+			font-family: var(--font);
+			font-size: 16px;
+			line-height: 1.95;
+			color: var(--text);
+			background:
+				radial-gradient(900px 520px at 8% -8%, rgba(62, 224, 143, .16), transparent 62%),
+				radial-gradient(800px 520px at 100% 0%, rgba(180, 147, 255, .13), transparent 58%),
+				linear-gradient(180deg, #070c16 0%, #0a1120 46%, #060a12 100%);
+			background-repeat: no-repeat;
+			-webkit-font-smoothing: antialiased;
+			/* clip 不会创建滚动容器，否则 position: sticky 会失效 */
+			overflow-x: clip;
+		}
 
-                <h1 style="text-align: center;">界面管理栏</h1>
-                <p>&emsp;&emsp;进入主界面，最下方的界面管理栏，可以在不同界面中分别切换，菜单按钮除外。
-                    菜单按钮将唤起文字操作功能与退出按钮。</p>
-                <div style="text-align:center"><img src="../picture/tutorial/menu1.jpg" alt="" width="250" height="40"></div>
-                <div style="text-align:center"><img src="../picture/tutorial/menu2.jpg" alt="" width="80" height="220"></div>
-            </div>
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			z-index: -1;
+			pointer-events: none;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px);
+			background-size: 52px 52px;
+			mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+			-webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+		}
 
-            <div id="main_2" style="display: none;" >
-                <h1 style="text-align: center;">本地文件存储</h1>
-                <p>&emsp;&emsp;命令模拟器的世界储存和源代码位于同一目录位置。</p>
-                <p>&emsp;&emsp;Windows的本地文件储存在用户自己选择的文件夹目录。</p>
-                <p style="overflow-wrap:break-word">
-                    &emsp;&emsp;Android的本地文件需要用户需要在MT管理器中，点击最上方路径栏，跳转至/storage/emulated/0/Android/data/ru.iiec.pydroid3(
-                    <a href="#" onclick="clipboard.copy('/storage/emulated/0/Android/data/ru.iiec.pydroid3')">点击复制</a>)
-                    如果是Android 13及以上系统则需要按照<a href="https://shizuku.rikka.app/zh-hans/guide/setup/#%E9%80%9A%E8%BF%87%E6%97%A0%E7%BA%BF%E8%B0%83%E8%AF%95%E5%90%AF%E5%8A%A8"
-                    >官方教程</a><samp class="red_text">授权Shuziku</samp>才能正常进入该目录。
-                    进入该目录，在此目录下有files文件夹，命令模拟器本地文件就储存于此。
-                </p>
-                <p>&emsp;&emsp;用户可以在MT管理器中点击右上角菜单，对此目录<samp class="red_text"
-                >设置首页</samp>或<samp class="red_text">添加书签</samp>以方便下一次寻找该目录。</p>
+		::selection {
+			background: rgba(62, 224, 143, .3);
+			color: #fff;
+		}
 
-                <h1 style="text-align: center;">本地网站</h1>
-                <p>
-                    &emsp;&emsp;命令模拟器在启动时会自动搭建一个本地服务器，
-                    这个服务器将服务于命令模拟器中的重要功能，例如命令的语法错误反馈信息。
-                    并且你所阅读的帮助文档服务也由该本地服务器提供。
-                </p>
-                <p>&emsp;&emsp;命令模拟器的本地服务器地址为: <samp class="red_text">localhost:32323</samp>。</p>
-                <p>
-                    &emsp;&emsp;注意：<samp class="red_text">安卓用户使用的Pydroid 3在切至后台会导致本程序暂停运行，
-                    本地服务器也会因此暂停运行</samp>。解决方法：将前台进程切换Pydroid 3后，返回浏览器即可正常工作。
-                </p>
-            </div>
+		:focus-visible {
+			outline: 2px solid var(--mint);
+			outline-offset: 3px;
+			border-radius: 8px;
+		}
 
-            <div id="main_3" style="display: none;" >
-                <h1 style="text-align: center;">文字输入和操作</h1>
-                <p>&emsp;&emsp;命令模拟器使用tkinter UI库进行搭建，因此很多文字操作功能无法直接在<samp class="red_text"
-                    >安卓和Windows</samp>中同时进行兼容。</p>
-                <p>&emsp;&emsp;命令模拟器中的撤回和恢复操作需要<samp class="red_text">界面操作栏</samp>中的菜单按钮进行撤回和恢复。</p>
-                <p>
-                    &emsp;&emsp;在安卓平台，命令模拟器中的输入框同样也不支持<samp class="red_text">输入法中</samp
-                    >提供的全选、复制、剪切、粘贴功能，需要依靠快捷操作菜单中的按钮进行支持。部分安卓用户由于输入法差距，
-                    换行也无法使用，文本操作菜单中的按钮也支持换行。
-                </p>
+		a {
+			color: var(--mint);
+			text-decoration-color: rgba(62, 224, 143, .45);
+			text-underline-offset: 3px;
+		}
 
-                <h1 style="text-align: center;">文本操作菜单</h1>
-                <div style="text-align:center"><img src="../picture/tutorial/select_menu1.jpg" alt="" width="80%"></div>
-                <p>如果用户在输入框中，在输入框中进行<samp class="red_text">缓慢的拖动操作</samp>，即可选中输入框内的文字。这时会显示文本操作菜单1，如上图所示。
-                点击对应菜单即可执行对应的操作。</p>
-                <div style="text-align:center"><img src="../picture/tutorial/select_menu2.jpg" alt="" width="80%"></div>
-                <p>如果用户在输入框中，对同一位置进行<samp class="red_text">多次缓慢的点击</samp>，即可显示文本操作菜单2，如上图所示。
-                点击对应菜单即可执行对应的操作。</p>
-                <div style="text-align:center"><img src="../picture/tutorial/menu2.jpg" alt="" width="80" height="220"></div>
-                <p>&emsp;&emsp;这是<samp class="red_text">界面切换栏</samp>中的菜单选项，适用于本程序所有的文本输入框。</p>
-            </div>
+		a:hover {
+			color: #8dffc3;
+		}
 
-            <div id="main_4" style="display: none;" >
-                <h1 style="text-align: center;">用户登录</h1>
-                <p>
-                    &emsp;&emsp;命令模拟器的登录功能主要是为拓展包而服务。拓展包的下载需要在服务器中验证用户是否拥有拓展包，
-                    如果用户想拥有拓展包，需要在<a href="https://commandsimulator.great-site.net/login.php">命令模拟器官网</a>中购入。
-                    如果没有账号，也可以在官网进行注册。
-                </p>
-                <h1 style="text-align: center;">拓展包</h1>
-                <div style="text-align:center"><img src="../picture/tutorial/expand1.jpg" alt="" width="250" height="270"></div>
-    
-                <p>
-                    &emsp;&emsp;拓展包的平台都是第三方拓展包。第三方拓展包为命令模拟器附加的服务，使用第三方拓展包需要注册命令模拟器的账户，
-                    并在官网选购拓展包，拓展包将会根据未来用户的反馈进行更新。第三方拓展包并不是只由命令模拟器作者进行开发，
-                    未来可能有拓展包开发者对自己的拓展包进行定价，请各位用户尊重拓展包开发者的著作权。
-                </p>
-                <p>
-                    &emsp;&emsp;第三方拓展包有启动和重启两个开启方式。如果点击启动，则将恢复用户上一次对该拓展包内容的修改，
-                    如果点击重启，则销毁上一次的修改重新启动拓展包。
-                </p>
-                <p>
-                    &emsp;&emsp;注意：<samp class="red_text">由于拓展包是贴近python代码进行开发，请不要安装未知的第三方拓展包。</samp>
-                    安装第三方拓展包造成的设备损害，开发者将不对此进行负责。
-                </p>
-            </div>
+		.wrap {
+			width: min(1120px, 100% - var(--gutter));
+			margin-inline: auto;
+		}
 
-            <div id="main_5" style="display: none;" >
-                <h1 style="text-align: center;">软件更新</h1>
-                <p>&emsp;&emsp;命令模拟器在服务器查询到最新版本时会提醒用户是否需要更新。</p>
-                <div style="text-align:center"><img src="../picture/tutorial/update.png" alt="" width="250" height="180"></div>
-                <p>&emsp;&emsp;安卓用户需要在main.py所在的目录，寻找<samp class="red_text">update.py</samp
-                >文件，使用Pydroid 3打开文件后，运行文件即可更新。</p>
-                <p>&emsp;&emsp;Windows用户在根目录需要寻找<samp class="red_text">Windows更新.bat</samp
-                >文件，双击运行后即可更新。如果用户误删除了程序的重要文件，也可以通过更新来进行恢复。</p>
-            </div>
+		.skip {
+			position: absolute;
+			left: -9999px;
+			top: 8px;
+			z-index: 99;
+			padding: 10px 16px;
+			border-radius: 10px;
+			background: var(--mint);
+			color: #04140b;
+			font-weight: 700;
+			text-decoration: none;
+		}
 
-        </div>
+		.skip:focus {
+			left: 12px;
+		}
 
-        <div style="height: 30px;"></div>
+		/* ========== 顶部 ========== */
+		.header {
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			background: rgba(7, 12, 22, .78);
+			border-bottom: 1px solid var(--line);
+			backdrop-filter: blur(16px) saturate(160%);
+			-webkit-backdrop-filter: blur(16px) saturate(160%);
+			padding-left: env(safe-area-inset-left);
+			padding-right: env(safe-area-inset-right);
+		}
 
-    </body>
+		.header__inner {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			height: var(--header-h);
+		}
 
-    <script>
-        var count_1 = 0 ;
-        function close_menu(){
-            if (count_1 == 0){
-                document.getElementById('menu_1').style.display = "none";
-                document.getElementById('button_1').innerHTML = "点击展开菜单";
-                document.getElementById('top_blank').style.height = "20px";
-            }
-            else{
-                document.getElementById('menu_1').style.display = "";
-                document.getElementById('button_1').innerHTML = "点击收入菜单"
-                document.getElementById('top_blank').style.height = (document.getElementById('menu_1').clientHeight + 20).toString() + "px"
-            }
-            count_1 ++; count_1 %= 2;
-        }
-        function website1(){window.location.href='http://localhost:32323';}
-    </script>
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			text-decoration: none;
+			color: var(--text);
+			flex: none;
+			min-height: 40px;
+		}
 
-    <script>
-        if (window.innerWidth > 700) {document.getElementById('main_text').style.width = "700px";}  
-        function display_thing(id1){
-            array1 = ['main_1','main_2','main_3','main_4','main_5','main_6','main_7'];
-            document.body.scrollTop = 0; 
-            document.documentElement.scrollTop = 0;
-            for (let index = 0; index < array1.length; index++) {
-                if (id1 == array1[index]) document.getElementById(array1[index]).style.display = "";
-                else document.getElementById(array1[index]).style.display = "none";
-            }
-        }
+		.brand svg {
+			width: 26px;
+			height: 26px;
+			filter: drop-shadow(0 0 12px rgba(62, 224, 143, .45));
+		}
 
-        var clipboard = function (window, document, navigator) {
-          var textArea, copy;
- 
-          function isOS() {
-              return navigator.userAgent.match(/ipad|iphone/i);
-          }
- 
-          function createTextArea(text) {
-              textArea = document.createElement('textArea');
-              textArea.value = text;
-              document.body.appendChild(textArea);
-          }
- 
-          function selectText() {
-              var range, selection;
- 
-              if (isOS()) {
-                  range = document.createRange();
-                  range.selectNodeContents(textArea);
-                  selection = window.getSelection();
-                  selection.removeAllRanges();
-                  selection.addRange(range);
-                  textArea.setSelectionRange(0, 999999);
-              } else {
-                  textArea.select();
-              }
-          }
- 
-          function copyToClipboard() {
-              document.execCommand('copy');
-              document.body.removeChild(textArea);
-          }
- 
-          copy = function copy(text) {
-              createTextArea(text);
-              selectText();
-              copyToClipboard();
-          };
- 
-          return {
-              copy: copy
-          };
-        }(window, document, navigator);
+		.brand b {
+			font-size: 15px;
+			letter-spacing: .02em;
+			white-space: nowrap;
+		}
 
-    </script>
+		.crumb {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			color: var(--muted);
+			font-size: 13.5px;
+			white-space: nowrap;
+			overflow: hidden;
+		}
+
+		.crumb::before {
+			content: "/";
+			color: rgba(255, 255, 255, .3);
+		}
+
+		.crumb span {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.back {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			height: 38px;
+			padding: 0 14px;
+			border-radius: 11px;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			color: var(--text);
+			font-size: 13.5px;
+			text-decoration: none;
+			white-space: nowrap;
+			transition: background-color .2s, border-color .2s, transform .2s;
+		}
+
+		.back:hover {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.back svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		/* ========== 主体两栏 ========== */
+		.layout {
+			display: grid;
+			grid-template-columns: 226px minmax(0, 1fr);
+			gap: clamp(22px, 3vw, 44px);
+			align-items: start;
+			padding: clamp(22px, 3.4vw, 40px) 0 48px;
+		}
+
+		.side__inner {
+			position: sticky;
+			top: calc(var(--header-h) + 20px);
+		}
+
+		.side__label {
+			margin: 0 0 10px 12px;
+			font-size: 10.5px;
+			font-weight: 700;
+			letter-spacing: .26em;
+			text-transform: uppercase;
+			color: var(--mint);
+		}
+
+		.toc {
+			display: flex;
+			flex-direction: column;
+			gap: 3px;
+		}
+
+		.toc button {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			width: 100%;
+			padding: 10px 12px;
+			border: 0;
+			border-radius: 11px;
+			background: transparent;
+			color: var(--muted);
+			font: inherit;
+			font-size: 14.5px;
+			text-align: left;
+			cursor: pointer;
+			transition: color .18s, background-color .18s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.toc button .num {
+			font-family: var(--mono);
+			font-size: 11px;
+			color: rgba(255, 255, 255, .28);
+			letter-spacing: .04em;
+		}
+
+		.toc button:hover {
+			color: var(--text);
+			background: var(--panel);
+		}
+
+		.toc button.is-active {
+			color: var(--mint);
+			background: rgba(62, 224, 143, .13);
+			font-weight: 700;
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .28), 0 8px 22px -16px rgba(62, 224, 143, .9);
+		}
+
+		.toc button.is-active .num {
+			color: rgba(62, 224, 143, .8);
+		}
+
+		.side__foot {
+			margin-top: 18px;
+			padding: 14px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: var(--panel);
+			font-size: 12.5px;
+			line-height: 1.8;
+			color: var(--muted);
+		}
+
+		.side__foot b {
+			display: block;
+			margin-bottom: 4px;
+			color: var(--text);
+			font-size: 13px;
+		}
+
+		.side__foot a {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			margin-top: 6px;
+			font-size: 13px;
+			text-decoration: none;
+			color: var(--mint);
+		}
+
+		/* ========== 正文卡片 ========== */
+		.doc {
+			position: relative;
+			min-width: 0;
+			padding: clamp(20px, 3.2vw, 40px);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: linear-gradient(180deg, rgba(255, 255, 255, .042), rgba(255, 255, 255, .012));
+			box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .06);
+		}
+
+		.doc__eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			margin: 0 0 12px;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .18em;
+			color: var(--mint);
+			text-transform: uppercase;
+		}
+
+		.doc__eyebrow::before {
+			content: "";
+			width: 18px;
+			height: 1px;
+			background: var(--mint);
+			opacity: .7;
+		}
+
+		.doc h1 {
+			margin: 0;
+			font-size: clamp(27px, 5vw, 38px);
+			line-height: 1.25;
+			letter-spacing: -.02em;
+			font-weight: 800;
+		}
+
+		.doc__lead {
+			margin: 12px 0 18px;
+			max-width: 60ch;
+			color: var(--muted);
+			font-size: 15.5px;
+			line-height: 1.85;
+		}
+
+		.doc__meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 5px;
+			margin: 0 0 26px;
+			padding: 0 0 20px;
+			border-bottom: 1px solid var(--line);
+			list-style: none;
+			font-size: 12.5px;
+			color: var(--muted);
+		}
+
+		.doc__meta li {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			padding: 4px 10px 4px 8px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: rgba(255, 255, 255, .03);
+		}
+
+		.doc__meta li::before {
+			content: "";
+			width: 5px;
+			height: 5px;
+			border-radius: 1px;
+			background: var(--mint);
+			opacity: .75;
+		}
+
+		/* ========== 章节排版 ========== */
+		.panel[hidden] {
+			display: none;
+		}
+
+		.panel > h2 {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			margin: 0 0 16px;
+			font-size: clamp(20px, 3.2vw, 26px);
+			line-height: 1.4;
+			letter-spacing: -.01em;
+			font-weight: 800;
+		}
+
+		.panel > h2::before {
+			content: "";
+			flex: none;
+			width: 4px;
+			height: 1.05em;
+			border-radius: 2px;
+			background: linear-gradient(180deg, var(--mint), var(--mint-dim));
+			box-shadow: 0 0 12px rgba(62, 224, 143, .55);
+		}
+
+		.doc h3 {
+			position: relative;
+			margin: 34px 0 12px;
+			padding-left: 15px;
+			font-size: 16.5px;
+			font-weight: 700;
+			letter-spacing: .01em;
+			color: #dce8f8;
+		}
+
+		.doc h3::before {
+			content: "";
+			position: absolute;
+			left: 0;
+			top: .58em;
+			width: 7px;
+			height: 7px;
+			border-radius: 2px;
+			background: var(--mint);
+			transform: rotate(45deg);
+			opacity: .85;
+		}
+
+		.panel p {
+			margin: 0 0 15px;
+			color: var(--body);
+			font-size: 15.5px;
+			line-height: 1.95;
+		}
+
+		.panel p:last-child {
+			margin-bottom: 0;
+		}
+
+		.panel strong {
+			color: var(--text);
+			font-weight: 700;
+		}
+
+		mark {
+			padding: 1px 6px;
+			margin: 0 1px;
+			border-radius: 6px;
+			background: rgba(255, 200, 87, .14);
+			box-shadow: inset 0 0 0 1px rgba(255, 200, 87, .22);
+			color: #ffd98a;
+			font-weight: 600;
+		}
+
+		code {
+			font-family: var(--mono);
+			font-size: .875em;
+			padding: 2px 6px;
+			border-radius: 6px;
+			background: rgba(140, 170, 255, .13);
+			box-shadow: inset 0 0 0 1px rgba(140, 170, 255, .16);
+			color: #bcd0ff;
+			white-space: nowrap;
+		}
+
+		/* 长路径整块换行，不在中间断开 */
+		code.path {
+			display: inline-block;
+			max-width: 100%;
+			font-size: .8em;
+			white-space: normal;
+			word-break: break-all;
+		}
+
+		/* 下载条目 */
+		.downloads {
+			display: grid;
+			gap: 8px;
+			margin: 18px 0 20px;
+		}
+
+		.download {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			padding: 12px 14px;
+			border: 1px solid var(--line);
+			border-radius: 14px;
+			background: rgba(255, 255, 255, .028);
+			transition: border-color .2s, background-color .2s;
+		}
+
+		.download:hover {
+			border-color: rgba(62, 224, 143, .3);
+			background: rgba(62, 224, 143, .06);
+		}
+
+		.download__name {
+			flex: 1;
+			min-width: 0;
+			font-size: 14.5px;
+			font-weight: 600;
+			color: var(--text);
+		}
+
+		.download__name small {
+			display: block;
+			font-size: 12.5px;
+			font-weight: 400;
+			color: var(--muted);
+			line-height: 1.6;
+		}
+
+		.download__link {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			flex: none;
+			min-height: 36px;
+			padding: 0 13px;
+			border-radius: 10px;
+			border: 1px solid rgba(62, 224, 143, .34);
+			background: rgba(62, 224, 143, .1);
+			color: var(--mint);
+			font-size: 13px;
+			font-weight: 600;
+			text-decoration: none;
+			transition: background-color .2s, transform .2s;
+		}
+
+		.download__link:hover {
+			background: rgba(62, 224, 143, .18);
+			transform: translateY(-1px);
+		}
+
+		.download__link svg {
+			width: 13px;
+			height: 13px;
+		}
+
+		/* 提示块 */
+		.callout {
+			display: flex;
+			gap: 11px;
+			margin: 18px 0;
+			padding: 14px 16px;
+			border: 1px solid rgba(255, 200, 87, .26);
+			border-radius: 14px;
+			background: linear-gradient(135deg, rgba(255, 200, 87, .12), rgba(255, 120, 80, .05));
+			font-size: 14.5px;
+			line-height: 1.85;
+			color: #ffd9a2;
+		}
+
+		.callout svg {
+			flex: none;
+			width: 18px;
+			height: 18px;
+			margin-top: 4px;
+			color: var(--amber);
+		}
+
+		.callout b {
+			color: #ffe9c4;
+		}
+
+		/* 复制按钮 */
+		.copy {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			margin: 0 2px;
+			padding: 1px 9px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: var(--panel);
+			color: var(--muted);
+			font: inherit;
+			font-size: 12.5px;
+			cursor: pointer;
+			vertical-align: 1px;
+			transition: color .2s, border-color .2s, background-color .2s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.copy:hover {
+			color: var(--mint);
+			border-color: rgba(62, 224, 143, .35);
+			background: rgba(62, 224, 143, .08);
+		}
+
+		.copy svg {
+			width: 12px;
+			height: 12px;
+		}
+
+		/* 截图 */
+		.shot {
+			margin: 18px 0 22px;
+			padding: 12px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background:
+				radial-gradient(120% 100% at 50% 0%, rgba(255, 255, 255, .05), transparent 70%),
+				rgba(255, 255, 255, .022);
+			text-align: center;
+		}
+
+		.shot img {
+			display: block;
+			width: 100%;
+			max-width: 100%;
+			height: auto;
+			margin: 0 auto;
+			border-radius: 8px;
+			image-rendering: pixelated;
+			box-shadow: 0 12px 30px -18px rgba(0, 0, 0, .9);
+		}
+
+		.shot figcaption {
+			margin-top: 10px;
+			font-size: 12.5px;
+			line-height: 1.7;
+			color: var(--muted);
+		}
+
+		/* 章节翻页 */
+		.pager {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 10px;
+			margin-top: 30px;
+			padding-top: 20px;
+			border-top: 1px solid var(--line);
+		}
+
+		.pager button {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			min-height: 44px;
+			padding: 0 16px;
+			border: 1px solid var(--line);
+			border-radius: 12px;
+			background: var(--panel);
+			color: var(--text);
+			font: inherit;
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: background-color .2s, border-color .2s, transform .2s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.pager button:hover:not(:disabled) {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.pager button:disabled {
+			opacity: .34;
+			cursor: not-allowed;
+		}
+
+		.pager button.next {
+			margin-left: auto;
+			color: #04150c;
+			border-color: transparent;
+			background: linear-gradient(180deg, #63f0a6, #2fcf80);
+			box-shadow: 0 10px 26px -14px rgba(62, 224, 143, .9);
+		}
+
+		.pager button.next:hover:not(:disabled) {
+			background: linear-gradient(180deg, #74f6b3, #37d98a);
+		}
+
+		.pager svg {
+			width: 15px;
+			height: 15px;
+		}
+
+		/* ========== 页脚 ========== */
+		.footer {
+			padding: 24px 0 calc(40px + env(safe-area-inset-bottom));
+			border-top: 1px solid var(--line);
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px 22px;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.footer p {
+			margin: 0;
+		}
+
+		.footer nav {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+		}
+
+		.footer nav a {
+			padding: 6px 10px;
+			border-radius: 8px;
+			color: var(--muted);
+			text-decoration: none;
+			transition: color .2s, background-color .2s;
+		}
+
+		.footer nav a:hover {
+			color: var(--text);
+			background: var(--panel-hi);
+		}
+
+		/* ========== 提示条 ========== */
+		.toast {
+			position: fixed;
+			left: 50%;
+			bottom: calc(24px + env(safe-area-inset-bottom));
+			z-index: 80;
+			transform: translate(-50%, 14px);
+			padding: 10px 18px;
+			border-radius: 999px;
+			border: 1px solid rgba(62, 224, 143, .35);
+			background: rgba(10, 24, 17, .94);
+			color: #9ff0c6;
+			font-size: 13.5px;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity .22s, transform .22s;
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+		}
+
+		.toast.show {
+			opacity: 1;
+			transform: translate(-50%, 0);
+		}
+
+		/* ========== 响应式 ========== */
+		@media (max-width: 980px) {
+			.layout {
+				display: block;
+				padding-top: 0;
+			}
+
+			/* 侧栏变成吸顶的横向标签条 */
+			.side {
+				position: sticky;
+				top: var(--header-h);
+				z-index: 30;
+				margin: 0 calc(var(--gutter) / -2);
+				padding: 10px calc(var(--gutter) / 2);
+				background: rgba(7, 12, 22, .88);
+				border-bottom: 1px solid var(--line);
+				backdrop-filter: blur(14px);
+				-webkit-backdrop-filter: blur(14px);
+			}
+
+			.side__inner {
+				position: static;
+			}
+
+			.side__label,
+			.side__foot {
+				display: none;
+			}
+
+			.toc {
+				flex-direction: row;
+				gap: 7px;
+				overflow-x: auto;
+				scrollbar-width: none;
+				-ms-overflow-style: none;
+				scroll-behavior: smooth;
+			}
+
+			.toc::-webkit-scrollbar {
+				display: none;
+			}
+
+			.toc button {
+				width: auto;
+				flex: none;
+				padding: 9px 14px;
+				border: 1px solid var(--line);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, .035);
+				font-size: 13.5px;
+				white-space: nowrap;
+			}
+
+			.toc button.is-active {
+				border-color: rgba(62, 224, 143, .32);
+				background: rgba(62, 224, 143, .14);
+				box-shadow: 0 8px 20px -14px rgba(62, 224, 143, .9);
+			}
+
+			.doc {
+				margin-top: 18px;
+			}
+		}
+
+		@media (max-width: 620px) {
+			:root {
+				--header-h: 56px;
+			}
+
+			.crumb {
+				display: none;
+			}
+
+			.back {
+				padding: 0 11px;
+			}
+
+			.back span {
+				display: none;
+			}
+
+			.doc {
+				padding: 18px 16px 22px;
+				border-radius: 18px;
+			}
+
+			.doc__lead {
+				font-size: 14.5px;
+			}
+
+			.panel p {
+				font-size: 15px;
+				line-height: 1.95;
+			}
+
+			.doc h3 {
+				margin-top: 26px;
+			}
+
+			/* 手机上让这段路径刚好占满一行 */
+			code.path {
+				font-size: .74em;
+			}
+
+			.shot {
+				padding: 9px;
+				border-radius: 13px;
+			}
+
+			.pager button {
+				flex: 1 1 auto;
+				justify-content: center;
+			}
+
+			.pager button.next {
+				margin-left: 0;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			html {
+				scroll-behavior: auto;
+			}
+
+			* {
+				transition-duration: .001s !important;
+				animation-duration: .001s !important;
+			}
+		}
+	</style>
+</head>
+
+<body id="top">
+	<a class="skip" href="#main_1">跳到正文</a>
+
+	<header class="header">
+		<div class="wrap header__inner">
+			<a class="brand" href="../index.html">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<path d="M16 3.2 28.6 10.4v11.2L16 28.8 3.4 21.6V10.4Z" fill="#0d2a19" stroke="#3ee08f" stroke-width="1.5" stroke-linejoin="round" />
+					<path d="M16 3.2 28.6 10.4 16 17.6 3.4 10.4Z" fill="#2f8d55" />
+					<path d="M16 17.6v11.2L3.4 21.6V10.4Z" fill="#0f3d23" />
+					<path d="M16 17.6 28.6 10.4v11.2L16 28.8Z" fill="#186b3a" />
+					<path d="M11.4 9.1 16 6.5l4.6 2.6-4.6 2.6Z" fill="#c8f3d9" opacity=".85" />
+				</svg>
+				<b>命令模拟器</b>
+			</a>
+			<div class="crumb"><span>帮助文档 / 使用须知</span></div>
+			<a class="back" href="../index.html">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M4 11.5 12 4l8 7.5V20H4z" />
+					<path d="M9.5 20v-5.5h5V20" />
+				</svg>
+				<span>返回主页</span>
+			</a>
+		</div>
+	</header>
+
+	<div class="wrap layout">
+		<aside class="side">
+			<div class="side__inner">
+				<p class="side__label">本页目录</p>
+				<nav class="toc" aria-label="本页目录">
+					<button type="button" data-target="main_1"><span class="num">01</span>软件使用</button>
+					<button type="button" data-target="main_2"><span class="num">02</span>本地数据</button>
+					<button type="button" data-target="main_3"><span class="num">03</span>文字输入</button>
+					<button type="button" data-target="main_4"><span class="num">04</span>在线服务</button>
+					<button type="button" data-target="main_5"><span class="num">05</span>软件更新</button>
+				</nav>
+				<div class="side__foot">
+					<b>第一次用？</b>
+					先按 01 装好辅助软件，再对照 02 找到本地文件。
+					<a href="../index.html">← 回到文档首页</a>
+				</div>
+			</div>
+		</aside>
+
+		<article class="doc">
+
+			<!-- ============ 01 软件使用 ============ -->
+			<section class="panel" id="main_1" aria-labelledby="t-main_1">
+				<h2 id="t-main_1">软件使用</h2>
+				<p>
+					本工具序需要与<strong>文件管理器、浏览器</strong>组合使用才可以完整体验所有功能。
+					如果您是安卓用户，请按照以下条目，安装对应的必要辅助软件。
+					<strong>安卓 13 及以上</strong>系统需额外安装 <strong>Shuziku</strong>。
+				</p>
+
+				<div class="downloads">
+					<div class="download">
+						<span class="download__name">MT 文件管理器<small>用于浏览与编辑本地文件</small></span>
+						<a class="download__link" href="https://mt2.cn/download/" target="_blank" rel="noopener noreferrer">
+							点击下载
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M12 4v11" />
+								<path d="m7 12 5 5 5-5" />
+								<path d="M5 20h14" />
+							</svg>
+						</a>
+					</div>
+					<div class="download">
+						<span class="download__name">Shuziku<small>安卓 13 及以上需要</small></span>
+						<a class="download__link" href="https://apt.izzysoft.de/fdroid/repo/moe.shizuku.privileged.api_1086.apk" target="_blank" rel="noopener noreferrer">
+							点击下载
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M12 4v11" />
+								<path d="m7 12 5 5 5-5" />
+								<path d="M5 20h14" />
+							</svg>
+						</a>
+					</div>
+				</div>
+
+				<p>
+					本调试程序只涉及<strong>点击和输入文字操作</strong>。如果<strong>安卓用户</strong>执意多次执行<strong>返回操作</strong>，
+					将会直接关闭此调试程序。
+				</p>
+
+				<div class="callout">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 9v4" />
+						<path d="M12 17h.01" />
+						<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+					</svg>
+					<div><b>注意：</b>这不是刻意的设计，而是 Pydroid 3 在程序运行下的自身设定。</div>
+				</div>
+
+				<h3>界面管理栏</h3>
+				<p>
+					进入主界面，最下方的界面管理栏，可以在不同界面中分别切换，菜单按钮除外。
+					菜单按钮将唤起文字操作功能与退出按钮。
+				</p>
+				<figure class="shot">
+					<img src="../picture/tutorial/menu1.jpg" alt="界面管理栏：游戏、拓展、窗口、设置、菜单" style="max-width:400px" loading="lazy" decoding="async">
+					<figcaption>界面管理栏：游戏 / 拓展 / 窗口 / 设置 / 菜单</figcaption>
+				</figure>
+				<figure class="shot">
+					<img src="../picture/tutorial/menu2.jpg" alt="菜单按钮展开的列表：撤销、恢复、清空、行首、行尾、选行、退出" style="max-width:130px" loading="lazy" decoding="async">
+					<figcaption>菜单按钮：文字操作与退出</figcaption>
+				</figure>
+			</section>
+
+			<!-- ============ 02 本地数据 ============ -->
+			<section class="panel" id="main_2" aria-labelledby="t-main_2" hidden>
+				<h2 id="t-main_2">本地数据</h2>
+
+				<h3>本地文件存储</h3>
+				<p>命令模拟器的世界储存和源代码位于同一目录位置。</p>
+				<p>Windows 的本地文件储存在用户自己选择的文件夹目录。</p>
+				<p>
+					Android 的本地文件需要用户需要在 MT 管理器中，点击最上方路径栏，跳转至
+					<code class="path">/storage/emulated/0/Android/data/ru.iiec.pydroid3</code>
+					<button type="button" class="copy" data-copy="/storage/emulated/0/Android/data/ru.iiec.pydroid3">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<rect x="9" y="9" width="12" height="12" rx="2" />
+							<path d="M5 15V5a2 2 0 0 1 2-2h10" />
+						</svg>
+						点击复制
+					</button>
+					如果是 Android 13 及以上系统则需要按照<a href="https://shizuku.rikka.app/zh-hans/guide/setup/#%E9%80%9A%E8%BF%87%E6%97%A0%E7%BA%BF%E8%B0%83%E8%AF%95%E5%90%AF%E5%8A%A8">官方教程</a>
+					<mark>授权 Shuziku</mark> 才能正常进入该目录。进入该目录，在此目录下有 files 文件夹，命令模拟器本地文件就储存于此。
+				</p>
+				<p>用户可以在 MT 管理器中点击右上角菜单，对此目录<strong>设置首页</strong>或<strong>添加书签</strong>以方便下一次寻找该目录。</p>
+
+				<h3>本地网站</h3>
+				<p>
+					命令模拟器在启动时会自动搭建一个本地服务器，这个服务器将服务于命令模拟器中的重要功能，
+					例如命令的语法错误反馈信息。并且你所阅读的帮助文档服务也由该本地服务器提供。
+				</p>
+				<p>命令模拟器的本地服务器地址为：<code>localhost:32323</code>。</p>
+
+				<div class="callout">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 9v4" />
+						<path d="M12 17h.01" />
+						<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+					</svg>
+					<div>
+						<b>注意：</b>安卓用户使用的 Pydroid 3 在切至后台会导致本程序暂停运行，本地服务器也会因此暂停运行。
+						解决方法：将前台进程切换 Pydroid 3 后，返回浏览器即可正常工作。
+					</div>
+				</div>
+			</section>
+
+			<!-- ============ 03 文字输入 ============ -->
+			<section class="panel" id="main_3" aria-labelledby="t-main_3" hidden>
+				<h2 id="t-main_3">文字输入</h2>
+
+				<h3>文字输入和操作</h3>
+				<p>命令模拟器使用 tkinter UI 库进行搭建，因此很多文字操作功能无法直接在<strong>安卓和 Windows</strong> 中同时进行兼容。</p>
+				<p>命令模拟器中的撤回和恢复操作需要<strong>界面操作栏</strong>中的菜单按钮进行撤回和恢复。</p>
+				<p>
+					在安卓平台，命令模拟器中的输入框同样也不支持<strong>输入法中</strong>提供的全选、复制、剪切、粘贴功能，
+					需要依靠快捷操作菜单中的按钮进行支持。部分安卓用户由于输入法差距，换行也无法使用，
+					文本操作菜单中的按钮也支持换行。
+				</p>
+
+				<h3>文本操作菜单</h3>
+				<figure class="shot">
+					<img src="../picture/tutorial/select_menu1.jpg" alt="文本操作菜单 1：剪切、复制、换行、粘贴、粘贴对象" style="max-width:440px" loading="lazy" decoding="async">
+					<figcaption>文本操作菜单 1</figcaption>
+				</figure>
+				<p>
+					如果用户在输入框中，在输入框中进行<strong>缓慢的拖动操作</strong>，即可选中输入框内的文字。
+					这时会显示文本操作菜单 1，如上图所示。点击对应菜单即可执行对应的操作。
+				</p>
+				<figure class="shot">
+					<img src="../picture/tutorial/select_menu2.jpg" alt="文本操作菜单 2" style="max-width:440px" loading="lazy" decoding="async">
+					<figcaption>文本操作菜单 2</figcaption>
+				</figure>
+				<p>
+					如果用户在输入框中，对同一位置进行<strong>多次缓慢的点击</strong>，即可显示文本操作菜单 2，如上图所示。
+					点击对应菜单即可执行对应的操作。
+				</p>
+				<figure class="shot">
+					<img src="../picture/tutorial/menu2.jpg" alt="界面切换栏中的菜单选项" style="max-width:130px" loading="lazy" decoding="async">
+					<figcaption>界面切换栏中的菜单选项</figcaption>
+				</figure>
+				<p>这是<strong>界面切换栏</strong>中的菜单选项，适用于本程序所有的文本输入框。</p>
+			</section>
+
+			<!-- ============ 04 在线服务 ============ -->
+			<section class="panel" id="main_4" aria-labelledby="t-main_4" hidden>
+				<h2 id="t-main_4">在线服务</h2>
+
+				<h3>用户登录</h3>
+				<p>
+					命令模拟器的登录功能主要是为拓展包而服务。拓展包的下载需要在服务器中验证用户是否拥有拓展包，
+					如果用户想拥有拓展包，需要在<a href="https://commandsimulator.great-site.net/login.php">命令模拟器官网</a>中购入。
+					如果没有账号，也可以在官网进行注册。
+				</p>
+
+				<h3>拓展包</h3>
+				<figure class="shot">
+					<img src="../picture/tutorial/expand1.jpg" alt="拓展包列表界面" style="max-width:210px" loading="lazy" decoding="async">
+					<figcaption>拓展包列表</figcaption>
+				</figure>
+				<p>
+					拓展包的平台都是第三方拓展包。第三方拓展包为命令模拟器附加的服务，使用第三方拓展包需要注册命令模拟器的账户，
+					并在官网选购拓展包，拓展包将会根据未来用户的反馈进行更新。第三方拓展包并不是只由命令模拟器作者进行开发，
+					未来可能有拓展包开发者对自己的拓展包进行定价，请各位用户尊重拓展包开发者的著作权。
+				</p>
+				<p>
+					第三方拓展包有启动和重启两个开启方式。如果点击启动，则将恢复用户上一次对该拓展包内容的修改，
+					如果点击重启，则销毁上一次的修改重新启动拓展包。
+				</p>
+
+				<div class="callout">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 9v4" />
+						<path d="M12 17h.01" />
+						<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+					</svg>
+					<div>
+						<b>注意：</b>由于拓展包是贴近 python 代码进行开发，<b>请不要安装未知的第三方拓展包。</b>
+						安装第三方拓展包造成的设备损害，开发者将不对此进行负责。
+					</div>
+				</div>
+			</section>
+
+			<!-- ============ 05 软件更新 ============ -->
+			<section class="panel" id="main_5" aria-labelledby="t-main_5" hidden>
+				<h2 id="t-main_5">软件更新</h2>
+				<p>命令模拟器在服务器查询到最新版本时会提醒用户是否需要更新。</p>
+				<figure class="shot">
+					<img src="../picture/tutorial/update.png" alt="更新提示对话框" style="max-width:300px" loading="lazy" decoding="async">
+					<figcaption>检测到新版本时的提醒</figcaption>
+				</figure>
+				<p>
+					安卓用户需要在 <code>main.py</code> 所在的目录，寻找 <code>update.py</code> 文件，
+					使用 Pydroid 3 打开文件后，运行文件即可更新。
+				</p>
+				<p>
+					Windows 用户在根目录需要寻找 <code>Windows更新.bat</code> 文件，双击运行后即可更新。
+					如果用户误删除了程序的重要文件，也可以通过更新来进行恢复。
+				</p>
+			</section>
+
+			<div class="pager">
+				<button type="button" class="prev" id="pager-prev">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M20 12H5" />
+						<path d="m11 18-6-6 6-6" />
+					</svg>
+					<span>上一节</span>
+				</button>
+				<button type="button" class="next" id="pager-next">
+					<span>下一节</span>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 12h15" />
+						<path d="m13 6 6 6-6 6" />
+					</svg>
+				</button>
+			</div>
+		</article>
+	</div>
+
+	<footer class="footer wrap">
+		<p>命令模拟器 · 使用须知</p>
+	</footer>
+
+	<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+	<script>
+		(function () {
+			var ORDER = ['main_1', 'main_2', 'main_3', 'main_4', 'main_5'];
+			var TITLES = {
+				main_1: '软件使用',
+				main_2: '本地数据',
+				main_3: '文字输入',
+				main_4: '在线服务',
+				main_5: '软件更新'
+			};
+			var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			var tabs = Array.prototype.slice.call(document.querySelectorAll('.toc [data-target]'));
+			var prevBtn = document.getElementById('pager-prev');
+			var nextBtn = document.getElementById('pager-next');
+			var toast = document.getElementById('toast');
+			var toastTimer = null;
+			var navigated = false;
+
+			function showToast(text) {
+				toast.textContent = text;
+				toast.classList.add('show');
+				clearTimeout(toastTimer);
+				toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+			}
+
+			function current() {
+				for (var i = 0; i < ORDER.length; i++) {
+					var el = document.getElementById(ORDER[i]);
+					if (el && !el.hidden) return ORDER[i];
+				}
+				return ORDER[0];
+			}
+
+			function updatePager(id) {
+				var index = ORDER.indexOf(id);
+				var prevName = index > 0 ? TITLES[ORDER[index - 1]] : '';
+				var nextName = index < ORDER.length - 1 ? TITLES[ORDER[index + 1]] : '';
+
+				prevBtn.disabled = index === 0;
+				nextBtn.disabled = index === ORDER.length - 1;
+				prevBtn.setAttribute('data-target', index > 0 ? ORDER[index - 1] : '');
+				nextBtn.setAttribute('data-target', index < ORDER.length - 1 ? ORDER[index + 1] : '');
+				prevBtn.querySelector('span').textContent = prevName ? '上一节 · ' + prevName : '已经是第一节';
+				nextBtn.querySelector('span').textContent = nextName ? '下一节 · ' + nextName : '已经是最后一节';
+			}
+
+			function jumpTop() {
+				var root = document.documentElement;
+				var previous = root.style.scrollBehavior;
+				root.style.scrollBehavior = 'auto';
+				window.scrollTo(0, 0);
+				root.style.scrollBehavior = previous;
+			}
+
+			function display_thing(id, options) {
+				options = options || {};
+				if (ORDER.indexOf(id) < 0) id = ORDER[0];
+
+				ORDER.forEach(function (key) {
+					var el = document.getElementById(key);
+					if (el) el.hidden = key !== id;
+				});
+
+				tabs.forEach(function (btn) {
+					var active = btn.getAttribute('data-target') === id;
+					btn.classList.toggle('is-active', active);
+					if (active) btn.setAttribute('aria-current', 'true');
+					else btn.removeAttribute('aria-current');
+				});
+
+				updatePager(id);
+				document.title = TITLES[id] + ' · 命令模拟器帮助文档';
+
+				if (options.initial) {
+					// 初始渲染不写 hash：部分浏览器写入 hash 会立刻跳到锚点
+					jumpTop();
+				} else {
+					if (history.replaceState) history.replaceState(null, '', '#' + id);
+					else location.hash = id;
+					window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+				}
+
+				// 手机上让当前标签保持在可视区域中间
+				if (window.matchMedia('(max-width: 980px)').matches) {
+					var bar = document.querySelector('.toc');
+					var active = tabs.filter(function (b) { return b.getAttribute('data-target') === id; })[0];
+					if (bar && active) {
+						bar.scrollTo({
+							left: active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2,
+							behavior: reduceMotion ? 'auto' : 'smooth'
+						});
+					}
+				}
+			}
+
+			tabs.forEach(function (btn) {
+				btn.addEventListener('click', function () {
+					navigated = true;
+					display_thing(btn.getAttribute('data-target'));
+				});
+			});
+
+			[prevBtn, nextBtn].forEach(function (btn) {
+				btn.addEventListener('click', function () {
+					var target = btn.getAttribute('data-target');
+					if (target) {
+						navigated = true;
+						display_thing(target);
+					}
+				});
+			});
+
+			window.addEventListener('hashchange', function () {
+				var id = decodeURIComponent(location.hash.replace('#', ''));
+				if (ORDER.indexOf(id) >= 0) display_thing(id, { initial: true });
+			});
+
+			// 复制按钮
+			var clipboard = {
+				copy: function (text) {
+					var done = function () { showToast('已复制：' + text); };
+					if (navigator.clipboard && window.isSecureContext) {
+						navigator.clipboard.writeText(text).then(done, function () { legacy(text, done); });
+					} else {
+						legacy(text, done);
+					}
+				}
+			};
+
+			function legacy(text, done) {
+				var area = document.createElement('textarea');
+				area.value = text;
+				area.setAttribute('readonly', '');
+				area.style.position = 'fixed';
+				area.style.opacity = '0';
+				document.body.appendChild(area);
+				area.select();
+				try { document.execCommand('copy'); done(); }
+				catch (error) { showToast('复制失败，请手动选择'); }
+				document.body.removeChild(area);
+			}
+
+			document.addEventListener('click', function (event) {
+				var btn = event.target.closest('[data-copy]');
+				if (btn) {
+					event.preventDefault();
+					clipboard.copy(btn.getAttribute('data-copy'));
+				}
+			});
+
+			// 兼容旧页面里可能残留的调用
+			window.display_thing = display_thing;
+			window.clipboard = clipboard;
+			window.close_menu = function () { };
+			window.website1 = function () { window.location.href = '../index.html'; };
+
+			// 首次进入：支持 #main_3 这样的深链接
+			var initial = decodeURIComponent(location.hash.replace('#', ''));
+			display_thing(ORDER.indexOf(initial) >= 0 ? initial : ORDER[0], { initial: true });
+
+			// 深链接时浏览器会在解析结束后自行跳到锚点，这里把它拉回页首
+			window.addEventListener('load', function () {
+				if (!navigated) jumpTop();
+			});
+		}());
+	</script>
+</body>
 
 </html>
-
-
-
-
-

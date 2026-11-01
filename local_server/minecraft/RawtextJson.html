@@ -1,0 +1,1820 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061018">
+  <title>RawtextJson · 基岩版文本组件入门</title>
+  <meta name="description" content="用动画介绍基岩版 rawtext 列表、文本组件、顺序拼接和 translate 填空规则。">
+  <style>
+    :root {
+      --bg: #061018;
+      --panel: rgba(10, 27, 37, .86);
+      --line: rgba(126, 214, 232, .14);
+      --line-strong: rgba(126, 214, 232, .25);
+      --text: #e9f7fb;
+      --muted: #8faab5;
+      --cyan: #4de3ff;
+      --amber: #ffb454;
+      --green: #7dffb2;
+      --pink: #ff5d8f;
+      --violet: #b8a6ff;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.75;
+    }
+
+    html,
+    body { overscroll-behavior-x: none; }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(900px 600px at 8% -5%, rgba(77, 227, 255, .13), transparent 62%),
+        radial-gradient(800px 560px at 94% 12%, rgba(255, 180, 84, .09), transparent 58%),
+        radial-gradient(700px 500px at 50% 105%, rgba(184, 166, 255, .06), transparent 62%);
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(126, 214, 232, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126, 214, 232, .045) 1px, transparent 1px);
+      background-size: 54px 54px;
+      -webkit-mask-image: linear-gradient(to bottom, #000, rgba(0, 0, 0, .6) 60%, transparent);
+      mask-image: linear-gradient(to bottom, #000, rgba(0, 0, 0, .6) 60%, transparent);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    p { margin-bottom: 0; }
+
+    code {
+      padding: 1px 5px;
+      border: 1px solid rgba(77, 227, 255, .14);
+      border-radius: 5px;
+      background: rgba(77, 227, 255, .07);
+      color: #c9f6ff;
+      font-family: var(--mono);
+      font-size: .9em;
+      overflow-wrap: anywhere;
+    }
+
+    ::selection { background: rgba(77, 227, 255, .28); color: #fff; }
+
+    /* ---------- header ---------- */
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 13px clamp(16px, 4vw, 48px);
+      border-bottom: 1px solid rgba(126, 214, 232, .1);
+      background: rgba(6, 16, 24, .93);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3px;
+      width: 23px;
+      height: 23px;
+    }
+
+    .brand-mark i { border-radius: 2px; background: var(--cyan); }
+    .brand-mark i:nth-child(2) { background: var(--amber); }
+    .brand-mark i:nth-child(3) { background: rgba(77, 227, 255, .34); }
+    .brand-mark i:nth-child(4) { background: rgba(255, 180, 84, .44); }
+
+    .nav {
+      display: flex;
+      gap: clamp(12px, 2vw, 26px);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav a:hover { color: var(--text); }
+
+    .header-tag {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+      white-space: nowrap;
+    }
+
+    /* ---------- base ---------- */
+
+    main,
+    .site-header,
+    .site-footer { position: relative; z-index: 1; }
+
+    .section {
+      width: min(1120px, calc(100% - 40px));
+      margin-inline: auto;
+      padding-block: clamp(62px, 8vw, 104px);
+      scroll-margin-top: 76px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: clamp(40px, 6.5vw, 76px);
+      font-weight: 760;
+      line-height: 1.05;
+      letter-spacing: -.045em;
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: clamp(30px, 4.2vw, 50px);
+      font-weight: 720;
+      line-height: 1.14;
+      letter-spacing: -.035em;
+    }
+
+    h3 { margin-bottom: 6px; font-size: clamp(19px, 2.1vw, 26px); line-height: 1.3; }
+
+    .kicker {
+      margin-bottom: 12px;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 16px;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .16em;
+    }
+
+    .eyebrow .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 14px var(--cyan);
+      animation: pulse 2.8s ease-in-out infinite;
+    }
+
+    .grad {
+      background: linear-gradient(100deg, var(--cyan), #c5fbff 42%, var(--amber));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lede {
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: clamp(15px, 1.5vw, 18px);
+      line-height: 1.9;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .section-head > p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    /* ---------- hero ---------- */
+
+    .hero {
+      min-height: calc(100vh - 64px);
+      min-height: calc(100svh - 64px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+      gap: clamp(28px, 5vw, 64px);
+      align-items: center;
+      padding-top: clamp(34px, 7vh, 72px);
+      padding-bottom: clamp(40px, 7vh, 76px);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 9px 16px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: #04222a;
+      box-shadow: 0 10px 30px rgba(77, 227, 255, .18);
+    }
+
+    .btn-ghost {
+      border-color: rgba(77, 227, 255, .26);
+      background: rgba(77, 227, 255, .04);
+      color: var(--text);
+    }
+
+    .hero-visual { display: grid; gap: 12px; }
+
+    .hero-code,
+    .hero-render {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #07141b;
+      overflow: hidden;
+    }
+
+    .hero-code { transform: rotate(-1deg); }
+    .hero-render { transform: rotate(1deg); }
+
+    .mini-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 13px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .mini-head .dotline { display: flex; gap: 4px; }
+    .mini-head .dotline i { width: 6px; height: 6px; border-radius: 50%; background: rgba(126, 214, 232, .3); }
+    .mini-head .dotline i:first-child { background: var(--cyan); }
+    .mini-head .dotline i:nth-child(2) { background: var(--amber); }
+    .mini-head .dotline i:nth-child(3) { background: var(--pink); }
+
+    .mini-code {
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.8;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .hero-render-body {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      font-size: clamp(15px, 1.8vw, 19px);
+    }
+
+    .render-badge {
+      padding: 3px 7px;
+      border: 1px solid rgba(125, 255, 178, .28);
+      border-radius: 999px;
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+
+    .scan-line {
+      height: 1px;
+      margin: 0 16px;
+      background: linear-gradient(90deg, transparent, rgba(77, 227, 255, .55), transparent);
+      animation: scanLine 5s ease-in-out infinite;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 26px;
+    }
+
+    .hero-stats span {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    /* ---------- panels ---------- */
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .74));
+      min-width: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .08em;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid rgba(77, 227, 255, .24);
+      border-radius: 999px;
+      background: rgba(77, 227, 255, .08);
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .chip.amber { border-color: rgba(255, 180, 84, .26); background: rgba(255, 180, 84, .08); color: var(--amber); }
+    .chip.green { border-color: rgba(125, 255, 178, .26); background: rgba(125, 255, 178, .07); color: var(--green); }
+
+    /* ---------- syntax ---------- */
+
+    .syntax-lab {
+      display: grid;
+      grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .syntax-code {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      color: #c8eaf2;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.95;
+      white-space: pre;
+      tab-size: 2;
+    }
+
+    .tok {
+      border-radius: 3px;
+      padding: 0 2px;
+      transition: background-color .25s, opacity .25s;
+    }
+
+    .tok.done { opacity: .48; }
+
+    .tok.active {
+      background: rgba(77, 227, 255, .17);
+      box-shadow: inset 0 -1px 0 rgba(77, 227, 255, .65);
+    }
+
+    .tok.key { color: var(--cyan); }
+    .tok.string { color: var(--amber); }
+    .tok.punct { color: #7f9aa5; }
+    .tok.item { color: #c8eaf2; }
+
+    .syntax-flow { display: flex; flex-direction: column; }
+
+    .syntax-slots {
+      display: grid;
+      gap: 9px;
+      padding: 14px 15px;
+      flex: 1;
+    }
+
+    .syntax-slot {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, .015);
+      opacity: .22;
+      transform: translateY(5px);
+      transition: opacity .35s, transform .35s, border-color .35s, background .35s;
+    }
+
+    .syntax-slot.show {
+      opacity: 1;
+      transform: none;
+      border-color: rgba(77, 227, 255, .32);
+    }
+
+    .syntax-slot b {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(77, 227, 255, .1);
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .syntax-slot span {
+      font-family: var(--mono);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .syntax-slot small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 10px;
+    }
+
+    .syntax-output {
+      margin: 0 15px 15px;
+      padding: 12px;
+      border: 1px solid rgba(125, 255, 178, .2);
+      border-radius: 10px;
+      background: rgba(125, 255, 178, .035);
+    }
+
+    .syntax-output small {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .syntax-output strong {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 500;
+      overflow-wrap: anywhere;
+    }
+
+    .syntax-caption {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .018);
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.8;
+    }
+
+    .syntax-caption strong { color: var(--text); }
+
+    /* ---------- types ---------- */
+
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .type-card {
+      position: relative;
+      overflow: hidden;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .72));
+      min-width: 0;
+    }
+
+    .type-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(420px 190px at 8% 0%, var(--glow, rgba(77, 227, 255, .1)), transparent 62%);
+    }
+
+    .type-card.cyan { --accent: var(--cyan); --glow: rgba(77, 227, 255, .12); }
+    .type-card.amber { --accent: var(--amber); --glow: rgba(255, 180, 84, .1); }
+    .type-card.green { --accent: var(--green); --glow: rgba(125, 255, 178, .08); }
+    .type-card.pink { --accent: var(--pink); --glow: rgba(255, 93, 143, .08); }
+    .type-card.violet { --accent: var(--violet); --glow: rgba(184, 166, 255, .08); }
+
+    .type-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .type-top h3 { margin: 0; color: var(--accent); }
+    .type-top span { color: var(--accent); font-family: var(--mono); font-size: 9px; letter-spacing: .08em; }
+
+    .type-card p,
+    .type-card pre,
+    .type-output { position: relative; z-index: 1; }
+
+    .type-card p { color: var(--muted); font-size: 12.5px; line-height: 1.8; }
+
+    .type-card pre {
+      margin: 10px 0;
+      padding: 9px 10px;
+      overflow-x: auto;
+      border: 1px solid rgba(126, 214, 232, .08);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .18);
+      color: #c9f6ff;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .type-output {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .type-output strong { color: var(--text); font-weight: 500; }
+
+    .mc-red { color: #cf4d4d; }
+    .mc-gold { color: #e3a93d; }
+    .mc-bold { font-weight: 800; }
+    .mc-line { color: var(--text); }
+
+    .type-note {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-top: 14px;
+      padding: 13px 15px;
+      border: 1px dashed rgba(255, 180, 84, .24);
+      border-radius: 14px;
+      background: rgba(255, 180, 84, .035);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .type-note .key-dot {
+      width: 7px;
+      height: 7px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+      flex: 0 0 auto;
+    }
+
+    .type-note p { min-width: 0; }
+
+    /* ---------- list ---------- */
+
+    .list-lab {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .list-items { display: grid; gap: 8px; padding: 14px; }
+
+    .list-item {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, .014);
+      transition: border-color .3s, background .3s, transform .3s, opacity .3s;
+    }
+
+    .list-item.active {
+      border-color: rgba(77, 227, 255, .48);
+      background: rgba(77, 227, 255, .06);
+      transform: translateX(4px);
+    }
+
+    .list-item.done { opacity: .62; border-color: rgba(125, 255, 178, .18); }
+
+    .list-num {
+      display: grid;
+      place-items: center;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: rgba(77, 227, 255, .08);
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .list-item b { display: block; color: var(--cyan); font-size: 11px; }
+    .list-item code { display: block; margin-top: 2px; padding: 0; border: 0; background: none; color: var(--amber); font-size: 10.5px; }
+
+    .list-stage-panel { display: flex; flex-direction: column; }
+
+    .list-stage {
+      flex: 1;
+      padding: 16px;
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: clamp(15px, 1.9vw, 19px);
+      line-height: 1.8;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .stage-empty { color: var(--muted); }
+
+    .stage-chunk {
+      display: inline;
+      animation: chunkIn .32s ease both;
+    }
+
+    .list-caption {
+      margin: 0 14px 14px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .018);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .list-caption strong { color: var(--text); }
+
+    /* ---------- translate ---------- */
+
+    .tr-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .tr-tab {
+      min-height: 42px;
+      padding: 7px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .02);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tr-tab.active {
+      border-color: rgba(255, 93, 143, .4);
+      background: rgba(255, 93, 143, .08);
+      color: var(--pink);
+    }
+
+    .tr-lab {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .tr-code-panel { display: flex; flex-direction: column; }
+
+    .tr-json {
+      margin: 0;
+      padding: 15px 16px;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .tr-explain {
+      margin: auto 14px 14px;
+      padding: 10px 12px;
+      border-left: 2px solid rgba(255, 93, 143, .5);
+      border-radius: 0 8px 8px 0;
+      background: rgba(255, 93, 143, .035);
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.8;
+    }
+
+    .tr-play-panel { display: flex; flex-direction: column; }
+
+    .tr-template {
+      min-height: 66px;
+      margin: 14px 14px 0;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 93, 143, .17);
+      border-radius: 10px;
+      background: rgba(255, 93, 143, .025);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1.9;
+      overflow-wrap: anywhere;
+    }
+
+    .tr-ph {
+      display: inline-block;
+      margin: 0 2px;
+      padding: 1px 5px;
+      border: 1px solid rgba(255, 180, 84, .4);
+      border-radius: 5px;
+      background: rgba(255, 180, 84, .09);
+      color: var(--amber);
+      font-size: .88em;
+    }
+
+    .tr-filled {
+      display: inline-block;
+      margin: 0 2px;
+      padding: 1px 5px;
+      border: 1px solid rgba(125, 255, 178, .36);
+      border-radius: 5px;
+      background: rgba(125, 255, 178, .09);
+      color: var(--green);
+      font-size: .88em;
+    }
+
+    .tr-filled.is-new {
+      animation: chunkIn .3s ease both;
+    }
+
+    .tr-answers-label {
+      margin: 12px 14px 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .tr-answers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 7px 14px 0;
+    }
+
+    .tr-answer {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, .02);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      transition: border-color .25s, background .25s, color .25s, opacity .25s;
+    }
+
+    .tr-answer small {
+      display: block;
+      margin-top: 1px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .tr-pos {
+      display: inline-grid;
+      place-items: center;
+      width: 16px;
+      height: 16px;
+      margin-right: 5px;
+      border-radius: 50%;
+      background: rgba(77, 227, 255, .1);
+      color: var(--cyan);
+      font-size: 8px;
+      vertical-align: 1px;
+    }
+
+    .tr-answer.used {
+      border-color: rgba(125, 255, 178, .35);
+      background: rgba(125, 255, 178, .07);
+      color: var(--green);
+    }
+
+    .tr-answer.picked {
+      border-color: rgba(77, 227, 255, .7);
+      box-shadow: 0 0 0 1px rgba(77, 227, 255, .32);
+    }
+
+    .tr-answer.removed { display: none; }
+
+    .tr-result {
+      margin: 12px 14px 0;
+      padding: 10px 12px;
+      border: 1px solid rgba(125, 255, 178, .2);
+      border-radius: 9px;
+      background: rgba(125, 255, 178, .035);
+    }
+
+    .tr-result small {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .tr-result strong {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      overflow-wrap: anywhere;
+    }
+
+    .tr-caption {
+      margin: auto 14px 14px;
+      padding-top: 10px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.8;
+    }
+
+    .tr-tip {
+      margin-top: 12px;
+      padding: 11px 14px;
+      border: 1px dashed rgba(255, 180, 84, .24);
+      border-radius: 12px;
+      background: rgba(255, 180, 84, .03);
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.8;
+    }
+
+    .tr-tip strong { color: var(--amber); }
+
+    /* ---------- outro ---------- */
+
+    .outro {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid rgba(77, 227, 255, .16);
+      border-radius: 22px;
+      background:
+        radial-gradient(700px 360px at 8% 0%, rgba(77, 227, 255, .08), transparent 62%),
+        linear-gradient(160deg, rgba(13, 32, 42, .9), rgba(7, 18, 26, .8));
+    }
+
+    .outro-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .outro-card span { color: var(--cyan); font-family: var(--mono); font-size: 9px; }
+    .outro-card h3 { margin: 5px 0; font-size: 17px; }
+    .outro-card p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+
+    /* ---------- footer ---------- */
+
+    .site-footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px 18px;
+      width: min(1120px, calc(100% - 40px));
+      margin-inline: auto;
+      padding: 22px 0 38px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: .08em;
+    }
+
+    .site-footer a { color: var(--cyan); }
+
+    /* ---------- motion ---------- */
+
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .75s ease, transform .75s ease;
+    }
+
+    .js .reveal.in { opacity: 1; transform: none; }
+
+    .is-paused *,
+    .is-paused *::before,
+    .is-paused *::after { animation-play-state: paused !important; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .4; transform: scale(.85); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    @keyframes scanLine {
+      0%, 100% { opacity: .2; transform: scaleX(.4); }
+      50% { opacity: 1; transform: scaleX(1); }
+    }
+
+    @keyframes chunkIn {
+      from { opacity: 0; transform: translateY(3px) scale(.97); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* ---------- responsive ---------- */
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        padding-top: 38px;
+      }
+
+      .hero-copy { max-width: 720px; }
+      .hero-visual { max-width: 640px; }
+
+      .section-head,
+      .syntax-lab,
+      .list-lab,
+      .tr-lab { grid-template-columns: 1fr; }
+
+      .type-grid { grid-template-columns: 1fr; }
+      .outro { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .site-header { padding-block: 11px; }
+      .nav { display: none; }
+      .header-tag { display: none; }
+
+      .section { width: calc(100% - 28px); }
+      .hero { gap: 26px; }
+      h1 { font-size: clamp(38px, 11vw, 58px); }
+
+      .hero-actions .btn { flex: 1 1 auto; }
+
+      .mini-code {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .syntax-code {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 11.5px;
+      }
+
+      .type-card { padding: 15px; }
+      .list-items { padding: 10px; }
+      .list-item { grid-template-columns: 25px minmax(0, 1fr); }
+      .tr-template { font-size: 13px; }
+      .tr-json { font-size: 10.5px; }
+    }
+
+    @media (max-width: 420px) {
+      .tr-tab { min-height: 44px; }
+      .hero-stats span { font-size: 9px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="回到顶部">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span>RAWTEXT LAB</span>
+    </a>
+    <span class="header-tag">BEDROCK · RAWTEXT</span>
+  </header>
+
+  <main id="top">
+    <section class="section hero" id="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span> RAWTEXTJSON / 入门</p>
+        <h1>一句话，<br><span class="grad">可以拆成很多段</span></h1>
+        <p class="lede">基岩版的 rawtext 是一个列表。游戏从第一项读到最后一项，把每一项变成文字，再按顺序接起来。translate 则像一道填空题：先给模板，再用答案卡填进去。</p>
+        <div class="hero-stats">
+          <span>rawtext: [ ... ]</span>
+          <span>按顺序显示</span>
+          <span>translate + with</span>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="hero-code">
+          <div class="mini-head"><span class="dotline"><i></i><i></i><i></i></span><span>rawtext</span></div>
+          <div class="mini-code">{
+  "rawtext": [
+    { "text": "Hello " },
+    { "translate": "%%s", "with": ["world"] }
+  ]
+}</div>
+          <div class="scan-line"></div>
+        </div>
+        <div class="hero-render">
+          <div class="mini-head"><span class="dotline"><i></i><i></i><i></i></span><span>屏幕上</span></div>
+          <div class="hero-render-body"><span class="render-badge">显示</span><span>Hello world</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="syntax">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">01 / RawtextJson 语法</p>
+          <h2>rawtext 后面，<br>先写一个方括号</h2>
+        </div>
+        <p>rawtext 的值是一个列表，用 <code>[ ]</code> 包起来；列表里每一项用 <code>{ }</code> 包起来，项与项之间用逗号隔开。读的顺序，就是显示的顺序。<br>标准格式：{"rawtext": [&lt;组件1&gt;, &lt;组件2&gt;]}</p>
+      </div>
+
+      <div class="syntax-lab">
+        <div class="panel reveal">
+          <div class="panel-head"><span>rawtext 的写法</span><span class="chip green">列表 · 循环</span></div>
+          <pre class="syntax-code" id="syntaxCode">{
+  <span class="tok key" data-step="0">"rawtext"</span><span class="tok punct" data-step="0">:</span> <span class="tok punct" data-step="1">[</span>
+    <span class="tok item" data-step="2">{ "text": "Hello " }</span><span class="tok punct" data-step="3">,</span>
+    <span class="tok item" data-step="3">{ "translate": "%%s", "with": ["world"] }</span>
+  <span class="tok punct" data-step="4">]</span>
+}</pre>
+        </div>
+
+        <div class="panel syntax-flow reveal">
+          <div class="panel-head"><span>游戏按顺序读</span><span class="chip amber">1 → 2</span></div>
+          <div class="syntax-slots" id="syntaxSlots">
+            <div class="syntax-slot" data-slot="0">
+              <b>1</b>
+              <span>Hello <small>来自第一项 text</small></span>
+            </div>
+            <div class="syntax-slot" data-slot="1">
+              <b>2</b>
+              <span>world <small>来自第二项 translate</small></span>
+            </div>
+          </div>
+          <div class="syntax-output">
+            <small>屏幕上</small>
+            <strong id="syntaxOutput">（等待）</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="syntax-caption" id="syntaxCaption"></div>
+    </section>
+
+    <section class="section" id="types">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">02 / 文本组件</p>
+          <h2>列表里的每一项，<br>可以是什么？</h2>
+        </div>
+        <p>最常见的是文字、翻译、分数和实体名称。每一项只选一种内容；写什么，就会在对应位置显示什么。</p>
+      </div>
+
+      <div class="type-grid">
+        <article class="type-card cyan reveal">
+          <div class="type-top"><h3>text</h3><span>纯文字</span></div>
+          <p>直接写要显示的字；<code>\n</code> 可以换行。空格也要自己写进去，游戏不会自动加。</p>
+          <pre><code>{"text": "Hello\nWorld"}</code></pre>
+          <div class="type-output">显示：<strong>Hello ↵ World</strong></div>
+        </article>
+
+        <article class="type-card amber reveal">
+          <div class="type-top"><h3>translate</h3><span>翻译 / 模板</span></div>
+          <p>先给一个语言键名或模板，再用 <code>with</code> 里的内容填空。语言键名会按当前语言显示译文。</p>
+          <pre><code>{"translate": "commands.op.success",
+ "with": ["Alex"]}</code></pre>
+          <div class="type-output">显示：<strong>已将 Alex 设为管理员</strong></div>
+        </article>
+
+        <article class="type-card green reveal">
+          <div class="type-top"><h3>score</h3><span>分数</span></div>
+          <p>读取记分板上的分数。多个分数会用逗号加空格连在一起。</p>
+          <pre><code>{"score": {"name": "@s", "objective": "obj"}}</code></pre>
+          <div class="type-output">显示：<strong>42</strong></div>
+        </article>
+
+        <article class="type-card pink reveal">
+          <div class="type-top"><h3>selector</h3><span>实体名称</span></div>
+          <p>显示被选中实体的名称；没有自定义名称时，显示实体类型名。</p>
+          <pre><code>{"selector": "@a"}</code></pre>
+          <div class="type-output">显示：<strong>Alex, Steve</strong></div>
+        </article>
+
+        <article class="type-card violet reveal">
+          <div class="type-top"><h3>translate-with-rawtext</h3><span>翻译 + 列表</span></div>
+          <p><code>with</code> 里不一定是普通答案，还可以再放一个 rawtext 列表。游戏会先把这个小列表按顺序变成文字，再拿来填空。</p>
+          <pre><code>{"translate": "%%s + %%s",
+ "with": {"rawtext": [
+   {"text": "X"},
+   {"text": "Y"}
+ ]}}</code></pre>
+          <div class="type-output">显示：<strong>X + Y</strong></div>
+        </article>
+
+        <article class="type-card cyan reveal">
+          <div class="type-top"><h3>§ 格式化</h3><span>颜色与样式</span></div>
+          <p><code>§4</code> 深红，<code>§6</code> 金色，<code>§l</code> 粗体，<code>§r</code> 恢复默认。注意：<code>§6</code> 只改颜色，不会自动变粗。</p>
+          <pre><code>{"text": "§4Red §6Gold §lBold"}</code></pre>
+          <div class="type-output">显示：<span class="mc-line"><span class="mc-red">Red</span> <span class="mc-gold">Gold</span> <span class="mc-gold mc-bold">Bold</span></span></div>
+        </article>
+      </div>
+
+    </section>
+
+    <section class="section" id="list">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">03 / rawtext 列表</p>
+          <h2>一段一段，<br>接成一句话</h2>
+        </div>
+        <p>游戏从第一项读到最后一项，把每一项变成文字，再按顺序接起来。列表本身不会自动加空格或换行；需要空格，就把它写进 text 里。</p>
+      </div>
+
+      <div class="list-lab">
+        <div class="panel reveal">
+          <div class="panel-head"><span>rawtext 列表</span><span class="chip">4 项</span></div>
+          <div class="list-items" id="listItems">
+            <div class="list-item" data-index="0">
+              <span class="list-num">1</span>
+              <div><b>text</b><code>"玩家："</code></div>
+            </div>
+            <div class="list-item" data-index="1">
+              <span class="list-num">2</span>
+              <div><b>selector</b><code>"@a"</code></div>
+            </div>
+            <div class="list-item" data-index="2">
+              <span class="list-num">3</span>
+              <div><b>text</b><code>" 分数："</code></div>
+            </div>
+            <div class="list-item" data-index="3">
+              <span class="list-num">4</span>
+              <div><b>score</b><code>{"name": "@s", "objective": "obj"}</code></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel list-stage-panel reveal">
+          <div class="panel-head"><span>屏幕上的结果</span><span class="chip green" id="listLoop">循环播放</span></div>
+          <div class="list-stage" id="listStage"><span class="stage-empty">（等待）</span></div>
+          <div class="list-caption" id="listCaption"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="translate">
+      <div class="section-head reveal">
+        <div>
+          <p class="kicker">04 / translate</p>
+          <h2>像填空题，<br>把答案放进空里</h2>
+        </div>
+        <p>translate 给出一句模板，with 给出答案卡。<code>%%s</code> 按顺序填；<code>%%1</code>、<code>%%2</code> 按编号填。with 里还可以再放一个 rawtext 列表。</p>
+      </div>
+
+      <div class="tr-tabs reveal" role="tablist" aria-label="translate 示例">
+        <button class="tr-tab active" type="button" data-example="seq">顺序</button>
+        <button class="tr-tab" type="button" data-example="mix">顺序+编号</button>
+        <button class="tr-tab" type="button" data-example="selector">selector 无结果</button>
+        <button class="tr-tab" type="button" data-example="score">分数决定位置</button>
+      </div>
+
+      <div class="tr-lab">
+        <div class="panel tr-code-panel reveal">
+          <div class="panel-head"><span>translate 的写法</span><span class="chip amber">模板</span></div>
+          <pre class="tr-json" id="trJson"></pre>
+          <p class="tr-explain" id="trExplain"></p>
+        </div>
+
+        <div class="panel tr-play-panel reveal">
+          <div class="panel-head"><span>填空过程</span><span class="chip" id="trStep">1 / 3</span><span class="chip green">自动循环</span></div>
+          <div class="tr-template" id="trTemplate"></div>
+          <div class="tr-answers-label">with 里的答案</div>
+          <div class="tr-answers" id="trAnswers"></div>
+          <div class="tr-result"><small>拼出来的话</small><strong id="trResult">（等待）</strong></div>
+          <div class="tr-caption" id="trCaption"></div>
+        </div>
+      </div>
+
+      <div class="tr-tip reveal"><strong>小提示：</strong>%%s 和 %%1、%%2 混用时，编号不是从整张答案卡的第一张重新数，而是从“已经用掉的答案”后面继续数。分数示例里的 %%%%s 会先被分数替换成 %%1、%%2……，再从 A 开始数。答案卡前面的小数字，是它现在在列表里的位置；空 selector 被删除后，数字会重新排。</div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <span>TEXT LAB</span>
+    <span>rawtext · translate · §</span>
+    <span>参考：<a href="https://zh.minecraft.wiki/w/%E6%96%87%E6%9C%AC%E7%BB%84%E4%BB%B6" target="_blank" rel="noreferrer">Minecraft Wiki</a> / <a href="https://www.runoob.com/json/json-syntax.html" target="_blank" rel="noreferrer">JSON 语法</a></span>
+  </footer>
+
+  <script>
+    (() => {
+      'use strict';
+
+      document.documentElement.classList.add('js');
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+      const supportsObserver = 'IntersectionObserver' in window;
+
+      /* ---------------------------------------------------------
+         入场与视口暂停
+         --------------------------------------------------------- */
+      if (supportsObserver) {
+        const revealObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('in');
+            revealObserver.unobserve(entry.target);
+          }
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+        $$('.reveal').forEach((el) => revealObserver.observe(el));
+
+        const pauseObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            entry.target.classList.toggle('is-paused', !entry.isIntersecting);
+          }
+        }, { threshold: 0.08 });
+
+        $$('.section').forEach((section) => pauseObserver.observe(section));
+      } else {
+        $$('.reveal').forEach((el) => el.classList.add('in'));
+      }
+
+      /* ---------------------------------------------------------
+         01 / rawtext 写法动画
+         --------------------------------------------------------- */
+      const syntaxSteps = [
+        { caption: '<strong>rawtext 是名字：</strong>它后面用冒号接内容。这个名字告诉游戏：下面要读的是一个文本列表。' },
+        { caption: '<strong>方括号 [ ]：</strong>表示列表开始。列表里可以只放一项，也可以放很多项。' },
+        { caption: '<strong>第 1 项：</strong>用花括号 { } 包起来。text 表示直接显示 "Hello "，注意空格也写进去了。' },
+        { caption: '<strong>逗号分隔第 2 项：</strong>translate 会先变成文字（后面细讲），这里填进 "world"。' },
+        { caption: '<strong>方括号结束：</strong>游戏按 1 → 2 的顺序读，屏幕上就是 "Hello world"。' }
+      ];
+      const syntaxTokens = $$('#syntaxCode .tok');
+      const syntaxSlots = $$('#syntaxSlots .syntax-slot');
+      const syntaxOutput = $('#syntaxOutput');
+      const syntaxCaption = $('#syntaxCaption');
+      let syntaxStep = 0;
+      let syntaxTimer = null;
+
+      const syntaxOutputs = ['（等待）', '（等待）', 'Hello ', 'Hello world', 'Hello world'];
+
+      function renderSyntax() {
+        syntaxTokens.forEach((token) => {
+          const step = Number(token.dataset.step);
+          token.classList.toggle('active', step === syntaxStep);
+          token.classList.toggle('done', step < syntaxStep);
+        });
+
+        syntaxSlots.forEach((slot, index) => {
+          slot.classList.toggle('show', syntaxStep >= index + 2);
+        });
+
+        if (syntaxOutput) syntaxOutput.textContent = syntaxOutputs[syntaxStep];
+        if (syntaxCaption) syntaxCaption.innerHTML = syntaxSteps[syntaxStep].caption;
+      }
+
+      function stopSyntax() {
+        if (!syntaxTimer) return;
+        clearInterval(syntaxTimer);
+        syntaxTimer = null;
+      }
+
+      function startSyntax() {
+        if (syntaxTimer) return;
+        if (syntaxStep >= syntaxSteps.length - 1) {
+          syntaxStep = 0;
+          renderSyntax();
+        }
+        syntaxTimer = setInterval(() => {
+          syntaxStep = (syntaxStep + 1) % syntaxSteps.length;
+          renderSyntax();
+        }, 1500);
+      }
+
+      renderSyntax();
+
+      /* ---------------------------------------------------------
+         03 / rawtext 列表循环动画
+         --------------------------------------------------------- */
+      const listChunks = ['玩家：', 'Alex, Steve', ' 分数：', '42'];
+      const listSteps = [
+        { count: 0, caption: '列表有 4 项。游戏从第 1 项开始读，还什么都没有显示。' },
+        { count: 1, caption: '<strong>第 1 项是 text：</strong>直接显示 "玩家："。这一段就接在屏幕最前面。' },
+        { count: 2, caption: '<strong>第 2 项是 selector：</strong>把 @a 变成在线玩家名字，接在 "玩家：" 后面。' },
+        { count: 3, caption: '<strong>第 3 项是 text：</strong>接上 " 分数："。注意开头有空格，所以名字和“分数”之间才有空隙。' },
+        { count: 4, caption: '<strong>第 4 项是 score：</strong>读取分数 42，接在最后。四项读完，一句话就完成了。' },
+        { count: 4, caption: '<strong>完成：</strong>列表没有自动加空格；每一段之间的空隙，都是 text 里自己写出来的。' }
+      ];
+      const listItems = $$('#listItems .list-item');
+      const listStage = $('#listStage');
+      const listCaption = $('#listCaption');
+      const listLoop = $('#listLoop');
+      let listStep = 0;
+      let listTimer = null;
+
+      function renderList() {
+        const step = Math.min(listStep, listSteps.length - 1);
+        const count = listSteps[step].count;
+
+        listItems.forEach((item, index) => {
+          item.classList.toggle('active', listStep < listSteps.length - 1 && index === count - 1);
+          item.classList.toggle('done', index < count - 1 || listStep === listSteps.length - 1);
+        });
+
+        if (listStage) {
+          if (count === 0) {
+            listStage.innerHTML = '<span class="stage-empty">（等待）</span>';
+          } else {
+            listStage.innerHTML = listChunks.slice(0, count)
+              .map((chunk) => `<span class="stage-chunk">${chunk}</span>`)
+              .join('');
+          }
+        }
+
+        if (listCaption) listCaption.innerHTML = listSteps[step].caption;
+        if (listLoop) listLoop.textContent = listStep === listSteps.length - 1 ? '准备循环…' : '循环播放';
+      }
+
+      function stopList() {
+        if (!listTimer) return;
+        clearInterval(listTimer);
+        listTimer = null;
+      }
+
+      function startList() {
+        if (listTimer) return;
+        listTimer = setInterval(() => {
+          listStep += 1;
+          if (listStep >= listSteps.length) listStep = 0;
+          renderList();
+        }, 1600);
+      }
+
+      renderList();
+
+      /* ---------------------------------------------------------
+         04 / translate 填空动画
+         --------------------------------------------------------- */
+      const translateExamples = {
+        seq: {
+          json: '{"translate": "Hi %%s, you are %%s", "with": ["Alex", "admin"]}',
+          template: 'Hi %%s, you are %%s',
+          answers: ['Alex', 'admin'],
+          explain: '模板里有两个 %%s。with 里有两张答案卡：Alex 和 admin。按顺序填进去。',
+          frames: [
+            { used: [], replaced: {}, output: '', caption: '先看模板：两个空。with 里有两张答案卡。' },
+            { used: [0], pick: 0, replaced: { 0: 'Alex' }, output: 'Hi Alex, you are %%s', caption: '第一个空按顺序拿 Alex；已经用掉 1 张卡。' },
+            { used: [0, 1], pick: 1, replaced: { 0: 'Alex', 1: 'admin' }, output: 'Hi Alex, you are admin', caption: '第二个空拿 admin；句子完成。' }
+          ]
+        },
+        mix: {
+          json: '{"translate": "%%s + %%2 + %%s + %%1",\n "with": ["A", "B", "C", "D"]}',
+          template: '%%s + %%2 + %%s + %%1',
+          answers: ['A', 'B', 'C', 'D'],
+          explain: '模板里有两个 %%s 顺序空，还有 %%2 和 %%1 两个编号空。答案卡是 A、B、C、D。先填完两个 %%s，再按编号从剩下的答案里取。',
+          frames: [
+            { used: [], replaced: {}, output: '', caption: '模板：%%s、%%2、%%s、%%1。答案卡 A、B、C、D。' },
+            { used: [0], pick: 0, replaced: { 0: 'A' }, output: 'A + %%2 + %%s + %%1', caption: '先处理第一个 %%s：拿 A；已经用掉 1 张卡。' },
+            { used: [0, 1], pick: 1, replaced: { 0: 'A', 2: 'B' }, output: 'A + %%2 + B + %%1', caption: '再处理第二个 %%s：拿 B；现在两张顺序卡都用掉了。' },
+            { used: [0, 1, 3], pick: 3, replaced: { 0: 'A', 1: 'D', 2: 'B' }, output: 'A + D + B + %%1', caption: '%%2：从已经用掉的 A、B 后面数第 2 张，拿到 D。' },
+            { used: [0, 1, 2, 3], pick: 2, replaced: { 0: 'A', 1: 'D', 2: 'B', 3: 'C' }, output: 'A + D + B + C', caption: '%%1：还是从 A、B 后面数第 1 张，拿到 C；完成。' }
+          ]
+        },
+        selector: {
+          json: '{"translate": "显示：%%3", "with": {"rawtext": [\n   {"selector": "@a[rm=0.5, r=2]"},\n   {"selector": "@a[rm=0.5, r=1]"},\n   {"text": "X"},\n   {"text": "Y"},\n   {"text": "Z"}\n ]}}',
+          template: '显示：%%3',
+          speed: 2600,
+          showPositions: true,
+          answers: [
+            { label: 'S1', value: '@a[rm=0.5, r=2] · ?' },
+            { label: 'S2', value: '@a[rm=0.5, r=1] · ?' },
+            'X', 'Y', 'Z'
+          ],
+          explain: '没有实体的 selector 不会产生文字，会被整项跳过；后面的项会往前补位，所以 %%3 选到的位置会变。',
+          frames: [
+            { used: [], replaced: {}, output: '', caption: '第一步：原始列表有 5 项：S1、S2、X、Y、Z。先检查 S1 能不能找到实体。' },
+            {
+              used: [], replaced: {}, output: '', caption: '第二步：正在检查 S1（@a[rm=0.5, r=2]）。它现在是什么结果还不知道。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 检查中…' },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · ?' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [], replaced: {}, output: '', caption: '第三步：S1 找到了实体，所以这一项保留下来，不会删除。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 有实体' },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · ?' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [], replaced: {}, output: '', caption: '第四步：再检查 S2（@a[rm=0.5, r=1]）。S1 仍然保留着。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 有实体' },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 检查中…' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [], replaced: {}, output: '', caption: '第五步：S2 也找到了实体。两个 selector 都保留，列表还是 5 项。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 有实体' },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 有实体' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [2], pick: 2, replaced: { 0: 'X' }, output: '显示：X', caption: '第六步：%%3 从第 1 项开始数：S1 是 1、S2 是 2、X 是 3，所以显示 X。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 有实体' },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 有实体' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [], replaced: {}, output: '', caption: '第七步：换一种情况。重新检查 S1；这次先假设它找不到实体。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 检查中…' },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 有实体' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [], replaced: {}, output: '', caption: '第八步：S1 确实没有实体，所以这一整项被删除。后面的 S2、X、Y、Z 往前补位。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 无实体', removed: true },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 有实体' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [3], pick: 3, replaced: { 0: 'Y' }, output: '显示：Y', caption: '第九步：现在 S2 是第 1 项、X 是第 2 项、Y 是第 3 项；%%3 显示 Y。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 无实体', removed: true },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 有实体' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [], replaced: {}, output: '', caption: '第十步：再换一种情况。检查 S2；S1 仍然被删除。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 无实体', removed: true },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 检查中…' },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [], replaced: {}, output: '', caption: '第十一步：S2 也没有实体，于是也被删除。列表只剩 X、Y、Z 三项。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 无实体', removed: true },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 无实体', removed: true },
+                'X', 'Y', 'Z'
+              ]
+            },
+            {
+              used: [4], pick: 4, replaced: { 0: 'Z' }, output: '显示：Z', caption: '第十二步：X 是第 1 项、Y 是第 2 项、Z 是第 3 项；%%3 显示 Z。',
+              answers: [
+                { label: 'S1', value: '@a[rm=0.5, r=2] · 无实体', removed: true },
+                { label: 'S2', value: '@a[rm=0.5, r=1] · 无实体', removed: true },
+                'X', 'Y', 'Z'
+              ]
+            }
+          ]
+        },
+        score: {
+          json: '{"translate": "显示：%%%%s", "with": {"rawtext": [\n   {"score": {"name": "@s", "objective": "scb1"}},\n   {"text": "A"},\n   {"text": "B"},\n   {"text": "C"},\n   {"text": "D"},\n   {"text": "E"}\n ]}}',
+          template: '显示：%%%%s',
+          speed: 2300,
+          showPositions: true,
+          answers: [
+            { label: 'score @s', value: '?', noPosition: true },
+            'A', 'B', 'C', 'D', 'E'
+          ],
+          explain: 'with 的第一项是分数；后面 A-E 是答案卡。模板里的 %%%%s 会先被分数替换成 %%1、%%2……，再从 A 开始按编号取。',
+          frames: [
+            { used: [], replaced: {}, templateText: '显示：%%%%s', output: '', caption: '第一步：with 的第一项是分数，后面 A-E 是答案卡。模板里的 %%%%s 还在等分数。' },
+            { used: [0], scoreValue: 1, templateText: '显示：%%1', output: '', caption: '第二步：分数 = 1。%%s 被替换成 1，模板剩下 %%1；分数这一项已经用掉，指针落在 A 前面。' },
+            { used: [0, 1], pick: 1, scoreValue: 1, templateText: '显示：%%1', output: '显示：A', caption: '第三步：%%1 从 A 开始数第 1 张 → A。' },
+            { used: [0], scoreValue: 2, templateText: '显示：%%2', output: '', caption: '第四步：分数 = 2。模板变成 %%2；分数用掉，还是从 A 开始数。' },
+            { used: [0, 2], pick: 2, scoreValue: 2, templateText: '显示：%%2', output: '显示：B', caption: '第五步：%%2 从 A 开始数第 2 张 → B。' },
+            { used: [0], scoreValue: 3, templateText: '显示：%%3', output: '', caption: '第六步：分数 = 3。模板变成 %%3；从 A 开始准备数。' },
+            { used: [0, 3], pick: 3, scoreValue: 3, templateText: '显示：%%3', output: '显示：C', caption: '第七步：%%3 从 A 开始数第 3 张 → C。' },
+            { used: [0], scoreValue: 4, templateText: '显示：%%4', output: '', caption: '第八步：分数 = 4。模板变成 %%4；还是从 A 开始数。' },
+            { used: [0, 4], pick: 4, scoreValue: 4, templateText: '显示：%%4', output: '显示：D', caption: '第九步：%%4 从 A 开始数第 4 张 → D。' },
+            { used: [0], scoreValue: 5, templateText: '显示：%%5', output: '', caption: '第十步：分数 = 5。模板变成 %%5；继续从 A 开始数。' },
+            { used: [0, 5], pick: 5, scoreValue: 5, templateText: '显示：%%5', output: '显示：E', caption: '第十一步：%%5 从 A 开始数第 5 张 → E。' }
+          ]
+        }
+      };
+
+      const trTabs = $$('.tr-tab');
+      const trJson = $('#trJson');
+      const trExplain = $('#trExplain');
+      const trTemplate = $('#trTemplate');
+      const trAnswers = $('#trAnswers');
+      const trStep = $('#trStep');
+      const trResult = $('#trResult');
+      const trCaption = $('#trCaption');
+
+      let trKey = 'seq';
+      let trFrame = 0;
+      let trTimer = null;
+      let previousFilled = new Set();
+
+      function escapeHTML(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function parseTemplate(template) {
+        const parts = [];
+        const re = /%%s|%%\d+/g;
+        let last = 0;
+        let index = 0;
+        let match;
+
+        while ((match = re.exec(template))) {
+          if (match.index > last) parts.push({ type: 'text', value: template.slice(last, match.index) });
+          parts.push({ type: 'ph', raw: match[0], index });
+          index += 1;
+          last = match.index + match[0].length;
+        }
+
+        if (last < template.length) parts.push({ type: 'text', value: template.slice(last) });
+        return parts;
+      }
+
+      function currentExample() {
+        return translateExamples[trKey];
+      }
+
+      function renderTemplateText(text) {
+        const re = /%%s|%%\d+/g;
+        let last = 0;
+        let html = '';
+        let match;
+
+        while ((match = re.exec(text))) {
+          if (match.index > last) html += escapeHTML(text.slice(last, match.index));
+          html += `<span class="tr-ph">${escapeHTML(match[0])}</span>`;
+          last = match.index + match[0].length;
+        }
+
+        if (last < text.length) html += escapeHTML(text.slice(last));
+        return html;
+      }
+
+      function renderTranslate() {
+        const example = currentExample();
+        const frame = example.frames[trFrame];
+        const filledNow = new Set(Object.keys(frame.replaced || {}).map(Number));
+
+        if (trJson) trJson.textContent = example.json;
+        if (trExplain) trExplain.textContent = example.explain;
+
+        if (trTemplate) {
+          if (frame.templateText !== undefined) {
+            trTemplate.innerHTML = renderTemplateText(frame.templateText);
+          } else {
+            const parts = parseTemplate(example.template);
+            trTemplate.innerHTML = parts.map((part) => {
+              if (part.type === 'text') return escapeHTML(part.value);
+              if (Object.prototype.hasOwnProperty.call(frame.replaced, part.index)) {
+                const isNew = filledNow.has(part.index) && !previousFilled.has(part.index);
+                return `<span class="tr-filled${isNew ? ' is-new' : ''}">${escapeHTML(frame.replaced[part.index])}</span>`;
+              }
+              return `<span class="tr-ph">${escapeHTML(part.raw)}</span>`;
+            }).join('');
+          }
+        }
+
+        if (trAnswers) {
+          let answers = frame.answers || example.answers;
+          if (frame.scoreValue !== undefined) {
+            answers = answers.map((item, index) => {
+              if (index !== 0 || typeof item === 'string') return item;
+              return { ...item, value: String(frame.scoreValue) };
+            });
+          }
+
+          const showPositions = example.showPositions === true;
+          let visiblePosition = 0;
+
+          trAnswers.innerHTML = answers.map((item, index) => {
+            const answer = typeof item === 'string' ? { label: item, value: item } : item;
+            const used = frame.used.includes(index);
+            const picked = frame.pick === index;
+            const removed = answer.removed === true;
+            let position = 0;
+
+            if (showPositions && !removed && !answer.noPosition) {
+              visiblePosition += 1;
+              position = visiblePosition;
+            }
+
+            const pos = position ? `<span class="tr-pos">${position}</span>` : '';
+            const value = answer.label !== answer.value
+              ? `<small>→ ${escapeHTML(answer.value)}</small>`
+              : '';
+            return `<span class="tr-answer ${used ? 'used' : ''} ${picked ? 'picked' : ''} ${removed ? 'removed' : ''}">${pos}${escapeHTML(answer.label)}${value}</span>`;
+          }).join('');
+        }
+
+        if (trStep) trStep.textContent = `${trFrame + 1} / ${example.frames.length}`;
+        if (trResult) trResult.textContent = frame.output || '（等待）';
+        if (trCaption) trCaption.textContent = frame.caption;
+
+        previousFilled = filledNow;
+        trTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.example === trKey));
+      }
+
+      function stopTranslate() {
+        if (!trTimer) return;
+        clearInterval(trTimer);
+        trTimer = null;
+      }
+
+      function startTranslate() {
+        if (trTimer) return;
+        const speed = currentExample().speed || 1700;
+        trTimer = setInterval(() => {
+          trFrame += 1;
+          if (trFrame >= currentExample().frames.length) trFrame = 0;
+          renderTranslate();
+        }, speed);
+      }
+
+      trTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          stopTranslate();
+          trKey = tab.dataset.example;
+          trFrame = 0;
+          previousFilled = new Set();
+          renderTranslate();
+          startTranslate();
+        });
+      });
+
+      renderTranslate();
+
+      /* ---------------------------------------------------------
+         只在可见时播放 / 循环
+         --------------------------------------------------------- */
+      const players = [
+        {
+          id: 'syntax',
+          enter: () => {
+            if (syntaxStep >= syntaxSteps.length - 1) {
+              syntaxStep = 0;
+              renderSyntax();
+            }
+            startSyntax();
+          },
+          leave: stopSyntax
+        },
+        {
+          id: 'list',
+          enter: startList,
+          leave: stopList
+        },
+        {
+          id: 'translate',
+          enter: startTranslate,
+          leave: stopTranslate
+        }
+      ];
+
+      const visible = new Map();
+
+      if (supportsObserver) {
+        const autoObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            const player = players.find((item) => item.id === entry.target.id);
+            if (!player) continue;
+            visible.set(player.id, entry.isIntersecting);
+            if (entry.isIntersecting) player.enter();
+            else player.leave();
+          }
+        }, { threshold: 0.18 });
+
+        for (const player of players) {
+          const section = document.getElementById(player.id);
+          if (section) autoObserver.observe(section);
+        }
+      } else {
+        for (const player of players) player.enter();
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          players.forEach((player) => player.leave());
+        } else {
+          players.forEach((player) => {
+            if (!supportsObserver || visible.get(player.id)) player.enter();
+          });
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

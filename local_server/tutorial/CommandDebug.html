@@ -1,236 +1,1538 @@
 <!DOCTYPE html>
+<html lang="zh-CN">
 
-<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="color-scheme" content="dark">
+	<meta name="theme-color" content="#070c16">
+	<meta name="description" content="命令模拟器命令调试文档：命令运行方式、命令方块注册语法、MC 函数、终端命令与已知限制。">
+	<title>命令调试 · 命令模拟器帮助文档</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070c16'/%3E%3Cpath d='M16 5 27 11.4v9.2L16 27 5 20.6v-9.2z' fill='%232f8d55'/%3E%3Cpath d='M5 11.4 16 17.8l11-6.4v9.2L16 27z' fill='%230f3d23'/%3E%3Cpath d='M16 5 27 11.4 16 17.8 5 11.4z' fill='%233ee08f'/%3E%3C/svg%3E">
 
-	<head>
-		<meta charset="utf-8">
-		<title> 命令模拟器命令调试文档 </title>
-        <link href="../css/wendang.css" rel="stylesheet" type="text/css" media="all" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	</head>
-        
-    <body style="width: 80%; margin: 0px auto;">
-        <div class="menu">
-            <div id="menu_1">
-                <div class="menu_1">
-                    <div onclick="display_thing('main_1');">命令运行</div>
-                    <div onclick="display_thing('main_2');">命令方块</div>
-                    <div onclick="display_thing('main_3');">MC函数</div>
-                    <div onclick="display_thing('main_4');">终端命令</div>
-                </div>
-                <div class="menu_1">
-                    <div onclick="display_thing('main_5');">命令须知</div>
-                </div>
-            </div>
-            <div style="text-align: center; background-color: rgb(62, 94, 7); color: white; display: flex;">
-                <div onclick="close_menu()" style="padding: 3px 0px; width: 50%; border-right: 3px solid white;" id="button_1">点击收入菜单</div>
-                <div onclick="website1()" style="padding: 3px 0px; width: 50%;">点击返回主页</div>
-            </div>
-        </div>
+	<style>
+		/* ========== 基础变量 ========== */
+		:root {
+			--bg: #070c16;
+			--panel: rgba(255, 255, 255, .045);
+			--panel-hi: rgba(255, 255, 255, .08);
+			--line: rgba(255, 255, 255, .10);
+			--line-hi: rgba(255, 255, 255, .2);
+			--text: #eaf1fb;
+			--body: #c2d0e2;
+			--muted: #93a5bf;
+			--mint: #3ee08f;
+			--mint-dim: #2bbd76;
+			--amber: #ffc857;
+			--violet: #b493ff;
+			--gutter: clamp(20px, 5vw, 64px);
+			--header-h: 62px;
+			--radius: 22px;
+			--font: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+				"Microsoft YaHei", "Noto Sans SC", sans-serif;
+			--mono: ui-monospace, "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+		}
 
-        <div id="top_blank" style="height: 80px;"></div>
+		* {
+			box-sizing: border-box;
+		}
 
-        <div id="main_text" style="width: 95%; margin: 0px auto;">
+		html {
+			scroll-behavior: smooth;
+			-webkit-text-size-adjust: 100%;
+		}
 
-            <div id="main_1" >
-                <h1 style="text-align: center;">命令运行</h1>
-                <p>
-                    &emsp;&emsp;命令模拟器支持以下命令运行的方式：①命令方块；②发送命令窗口；③函数命令
-                </p>
-                <div style="text-align:center"><img src="../picture/tutorial/send_command.jpg" alt="" width="250" height="450"></div>
-                <div style="text-align:center">发送命令窗口</div>
-                <p>&emsp;&emsp;<samp class="red_text">命令模拟器的发送命令窗口支持运行调试命令、终端命令和MC原版命令(可以不加/)。</samp></p>
-                <p>
-                    &emsp;&emsp;命令模拟器支持读取行为包，资源包中新增的项目(<samp class="red_text">仅限于注册ID</samp>)：
-                    动画、动画控制器、迷雾、粒子、声音、音乐、功能域、方块、物品、实体、战利品表、交易表、场景文件、摄像头预设。
-                </p>
-                <p>
-                    &emsp;&emsp;命令模拟器支持对用户的命令进行语法检查，根据版本判断命令的语法，这将影响命令的语法检查和命令最终的运行效果。
-                    命令在世界内运行并影响世界数据，用户可根据生成的反馈信息检查命令的对错与否。
-                </p>
-            </div>
+		body {
+			margin: 0;
+			min-height: 100dvh;
+			font-family: var(--font);
+			font-size: 16px;
+			line-height: 1.95;
+			color: var(--text);
+			background:
+				radial-gradient(900px 520px at 8% -8%, rgba(62, 224, 143, .16), transparent 62%),
+				radial-gradient(800px 520px at 100% 0%, rgba(180, 147, 255, .13), transparent 58%),
+				linear-gradient(180deg, #070c16 0%, #0a1120 46%, #060a12 100%);
+			background-repeat: no-repeat;
+			-webkit-font-smoothing: antialiased;
+			/* clip 不会创建滚动容器，否则 position: sticky 会失效 */
+			overflow-x: clip;
+		}
 
-            <div id="main_2" style="display: none;" >
-                <h1 style="text-align: center;">命令方块</h1>
-                <p>
-                    &emsp;&emsp;命令模拟器通过txt文件在世界内注册命令方块。你可以在<samp class="red_text">save_world/世界名字/command_blocks</samp>下创建txt文件开始编写命令方块。
-                    所有在这个目录下的txt文件都会参与注册命令方块。
-                </p>
-                <p>&emsp;&emsp;命令模拟器生成的世界会将主世界维度的x为1600 ~ 1695，z为1600 ~ 1695的区域设置为命令方块部署区域，超出该区域的命令方块将不再运行。</p>
-                <h1 style="text-align: center;">注册语法</h1>
-                <p>&emsp;&emsp;注册命令方块支持的语法有以下四种：</p>
-                <div style="background-color: rgb(255, 255, 255);">
-                    <p>
-                        &emsp;① start &#60;posx&#62; &#60;posy&#62; &#60;posz&#62;<br>
-                        &emsp;② [方向,属性] [MC命令]<br>
-                        &emsp;&emsp; [MC命令]<br>
-                        &emsp;&emsp; [MC命令]<br>
-                        &emsp;&emsp; ........<br>
-                        &emsp;③ [方向,属性] empty<br>
-                        &emsp;④ #注释内容<br>
-                    </p>
-                </div>
-                <p>
-                    &emsp;&emsp;start语法表示从某个局部位置开始部署命令方块，局部位置一定要满足以下条件：<samp class="red_text">x为0到95，y为-64到319，z为0到95。在世界内的命令方块将在(1600,-64,1600)加上局部位置后开始布置。</samp><br>
-                    &emsp;&emsp;方向是必填参数，表示从start位置开始，朝什么方向布置命令方块，命令方块自身的朝向也由该参数决定。可填参数<samp class="red_text">x+、x-、y+、y-，z-，z+、0、1、2、3、4、5。</samp>
-                    属性是选填参数，表示该位置的命令方块具体设置，可填参数<samp class="red_text">(循环/连锁/脉冲)(有条件/无条件)(红石/常开)(延时)，参数可以使用逗号或分号隔开。</samp><br>
-                    &emsp;&emsp;语法③用于插入一个空白的命令方块。<br>
-                    &emsp;&emsp;语法④用于插入一行注释内容，注释不影响命令方块的结构。<br><br>
-                    &emsp;&emsp;默认的属性是[连锁，无条件，常开，0]，如果指定新的属性则会覆盖默认属性，
-                    当下一条MC命令没有指定方向和属性参数时，则会使用最后一次设置的方向和属性参数。下面将使用一个例子进行解析。<br>
-                </p>
-                <div style="background-color: white;"><code>
-                    # 设置起始位置 1602 -60 1625<br>
-                    <span class="blue_text">start 2 -60 25</span><br>
-                    # 位置1602 -60 1625为无条件常开延时为0的脉冲命令方块(朝向y+)<br>
-                    <span class="blue_text">[y+,脉冲,无条件，0]say aaaa</span><br>
-                    # 位置1602 -59 1625为有条件常开延时为0的连锁命令方块(朝向y+)<br>
-                    <span class="blue_text">[y+,连锁，有条件，0]testfor aaaa</span><br>
-                    # 位置1602 -58 1625为有条件常开延时为0的连锁命令方块(朝向y+)<br>
-                    <span class="blue_text">testfor bbbb</span><br>
-                    # 位置1602 -57 1625为有条件常开延时为0的连锁命令方块(朝向y+)<br>
-                    <span class="blue_text">testfor bbbb</span><br>
-                    <br><br>
-                    # 起始命令方块的位置 1622 -40 1676<br>
-                    <span class="blue_text">start 1622 -40 1676</span><br>
-                    # 位置1622 -40 1676为无条件常开延时为0的脉冲命令方块(朝向y+)<br>
-                    <span class="blue_text">[y+,脉冲,无条件，0]say aaaa</span><br>
-                    # 位置1622 -39 1676为无条件常开延时为0的连锁命令方块(朝向y+)<br>
-                    <span class="blue_text">[y+,连锁]say aaaa</span><br>
-                    # 位置1622 -38 1676为无条件常开延时为0的连锁命令方块(朝向y+)<br>
-                    <span class="blue_text">say aaaa</span><br>
-                    # 位置1622 -37 1676为无条件常开延时为0的连锁命令方块(朝向y+)<br>
-                    <span class="blue_text">say aaaa</span><br>
-                </code></div>
-                <p>
-                    &emsp;&emsp;编辑完成命令方块文件后，用户需要在发送命令窗口运行“#reload”<samp class="red_text">终端命令</samp>来对文件进行语法检查，检查通过后，
-                    命令方块才会写入世界。<samp class="red_text">注意：注册完成并写入游戏的红石控制命令方块只能接受红石块的激活响应。</samp>
-                </p>
-            </div>
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			z-index: -1;
+			pointer-events: none;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px);
+			background-size: 52px 52px;
+			mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+			-webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+		}
 
-            <div id="main_3" style="display: none;" >
-                <h1 style="text-align: center;">MC函数</h1>
-                <p>&emsp;&emsp;命令模拟器可以读取行为包中的函数并正常执行，用户想要载入函数，首先应该先制作行为包。</p>
-                <p>
-                    &emsp;&emsp;命令模拟器位于main.py目录中，在functionality文件夹内会自动生成example文件夹。example文件夹里的example_bp就是一个行为包的模板，
-                    用户可以直接将该行为包复制进save_world\世界名字\behavior_packs内。
-                </p>
-                <p>
-                    &emsp;&emsp;如果用户想执行某一个版本的命令语法，请打开行为包内的manifest.json，找到min_engine_version参数并修改即可。
-                    execute新语法需要将min_engine_version参数设置为[1,19,50]及以上。
-                    min_engine_version参数设置完成后，在functions里就可以开始编辑的理想中的MC函数了。
-                </p>
-                <p>&emsp;&emsp;编辑完成函数文件后，你需要在发送命令窗口运行“#reload”终端命令来对文件进行语法检查，检查通过后，函数才会写入世界。</p>
-            </div>
+		::selection {
+			background: rgba(62, 224, 143, .3);
+			color: #fff;
+		}
 
-            <div id="main_4" style="display: none;" >
-                <h1 style="text-align: center;">终端关键字</h1>
-                <p>&emsp;&emsp;终端关键字是对终端命令进行控制的语法关键字，命令模拟器支持以下两种语法关键字。</p>
-                <div style="background-color: white;">
-                    <p>
-                        &emsp;① pass &#60;int&#62;<br>
-                        &emsp;② end
-                    </p>
-                </div>
-                <p>
-                    &emsp;&emsp;pass是跳过指令，int代表跳过几行终端，调试或MC指令。<br>
-                    &emsp;&emsp;end是提前结束指令，当遇到end关键字时，终端命令终止运行。
-                </p>
+		:focus-visible {
+			outline: 2px solid var(--mint);
+			outline-offset: 3px;
+			border-radius: 8px;
+		}
 
-                <h1 style="text-align: center;">终端命令</h1>
-                <p>&emsp;&emsp;终端命令是命令模拟器对与调试参数设置的内置特殊命令，命令模拟器支持以下终端命令。如果以#开头但并不符合以下终端命令的格式，将会当做注释处理。</p>
-                <h3>#reload</h3>
-                <p>格式: #reload [open_cb_view] [transfor]</p>
-                <p>
-                    &emsp;&emsp;将行为包中的函数和用户的命令方块注册文件全部重新进行语法检查和加载。
-                    如果含有语法错误，则会在检查完毕后自动弹出语法反馈的窗口。
-                    只有在语法检查完全通过后，文件数据才能被写入世界、生成命令方块视图、以及创建bdx。<br>
-                    &emsp;&emsp;open_cb_view参数可以填 true 和 false ，在ture下会自动打开命令方块视图。
-                    如果有注册命令方块的操作，可以查看命令方块1:1大致渲染图。否则只会渲染黑幕。<br>
-                    &emsp;&emsp;transfor参数可以填 none、bdx、mcstructure ,transfor指定的是命令方块文件导出的文件格式，
-                    导出的文件将生成在 functionality/CB_Structure 路径下。
-                </p>
-                
-                <h3>#set</h3>
-                <p>
-                    格式1: #set command_version &#60;int&#62; &#60;int&#62; &#60;int&#62;<br>
-                    格式2: #set test_time &#60;int&#62;
-                    格式3: #set response_web &#60;bool&#62;
-                </p>
-                <p>
-                    &emsp;&emsp;command_version是设定命令对应游戏版本，命令的语法将会根据设置的版本进行运行。<br>
-                    &emsp;&emsp;test_time是设定命令测试的总时长，当test_time设置为大于0的时候，所有命令设施开始运行，
-                    在测试过程中会记录所有命令运行的反馈，测试时间到后会跳转至命令反馈页面。<br>
-                    &emsp;&emsp;response_web是设定命令测试完成后是否自动跳转命令反馈网页，
-                    每一次进入世界时都不会自动跳转，需要用户执行命令开启自动跳转。
-                </p>
+		a {
+			color: var(--mint);
+			text-decoration-color: rgba(62, 224, 143, .45);
+			text-underline-offset: 3px;
+		}
 
-                <h3>#command</h3>
-                <p>
-                    格式1: #command loop &#60;command&#62;<br>
-                    格式2: #command delay &#60;int&#62; &#60;command&#62;<br>
-                    格式3: #command end &#60;command&#62;
-                </p>
-                <p>
-                    &emsp;&emsp;loop是设定哪些MC命令在测试过程中需要每刻都运行。<br>
-                    &emsp;&emsp;delay是设定哪些MC命令在延时后的游戏刻运行，用于测试某些条件触发的功能。<br>
-                    &emsp;&emsp;end是设定哪些MC命令在测试完成后运行的命令，用于快速查看运行结果。
-                </p>
-            </div>
+		a:hover {
+			color: #8dffc3;
+		}
 
-            <div id="main_5" style="display: none;" >
-                <h1 style="text-align: center;">命令须知</h1>
-                <p>
-                    &emsp;&emsp;一些命令并没有完全模拟其特性，这些命令将在下方一一陈述。
-                </p>
+		.wrap {
+			width: min(1120px, 100% - var(--gutter));
+			margin-inline: auto;
+		}
 
-                <h3>/structure</h3>
-                <p>
-                    该命令无法对方块的方向进行旋转。
-                </p>
+		.skip {
+			position: absolute;
+			left: -9999px;
+			top: 8px;
+			z-index: 99;
+			padding: 10px 16px;
+			border-radius: 10px;
+			background: var(--mint);
+			color: #04140b;
+			font-weight: 700;
+			text-decoration: none;
+		}
 
-                <h3>/damage</h3>
-                <p>
-                    该命令无法做出准确的伤害计算。
-                </p>
+		.skip:focus {
+			left: 12px;
+		}
 
-                <h3>其他待补充</h3>
-            </div>
-        </div>
-        
-        <div style="height: 30px;"></div>
+		/* ========== 顶部 ========== */
+		.header {
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			background: rgba(7, 12, 22, .78);
+			border-bottom: 1px solid var(--line);
+			backdrop-filter: blur(16px) saturate(160%);
+			-webkit-backdrop-filter: blur(16px) saturate(160%);
+			padding-left: env(safe-area-inset-left);
+			padding-right: env(safe-area-inset-right);
+		}
 
-    </body>
+		.header__inner {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			height: var(--header-h);
+		}
 
-    <script>
-        var count_1 = 0 ;
-        function close_menu(){
-            if (count_1 == 0){
-                document.getElementById('menu_1').style.display = "none";
-                document.getElementById('button_1').innerHTML = "点击展开菜单";
-                document.getElementById('top_blank').style.height = "20px";
-            }
-            else{
-                document.getElementById('menu_1').style.display = "";
-                document.getElementById('button_1').innerHTML = "点击收入菜单"
-                document.getElementById('top_blank').style.height = (document.getElementById('menu_1').clientHeight + 20).toString() + "px"
-            }
-            count_1 ++; count_1 %= 2;
-        }
-        function website1(){window.location.href='http://localhost:32323';}
-    </script>
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			text-decoration: none;
+			color: var(--text);
+			flex: none;
+			min-height: 40px;
+		}
 
-    <script>
-        if (window.innerWidth > 700) {document.getElementById('main_text').style.width = "700px";}  
-        function display_thing(id1){
-            array1 = ['main_1','main_2','main_3','main_4','main_5','main_6'];
-            document.body.scrollTop = 0; 
-            document.documentElement.scrollTop = 0;
-            for (let index = 0; index < array1.length; index++) {
-                if (id1 == array1[index]) document.getElementById(array1[index]).style.display = "";
-                else document.getElementById(array1[index]).style.display = "none";
-            }
-        }
-    </script>
+		.brand svg {
+			width: 26px;
+			height: 26px;
+			filter: drop-shadow(0 0 12px rgba(62, 224, 143, .45));
+		}
+
+		.brand b {
+			font-size: 15px;
+			letter-spacing: .02em;
+			white-space: nowrap;
+		}
+
+		.crumb {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			color: var(--muted);
+			font-size: 13.5px;
+			white-space: nowrap;
+			overflow: hidden;
+		}
+
+		.crumb::before {
+			content: "/";
+			color: rgba(255, 255, 255, .3);
+		}
+
+		.crumb span {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.back {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			height: 38px;
+			padding: 0 14px;
+			border-radius: 11px;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			color: var(--text);
+			font-size: 13.5px;
+			text-decoration: none;
+			white-space: nowrap;
+			transition: background-color .2s, border-color .2s, transform .2s;
+		}
+
+		.back:hover {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.back svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		/* ========== 主体两栏 ========== */
+		.layout {
+			display: grid;
+			grid-template-columns: 226px minmax(0, 1fr);
+			gap: clamp(22px, 3vw, 44px);
+			align-items: start;
+			padding: clamp(22px, 3.4vw, 40px) 0 48px;
+		}
+
+		.side__inner {
+			position: sticky;
+			top: calc(var(--header-h) + 20px);
+		}
+
+		.side__label {
+			margin: 0 0 10px 12px;
+			font-size: 10.5px;
+			font-weight: 700;
+			letter-spacing: .26em;
+			text-transform: uppercase;
+			color: var(--mint);
+		}
+
+		.toc {
+			display: flex;
+			flex-direction: column;
+			gap: 3px;
+		}
+
+		.toc button {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			width: 100%;
+			padding: 10px 12px;
+			border: 0;
+			border-radius: 11px;
+			background: transparent;
+			color: var(--muted);
+			font: inherit;
+			font-size: 14.5px;
+			text-align: left;
+			cursor: pointer;
+			transition: color .18s, background-color .18s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.toc button .num {
+			font-family: var(--mono);
+			font-size: 11px;
+			color: rgba(255, 255, 255, .28);
+			letter-spacing: .04em;
+		}
+
+		.toc button:hover {
+			color: var(--text);
+			background: var(--panel);
+		}
+
+		.toc button.is-active {
+			color: var(--mint);
+			background: rgba(62, 224, 143, .13);
+			font-weight: 700;
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .28), 0 8px 22px -16px rgba(62, 224, 143, .9);
+		}
+
+		.toc button.is-active .num {
+			color: rgba(62, 224, 143, .8);
+		}
+
+		.side__foot {
+			margin-top: 18px;
+			padding: 14px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: var(--panel);
+			font-size: 12.5px;
+			line-height: 1.8;
+			color: var(--muted);
+		}
+
+		.side__foot b {
+			display: block;
+			margin-bottom: 4px;
+			color: var(--text);
+			font-size: 13px;
+		}
+
+		.side__foot a {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			margin-top: 6px;
+			font-size: 13px;
+			text-decoration: none;
+			color: var(--mint);
+		}
+
+		/* ========== 正文卡片 ========== */
+		.doc {
+			position: relative;
+			min-width: 0;
+			padding: clamp(20px, 3.2vw, 40px);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: linear-gradient(180deg, rgba(255, 255, 255, .042), rgba(255, 255, 255, .012));
+			box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .06);
+		}
+
+		.doc__eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			margin: 0 0 12px;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .18em;
+			color: var(--mint);
+			text-transform: uppercase;
+		}
+
+		.doc__eyebrow::before {
+			content: "";
+			width: 18px;
+			height: 1px;
+			background: var(--mint);
+			opacity: .7;
+		}
+
+		.doc h1 {
+			margin: 0;
+			font-size: clamp(27px, 5vw, 38px);
+			line-height: 1.25;
+			letter-spacing: -.02em;
+			font-weight: 800;
+		}
+
+		.doc__lead {
+			margin: 12px 0 18px;
+			max-width: 60ch;
+			color: var(--muted);
+			font-size: 15.5px;
+			line-height: 1.85;
+		}
+
+		.doc__meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 5px;
+			margin: 0 0 26px;
+			padding: 0 0 20px;
+			border-bottom: 1px solid var(--line);
+			list-style: none;
+			font-size: 12.5px;
+			color: var(--muted);
+		}
+
+		.doc__meta li {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			padding: 4px 10px 4px 8px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: rgba(255, 255, 255, .03);
+		}
+
+		.doc__meta li::before {
+			content: "";
+			width: 5px;
+			height: 5px;
+			border-radius: 1px;
+			background: var(--mint);
+			opacity: .75;
+		}
+
+		/* ========== 章节排版 ========== */
+		.panel[hidden] {
+			display: none;
+		}
+
+		.panel > h2 {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			margin: 0 0 16px;
+			font-size: clamp(20px, 3.2vw, 26px);
+			line-height: 1.4;
+			letter-spacing: -.01em;
+			font-weight: 800;
+		}
+
+		.panel > h2::before {
+			content: "";
+			flex: none;
+			width: 4px;
+			height: 1.05em;
+			border-radius: 2px;
+			background: linear-gradient(180deg, var(--mint), var(--mint-dim));
+			box-shadow: 0 0 12px rgba(62, 224, 143, .55);
+		}
+
+		.doc h3 {
+			position: relative;
+			margin: 34px 0 12px;
+			padding-left: 15px;
+			font-size: 16.5px;
+			font-weight: 700;
+			letter-spacing: .01em;
+			color: #dce8f8;
+		}
+
+		.doc h3::before {
+			content: "";
+			position: absolute;
+			left: 0;
+			top: .58em;
+			width: 7px;
+			height: 7px;
+			border-radius: 2px;
+			background: var(--mint);
+			transform: rotate(45deg);
+			opacity: .85;
+		}
+
+		.panel p {
+			margin: 0 0 15px;
+			color: var(--body);
+			font-size: 15.5px;
+			line-height: 1.95;
+		}
+
+		.panel p:last-child {
+			margin-bottom: 0;
+		}
+
+		.panel strong {
+			color: var(--text);
+			font-weight: 700;
+		}
+
+		mark {
+			padding: 1px 6px;
+			margin: 0 1px;
+			border-radius: 6px;
+			background: rgba(255, 200, 87, .14);
+			box-shadow: inset 0 0 0 1px rgba(255, 200, 87, .22);
+			color: #ffd98a;
+			font-weight: 600;
+		}
+
+		code {
+			font-family: var(--mono);
+			font-size: .875em;
+			padding: 2px 6px;
+			border-radius: 6px;
+			background: rgba(140, 170, 255, .13);
+			box-shadow: inset 0 0 0 1px rgba(140, 170, 255, .16);
+			color: #bcd0ff;
+			white-space: nowrap;
+		}
+
+		/* 行内标签 */
+		.chips {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 7px;
+			margin: -4px 0 20px;
+		}
+
+		.chip {
+			display: inline-flex;
+			align-items: baseline;
+			gap: 6px;
+			padding: 4px 11px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: rgba(255, 255, 255, .04);
+			color: var(--text);
+			font-size: 13px;
+			line-height: 1.7;
+			white-space: nowrap;
+		}
+
+		.chip .num {
+			font-family: var(--mono);
+			font-size: 11px;
+			color: var(--mint);
+			opacity: .8;
+		}
+
+		/* 代码块 */
+		.code {
+			margin: 14px 0 22px;
+			border: 1px solid var(--line);
+			border-radius: 14px;
+			background: rgba(4, 8, 16, .55);
+			overflow: hidden;
+		}
+
+		.code__bar {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 8px 14px;
+			border-bottom: 1px solid var(--line);
+			font-family: var(--mono);
+			font-size: 11px;
+			letter-spacing: .1em;
+			color: var(--muted);
+		}
+
+		.code__bar::before {
+			content: "";
+			flex: none;
+			width: 7px;
+			height: 7px;
+			border-radius: 50%;
+			background: rgba(62, 224, 143, .65);
+			box-shadow: 14px 0 0 rgba(255, 200, 87, .55), 28px 0 0 rgba(255, 120, 80, .45);
+			margin-right: 24px;
+		}
+
+		.code pre {
+			margin: 0;
+			padding: 14px 16px;
+			overflow-x: auto;
+			font-family: var(--mono);
+			font-size: 12.8px;
+			line-height: 1.85;
+			color: #cfe0f5;
+			tab-size: 4;
+		}
+
+		.code .cm {
+			color: #6a80a0;
+		}
+
+		.code .kw {
+			color: #7cf3b3;
+		}
+
+		.code .ar {
+			color: #ffc857;
+		}
+
+		/* 圈码在等宽字体里会掉字，单独用正文字体渲染 */
+		.no {
+			font-family: var(--font);
+			line-height: 1;
+		}
+
+		.code .no {
+			color: var(--amber);
+		}
+
+		/* 语法说明条目 */
+		.def {
+			display: flex;
+			gap: 12px;
+			padding: 12px 14px;
+			margin-bottom: 8px;
+			border: 1px solid var(--line);
+			border-radius: 13px;
+			background: rgba(255, 255, 255, .026);
+		}
+
+		.def__tag {
+			flex: none;
+			height: 22px;
+			padding: 0 8px;
+			border-radius: 7px;
+			background: rgba(62, 224, 143, .12);
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .24);
+			color: var(--mint);
+			font-family: var(--mono);
+			font-size: 11.5px;
+			line-height: 22px;
+			white-space: nowrap;
+		}
+
+		.def__body {
+			min-width: 0;
+		}
+
+		.def__body p {
+			margin: 0 0 6px;
+			font-size: 14.5px;
+			line-height: 1.9;
+		}
+
+		.def__body p:last-child {
+			margin-bottom: 0;
+		}
+
+		/* 终端命令卡片 */
+		.cmd {
+			margin: 20px 0;
+			padding: 16px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .014));
+		}
+
+		.cmd__head {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			flex-wrap: wrap;
+			margin-bottom: 10px;
+		}
+
+		.cmd__name {
+			font-family: var(--mono);
+			font-size: 15px;
+			font-weight: 700;
+			color: var(--mint);
+		}
+
+		.cmd__tag {
+			padding: 1px 9px;
+			border-radius: 999px;
+			border: 1px solid rgba(180, 147, 255, .3);
+			background: rgba(180, 147, 255, .1);
+			color: #cbb8ff;
+			font-size: 11.5px;
+		}
+
+		.cmd .code {
+			margin: 10px 0 14px;
+		}
+
+		.cmd p {
+			margin: 0 0 12px;
+			font-size: 14.5px;
+			line-height: 1.9;
+		}
+
+		.cmd p:last-child {
+			margin-bottom: 0;
+		}
+
+		/* 参数列表 */
+		.params {
+			display: grid;
+			gap: 8px;
+			margin: 14px 0 0;
+		}
+
+		.param {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			gap: 4px 10px;
+		}
+
+		.param__name {
+			flex: none;
+			font-family: var(--mono);
+			font-size: 12.5px;
+			padding: 1px 8px;
+			border-radius: 6px;
+			background: rgba(140, 170, 255, .12);
+			box-shadow: inset 0 0 0 1px rgba(140, 170, 255, .15);
+			color: #bcd0ff;
+		}
+
+		.param__text {
+			flex: 1 1 260px;
+			min-width: 0;
+			color: var(--body);
+			font-size: 14.5px;
+			line-height: 1.9;
+		}
+
+		/* 已知限制 */
+		.limits {
+			display: grid;
+			gap: 8px;
+			margin: 16px 0 0;
+		}
+
+		.limit {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			gap: 4px 12px;
+			padding: 12px 14px;
+			border: 1px solid var(--line);
+			border-radius: 13px;
+			background: rgba(255, 255, 255, .026);
+		}
+
+		.limit__name {
+			flex: none;
+			font-family: var(--mono);
+			font-size: 13.5px;
+			color: #ffb37a;
+		}
+
+		.limit__text {
+			flex: 1 1 240px;
+			min-width: 0;
+			color: var(--body);
+			font-size: 14.5px;
+			line-height: 1.9;
+		}
+
+		.limit--todo .limit__name {
+			color: var(--muted);
+		}
+
+		/* 截图 */
+		.shot {
+			width: fit-content;
+			max-width: 100%;
+			margin: 18px auto 22px;
+			padding: 12px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background:
+				radial-gradient(120% 100% at 50% 0%, rgba(255, 255, 255, .05), transparent 70%),
+				rgba(255, 255, 255, .022);
+			text-align: center;
+		}
+
+		.shot img {
+			display: block;
+			width: 100%;
+			max-width: 100%;
+			height: auto;
+			margin: 0 auto;
+			border-radius: 8px;
+			image-rendering: pixelated;
+			box-shadow: 0 12px 30px -18px rgba(0, 0, 0, .9);
+		}
+
+		.shot figcaption {
+			margin-top: 10px;
+			font-size: 12.5px;
+			line-height: 1.7;
+			color: var(--muted);
+		}
+
+		/* 提示块 */
+		.callout {
+			display: flex;
+			gap: 11px;
+			margin: 18px 0;
+			padding: 14px 16px;
+			border: 1px solid rgba(255, 200, 87, .26);
+			border-radius: 14px;
+			background: linear-gradient(135deg, rgba(255, 200, 87, .12), rgba(255, 120, 80, .05));
+			font-size: 14.5px;
+			line-height: 1.85;
+			color: #ffd9a2;
+		}
+
+		.callout svg {
+			flex: none;
+			width: 18px;
+			height: 18px;
+			margin-top: 4px;
+			color: var(--amber);
+		}
+
+		.callout b {
+			color: #ffe9c4;
+		}
+
+		.tip {
+			border-color: rgba(62, 224, 143, .26);
+			background: linear-gradient(135deg, rgba(62, 224, 143, .12), rgba(62, 224, 143, .035));
+			color: #bff3d4;
+		}
+
+		.tip svg {
+			color: var(--mint);
+		}
+
+		.tip b {
+			color: #e6fff0;
+		}
+
+		/* 章节翻页 */
+		.pager {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 10px;
+			margin-top: 30px;
+			padding-top: 20px;
+			border-top: 1px solid var(--line);
+		}
+
+		.pager button {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			min-height: 44px;
+			padding: 0 16px;
+			border: 1px solid var(--line);
+			border-radius: 12px;
+			background: var(--panel);
+			color: var(--text);
+			font: inherit;
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: background-color .2s, border-color .2s, transform .2s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.pager button:hover:not(:disabled) {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.pager button:disabled {
+			opacity: .34;
+			cursor: not-allowed;
+		}
+
+		.pager button.next {
+			margin-left: auto;
+			color: #04150c;
+			border-color: transparent;
+			background: linear-gradient(180deg, #63f0a6, #2fcf80);
+			box-shadow: 0 10px 26px -14px rgba(62, 224, 143, .9);
+		}
+
+		.pager button.next:hover:not(:disabled) {
+			background: linear-gradient(180deg, #74f6b3, #37d98a);
+		}
+
+		.pager svg {
+			width: 15px;
+			height: 15px;
+		}
+
+		/* ========== 页脚 ========== */
+		.footer {
+			padding: 24px 0 calc(40px + env(safe-area-inset-bottom));
+			border-top: 1px solid var(--line);
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px 22px;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.footer p {
+			margin: 0;
+		}
+
+		.footer nav {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+		}
+
+		.footer nav a {
+			padding: 6px 10px;
+			border-radius: 8px;
+			color: var(--muted);
+			text-decoration: none;
+			transition: color .2s, background-color .2s;
+		}
+
+		.footer nav a:hover {
+			color: var(--text);
+			background: var(--panel-hi);
+		}
+
+		/* ========== 响应式 ========== */
+		@media (max-width: 980px) {
+			.layout {
+				display: block;
+				padding-top: 0;
+			}
+
+			/* 侧栏变成吸顶的横向标签条 */
+			.side {
+				position: sticky;
+				top: var(--header-h);
+				z-index: 30;
+				margin: 0 calc(var(--gutter) / -2);
+				padding: 10px calc(var(--gutter) / 2);
+				background: rgba(7, 12, 22, .88);
+				border-bottom: 1px solid var(--line);
+				backdrop-filter: blur(14px);
+				-webkit-backdrop-filter: blur(14px);
+			}
+
+			.side__inner {
+				position: static;
+			}
+
+			.side__label,
+			.side__foot {
+				display: none;
+			}
+
+			.toc {
+				flex-direction: row;
+				gap: 7px;
+				overflow-x: auto;
+				scrollbar-width: none;
+				-ms-overflow-style: none;
+				scroll-behavior: smooth;
+			}
+
+			.toc::-webkit-scrollbar {
+				display: none;
+			}
+
+			.toc button {
+				width: auto;
+				flex: none;
+				padding: 9px 14px;
+				border: 1px solid var(--line);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, .035);
+				font-size: 13.5px;
+				white-space: nowrap;
+			}
+
+			.toc button.is-active {
+				border-color: rgba(62, 224, 143, .32);
+				background: rgba(62, 224, 143, .14);
+				box-shadow: 0 8px 20px -14px rgba(62, 224, 143, .9);
+			}
+
+			.doc {
+				margin-top: 18px;
+			}
+		}
+
+		@media (max-width: 620px) {
+			:root {
+				--header-h: 56px;
+			}
+
+			.crumb {
+				display: none;
+			}
+
+			.back {
+				padding: 0 11px;
+			}
+
+			.back span {
+				display: none;
+			}
+
+			.doc {
+				padding: 18px 16px 22px;
+				border-radius: 18px;
+			}
+
+			.doc__lead {
+				font-size: 14.5px;
+			}
+
+			.panel p {
+				font-size: 15px;
+				line-height: 1.95;
+			}
+
+			.doc h3 {
+				margin-top: 26px;
+			}
+
+			.code pre {
+				font-size: 12px;
+				padding: 12px 13px;
+			}
+
+			.def,
+			.limit {
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.def__tag,
+			.limit__name {
+				align-self: flex-start;
+			}
+
+			.shot {
+				padding: 9px;
+				border-radius: 13px;
+			}
+
+			.pager button {
+				flex: 1 1 auto;
+				justify-content: center;
+			}
+
+			.pager button.next {
+				margin-left: 0;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			html {
+				scroll-behavior: auto;
+			}
+
+			* {
+				transition-duration: .001s !important;
+				animation-duration: .001s !important;
+			}
+		}
+	</style>
+</head>
+
+<body id="top">
+	<a class="skip" href="#main_1">跳到正文</a>
+
+	<header class="header">
+		<div class="wrap header__inner">
+			<a class="brand" href="../index.html">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<path d="M16 3.2 28.6 10.4v11.2L16 28.8 3.4 21.6V10.4Z" fill="#0d2a19" stroke="#3ee08f" stroke-width="1.5" stroke-linejoin="round" />
+					<path d="M16 3.2 28.6 10.4 16 17.6 3.4 10.4Z" fill="#2f8d55" />
+					<path d="M16 17.6v11.2L3.4 21.6V10.4Z" fill="#0f3d23" />
+					<path d="M16 17.6 28.6 10.4v11.2L16 28.8Z" fill="#186b3a" />
+					<path d="M11.4 9.1 16 6.5l4.6 2.6-4.6 2.6Z" fill="#c8f3d9" opacity=".85" />
+				</svg>
+				<b>命令模拟器</b>
+			</a>
+			<div class="crumb"><span>帮助文档 / 命令调试</span></div>
+			<a class="back" href="../index.html">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M4 11.5 12 4l8 7.5V20H4z" />
+					<path d="M9.5 20v-5.5h5V20" />
+				</svg>
+				<span>返回主页</span>
+			</a>
+		</div>
+	</header>
+
+	<div class="wrap layout">
+		<aside class="side">
+			<div class="side__inner">
+				<p class="side__label">本页目录</p>
+				<nav class="toc" aria-label="本页目录">
+					<button type="button" data-target="main_1"><span class="num">01</span>命令运行</button>
+					<button type="button" data-target="main_2"><span class="num">02</span>命令方块</button>
+					<button type="button" data-target="main_3"><span class="num">03</span>MC 函数</button>
+					<button type="button" data-target="main_4"><span class="num">04</span>终端命令</button>
+					<button type="button" data-target="main_5"><span class="num">05</span>命令须知</button>
+				</nav>
+				<div class="side__foot">
+					<b>调试建议</b>
+					改完文件先跑一次 <code>#reload</code>，语法通过才会真正写入世界。
+					<a href="../index.html">← 回到文档首页</a>
+				</div>
+			</div>
+		</aside>
+
+		<article class="doc">
+
+			<!-- ============ 01 命令运行 ============ -->
+			<section class="panel" id="main_1" aria-labelledby="t-main_1">
+				<h2 id="t-main_1">命令运行</h2>
+				<p>命令模拟器支持以下命令运行的方式：</p>
+				<div class="chips">
+					<span class="chip"><span class="num">01</span>命令方块</span>
+					<span class="chip"><span class="num">02</span>发送命令窗口</span>
+					<span class="chip"><span class="num">03</span>函数命令</span>
+				</div>
+
+				<figure class="shot">
+					<img src="../picture/tutorial/send_command.jpg" alt="发送命令窗口：顶部为终端执行返回界面，中间是输出区，底部为执行、命令、退出按钮" style="max-width:200px" loading="lazy" decoding="async">
+					<figcaption>发送命令窗口</figcaption>
+				</figure>
+
+				<div class="callout tip">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<circle cx="12" cy="12" r="9" />
+						<path d="M12 11v5" />
+						<path d="M12 8h.01" />
+					</svg>
+					<div>
+						命令模拟器的发送命令窗口支持运行<b>调试命令</b>、<b>终端命令</b>和 <b>MC 原版命令</b>（可以不加 <code>/</code>）。
+					</div>
+				</div>
+
+				<p>
+					命令模拟器支持读取行为包、资源包中新增的项目（<mark>仅限于注册 ID</mark>）：
+				</p>
+				<div class="chips">
+					<span class="chip">动画</span>
+					<span class="chip">动画控制器</span>
+					<span class="chip">迷雾</span>
+					<span class="chip">粒子</span>
+					<span class="chip">声音</span>
+					<span class="chip">音乐</span>
+					<span class="chip">功能域</span>
+					<span class="chip">方块</span>
+					<span class="chip">物品</span>
+					<span class="chip">实体</span>
+					<span class="chip">战利品表</span>
+					<span class="chip">交易表</span>
+					<span class="chip">场景文件</span>
+					<span class="chip">摄像头预设</span>
+				</div>
+
+				<p>
+					命令模拟器支持对用户的命令进行<strong>语法检查</strong>，根据版本判断命令的语法，这将影响命令的语法检查和命令最终的运行效果。
+					命令在世界内运行并影响世界数据，用户可根据生成的反馈信息检查命令的对错与否。
+				</p>
+			</section>
+
+			<!-- ============ 02 命令方块 ============ -->
+			<section class="panel" id="main_2" aria-labelledby="t-main_2" hidden>
+				<h2 id="t-main_2">命令方块</h2>
+				<p>
+					命令模拟器通过 txt 文件在世界内注册命令方块。你可以在 <code>save_world/世界名字/command_blocks</code> 下创建 txt 文件开始编写命令方块。
+					所有在这个目录下的 txt 文件都会参与注册命令方块。
+				</p>
+				<p>
+					命令模拟器生成的世界会将主世界维度的 x 为 1600 ~ 1695，z 为 1600 ~ 1695 的区域设置为命令方块部署区域，
+					超出该区域的命令方块将不再运行。
+				</p>
+
+				<h3>注册语法</h3>
+				<p>注册命令方块支持的语法有以下四种：</p>
+				<div class="code">
+					<div class="code__bar">registration</div>
+					<pre><span class="no">①</span> start &lt;posx&gt; &lt;posy&gt; &lt;posz&gt;
+<span class="no">②</span> [属性] [MC命令]
+    [MC命令]
+    [MC命令]
+    ……
+<span class="no">③</span> [属性] empty
+<span class="no">④</span> #注释内容</pre>
+				</div>
+
+				<div class="def">
+					<span class="def__tag">语法 <span class="no">①</span></span>
+					<div class="def__body">
+						<p>
+							<code>start</code> 语法表示从某个局部位置开始部署命令方块，局部位置一定要满足以下条件：
+							<mark>x 为 0 到 95，y 为 0 到 383，z 为 0 到 95</mark>。
+							在世界内的命令方块将在 <code>(1600,-64,1600)</code> 加上局部位置后开始布置。
+						</p>
+						<p>
+							当声明了 <code>start</code> 语法后，默认的命令方块属性会重置为
+							<mark>[循环, y+, 无条件, 常开, 0]</mark>。
+						</p>
+					</div>
+				</div>
+
+				<div class="def">
+					<span class="def__tag">语法 <span class="no">②</span></span>
+					<div class="def__body">
+						<p>
+							属性是选填参数，表示该位置的命令方块具体设置，可填参数
+							<mark>(x+、x-、y+、y-、z-、z+、0、1、2、3、4、5。)
+							(循环/连锁/脉冲)(有条件/无条件)(红石/常开)(延时)</mark>，参数可以使用逗号或分号隔开。
+						</p>
+						<p>下一个命令方块会自动按照朝向参数布置，并且会继承上一个命令方块的所有属性，可以重新声明新的属性参数进行覆盖。</p>
+					</div>
+				</div>
+
+				<div class="def">
+					<span class="def__tag">语法 <span class="no">③</span></span>
+					<div class="def__body">
+						<p>用于插入一个空白的命令方块。</p>
+					</div>
+				</div>
+
+				<div class="def">
+					<span class="def__tag">语法 <span class="no">④</span></span>
+					<div class="def__body">
+						<p>用于插入一行注释内容，注释不影响命令方块的结构。</p>
+					</div>
+				</div>
+
+				<p>下面将使用一个例子进行解析。</p>
+				<div class="code">
+					<div class="code__bar">save_world/世界名字/command_blocks/demo.txt</div>
+					<pre><span class="kw">start 2 0 25</span>
+<span class="cm"># 设置起始位置 1602 -64 1625，并将命令方块属性重置</span>
+<span class="kw">say aaaa</span>
+<span class="cm"># 位置 1602 -64 1625 为无条件 常开 延时为 0 的循环命令方块（朝向 y+）</span>
+<span class="ar">[z+, 连锁, 有条件, 1]</span><span class="kw">testfor aaaa</span>
+<span class="cm"># 位置 1602 -63 1625 为 有条件 常开 延时为 1 的连锁命令方块（朝向 z+）</span>
+<span class="ar">[无条件]</span><span class="kw">testfor bbbb</span>
+<span class="cm"># 位置 1602 -63 1626 为 无条件 常开 延时为 1 的连锁命令方块（朝向 z+）</span>
+<span class="kw">testfor bbbb</span>
+<span class="cm"># 位置 1602 -63 1627 为 无条件 常开 延时为 1 的连锁命令方块（朝向 z+）</span></pre>
+				</div>
+
+				<div class="callout">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 9v4" />
+						<path d="M12 17h.01" />
+						<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+					</svg>
+					<div>
+						编辑完成命令方块文件后，用户需要在发送命令窗口运行 <code>#reload</code> 终端命令来对文件进行语法检查，
+						检查通过后，命令方块才会写入世界。
+						<b>注意：注册完成并写入游戏的红石控制命令方块只能接受红石块的激活响应。</b>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============ 03 MC 函数 ============ -->
+			<section class="panel" id="main_3" aria-labelledby="t-main_3" hidden>
+				<h2 id="t-main_3">MC 函数</h2>
+				<p>命令模拟器可以读取行为包中的函数并正常执行，用户想要载入函数，首先应该先制作行为包。</p>
+				<p>
+					命令模拟器位于 <code>main.py</code> 目录中，在 <code>functionality</code> 文件夹内会自动生成 <code>example</code> 文件夹。
+					<code>example</code> 文件夹里的 <code>example_bp</code> 就是一个行为包的模板，
+					用户可以直接将该行为包复制进 <code>save_world\世界名字\behavior_packs</code> 内。
+				</p>
+				<p>
+					如果用户想执行某一个版本的命令语法，请打开行为包内的 <code>manifest.json</code>，
+					找到 <code>min_engine_version</code> 参数并修改即可。
+					<code>execute</code> 新语法需要将 <code>min_engine_version</code> 参数设置为 <code>[1,19,50]</code> 及以上。
+					<code>min_engine_version</code> 参数设置完成后，在 <code>functions</code> 里就可以开始编辑理想中的 MC 函数了。
+				</p>
+
+				<div class="callout tip">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<circle cx="12" cy="12" r="9" />
+						<path d="M12 11v5" />
+						<path d="M12 8h.01" />
+					</svg>
+					<div>
+						编辑完成函数文件后，你需要在发送命令窗口运行 <code>#reload</code> 终端命令来对文件进行语法检查，
+						检查通过后，函数才会写入世界。
+					</div>
+				</div>
+			</section>
+
+			<!-- ============ 04 终端命令 ============ -->
+			<section class="panel" id="main_4" aria-labelledby="t-main_4" hidden>
+				<h2 id="t-main_4">终端命令</h2>
+
+				<h3>终端关键字</h3>
+				<p>终端关键字是对终端命令进行控制的语法关键字，命令模拟器支持以下两种语法关键字。</p>
+				<div class="code">
+					<div class="code__bar">keyword</div>
+					<pre><span class="no">①</span> pass &lt;int&gt;
+<span class="no">②</span> end</pre>
+				</div>
+				<div class="def">
+					<span class="def__tag">pass</span>
+					<div class="def__body">
+						<p><code>pass</code> 是跳过指令，<code>int</code> 代表跳过几行终端、调试或 MC 指令。</p>
+					</div>
+				</div>
+				<div class="def">
+					<span class="def__tag">end</span>
+					<div class="def__body">
+						<p><code>end</code> 是提前结束指令，当遇到 <code>end</code> 关键字时，终端命令终止运行。</p>
+					</div>
+				</div>
+
+				<h3>内置命令</h3>
+				<p>
+					终端命令是命令模拟器对调试参数设置的内置特殊命令，命令模拟器支持以下终端命令。
+					如果以 <code>#</code> 开头但并不符合以下终端命令的格式，将会当做注释处理。
+				</p>
+
+				<div class="cmd">
+					<div class="cmd__head">
+						<span class="cmd__name">#reload</span>
+						<span class="cmd__tag">语法检查</span>
+					</div>
+					<div class="code">
+						<div class="code__bar">格式</div>
+						<pre><span class="kw">#reload</span></pre>
+					</div>
+					<p>
+						将行为包中的函数和用户的命令方块注册文件全部重新进行语法检查和加载。
+						如果含有语法错误，则会在检查完毕后自动弹出语法反馈的窗口。
+						只有在语法检查完全通过后，文件数据才能被写入世界、生成命令方块视图、以及创建结构。
+					</p>
+				</div>
+
+				<div class="cmd">
+					<div class="cmd__head">
+						<span class="cmd__name">#testing</span>
+						<span class="cmd__tag">命令测试</span>
+					</div>
+					<div class="code">
+						<div class="code__bar">格式</div>
+						<pre><span class="kw">#testing</span>  &lt;TestTime:int&gt;  &lt;OpenWeb:bool&gt;
+           &lt;TestArea_x1:int&gt;  &lt;TestArea_y1:int&gt;  &lt;TestArea_z1:int&gt;
+           &lt;TestArea_x2:int&gt;  &lt;TestArea_y2:int&gt;  &lt;TestArea_z2:int&gt;</pre>
+					</div>
+					<div class="params">
+						<div class="param">
+							<span class="param__name">TestTime</span>
+							<span class="param__text">
+								设定命令测试的总时长。当 test_time 设置时，所有命令设施开始运行，
+								在测试过程中会记录所有命令运行的反馈，测试时间到后会跳转至命令反馈页面。
+							</span>
+						</div>
+						<div class="param">
+							<span class="param__name">OpenWeb</span>
+							<span class="param__text">
+								设定命令测试完成后是否自动跳转命令反馈网页。每一次进入世界时都不会自动跳转，
+								需要用户设置布尔值开启自动跳转。
+							</span>
+						</div>
+						<div class="param">
+							<span class="param__name">TestArea</span>
+							<span class="param__text">
+								设定命令测试过程中记录的测试区域（x1y1z1 与 x2y2z2 各一个对角点），
+								可加载至反馈网页进行渲染。
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="cmd">
+					<div class="cmd__head">
+						<span class="cmd__name">#command</span>
+						<span class="cmd__tag">定时命令</span>
+					</div>
+					<div class="code">
+						<div class="code__bar">格式</div>
+						<pre><span class="ar">格式 1</span>  <span class="kw">#command</span>  tick_start_loop   &lt;Time:int&gt;  &lt;command&gt;
+<span class="ar">格式 2</span>  <span class="kw">#command</span>  tick_end_loop     &lt;Time:int&gt;  &lt;command&gt;
+<span class="ar">格式 3</span>  <span class="kw">#command</span>  tick_start_delay  &lt;Time:int&gt;  &lt;command&gt;
+<span class="ar">格式 4</span>  <span class="kw">#command</span>  tick_end_delay    &lt;Time:int&gt;  &lt;command&gt;</pre>
+					</div>
+					<div class="params">
+						<div class="param">
+							<span class="param__name">Time</span>
+							<span class="param__text">设定需要循环或者延时的游戏刻运行。</span>
+						</div>
+						<div class="param">
+							<span class="param__name">loop</span>
+							<span class="param__text">设定哪些 MC 命令在测试过程中需要循环 * 刻运行。</span>
+						</div>
+						<div class="param">
+							<span class="param__name">delay</span>
+							<span class="param__text">设定哪些 MC 命令在测试过程中需要延时 * 刻运行，用于测试某些条件触发的功能。</span>
+						</div>
+						<div class="param">
+							<span class="param__name">tick_start</span>
+							<span class="param__text">设定 MC 命令在运行命令方块与函数之前运行。</span>
+						</div>
+						<div class="param">
+							<span class="param__name">tick_end</span>
+							<span class="param__text">设定 MC 命令在运行命令方块与函数结束后运行。</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============ 05 命令须知 ============ -->
+			<section class="panel" id="main_5" aria-labelledby="t-main_5" hidden>
+				<h2 id="t-main_5">命令须知</h2>
+				<p>一些命令并没有完全模拟其特性，这些命令将在下方一一陈述。</p>
+
+				<div class="limits">
+					<div class="limit">
+						<span class="limit__name">/structure</span>
+						<span class="limit__text">该命令无法对方块的方向进行旋转。</span>
+					</div>
+					<div class="limit">
+						<span class="limit__name">/damage</span>
+						<span class="limit__text">该命令无法做出准确的伤害计算。</span>
+					</div>
+					<div class="limit limit--todo">
+						<span class="limit__name">其他</span>
+						<span class="limit__text">待补充。</span>
+					</div>
+				</div>
+			</section>
+
+			<div class="pager">
+				<button type="button" class="prev" id="pager-prev">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M20 12H5" />
+						<path d="m11 18-6-6 6-6" />
+					</svg>
+					<span>上一节</span>
+				</button>
+				<button type="button" class="next" id="pager-next">
+					<span>下一节</span>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 12h15" />
+						<path d="m13 6 6 6-6 6" />
+					</svg>
+				</button>
+			</div>
+		</article>
+	</div>
+
+	<footer class="footer wrap">
+		<p>命令模拟器 · 命令调试</p>
+		<nav aria-label="页脚导航">
+			<a href="../index.html">文档首页</a>
+			<a href="./Instructions.html">使用须知</a>
+			<a href="./WorldConfig.html">世界配置</a>
+			<a href="https://commandsimulator.great-site.net" target="_blank" rel="noopener noreferrer">官网 ↗</a>
+		</nav>
+	</footer>
+
+	<script>
+		(function () {
+			var ORDER = ['main_1', 'main_2', 'main_3', 'main_4', 'main_5'];
+			var TITLES = {
+				main_1: '命令运行',
+				main_2: '命令方块',
+				main_3: 'MC 函数',
+				main_4: '终端命令',
+				main_5: '命令须知'
+			};
+			var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			var tabs = Array.prototype.slice.call(document.querySelectorAll('.toc [data-target]'));
+			var prevBtn = document.getElementById('pager-prev');
+			var nextBtn = document.getElementById('pager-next');
+			var navigated = false;
+
+			function jumpTop() {
+				var root = document.documentElement;
+				var previous = root.style.scrollBehavior;
+				root.style.scrollBehavior = 'auto';
+				window.scrollTo(0, 0);
+				root.style.scrollBehavior = previous;
+			}
+
+			function updatePager(id) {
+				var index = ORDER.indexOf(id);
+				var prevName = index > 0 ? TITLES[ORDER[index - 1]] : '';
+				var nextName = index < ORDER.length - 1 ? TITLES[ORDER[index + 1]] : '';
+
+				prevBtn.disabled = index === 0;
+				nextBtn.disabled = index === ORDER.length - 1;
+				prevBtn.setAttribute('data-target', index > 0 ? ORDER[index - 1] : '');
+				nextBtn.setAttribute('data-target', index < ORDER.length - 1 ? ORDER[index + 1] : '');
+				prevBtn.querySelector('span').textContent = prevName ? '上一节 · ' + prevName : '已经是第一节';
+				nextBtn.querySelector('span').textContent = nextName ? '下一节 · ' + nextName : '已经是最后一节';
+			}
+
+			function display_thing(id, options) {
+				options = options || {};
+				if (ORDER.indexOf(id) < 0) id = ORDER[0];
+
+				ORDER.forEach(function (key) {
+					var el = document.getElementById(key);
+					if (el) el.hidden = key !== id;
+				});
+
+				tabs.forEach(function (btn) {
+					var active = btn.getAttribute('data-target') === id;
+					btn.classList.toggle('is-active', active);
+					if (active) btn.setAttribute('aria-current', 'true');
+					else btn.removeAttribute('aria-current');
+				});
+
+				updatePager(id);
+				document.title = TITLES[id] + ' · 命令模拟器帮助文档';
+
+				if (options.initial) {
+					jumpTop();
+				} else {
+					if (history.replaceState) history.replaceState(null, '', '#' + id);
+					else location.hash = id;
+					window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+				}
+
+				if (window.matchMedia('(max-width: 980px)').matches) {
+					var bar = document.querySelector('.toc');
+					var active = tabs.filter(function (b) { return b.getAttribute('data-target') === id; })[0];
+					if (bar && active) {
+						bar.scrollTo({
+							left: active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2,
+							behavior: reduceMotion ? 'auto' : 'smooth'
+						});
+					}
+				}
+			}
+
+			tabs.forEach(function (btn) {
+				btn.addEventListener('click', function () {
+					navigated = true;
+					display_thing(btn.getAttribute('data-target'));
+				});
+			});
+
+			[prevBtn, nextBtn].forEach(function (btn) {
+				btn.addEventListener('click', function () {
+					var target = btn.getAttribute('data-target');
+					if (target) {
+						navigated = true;
+						display_thing(target);
+					}
+				});
+			});
+
+			window.addEventListener('hashchange', function () {
+				var id = decodeURIComponent(location.hash.replace('#', ''));
+				if (ORDER.indexOf(id) >= 0) display_thing(id, { initial: true });
+			});
+
+			window.display_thing = display_thing;
+			window.close_menu = function () { };
+			window.website1 = function () { window.location.href = '../index.html'; };
+
+			var initial = decodeURIComponent(location.hash.replace('#', ''));
+			var deepLink = ORDER.indexOf(initial) >= 0;
+			display_thing(deepLink ? initial : ORDER[0], { initial: true });
+
+			if (deepLink && history.replaceState) {
+				history.replaceState(null, '', location.pathname + location.search);
+			}
+
+			window.addEventListener('load', function () {
+				if (!navigated) jumpTop();
+			});
+		}());
+	</script>
+</body>
 
 </html>

@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060a13">
+<meta name="color-scheme" content="dark">
+<title>命令上下文 · 基岩版动画讲解</title>
+<style>
+  :root{
+    --bg:#060a13; --bg2:#0b1224; --ink:#e9f2ff; --dim:#93a7c6;
+    --cyan:#4be0ff; --violet:#a78bfa; --lime:#a3e635; --amber:#fbbf24; --pink:#f472b6;
+    --gridline:rgba(120,160,255,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    /* 静态背景：只绘制一次，滚动和动画时不再重绘 */
+    background:
+      radial-gradient(900px 600px at 78% 8%, rgba(75,224,255,.09), transparent 60%),
+      radial-gradient(800px 500px at 10% 90%, rgba(167,139,250,.09), transparent 60%),
+      linear-gradient(180deg,var(--bg),var(--bg2) 55%,#04070e);
+    color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Noto Sans SC",sans-serif;
+    line-height:1.75; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    -webkit-text-size-adjust:100%;
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* 静态网格（无动画、无 mask） */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(var(--gridline) 1px, transparent 1px),
+      linear-gradient(90deg, var(--gridline) 1px, transparent 1px);
+    background-size:64px 64px;
+    opacity:.5;
+  }
+
+  .progress{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.06);z-index:50}
+  .progress i{display:block;height:100%;width:0%;
+    background:linear-gradient(90deg,var(--cyan),var(--violet),var(--pink));
+    transition:width .12s linear}
+
+  .power{
+    position:fixed; right:14px; top:12px; z-index:60;
+    font:inherit; font-size:12px; letter-spacing:.08em;
+    color:var(--dim); background:rgba(10,16,30,.85);
+    border:1px solid rgba(150,180,255,.28); border-radius:999px;
+    padding:5px 12px; cursor:pointer;
+  }
+  .power:hover{color:var(--ink);border-color:var(--cyan)}
+  .power[aria-pressed="true"]{color:var(--amber);border-color:rgba(251,191,36,.55)}
+
+  .dots{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:10px}
+  .dots button{
+    width:12px;height:12px;border-radius:50%;border:1px solid rgba(160,190,255,.45);
+    background:transparent;cursor:pointer;padding:0;transition:.2s;position:relative;
+  }
+  .dots button:hover{transform:scale(1.3);border-color:var(--cyan)}
+  .dots button.on{background:var(--cyan);border-color:var(--cyan)}
+  .dots button::after{
+    content:attr(data-label); position:absolute; right:20px; top:50%; transform:translateY(-50%) translateX(6px);
+    white-space:nowrap; font-size:12px; color:var(--dim); opacity:0; pointer-events:none; transition:.2s;
+  }
+  .dots button:hover::after{opacity:1; transform:translateY(-50%) translateX(0)}
+
+  main{position:relative;z-index:1}
+  .scene{
+    min-height:100vh; min-height:100svh;
+    display:grid; place-items:center; padding:9vh 5vw 8vh;
+    /* 屏幕外的章节跳过渲染，省 CPU / GPU */
+    content-visibility:auto; contain-intrinsic-size:auto 100vh;
+  }
+  .wrap{width:100%;max-width:1180px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:4vw;align-items:center}
+  @media (max-width:900px){ .wrap{grid-template-columns:1fr;gap:24px} .scene{padding:8vh 6vw 10vh} }
+
+  .kicker{font-size:13px;letter-spacing:.28em;color:var(--cyan);text-transform:uppercase;opacity:.9;margin:0 0 14px}
+  h1,h2,h3{margin:0 0 14px;line-height:1.25;font-weight:800;letter-spacing:.01em}
+  h1{font-size:clamp(28px,4.4vw,52px)}
+  h2{font-size:clamp(23px,3.1vw,36px)}
+  .copy p{color:var(--dim);font-size:clamp(15px,1.35vw,17.5px);margin:0 0 14px}
+  .copy p b{color:var(--ink)}
+  .hl{color:var(--cyan)} .hl2{color:var(--lime)} .hl3{color:var(--amber)} .hl4{color:var(--pink)}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .cmd{display:inline-block;padding:2px 9px;border-radius:8px;background:rgba(75,224,255,.10);
+       border:1px solid rgba(75,224,255,.28);color:#d9f6ff;font-size:.94em}
+
+  .stagebox{position:relative;border-radius:20px;padding:12px;
+    background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+    border:1px solid rgba(150,180,255,.16);
+    box-shadow:0 18px 44px -28px rgba(0,0,0,.9);
+    overflow:hidden}
+  svg.stage{display:block;width:100%;height:auto}
+  .cap{margin:11px 2px 0;font-size:13px;color:var(--dim);text-align:center}
+  @media (max-width:760px){ .cap{font-size:12px} .stagebox{padding:9px;border-radius:16px} }
+
+  .scene .rise{opacity:0;transform:translateY(16px)}
+  .scene.in .rise{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .d1{animation-delay:.04s!important}.d2{animation-delay:.14s!important}
+  .d3{animation-delay:.26s!important}.d4{animation-delay:.38s!important}.d5{animation-delay:.5s!important}
+
+  /* 离开视口 / 省电模式 → 所有动画暂停，不再占 CPU */
+  .scene:not(.in) *{animation-play-state:paused!important}
+  body.lowpower *{animation-play-state:paused!important; transition-duration:0s!important}
+
+  /* SVG 文字统一用 fill（color 对 SVG 文字无效，这正是上一版文字变黑的原因） */
+  .s1line{fill:#cfe8ff;font-family:ui-monospace,Consolas,monospace;font-size:clamp(14px,1.5vw,19px);letter-spacing:.02em}
+  .q{fill:var(--ink);font-size:15px;font-weight:700}
+  .qsub{fill:var(--dim);font-size:12px}
+  .qcard{fill:rgba(12,20,38,.92);stroke:rgba(140,180,255,.35)}
+  .tag{fill:#dff3ff;font-size:13px;font-family:ui-monospace,Consolas,monospace}
+  .tag2{fill:var(--lime);font-size:13px;font-family:ui-monospace,Consolas,monospace}
+  .worldlbl{fill:var(--dim);font-size:16px}
+  .compassT{fill:var(--dim);font-size:14px;letter-spacing:.1em}
+  .facingLbl{fill:var(--lime);font-size:13px;font-family:ui-monospace,Consolas,monospace}
+
+  #q1,#q2,#q3,#q4{opacity:0}
+  .scene.in #q1{animation:pop .62s .35s both}
+  .scene.in #q2{animation:pop .62s .55s both}
+  .scene.in #q3{animation:pop .62s .75s both}
+  .scene.in #q4{animation:pop .62s .95s both}
+  @keyframes pop{0%{opacity:0;transform:scale(.62) translateY(10px)}65%{opacity:1;transform:scale(1.03)}100%{opacity:1;transform:scale(1)}}
+
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .floaty{animation:floaty 5s ease-in-out infinite}
+  .beam{fill:none;stroke:rgba(75,224,255,.65);stroke-width:2;stroke-dasharray:6 9;animation:beamDash 1.8s linear infinite}
+  @keyframes beamDash{to{stroke-dashoffset:-30}}
+
+  .ground{fill:rgba(120,170,255,.10);stroke:rgba(120,170,255,.35)}
+  .blocky{fill:var(--cyan);opacity:0}
+  .scene.in .blocky{animation:drop .7s .9s both}
+  @keyframes drop{0%{opacity:0;transform:translateY(-20px)}70%{opacity:1;transform:translateY(2px)}100%{opacity:1;transform:translateY(0)}}
+
+  #posOrigin{transition:transform 1.15s cubic-bezier(.45,.05,.2,1);will-change:transform}
+  #posStage.moved #posOrigin{transform:translate(176px,-118px)}
+  .originDot{fill:var(--cyan)}
+  .halo{fill:rgba(75,224,255,.18)}
+  /* 圆环用 transform:scale + opacity（合成层），不再动画 r（几何属性，每帧重排） */
+  .ringPulse{fill:none;stroke:var(--cyan);stroke-width:2;transform-box:fill-box;transform-origin:center;
+    animation:ringOut 2.4s ease-out infinite}
+  @keyframes ringOut{0%{transform:scale(.55);opacity:.8}100%{transform:scale(2.6);opacity:0}}
+  .rel{stroke:var(--lime);stroke-width:2.5;stroke-dasharray:7 7;fill:none;animation:beamDash 1.5s linear infinite}
+  .worldmark{fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.2)}
+
+  /* 朝向：CSS 旋转（可暂停、走合成层），不再用 SMIL */
+  #facing{transform-box:view-box;transform-origin:320px 230px;animation:turn 16s linear infinite}
+  @keyframes turn{
+    0%,12%{transform:rotate(0deg)} 24%,36%{transform:rotate(90deg)}
+    48%,60%{transform:rotate(180deg)} 72%,84%{transform:rotate(270deg)}
+    96%,100%{transform:rotate(360deg)}
+  }
+  .compass{stroke:rgba(160,190,255,.32);fill:none;stroke-width:1.5}
+  .worldArrow{stroke:rgba(160,190,255,.5);stroke-width:3}
+  .localArrow{stroke:var(--lime);stroke-width:4}
+  .body{fill:rgba(140,180,255,.20);stroke:rgba(180,210,255,.7);stroke-width:2}
+  .head{fill:var(--cyan)}
+
+  .fig .body{opacity:.45;transition:opacity .4s}
+  .fig .head{opacity:.55;transition:opacity .4s}
+  .fig .figHalo{fill:none;stroke:var(--pink);stroke-width:3;opacity:0;transition:opacity .4s}
+  .fig.active .body,.fig.active .head{opacity:1}
+  .fig.active .figHalo{opacity:1}
+  .fig .nm{fill:var(--dim);font-size:13px;text-anchor:middle;transition:fill .3s}
+  .fig.active .nm{fill:var(--pink);font-weight:700}
+  .chatline{fill:#dff3ff;font-size:14px;font-family:ui-monospace,Consolas,monospace}
+  .chatbox{fill:rgba(12,20,38,.9);stroke:rgba(140,180,255,.28)}
+
+  .wpanel{opacity:.42;transition:opacity .45s;cursor:pointer}
+  .wpanel.active{opacity:1}
+  .wframe{fill:none;stroke:rgba(160,190,255,.28);stroke-width:2;transition:stroke .45s}
+  .wpanel.active .wframe{stroke:var(--cyan)}
+  .wtitle{fill:var(--ink);font-size:15px;font-weight:700;text-anchor:middle}
+  .wcoord{fill:var(--dim);font-size:12px;text-anchor:middle;font-family:ui-monospace,Consolas,monospace}
+  .wpulse{fill:none;stroke:var(--amber);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
+  .wpanel.active .wpulse{animation:ringOut 2.1s ease-out infinite}
+  #dimMarker{transition:transform .8s cubic-bezier(.45,.05,.2,1);fill:var(--amber);will-change:transform}
+  #dimStage[data-at="1"] #dimMarker{transform:translate(0,0)}
+  #dimStage[data-at="2"] #dimMarker{transform:translate(210px,0)}
+  #dimStage[data-at="3"] #dimMarker{transform:translate(420px,0)}
+
+  .idcard{border-radius:18px;padding:18px 20px;background:linear-gradient(160deg,rgba(20,32,58,.95),rgba(12,20,38,.95));
+    border:1px solid rgba(150,180,255,.25);box-shadow:0 16px 36px -24px #000;position:relative;overflow:hidden}
+  .idcard::before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent,rgba(75,224,255,.10),transparent);
+    transform:translateX(-100%)}
+  .scene.in .idcard::before{animation:sheen 2.2s .8s ease both}
+  @keyframes sheen{to{transform:translateX(100%)}}
+  .idhead{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;letter-spacing:.2em;color:var(--cyan)}
+  .idhead::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cyan)}
+  .idrow{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:baseline;padding:9px 0;border-top:1px dashed rgba(150,180,255,.14)}
+  .idrow:first-of-type{border-top:none}
+  .idk{font-size:12px;letter-spacing:.16em;color:var(--dim)}
+  .idv{font-size:15px;font-weight:600}
+  .c1{color:var(--pink)} .c2{color:var(--cyan)} .c3{color:var(--lime)} .c4{color:var(--amber)}
+  .deepdots{display:flex;gap:8px;margin-top:14px}
+  .deepdots i{width:9px;height:9px;border-radius:50%}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);
+    border:1px solid rgba(150,180,255,.25);border-radius:999px;padding:2px 10px;margin-right:6px}
+  .chip.dyn{color:var(--lime);border-color:rgba(163,230,53,.45);animation:blink 2.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+
+  .cmdbar{margin-top:16px;border-radius:14px;padding:13px 15px;background:rgba(6,10,20,.8);
+    border:1px solid rgba(150,180,255,.2);font-family:ui-monospace,Consolas,monospace;font-size:clamp(13px,1.35vw,16px);
+    display:flex;flex-wrap:wrap;gap:9px;align-items:center;justify-content:center}
+  .tok{padding:2px 8px;border-radius:7px;border:1px solid transparent}
+  .tok.t1{color:var(--pink);border-color:rgba(244,114,182,.45);background:rgba(244,114,182,.10)}
+  .tok.t3{color:var(--lime);border-color:rgba(163,230,53,.45);background:rgba(163,230,53,.10)}
+  .tok.t0{color:#cfe0ff}
+
+  .derive{display:grid;grid-template-columns:1fr 44px 1fr;gap:10px;align-items:center}
+  @media (max-width:560px){ .derive{grid-template-columns:1fr;gap:8px} .arrowmid{transform:rotate(90deg)} }
+  .arrowmid{text-align:center;color:var(--dim);font-size:20px}
+  .small{font-size:12.5px;color:var(--dim);margin-top:10px}
+  .flash{position:relative}
+  .flash::after{content:"";position:absolute;inset:-6px;border-radius:14px;border:2px solid var(--amber);opacity:0}
+  .scene.in .flash.hit::after{animation:flashring .9s ease both}
+  @keyframes flashring{0%{opacity:0;transform:scale(.95)}30%{opacity:1}100%{opacity:0;transform:scale(1.03)}}
+
+  .footnote{color:#6f86a8;font-size:12.5px;margin-top:18px}
+
+  /* ── 幕 8b：as / at 分身演示（只用 opacity/transform，成本极低） ── */
+  .fanWrap{display:grid;gap:9px}
+  .fanOrigin .idhead{font-size:11px}
+  .fanCmd{margin-top:8px;padding:7px 9px;border-radius:9px;background:rgba(6,10,20,.78);
+    border:1px dashed rgba(150,180,255,.28);font-size:clamp(11px,1.15vw,13px);text-align:center;
+    white-space:nowrap;overflow-x:auto}
+  .fanDown{text-align:center;color:var(--dim);font-size:12px}
+  /* 树（真实文本，移动端不需要缩放） */
+  .tree{display:grid;gap:3px;font-size:12.5px;line-height:1.5}
+  .trow{display:grid;grid-template-columns:1.4em 1fr auto;align-items:center;gap:7px;
+    padding:4px 8px;border-radius:9px;border:1px solid transparent;color:var(--dim);
+    transition:background .26s ease,border-color .26s ease,color .26s ease,transform .26s ease}
+  .trow .g{color:#40536e;font-family:ui-monospace,Consolas,monospace;white-space:pre;font-size:12px}
+  .trow .lbl b{color:var(--ink);font-weight:700}
+  .trow .tag{font-size:10.5px;padding:0 7px;border-radius:999px;
+    border:1px solid rgba(150,180,255,.22);white-space:nowrap}
+  .trow.cur{background:rgba(75,224,255,.10);border-color:rgba(75,224,255,.45);
+    color:var(--ink);transform:translateX(2px)}
+  .trow.path{border-color:rgba(150,180,255,.2);color:#bfd2ea}
+  .trow.back{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.07)}
+  .trow.leaf .tag{opacity:.3}
+  .trow.leaf.cur .tag{opacity:1;color:var(--amber);border-color:rgba(251,191,36,.5)}
+  .trow.leaf.done{color:#b9c9a3}
+  .trow.leaf.done .tag{opacity:1;color:var(--lime);border-color:rgba(163,230,53,.45)}
+  /* DFS 调用栈 */
+  .stack{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:1.9em;
+    font-size:11px;color:var(--dim)}
+  .stack .chip2{padding:1px 8px;border-radius:999px;background:rgba(14,22,42,.92);
+    border:1px solid rgba(150,180,255,.18)}
+  .fanCount{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    font-size:12px;color:var(--dim)}
+  .fanCount b{color:var(--amber);font-size:15px}
+  .fanHint{min-height:2.2em}
+  @media (max-width:520px){
+    .tree{font-size:11.5px}
+    .trow{padding:3px 6px;gap:5px}
+    .trow .g{font-size:11px}
+    .trow .tag{font-size:10px;padding:0 5px}
+    .fanCmd{padding:6px 8px}
+  }
+
+  /* ── 幕 8b 新版：DFS 动态生成 / 丢弃上下文卡片 ── */
+  .curCard{position:relative;border-radius:16px;padding:11px 13px 12px;
+    background:linear-gradient(160deg,rgba(24,36,64,.96),rgba(12,20,38,.96));
+    border:1px solid rgba(150,180,255,.3);box-shadow:0 14px 30px -24px #000;
+    transition:border-color .3s ease}
+  .curCard.gen{animation:cardIn .4s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes cardIn{0%{opacity:.25;transform:translateY(9px) scale(.97)}100%{opacity:1;transform:none}}
+  .curCard .ribbon{position:absolute;right:9px;top:-9px;font-size:10.5px;padding:1px 8px;border-radius:999px;
+    background:rgba(8,14,26,.96);border:1px solid rgba(150,180,255,.32);color:var(--dim)}
+  .frow{display:grid;grid-template-columns:4.6em 1fr;gap:8px;align-items:baseline;
+    padding:3px 6px;border-radius:8px;
+    transition:background .3s ease,box-shadow .3s ease}
+  .frow .fk{font-size:10.5px;letter-spacing:.1em;color:var(--dim)}
+  .frow .fv{font-size:13.5px;font-weight:600}
+  .frow.chg{background:rgba(251,191,36,.11);box-shadow:inset 2px 0 0 rgba(251,191,36,.9)}
+  .fanToast{position:absolute;left:50%;top:-11px;transform:translate(-50%,-4px) scale(.92);opacity:0;
+    font-size:10.5px;padding:1px 9px;border-radius:999px;white-space:nowrap;
+    transition:opacity .26s ease,transform .26s ease;pointer-events:none}
+  .fanToast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+  .fanToast.gen{color:var(--lime);border:1px solid rgba(163,230,53,.5);background:rgba(16,34,18,.95)}
+  .fanToast.drop{color:var(--pink);border:1px solid rgba(244,114,182,.5);background:rgba(38,16,28,.95)}
+  .fanStackRow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:24px;font-size:11px}
+  .mini{padding:2px 8px;border-radius:8px;background:rgba(14,22,42,.94);
+    border:1px solid rgba(150,180,255,.2);color:var(--dim)}
+  .mini.top{border-color:rgba(75,224,255,.6);color:var(--ink)}
+  .mini .mx{color:var(--pink);font-size:10px}
+  .mini.enter{animation:miniIn .32s ease both}
+  @keyframes miniIn{from{opacity:0;transform:translateY(-5px) scale(.94)}to{opacity:1;transform:none}}
+  .fanExec{display:flex;gap:6px;align-items:center}
+  .execPill{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;
+    border:1px solid rgba(150,180,255,.25);color:#5c708c;transition:.3s ease}
+  .execPill.on{border-color:rgba(163,230,53,.6);color:var(--lime);background:rgba(163,230,53,.12)}
+  @media (max-width:520px){
+    .frow{grid-template-columns:4.2em 1fr;gap:6px}
+    .frow .fk{font-size:10px}
+    .frow .fv{font-size:12.5px}
+    .execPill{width:20px;height:20px;font-size:10px}
+  }
+
+  /* 阅读前校对框 */
+  .envBox{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:rgba(12,20,38,.78);
+    border:1px solid rgba(150,180,255,.2);font-size:12.5px;color:var(--dim);line-height:1.75}
+  .envBox .envTitle{font-size:10.5px;letter-spacing:.14em;color:var(--cyan);margin-bottom:5px}
+  .envBox .mono{color:var(--ink)}
+
+  /* 纵向卡片列：新卡生成在父卡下方，分支结束即删除 */
+  .fanCol{display:flex;flex-direction:column;gap:6px;min-height:126px;padding:2px 0 4px}
+  .mcard{display:flex;align-items:center;gap:5px;flex-wrap:wrap;overflow:hidden;max-height:90px;
+    padding:6px 9px;border-radius:10px;background:rgba(16,25,46,.94);
+    border:1px solid rgba(150,180,255,.24);
+    transition:opacity .3s ease,transform .3s ease,max-height .3s ease,
+      margin .3s ease,padding .3s ease,border-color .3s ease}
+  .mcard.root{border-color:rgba(75,224,255,.5);background:rgba(16,32,52,.96)}
+  .mcard.enter{animation:cardIn .36s cubic-bezier(.2,.8,.2,1) both}
+  .mcard.leaving{opacity:0;transform:translateX(-9px) scale(.97);
+    max-height:0;padding-top:0;padding-bottom:0;margin-top:-6px;border-width:0}
+  .mcard .cch{font-size:11.5px;padding:1px 7px;border-radius:7px;background:rgba(255,255,255,.045);
+    border:1px solid transparent;white-space:nowrap}
+  .mcard .cch.c1{color:var(--pink)}
+  .mcard .cch.c2{color:var(--cyan)}
+  .mcard .cch.c3{color:var(--lime)}
+  .mcard .cch.c4{color:var(--amber)}
+  .mcard .cch.chg{border-color:rgba(251,191,36,.55);background:rgba(251,191,36,.10)}
+  .mcard .cbadge{margin-left:auto;font-size:10.5px;padding:1px 8px;border-radius:999px;
+    color:var(--amber);border:1px solid rgba(251,191,36,.45);opacity:0;transition:opacity .25s ease}
+  .mcard .cbadge.show{opacity:1}
+  .mcard.root .cbadge{color:var(--cyan);border-color:rgba(75,224,255,.45)}
+  @media (max-width:520px){
+    .mcard{padding:5px 7px;gap:4px}
+    .mcard .cch{font-size:10.5px;padding:1px 5px}
+    .mcard .cbadge{font-size:9.5px;padding:1px 6px}
+    .envBox{font-size:11.5px;padding:8px 10px}
+  }
+
+  /* 手机适配 */
+  @media (max-width:760px){
+    .dots{right:auto;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));top:auto;transform:translateX(-50%);
+      flex-direction:row;gap:10px;background:rgba(8,12,22,.78);padding:7px 12px;border-radius:999px;
+      border:1px solid rgba(150,180,255,.16)}
+    .dots button{width:14px;height:14px}
+    .dots button::after{display:none}
+    .power{top:10px;right:10px}
+    #facing{animation-duration:20s}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .scene .rise{opacity:1;transform:none}
+    #q1,#q2,#q3,#q4,.blocky{opacity:1}
+  }
+</style>
+</head>
+<body>
+<div class="progress"><i id="bar"></i></div>
+<button class="power" id="power" type="button" aria-pressed="false" title="暂停所有动画以降低 CPU 占用">动画：开</button>
+<nav class="dots" id="dots" aria-label="章节导航"></nav>
+
+<main>
+
+  <!-- 幕 1 -->
+  <section class="scene" id="s1" data-label="开场">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">Bedrock · Command Context</p>
+        <h1 class="rise d1">一条命令，<br>凭什么知道自己该在哪儿生效？</h1>
+        <p class="rise d2">命令本质上只是一串字。比如"把这一块换成石头"——这句字单独躺着的时候，游戏根本不知道：</p>
+        <p class="rise d3" style="font-size:clamp(16px,1.6vw,20px);color:var(--ink)">
+          <b>谁在说？在哪个世界说？站在哪里说？朝哪边说？</b>
+        </p>
+        <p class="rise d4">这四个答案合在一起，就是<b class="hl">命令上下文</b>。它不是命令的一部分，而是命令<b>执行时身上带着的一张"环境说明书"</b>。</p>
+        <p class="rise d5" style="color:var(--dim)">下面从"为什么需要它"讲起，一路讲到"它怎么被改写"。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <svg class="stage" viewBox="0 0 640 420" role="img" aria-label="命令文字落入世界">
+          <defs>
+            <pattern id="grid1" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M40 0H0V40" fill="none" stroke="rgba(120,160,255,.13)" stroke-width="1"/>
+            </pattern>
+          </defs>
+
+          <rect width="640" height="420" fill="url(#grid1)" opacity=".55"/>
+          <ellipse cx="320" cy="330" rx="250" ry="52" fill="rgba(75,224,255,.06)"/>
+
+          <g class="floaty">
+            <text x="320" y="150" text-anchor="middle" class="s1line">把 这 个 位 置 换 成 石 头</text>
+            <line x1="320" y1="168" x2="320" y2="252" class="beam"/>
+          </g>
+
+          <g>
+            <ellipse cx="320" cy="300" rx="66" ry="20" fill="rgba(75,224,255,.12)"/>
+            <rect x="288" y="276" width="64" height="34" rx="6" fill="rgba(75,224,255,.20)" stroke="rgba(120,220,255,.8)" stroke-width="2"/>
+            <text x="320" y="352" text-anchor="middle" class="tag" style="fill:#bcd9ff;font-size:12px">这里的"这个位置"，到底是哪个位置？</text>
+          </g>
+
+          <g id="q1"><rect class="qcard" x="18" y="26" width="176" height="58" rx="14"/><text class="q" x="34" y="52">谁在说？</text><text class="qsub" x="34" y="72">→ 执行者实体</text></g>
+          <g id="q2"><rect class="qcard" x="446" y="26" width="176" height="58" rx="14"/><text class="q" x="462" y="52">在哪个世界？</text><text class="qsub" x="462" y="72">→ 执行维度</text></g>
+          <g id="q3"><rect class="qcard" x="18" y="330" width="176" height="58" rx="14"/><text class="q" x="34" y="356">站在哪里？</text><text class="qsub" x="34" y="376">→ 执行位置</text></g>
+          <g id="q4"><rect class="qcard" x="446" y="330" width="176" height="58" rx="14"/><text class="q" x="462" y="356">朝哪边说？</text><text class="qsub" x="462" y="376">→ 执行朝向</text></g>
+        </svg>
+        <p class="cap">命令不是凭空生效的：它需要一张写清"谁 / 哪个世界 / 站哪 / 朝哪"的环境说明书。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 2 -->
+  <section class="scene" id="s2" data-label="为什么需要">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">一 · 为什么要有它</p>
+        <h2 class="rise d1">没有参考系，"这里"根本不存在</h2>
+        <p class="rise d2">命令里到处是<b>指代词</b>：<span class="cmd">~</span> 是"从这里"、<span class="cmd">^</span> 是"朝前"、<span class="cmd">@s</span> 是"我自己"。</p>
+        <p class="rise d3">可"这里""前面""我"在游戏里没有固定答案——它取决于<b>这句话是谁、在什么地方说出来的</b>。</p>
+        <p class="rise d4">看这三块地：同样是"在我脚下放个方块"，起点不同，方块就落在完全不同的地方。<b class="hl">同一句话，三个结果，差别只在上下文。</b></p>
+        <p class="rise d5" style="color:#7f95b8">上下文就是那个"参考系"。没有它，命令里的指代词全是悬空的。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <svg class="stage" viewBox="0 0 640 420" role="img" aria-label="同一句命令在不同起点产生不同结果">
+          <defs>
+            <pattern id="grid2" width="32" height="32" patternUnits="userSpaceOnUse">
+              <path d="M32 0H0V32" fill="none" stroke="rgba(120,160,255,.10)" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="640" height="420" fill="url(#grid2)"/>
+
+          <g>
+            <rect class="ground" x="40" y="286" width="150" height="12" rx="4"/>
+            <rect class="ground" x="245" y="216" width="150" height="12" rx="4"/>
+            <rect class="ground" x="450" y="316" width="150" height="12" rx="4"/>
+            <text x="115" y="330" text-anchor="middle" class="worldlbl">草原 · 起点 A</text>
+            <text x="320" y="262" text-anchor="middle" class="worldlbl">山顶 · 起点 B</text>
+            <text x="525" y="360" text-anchor="middle" class="worldlbl">岩浆边 · 起点 C</text>
+
+            <circle cx="115" cy="286" r="7" fill="#4be0ff"/>
+            <circle cx="320" cy="216" r="7" fill="#4be0ff"/>
+            <circle cx="525" cy="316" r="7" fill="#4be0ff"/>
+          </g>
+
+          <rect class="blocky" x="103" y="262" width="24" height="24" rx="4"/>
+          <rect class="blocky" x="308" y="192" width="24" height="24" rx="4" style="animation-delay:1.05s"/>
+          <rect class="blocky" x="513" y="292" width="24" height="24" rx="4" style="animation-delay:1.2s"/>
+
+          <text x="320" y="44" text-anchor="middle" class="s1line" style="fill:#9fe8ff">同一条命令：在"我脚下"放一个方块</text>
+          <text x="320" y="392" text-anchor="middle" class="worldlbl" style="fill:#7f95b8">三个落点 —— 上下文不同，结果就不同</text>
+        </svg>
+        <p class="cap">上下文不是"额外的设定"，它是命令和世界之间的<b>翻译官</b>。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 3 -->
+  <section class="scene" id="s3" data-label="执行位置">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">二 · 执行位置</p>
+        <h2 class="rise d1"><span class="hl2 mono">~</span> 的原点，就是执行位置</h2>
+        <p class="rise d2"><span class="cmd">~3 ~2</span> 读作"从这里往东 3 格、往上 2 格"。这个<b class="hl">"这里"</b>，就是执行位置。</p>
+        <p class="rise d3">所以它是个<b>原点</b>：原点不动，<span class="cmd">~3 ~2</span> 永远指向同一个地方；原点一挪，同样的写法指向的地方就跟着挪。</p>
+        <p class="rise d4">这也是为什么同一段指令，交给不同的人、不同的方块去执行，落点会变——<b>变的不是指令，是原点。</b></p>
+        <p class="rise d5" style="color:#7f95b8">记住一句话：<span class="cmd">~</span> 永远从执行位置出发，而不是从世界原点出发。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <svg class="stage" id="posStage" viewBox="0 0 640 420" role="img" aria-label="相对坐标随执行位置移动">
+          <defs>
+            <pattern id="grid3" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M40 0H0V40" fill="none" stroke="rgba(120,160,255,.13)" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="640" height="420" fill="url(#grid3)"/>
+
+          <g>
+            <rect class="worldmark" x="500" y="70" width="40" height="40" rx="6"/>
+            <text class="worldlbl" x="520" y="128" text-anchor="middle">世界某处（不动）</text>
+          </g>
+
+          <g id="posOrigin">
+            <circle class="ringPulse" cx="170" cy="300" r="12"/>
+            <circle class="halo" cx="170" cy="300" r="16"/>
+            <circle class="originDot" cx="170" cy="300" r="8"/>
+            <text class="tag" x="126" y="330">执行位置（~0 ~0）</text>
+
+            <path class="rel" d="M170 300 L290 220"/>
+            <rect x="278" y="208" width="26" height="26" rx="5" fill="rgba(163,230,53,.20)" stroke="#a3e635" stroke-width="2"/>
+            <text class="tag2" x="318" y="206">~3 ~2</text>
+          </g>
+
+          <text x="320" y="392" text-anchor="middle" class="worldlbl" style="fill:#7f95b8">同一句 <tspan class="tag2">~3 ~2</tspan>：原点动，落点就动</text>
+        </svg>
+        <p class="cap">执行位置 = 相对坐标的原点。世界不动，原点动。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 4 -->
+  <section class="scene" id="s4" data-label="执行朝向">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">三 · 执行朝向</p>
+        <h2 class="rise d1"><span class="hl2 mono">^</span> 的方向，由执行朝向决定</h2>
+        <p class="rise d2"><span class="cmd">^ ^ ^1</span> 的意思是"向左 0 格，向上 0 格，向前 1 格"。可"前"是哪儿？——它由<b class="hl3">执行朝向</b>决定。</p>
+        <p class="rise d3">俯视图里，人一转身，"前"就换方向。所以局部坐标（<span class="cmd">^</span>）像三根<b>跟着人转的轴</b>：左、上、前。</p>
+        <p class="rise d4">而世界方向（东南西北）是固定的。灰箭头是世界方向，绿箭头是你的"前"——<b>两者不一定一致</b>，这正是朝向参数存在的意义。</p>
+        <p class="rise d5" style="color:#7f95b8">顺带一提：传送、设置出生点这类命令里用 <span class="cmd">~</span> 写"相对朝向"时，基准也是执行朝向。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <svg class="stage" viewBox="0 0 640 420" role="img" aria-label="执行朝向旋转，局部坐标随之旋转">
+          <rect width="640" height="420" fill="url(#grid3)" opacity=".5"/>
+
+          <circle class="compass" cx="320" cy="230" r="132"/>
+          <line class="worldArrow" x1="320" y1="230" x2="320" y2="82"/>
+          <text class="compassT" x="320" y="66" text-anchor="middle">世界 +Z（固定）</text>
+          <line class="compass" x1="320" y1="230" x2="452" y2="230" stroke-dasharray="4 6"/>
+          <line class="compass" x1="320" y1="230" x2="188" y2="230" stroke-dasharray="4 6"/>
+          <line class="compass" x1="320" y1="230" x2="320" y2="362" stroke-dasharray="4 6"/>
+
+          <g id="facing">
+            <line class="localArrow" x1="320" y1="230" x2="320" y2="120"/>
+            <line stroke="rgba(163,230,53,.45)" stroke-width="2" stroke-dasharray="5 6" x1="320" y1="230" x2="243" y2="230"/>
+            <text class="facingLbl" x="330" y="112">^1 前</text>
+            <text class="facingLbl" x="196" y="248" style="fill:rgba(163,230,53,.65)">^0 左</text>
+            <circle class="head" cx="320" cy="230" r="13"/>
+            <path class="body" d="M296 252 q24 -16 48 0 q-6 18 -24 18 q-18 0 -24 -18z"/>
+          </g>
+
+          <text x="320" y="398" text-anchor="middle" class="worldlbl" style="fill:#7f95b8">人转身 → "前"换方向 → <tspan class="facingLbl">^1</tspan> 跟着转</text>
+        </svg>
+        <p class="cap">灰线是世界坐标系方向，绿箭头是"前"。<span class="mono">^</span> 跟着执行朝向转。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 5 -->
+  <section class="scene" id="s5" data-label="执行者">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">四 · 执行者</p>
+        <h2 class="rise d1"><span class="c1 mono">@s</span> 就是"我自己"</h2>
+        <p class="rise d2"><b class="hl4">执行者</b>是"谁在下这条命令"。它决定三件事：</p>
+        <p class="rise d3">· <span class="cmd">@s</span> 选中谁——就是执行者实体；<br>
+           · 发消息时显示<b>谁说的</b>——用执行者的名字；<br>
+           · 很多命令的<b>默认目标</b>——不写目标时，就是执行者自己。</p>
+        <p class="rise d4">执行者一换，这三件事全部跟着换。所以<b>同一条命令，换个执行者，就像换了个"我"</b>。</p>
+        <p class="rise d5" style="color:#7f95b8">注意：命令方块这类执行者<b>没有实体</b>，只有名字，所以它没有"我"可以当目标。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <svg class="stage" id="execStage" viewBox="0 0 640 420" role="img" aria-label="执行者切换，@s 与默认目标跟着切换">
+          <rect width="640" height="420" fill="url(#grid3)" opacity=".45"/>
+
+          <g class="fig active" data-name="玩家 A" transform="translate(150,0)">
+            <circle class="figHalo" cx="0" cy="140" r="46"/>
+            <circle class="head" cx="0" cy="128" r="15"/>
+            <path class="body" d="M-24 152 q24 -16 48 0 q-6 20 -24 20 q-18 0 -24 -20z"/>
+            <text class="nm" x="0" y="210">玩家 A</text>
+          </g>
+
+          <g class="fig" data-name="玩家 B" transform="translate(320,0)">
+            <circle class="figHalo" cx="0" cy="140" r="46"/>
+            <circle class="head" cx="0" cy="128" r="15"/>
+            <path class="body" d="M-24 152 q24 -16 48 0 q-6 20 -24 20 q-18 0 -24 -20z"/>
+            <text class="nm" x="0" y="210">玩家 B</text>
+          </g>
+
+          <g class="fig" data-name="村民" transform="translate(490,0)">
+            <circle class="figHalo" cx="0" cy="140" r="46"/>
+            <circle class="head" cx="0" cy="128" r="15"/>
+            <path class="body" d="M-24 152 q24 -16 48 0 q-6 20 -24 20 q-18 0 -24 -20z"/>
+            <text class="nm" x="0" y="210">村民</text>
+          </g>
+
+          <text x="320" y="58" text-anchor="middle" class="s1line" style="fill:#ffd6ea">@s → 光圈里的实体</text>
+
+          <g>
+            <rect class="chatbox" x="86" y="268" width="468" height="76" rx="12"/>
+            <text class="chatline" id="execChat" x="106" y="300">&lt;玩家 A&gt; 大家好</text>
+            <text class="chatline" id="execTarget" x="106" y="326" style="fill:#9db0cc">默认目标 → 玩家 A</text>
+          </g>
+          <text x="320" y="386" text-anchor="middle" class="worldlbl" style="fill:#7f95b8">执行者一变：@s、发言者、默认目标 一起变</text>
+        </svg>
+        <p class="cap">执行者 = 命令的"我"。<span class="mono">@s</span>、发言者、默认目标都指向它。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 6 -->
+  <section class="scene" id="s6" data-label="执行维度">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">五 · 执行维度</p>
+        <h2 class="rise d1">同一个坐标，在三个世界里各有一份</h2>
+        <p class="rise d2"><b class="hl">执行维度</b>就是"这句话在哪个世界生效"。坐标 <span class="cmd">(0, 64, 0)</span> 在主世界、下界、末地各有一份，<b>互不相通</b>。</p>
+        <p class="rise d3">所以命令只在自己所属的那个世界里动手：选实体的距离范围、方块的位置、找结构的搜索范围，全都在这个维度里算。</p>
+        <p class="rise d4">换句话说：<b>维度是坐标的"所属世界"</b>。坐标一样，世界不同，结果就是天差地别。</p>
+        <p class="rise d5" style="color:#7f95b8">这也是为什么"传送到同一个坐标"有时会跑到另一个世界去——看的是执行维度变没变。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <svg class="stage" id="dimStage" data-at="1" viewBox="0 0 640 420" role="img" aria-label="同一坐标在三个维度">
+          <rect width="640" height="420" fill="url(#grid3)" opacity=".35"/>
+
+          <g class="wpanel active" data-at="1">
+            <rect x="26" y="96" width="168" height="196" rx="16" fill="#123a2a"/>
+            <rect x="26" y="236" width="168" height="56" fill="#2f6b3f"/>
+            <rect x="26" y="150" width="168" height="86" fill="rgba(120,220,160,.10)"/>
+            <rect class="wframe" x="26" y="96" width="168" height="196" rx="16"/>
+            <circle class="wpulse" cx="110" cy="236" r="12"/>
+            <text class="wtitle" x="110" y="78">主世界</text>
+            <text class="wcoord" x="110" y="322">(0, 64, 0)</text>
+          </g>
+
+          <g class="wpanel" data-at="2">
+            <rect x="236" y="96" width="168" height="196" rx="16" fill="#3a1214"/>
+            <rect x="236" y="236" width="168" height="56" fill="#6b2f2f"/>
+            <rect x="236" y="150" width="168" height="86" fill="rgba(255,120,120,.10)"/>
+            <rect class="wframe" x="236" y="96" width="168" height="196" rx="16"/>
+            <circle class="wpulse" cx="320" cy="236" r="12"/>
+            <text class="wtitle" x="320" y="78">下界</text>
+            <text class="wcoord" x="320" y="322">(0, 64, 0)</text>
+          </g>
+
+          <g class="wpanel" data-at="3">
+            <rect x="446" y="96" width="168" height="196" rx="16" fill="#2b2438"/>
+            <rect x="446" y="236" width="168" height="56" fill="#5b4a70"/>
+            <rect x="446" y="150" width="168" height="86" fill="rgba(200,160,255,.10)"/>
+            <rect class="wframe" x="446" y="96" width="168" height="196" rx="16"/>
+            <circle class="wpulse" cx="530" cy="236" r="12"/>
+            <text class="wtitle" x="530" y="78">末地</text>
+            <text class="wcoord" x="530" y="322">(0, 64, 0)</text>
+          </g>
+
+          <circle id="dimMarker" cx="110" cy="236" r="9"/>
+          <text x="320" y="366" text-anchor="middle" class="worldlbl" style="fill:#7f95b8">坐标一模一样，世界不一样 → 效果落在不同地方</text>
+        </svg>
+        <p class="cap">维度 = 坐标的"所属世界"。<b>同一个数字，三个世界各一份。</b></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 7 -->
+  <section class="scene" id="s7" data-label="四件套">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">六 · 合体</p>
+        <h2 class="rise d1">一张"上下文身份证"</h2>
+        <p class="rise d2">把四件事写在一张卡上，命令里的指代词就能一一对上：</p>
+        <p class="rise d3">· <span class="c1 mono">as [选择器]</span> → 执行者<br>
+           · <span class="c3 mono">positioned/~/^</span> → 执行位置<br>
+           · <span class="c3 mono">rotated/facing</span> → 执行朝向（"前"的方向）<br>
+           · <span class="c3 mono">in</span> → 执行维度<br>
+           · <span class="c3 mono">at [选择器]</span> → 执行位置+执行朝向+执行维度</p>
+        <p class="rise d4">这就是为什么同一串字，在不同卡上会做出不同的事——<b class="hl">字没变，卡变了。</b></p>
+        <p class="rise d5" style="color:#7f95b8">读命令时先别急着看参数；先问自己：<b>这张卡上写了什么？</b></p>
+      </div>
+      <div class="stagebox rise d2">
+        <div class="idcard">
+          <div class="idhead">CONTEXT CARD</div>
+          <div class="idrow"><span class="idk">执行者</span><span class="idv c1">玩家 A <span class="chip dyn">实时跟随</span></span></div>
+          <div class="idrow"><span class="idk">执行维度</span><span class="idv c2">主世界</span></div>
+          <div class="idrow"><span class="idk">执行位置</span><span class="idv c3">(12, 64, 36)</span></div>
+          <div class="idrow"><span class="idk">执行朝向</span><span class="idv c4">(120°, 0°)</span></div>
+          <div class="deepdots"><i style="background:var(--pink)"></i><i style="background:var(--cyan)"></i><i style="background:var(--lime)"></i><i style="background:var(--amber)"></i></div>
+        </div>
+
+        <div class="cmdbar">
+          <span class="tok t1">@s</span>
+          <span class="tok t0">在</span>
+          <span class="tok t3">~2 ~0 ~2</span>
+          <span class="tok t0">放下石头</span>
+          <span class="tok t0">·</span>
+          <span class="tok t3">(120°, 0°)</span>
+          <span class="tok t0">方向</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 8 -->
+  <section class="scene" id="s8" data-label="可派生">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">七 · 深入一点</p>
+        <h2 class="rise d1">上下文还能被"换一张卡"</h2>
+        <p class="rise d2"><span class="cmd">/execute</span> 听起来很玄，其实就一件事：<b>复制现在的卡，改掉其中一格，再拿新卡去跑命令。</b></p>
+        <p class="rise d3">比如 <span class="cmd">as 某人</span>：只换"执行者"这一格，位置/朝向/维度原样保留；再 <span class="cmd">positioned 坐标</span>：只换"位置"这一格。</p>
+        <p class="rise d4">每改一格，就得到一张新卡；命令只认最后那张卡。这就是为什么可以"以别人的身份、在别的地方"做同一件事。</p>
+        <p class="rise d5" style="color:#7f95b8">基岩版有个细节：<span class="cmd">/execute</span> 会把<b>维度</b>和<b>朝向</b>当场"定住"（之后不再跟着实体变），而执行者的名字仍然<b>实时跟随</b>执行者实体。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <div class="derive">
+          <div class="idcard" style="padding:14px 16px">
+            <div class="idhead" style="font-size:11px">原来那张卡</div>
+            <div class="idrow" style="padding:6px 0"><span class="idk">执行者</span><span class="idv c1">玩家 A</span></div>
+            <div class="idrow" style="padding:6px 0"><span class="idk">维度</span><span class="idv c2">主世界</span></div>
+            <div class="idrow" style="padding:6px 0"><span class="idk">位置</span><span class="idv c3">(12,64,36)</span></div>
+            <div class="idrow" style="padding:6px 0"><span class="idk">朝向</span><span class="idv c4">(-90°, 0°)</span></div>
+          </div>
+
+          <div class="arrowmid">➜<br><span style="font-size:11px">复制<br>改一格</span></div>
+
+          <div class="idcard flash" id="cardNew" style="padding:14px 16px">
+            <div class="idhead" style="font-size:11px;color:var(--amber)">派生出来的新卡</div>
+            <div class="idrow" style="padding:6px 0">
+              <span class="idk">执行者</span>
+              <span class="idv c1" id="slotExec">玩家 A</span>
+            </div>
+            <div class="idrow" style="padding:6px 0"><span class="idk">维度</span><span class="idv c2">主世界 <span class="chip">定住</span></span></div>
+            <div class="idrow" style="padding:6px 0"><span class="idk">位置</span><span class="idv c3" id="slotPos">(12,64,36)</span></div>
+            <div class="idrow" style="padding:6px 0"><span class="idk">朝向</span><span class="idv c4">(-90°, 0°) <span class="chip">定住</span></span></div>
+          </div>
+        </div>
+        <p class="cap">换"执行者"这一格 → 变成 <b class="c1">玩家 B</b> 的身份；再换"位置"一格 → 换到另一个坐标。其它格原样不动。</p>
+        <p class="small">提示：右卡上带"定住"的格子，表示基岩版里 <span class="mono">/execute</span> 执行时就已经固定；执行者名字则一直实时跟随。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 8b：as / at 分身 -->
+  <section class="scene" id="s8b" data-label="as / at 分身">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">八 · 实战</p>
+        <h2 class="rise d1"><span class="c1 mono">as @a</span> <span class="c3 mono">at @a</span> 是怎么"分身"的</h2>
+        <p class="rise d2"><b>一张卡只跑一次命令。</b><span class="cmd">as</span> 只换执行者、<span class="cmd">at</span> 换环境；每命中一个目标，就在父卡下方复制一张新卡。</p>
+        <p class="rise d4">· <span class="cmd">as @a</span>：执行者换成每一名玩家 → 2 张卡（环境不变）；<br>
+           · <span class="cmd">at @a</span>：环境（维度/位置/朝向）换成每一名玩家的 → 2 × 2 = <b>4 张卡</b>；<br>
+           · <span class="cmd">run</span>：每张卡各跑一次 → <b>4 次执行</b>。</p>
+        <p class="rise d4">注意 <span class="cmd">at @a</span> 会<b>连乘</b>（每人 × 每人）；想"每人只跑一次"就写 <span class="cmd">at @s</span> ✓</p>
+        <p class="rise d5" style="color:#7f95b8">右侧动画：<b>根卡</b>在命令源生成 → 在它<b>下方</b>逐层生成新卡 → 走到叶子执行一次 → <b>这条分支的卡被删除</b> → 回到上一层再生成新卡。</p>
+        <div class="envBox rise d3">
+          <div class="envTitle">例子：命令由 玩家A 执行，两名玩家的环境</div>
+          <div><b class="c1">玩家 A</b> · <b class="c2">主世界</b> · 位置 <span class="mono">(0, 0, 0)</span> · 朝向 （90°, 0°）</div>
+          <div><b class="c1">玩家 B</b> · <b class="c2">下界</b> · 位置 <span class="mono">(1, 1, 1)</span> · 朝向 （40°, 0°）</div>
+        </div>
+      </div>
+      <div class="stagebox rise d2">
+        <div class="fanWrap">
+          <div class="fanCmd mono">execute <b class="c1">as @a</b> <b class="c3">at @a</b> run <b class="c4">粒子</b></div>
+
+          <div class="fanCol" id="fanCol"></div>
+
+          <div class="fanCount">
+            <span class="fanHint" id="fanHint">① 从命令源生成根卡片…</span>
+            <span class="fanExec">
+              <b id="fanCount" style="color:var(--amber);margin-right:2px">0</b>
+              <i class="execPill">①</i><i class="execPill">②</i><i class="execPill">③</i><i class="execPill">④</i>
+            </span>
+          </div>
+        </div>
+        <p class="cap"><span class="mono">as</span> 决定"以谁的身份"，<span class="mono">at</span> 决定"用谁的位置和朝向"；两边各命中几个目标，就乘出几张卡。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 幕 9 -->
+  <section class="scene" id="s9" data-label="总结">
+    <div class="wrap">
+      <div class="copy">
+        <p class="kicker rise d1">九 · 收尾</p>
+        <h2 class="rise d1">以后看命令，先问四句话</h2>
+        <p class="rise d2"><b class="c1">谁</b>在说？&nbsp;&nbsp;<b class="c2">哪个世界</b>？&nbsp;&nbsp;<b class="c3">站在哪</b>？&nbsp;&nbsp;<b class="c4">朝哪边</b>？</p>
+        <p class="rise d3">答完这四问，你手里就有一张"上下文卡"。命令里的 <span class="mono c1">@s</span>、<span class="mono c3">~</span>、<span class="mono c3">^</span>、以及所有坐标，都是在<b>这张卡上</b>找答案。</p>
+        <p class="rise d4" style="font-size:clamp(17px,1.8vw,22px);color:var(--ink)">
+          <b>命令负责说"做什么"，<br>上下文负责回答"在哪里、以谁的身份做"。</b>
+        </p>
+        <p class="rise d5 footnote">内容依据中文 Minecraft Wiki「命令上下文」条目（仅取基岩版：执行者、执行维度、执行位置、执行朝向；其余参数与"不同场景下的上下文"未纳入）。</p>
+      </div>
+      <div class="stagebox rise d2">
+        <svg class="stage" viewBox="0 0 640 420" role="img" aria-label="四问回顾">
+          <rect width="640" height="420" fill="url(#grid3)" opacity=".4"/>
+          <g>
+            <rect class="qcard" x="30" y="40" width="270" height="120" rx="18"/>
+            <text class="q" x="56" y="86" style="fill:#f472b6;font-size:17px">① 谁在说</text>
+            <text class="qsub" x="56" y="114">执行者 → @s、发言者、默认目标</text>
+            <text class="qsub" x="56" y="138" style="fill:#6f86a8">答案变了，这三样一起变</text>
+          </g>
+          <g>
+            <rect class="qcard" x="340" y="40" width="270" height="120" rx="18"/>
+            <text class="q" x="366" y="86" style="fill:#4be0ff;font-size:17px">② 哪个维度</text>
+            <text class="qsub" x="366" y="114">执行维度 → 坐标属于哪个维度</text>
+            <text class="qsub" x="366" y="138" style="fill:#6f86a8">同一坐标，三维度各一份</text>
+          </g>
+          <g>
+            <rect class="qcard" x="30" y="184" width="270" height="120" rx="18"/>
+            <text class="q" x="56" y="230" style="fill:#a3e635;font-size:17px">③ 站在哪</text>
+            <text class="qsub" x="56" y="258">执行位置 → ~ 的原点</text>
+            <text class="qsub" x="56" y="282" style="fill:#6f86a8">原点动，落点跟着动</text>
+          </g>
+          <g>
+            <rect class="qcard" x="340" y="184" width="270" height="120" rx="18"/>
+            <text class="q" x="366" y="230" style="fill:#fbbf24;font-size:17px">④ 朝哪边</text>
+            <text class="qsub" x="366" y="258">执行朝向 → ^ 的坐标系</text>
+            <text class="qsub" x="366" y="282" style="fill:#6f86a8">人转身，"前"换方向</text>
+          </g>
+          <text x="320" y="352" text-anchor="middle" class="s1line">四问 → 一张卡 → 命令落地</text>
+          <text x="320" y="386" text-anchor="middle" class="worldlbl" style="fill:#6f86a8">命令说做什么 · 上下文说在哪做、以谁做</text>
+        </svg>
+        <p class="cap">四问就是上下文。答完，命令自然就"知道"该落在哪里。</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var bar = document.getElementById("bar");
+  var dotsEl = document.getElementById("dots");
+  var scenes = Array.prototype.slice.call(document.querySelectorAll(".scene"));
+  var power = document.getElementById("power");
+  var lowpower = false;
+  var visible = !document.hidden;
+
+  scenes.forEach(function(sc, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.dataset.label = sc.dataset.label || ("第 " + (i+1) + " 幕");
+    b.setAttribute("aria-label", b.dataset.label);
+    b.addEventListener("click", function(){
+      sc.scrollIntoView({behavior: "smooth", block: "start"});
+    });
+    dotsEl.appendChild(b);
+  });
+  var dotBtns = Array.prototype.slice.call(dotsEl.children);
+
+  function onScroll(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    var p = max > 0 ? (h.scrollTop || document.body.scrollTop) / max : 0;
+    bar.style.width = (p * 100).toFixed(2) + "%";
+  }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+
+  /* 计时驱动：仅在「章节可见 + 页面前台 + 非省电」时运行 */
+  var drivers = {};
+  function makeLoop(fn, ms){
+    var t = null;
+    return {
+      start: function(){
+        if(reduce || lowpower || !visible || t) return;
+        fn();
+        t = setInterval(fn, ms);
+      },
+      stop: function(){ if(t){ clearInterval(t); t = null; } }
+    };
+  }
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      var sc = en.target;
+      if(en.isIntersecting){
+        sc.classList.add("in");
+        if(drivers[sc.id]) drivers[sc.id].start();
+        var idx = scenes.indexOf(sc);
+        dotBtns.forEach(function(d, i){ d.classList.toggle("on", i === idx); });
+      }else{
+        if(drivers[sc.id]) drivers[sc.id].stop();
+      }
+    });
+  }, {threshold: 0.3});
+  scenes.forEach(function(sc){ io.observe(sc); });
+
+  /* 幕 3：执行位置移动 */
+  var posStage = document.getElementById("posStage");
+  var posMoved = false;
+  drivers.s3 = makeLoop(function(){
+    posMoved = !posMoved;
+    posStage.classList.toggle("moved", posMoved);
+  }, 3000);
+
+  /* 幕 5：执行者切换 */
+  var figWrap = document.getElementById("execStage");
+  var figs = Array.prototype.slice.call(figWrap.querySelectorAll(".fig"));
+  var execChat = document.getElementById("execChat");
+  var execTarget = document.getElementById("execTarget");
+  var fi = 0;
+  function paintExec(){
+    figs.forEach(function(f, i){ f.classList.toggle("active", i === fi); });
+    var nm = figs[fi].getAttribute("data-name");
+    execChat.textContent = "<" + nm + "> 大家好";
+    execTarget.textContent = "默认目标 → " + nm;
+  }
+  paintExec();
+  drivers.s5 = makeLoop(function(){ fi = (fi + 1) % figs.length; paintExec(); }, 2300);
+
+  /* 幕 6：维度切换 */
+  var dimStage = document.getElementById("dimStage");
+  var wpanels = Array.prototype.slice.call(dimStage.querySelectorAll(".wpanel"));
+  var di = 1;
+  function paintDim(){
+    dimStage.setAttribute("data-at", String(di));
+    wpanels.forEach(function(p){ p.classList.toggle("active", p.getAttribute("data-at") === String(di)); });
+  }
+  paintDim();
+  drivers.s6 = makeLoop(function(){ di = di % 3 + 1; paintDim(); }, 2500);
+
+  /* 幕 8：派生演示 */
+  var cardNew = document.getElementById("cardNew");
+  var slotExec = document.getElementById("slotExec");
+  var slotPos = document.getElementById("slotPos");
+  var step = 0;
+  var POS = ["(12,64,36)", "(-40,70,8)"];
+  var pi = 0;
+  var hitTimer = null;
+  function derive(){
+    step = (step + 1) % 3;
+    if(step === 0){
+      slotExec.textContent = "玩家 A";
+      slotPos.textContent = POS[pi];
+    }else if(step === 1){
+      slotExec.textContent = "玩家 B";
+      cardNew.classList.add("hit");
+    }else{
+      pi = (pi + 1) % POS.length;
+      slotPos.textContent = POS[pi];
+      cardNew.classList.add("hit");
+    }
+    if(hitTimer) clearTimeout(hitTimer);
+    hitTimer = setTimeout(function(){ cardNew.classList.remove("hit"); }, 900);
+  }
+  drivers.s8 = makeLoop(derive, 2600);
+
+  /* 幕 8b：纵向卡片列 —— 在父卡下方生成新卡，分支结束即删除 */
+  var fanCol = document.getElementById("fanCol");
+  var fanHint = document.getElementById("fanHint");
+  var fanCountEl = document.getElementById("fanCount");
+  var execPills = Array.prototype.slice.call(document.querySelectorAll(".execPill"));
+  /* 玩家 A：主世界 (0,0,0) 朝东　·　玩家 B：下界 (1,1,1) 朝西 */
+  var A = {ex:"玩家 A", dim:"主世界", pos:"(0, 0, 0)", rot:"(90°, 0°)"};
+  var B = {ex:"玩家 B", dim:"下界",   pos:"(1, 1, 1)", rot:"(40°, 0°)"};
+  var atB  = {ex:A.ex, dim:B.dim, pos:B.pos, rot:B.rot};    /* A 的身份 + B 的环境 */
+  var asB  = {ex:B.ex, dim:A.dim, pos:A.pos, rot:A.rot};    /* B 的身份 + A 的环境 */
+  var atBA = {ex:B.ex, dim:A.dim, pos:A.pos, rot:A.rot};    /* B 的身份 + A 的环境（at→A） */
+  var atBB = {ex:B.ex, dim:B.dim, pos:B.pos, rot:B.rot};    /* B 的身份 + B 的环境 */
+
+  var FAN = [
+    {exec:0, hint:"① 从命令源生成根卡片", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]}]},
+    {exec:0, hint:"② 在根卡下方生成 as 卡：只换执行者 → 玩家 A", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asA", d:1, badge:"复制根", v:A, chg:["ex"]}]},
+    {exec:1, hint:"③ 再往下生成 at 卡：环境换成 A 的 → 执行 ①", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asA", d:1, badge:"as→A", v:A, chg:["ex"]},
+      {key:"atAA", d:2, badge:"执行 ①", v:A, chg:["dim","pos","rot"]}]},
+    {exec:1, hint:"④ 这张叶子卡用完了 → 先看它被删掉（这一步只删不加）", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asA", d:1, badge:"as→A", v:A, chg:["ex"]}]},
+    {exec:2, hint:"⑤ 再生成新卡：回到 as 卡下方，换成 B 的环境 → 执行 ②", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asA", d:1, badge:"as→A", v:A, chg:["ex"]},
+      {key:"atAB", d:2, badge:"执行 ②", v:atB, chg:["dim","pos","rot"]}]},
+    {exec:2, hint:"⑥ 叶子卡用完 → 删掉它（只删不加）", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asA", d:1, badge:"as→A", v:A, chg:["ex"]}]},
+    {exec:2, hint:"⑦ A 分支结束 → 删掉 as 卡，退回根卡", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]}]},
+    {exec:2, hint:"⑧ 在根卡下方生成 as 卡：执行者换成 B", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asB", d:1, badge:"复制根", v:asB, chg:["ex"]}]},
+    {exec:3, hint:"⑨ 再往下生成 at 卡：环境换成 A 的 → 执行 ③", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asB", d:1, badge:"as→B", v:asB, chg:["ex"]},
+      {key:"atBA", d:2, badge:"执行 ③", v:atBA, chg:["pos","rot"]}]},
+    {exec:3, hint:"⑩ 叶子卡用完 → 删掉它（只删不加）", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asB", d:1, badge:"as→B", v:asB, chg:["ex"]}]},
+    {exec:4, hint:"⑪ 再生成新卡：换成 B 的环境（下界）→ 执行 ④", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asB", d:1, badge:"as→B", v:asB, chg:["ex"]},
+      {key:"atBB", d:2, badge:"执行 ④", v:atBB, chg:["dim","pos","rot"]}]},
+    {exec:4, hint:"⑫ 叶子卡用完 → 删掉它（只删不加）", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]},
+      {key:"asB", d:1, badge:"as→B", v:asB, chg:["ex"]}]},
+    {exec:4, hint:"⑬ B 分支结束 → 删掉 as 卡", cards:[
+      {key:"root", d:0, root:true, badge:"根", v:A, chg:[]}]},
+    {exec:4, hint:"⑭ 删掉根卡：全部结束，1 条命令 = 4 次执行", cards:[]}
+  ];
+  var cardEls = {};
+  var FIELDS = ["ex", "dim", "pos", "rot"];
+  var FIELD_CLS = ["c1", "c2", "c3", "c4"];
+  function makeCard(c){
+    var el = document.createElement("div");
+    el.className = "mcard enter" + (c.root ? " root" : "");
+    el.style.marginLeft = (c.d * 10) + "px";
+    FIELDS.forEach(function(f, i){
+      var s = document.createElement("span");
+      s.className = "cch " + FIELD_CLS[i] + ((c.chg || []).indexOf(f) >= 0 ? " chg" : "");
+      s.textContent = c.v[f];
+      el.appendChild(s);
+    });
+    var b = document.createElement("span");
+    b.className = "cbadge" + (c.badge ? " show" : "");
+    b.textContent = c.badge || "";
+    el.appendChild(b);
+    return el;
+  }
+  function renderFan(cards){
+    var keep = {};
+    cards.forEach(function(c){ keep[c.key] = true; });
+    Object.keys(cardEls).forEach(function(k){
+      if(keep[k]) return;
+      var el = cardEls[k]; delete cardEls[k];
+      el.classList.add("leaving");
+      setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 340);
+    });
+    cards.forEach(function(c){
+      if(cardEls[c.key]) return;             /* 已存在就不动，避免多余重排 */
+      var el = makeCard(c);
+      cardEls[c.key] = el;
+      fanCol.appendChild(el);                /* 追加在最后 = 父卡的下方 */
+    });
+  }
+  var fanStep = 0;
+  function paintFan(){
+    var st = FAN[fanStep];
+    renderFan(st.cards);
+    fanHint.textContent = st.hint;
+    fanCountEl.textContent = String(st.exec);
+    execPills.forEach(function(p, i){ p.classList.toggle("on", i < st.exec); });
+  }
+  paintFan();
+  drivers.s8b = makeLoop(function(){
+    fanStep = (fanStep + 1) % FAN.length;
+    paintFan();
+  }, 1700);
+
+  /* 省电开关 */
+  power.addEventListener("click", function(){
+    lowpower = !lowpower;
+    document.body.classList.toggle("lowpower", lowpower);
+    power.setAttribute("aria-pressed", lowpower ? "true" : "false");
+    power.textContent = lowpower ? "动画：关" : "动画：开";
+    if(lowpower){
+      Object.keys(drivers).forEach(function(k){ drivers[k].stop(); });
+    }
+  });
+
+  /* 切后台停止计时器 */
+  document.addEventListener("visibilitychange", function(){
+    visible = !document.hidden && !lowpower;
+    if(!visible){ Object.keys(drivers).forEach(function(k){ drivers[k].stop(); }); }
+  });
+
+  /* 键盘上下切换章节（桌面） */
+  document.addEventListener("keydown", function(e){
+    if(e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    var y = window.scrollY || document.body.scrollTop;
+    var cur = 0;
+    scenes.forEach(function(sc, i){ if(sc.offsetTop <= y + 10) cur = i; });
+    var next = e.key === "ArrowDown" ? Math.min(scenes.length - 1, cur + 1) : Math.max(0, cur - 1);
+    scenes[next].scrollIntoView({behavior: "smooth", block: "start"});
+    e.preventDefault();
+  }, {passive:false});
+})();
+</script>
+</body>
+</html>

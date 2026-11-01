@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="color-scheme" content="dark">
+	<meta name="theme-color" content="#070c16">
+	<meta name="description" content="命令模拟器常见问题：输入法安全键盘模式、复制粘贴失效、UI 显示不完整。">
+	<title>常见问题 · 命令模拟器帮助文档</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070c16'/%3E%3Cpath d='M16 5 27 11.4v9.2L16 27 5 20.6v-9.2z' fill='%232f8d55'/%3E%3Cpath d='M5 11.4 16 17.8l11-6.4v9.2L16 27z' fill='%230f3d23'/%3E%3Cpath d='M16 5 27 11.4 16 17.8 5 11.4z' fill='%233ee08f'/%3E%3C/svg%3E">
+
+	<style>
+		/* ========== 基础变量 ========== */
+		:root {
+			--bg: #070c16;
+			--panel: rgba(255, 255, 255, .045);
+			--panel-hi: rgba(255, 255, 255, .08);
+			--line: rgba(255, 255, 255, .10);
+			--line-hi: rgba(255, 255, 255, .2);
+			--text: #eaf1fb;
+			--body: #c2d0e2;
+			--muted: #93a5bf;
+			--mint: #3ee08f;
+			--mint-dim: #2bbd76;
+			--amber: #ffc857;
+			--violet: #b493ff;
+			--gutter: clamp(20px, 5vw, 64px);
+			--header-h: 62px;
+			--radius: 22px;
+			--font: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
+				"Microsoft YaHei", "Noto Sans SC", sans-serif;
+			--mono: ui-monospace, "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html {
+			scroll-behavior: smooth;
+			-webkit-text-size-adjust: 100%;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100dvh;
+			font-family: var(--font);
+			font-size: 16px;
+			line-height: 1.95;
+			color: var(--text);
+			background:
+				radial-gradient(900px 520px at 8% -8%, rgba(62, 224, 143, .16), transparent 62%),
+				radial-gradient(800px 520px at 100% 0%, rgba(180, 147, 255, .13), transparent 58%),
+				linear-gradient(180deg, #070c16 0%, #0a1120 46%, #060a12 100%);
+			background-repeat: no-repeat;
+			-webkit-font-smoothing: antialiased;
+			/* clip 不会创建滚动容器，否则 position: sticky 会失效 */
+			overflow-x: clip;
+		}
+
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			z-index: -1;
+			pointer-events: none;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, .04) 1px, transparent 1px);
+			background-size: 52px 52px;
+			mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+			-webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 0%, #000 20%, transparent 78%);
+		}
+
+		::selection {
+			background: rgba(62, 224, 143, .3);
+			color: #fff;
+		}
+
+		:focus-visible {
+			outline: 2px solid var(--mint);
+			outline-offset: 3px;
+			border-radius: 8px;
+		}
+
+		a {
+			color: var(--mint);
+			text-decoration-color: rgba(62, 224, 143, .45);
+			text-underline-offset: 3px;
+		}
+
+		a:hover {
+			color: #8dffc3;
+		}
+
+		.wrap {
+			width: min(1120px, 100% - var(--gutter));
+			margin-inline: auto;
+		}
+
+		.skip {
+			position: absolute;
+			left: -9999px;
+			top: 8px;
+			z-index: 99;
+			padding: 10px 16px;
+			border-radius: 10px;
+			background: var(--mint);
+			color: #04140b;
+			font-weight: 700;
+			text-decoration: none;
+		}
+
+		.skip:focus {
+			left: 12px;
+		}
+
+		/* ========== 顶部 ========== */
+		.header {
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			background: rgba(7, 12, 22, .78);
+			border-bottom: 1px solid var(--line);
+			backdrop-filter: blur(16px) saturate(160%);
+			-webkit-backdrop-filter: blur(16px) saturate(160%);
+			padding-left: env(safe-area-inset-left);
+			padding-right: env(safe-area-inset-right);
+		}
+
+		.header__inner {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			height: var(--header-h);
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			text-decoration: none;
+			color: var(--text);
+			flex: none;
+			min-height: 40px;
+		}
+
+		.brand svg {
+			width: 26px;
+			height: 26px;
+			filter: drop-shadow(0 0 12px rgba(62, 224, 143, .45));
+		}
+
+		.brand b {
+			font-size: 15px;
+			letter-spacing: .02em;
+			white-space: nowrap;
+		}
+
+		.crumb {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			color: var(--muted);
+			font-size: 13.5px;
+			white-space: nowrap;
+			overflow: hidden;
+		}
+
+		.crumb::before {
+			content: "/";
+			color: rgba(255, 255, 255, .3);
+		}
+
+		.crumb span {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.back {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			height: 38px;
+			padding: 0 14px;
+			border-radius: 11px;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			color: var(--text);
+			font-size: 13.5px;
+			text-decoration: none;
+			white-space: nowrap;
+			transition: background-color .2s, border-color .2s, transform .2s;
+		}
+
+		.back:hover {
+			background: var(--panel-hi);
+			border-color: var(--line-hi);
+			transform: translateY(-1px);
+		}
+
+		.back svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		/* ========== 主体两栏 ========== */
+		.layout {
+			display: grid;
+			grid-template-columns: 226px minmax(0, 1fr);
+			gap: clamp(22px, 3vw, 44px);
+			align-items: start;
+			padding: clamp(22px, 3.4vw, 40px) 0 48px;
+		}
+
+		.side__inner {
+			position: sticky;
+			top: calc(var(--header-h) + 20px);
+		}
+
+		.side__label {
+			margin: 0 0 10px 12px;
+			font-size: 10.5px;
+			font-weight: 700;
+			letter-spacing: .26em;
+			text-transform: uppercase;
+			color: var(--mint);
+		}
+
+		.toc {
+			display: flex;
+			flex-direction: column;
+			gap: 3px;
+		}
+
+		.toc a {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 12px;
+			border-radius: 11px;
+			color: var(--muted);
+			font-size: 14.5px;
+			text-decoration: none;
+			transition: color .18s, background-color .18s;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.toc a .num {
+			font-family: var(--mono);
+			font-size: 11px;
+			color: rgba(255, 255, 255, .28);
+			letter-spacing: .04em;
+		}
+
+		.toc a:hover {
+			color: var(--text);
+			background: var(--panel);
+		}
+
+		.toc a.is-active {
+			color: var(--mint);
+			background: rgba(62, 224, 143, .13);
+			font-weight: 700;
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .28), 0 8px 22px -16px rgba(62, 224, 143, .9);
+		}
+
+		.toc a.is-active .num {
+			color: rgba(62, 224, 143, .8);
+		}
+
+		.side__foot {
+			margin-top: 18px;
+			padding: 14px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: var(--panel);
+			font-size: 12.5px;
+			line-height: 1.8;
+			color: var(--muted);
+		}
+
+		.side__foot b {
+			display: block;
+			margin-bottom: 4px;
+			color: var(--text);
+			font-size: 13px;
+		}
+
+		.side__foot a {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			margin-top: 6px;
+			font-size: 13px;
+			text-decoration: none;
+			color: var(--mint);
+		}
+
+		/* ========== 正文卡片 ========== */
+		.doc {
+			position: relative;
+			min-width: 0;
+			padding: clamp(20px, 3.2vw, 40px);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: linear-gradient(180deg, rgba(255, 255, 255, .042), rgba(255, 255, 255, .012));
+			box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .06);
+		}
+
+		.doc__eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			margin: 0 0 12px;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .18em;
+			color: var(--mint);
+			text-transform: uppercase;
+		}
+
+		.doc__eyebrow::before {
+			content: "";
+			width: 18px;
+			height: 1px;
+			background: var(--mint);
+			opacity: .7;
+		}
+
+		.doc h1 {
+			margin: 0;
+			font-size: clamp(27px, 5vw, 38px);
+			line-height: 1.25;
+			letter-spacing: -.02em;
+			font-weight: 800;
+		}
+
+		.doc__lead {
+			margin: 12px 0 18px;
+			max-width: 60ch;
+			color: var(--muted);
+			font-size: 15.5px;
+			line-height: 1.85;
+		}
+
+		.doc__meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 5px;
+			margin: 0 0 26px;
+			padding: 0 0 20px;
+			border-bottom: 1px solid var(--line);
+			list-style: none;
+			font-size: 12.5px;
+			color: var(--muted);
+		}
+
+		.doc__meta li {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			padding: 4px 10px 4px 8px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: rgba(255, 255, 255, .03);
+		}
+
+		.doc__meta li::before {
+			content: "";
+			width: 5px;
+			height: 5px;
+			border-radius: 1px;
+			background: var(--mint);
+			opacity: .75;
+		}
+
+		/* ========== 分类 ========== */
+		.cat {
+			scroll-margin-top: calc(var(--header-h) + 24px);
+		}
+
+		.cat + .cat {
+			margin-top: 34px;
+			padding-top: 26px;
+			border-top: 1px solid var(--line);
+		}
+
+		.cat > h2 {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			margin: 0 0 16px;
+			font-size: clamp(19px, 3.2vw, 25px);
+			line-height: 1.4;
+			letter-spacing: -.01em;
+			font-weight: 800;
+		}
+
+		.cat > h2::before {
+			content: "";
+			flex: none;
+			width: 4px;
+			height: 1.05em;
+			border-radius: 2px;
+			background: linear-gradient(180deg, var(--mint), var(--mint-dim));
+			box-shadow: 0 0 12px rgba(62, 224, 143, .55);
+		}
+
+		/* ========== 问答 ========== */
+		.qa {
+			position: relative;
+			padding: 17px 18px 15px;
+			margin-bottom: 10px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .012));
+			transition: border-color .2s, background-color .2s;
+		}
+
+		.qa:last-child {
+			margin-bottom: 0;
+		}
+
+		.qa:hover {
+			border-color: rgba(62, 224, 143, .22);
+		}
+
+		.qa__q {
+			display: flex;
+			align-items: flex-start;
+			gap: 10px;
+			margin: 0 0 10px;
+			font-size: 15.5px;
+			font-weight: 700;
+			line-height: 1.75;
+			color: #e8f2ff;
+		}
+
+		.qmark {
+			flex: none;
+			width: 22px;
+			height: 22px;
+			margin-top: 3px;
+			display: grid;
+			place-items: center;
+			border-radius: 7px;
+			background: rgba(62, 224, 143, .14);
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .3);
+			color: var(--mint);
+			font-family: var(--mono);
+			font-size: 12px;
+			font-weight: 700;
+		}
+
+		.qa__a {
+			padding-left: 32px;
+		}
+
+		.qa__a p {
+			margin: 0 0 10px;
+			color: var(--body);
+			font-size: 15px;
+			line-height: 1.95;
+		}
+
+		.qa__a p:last-child {
+			margin-bottom: 0;
+		}
+
+		.solve {
+			display: inline-block;
+			margin-right: 2px;
+			padding: 0 7px;
+			border-radius: 6px;
+			background: rgba(62, 224, 143, .14);
+			box-shadow: inset 0 0 0 1px rgba(62, 224, 143, .24);
+			color: #8df3bd;
+			font-weight: 700;
+		}
+
+		mark {
+			padding: 1px 6px;
+			margin: 0 1px;
+			border-radius: 6px;
+			background: rgba(255, 200, 87, .14);
+			box-shadow: inset 0 0 0 1px rgba(255, 200, 87, .22);
+			color: #ffd98a;
+			font-weight: 600;
+		}
+
+		code {
+			font-family: var(--mono);
+			font-size: .875em;
+			padding: 2px 6px;
+			border-radius: 6px;
+			background: rgba(140, 170, 255, .13);
+			box-shadow: inset 0 0 0 1px rgba(140, 170, 255, .16);
+			color: #bcd0ff;
+			white-space: nowrap;
+		}
+
+		/* 提示块 */
+		.callout {
+			display: flex;
+			gap: 11px;
+			margin: 10px 0 0;
+			padding: 13px 15px;
+			border: 1px solid rgba(255, 200, 87, .26);
+			border-radius: 13px;
+			background: linear-gradient(135deg, rgba(255, 200, 87, .12), rgba(255, 120, 80, .05));
+			font-size: 14px;
+			line-height: 1.85;
+			color: #ffd9a2;
+		}
+
+		.callout svg {
+			flex: none;
+			width: 17px;
+			height: 17px;
+			margin-top: 4px;
+			color: var(--amber);
+		}
+
+		.callout b {
+			color: #ffe9c4;
+		}
+
+		/* 结尾引导 */
+		.ask {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 12px;
+			margin-top: 30px;
+			padding: 16px 18px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: linear-gradient(135deg, rgba(62, 224, 143, .08), rgba(180, 147, 255, .05));
+			font-size: 14.5px;
+			color: var(--body);
+		}
+
+		.ask b {
+			color: var(--text);
+		}
+
+		.ask .btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			margin-left: auto;
+			min-height: 40px;
+			padding: 0 14px;
+			border-radius: 11px;
+			border: 1px solid rgba(62, 224, 143, .32);
+			background: rgba(62, 224, 143, .12);
+			color: var(--mint);
+			font-size: 13.5px;
+			font-weight: 600;
+			text-decoration: none;
+			transition: background-color .2s, transform .2s;
+		}
+
+		.ask .btn:hover {
+			background: rgba(62, 224, 143, .2);
+			transform: translateY(-1px);
+		}
+
+		/* ========== 页脚 ========== */
+		.footer {
+			padding: 24px 0 calc(40px + env(safe-area-inset-bottom));
+			border-top: 1px solid var(--line);
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px 22px;
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.footer p {
+			margin: 0;
+		}
+
+		/* ========== 响应式 ========== */
+		@media (max-width: 980px) {
+			.layout {
+				display: block;
+				padding-top: 0;
+			}
+
+			/* 侧栏变成吸顶的横向标签条 */
+			.side {
+				position: sticky;
+				top: var(--header-h);
+				z-index: 30;
+				margin: 0 calc(var(--gutter) / -2);
+				padding: 10px calc(var(--gutter) / 2);
+				background: rgba(7, 12, 22, .88);
+				border-bottom: 1px solid var(--line);
+				backdrop-filter: blur(14px);
+				-webkit-backdrop-filter: blur(14px);
+			}
+
+			.side__inner {
+				position: static;
+			}
+
+			.side__label,
+			.side__foot {
+				display: none;
+			}
+
+			.toc {
+				flex-direction: row;
+				gap: 7px;
+				overflow-x: auto;
+				scrollbar-width: none;
+				-ms-overflow-style: none;
+				scroll-behavior: smooth;
+			}
+
+			.toc::-webkit-scrollbar {
+				display: none;
+			}
+
+			.toc a {
+				flex: none;
+				padding: 9px 14px;
+				border: 1px solid var(--line);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, .035);
+				font-size: 13.5px;
+				white-space: nowrap;
+			}
+
+			.toc a.is-active {
+				border-color: rgba(62, 224, 143, .32);
+				background: rgba(62, 224, 143, .14);
+				box-shadow: 0 8px 20px -14px rgba(62, 224, 143, .9);
+			}
+
+			.doc {
+				margin-top: 18px;
+			}
+		}
+
+		@media (max-width: 620px) {
+			:root {
+				--header-h: 56px;
+			}
+
+			.crumb {
+				display: none;
+			}
+
+			.back {
+				padding: 0 11px;
+			}
+
+			.back span {
+				display: none;
+			}
+
+			.doc {
+				padding: 18px 16px 22px;
+				border-radius: 18px;
+			}
+
+			.doc__lead {
+				font-size: 14.5px;
+			}
+
+			.qa {
+				padding: 15px 14px 13px;
+			}
+
+			.qa__q {
+				font-size: 15px;
+			}
+
+			.qa__a {
+				padding-left: 0;
+			}
+
+			.qa__a p {
+				font-size: 14.5px;
+			}
+
+			.ask .btn {
+				margin-left: 0;
+				width: 100%;
+				justify-content: center;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			html {
+				scroll-behavior: auto;
+			}
+
+			* {
+				transition-duration: .001s !important;
+				animation-duration: .001s !important;
+			}
+		}
+	</style>
+</head>
+
+<body id="top">
+	<a class="skip" href="#q-input">跳到正文</a>
+
+	<header class="header">
+		<div class="wrap header__inner">
+			<a class="brand" href="../index.html">
+				<svg viewBox="0 0 32 32" aria-hidden="true">
+					<path d="M16 3.2 28.6 10.4v11.2L16 28.8 3.4 21.6V10.4Z" fill="#0d2a19" stroke="#3ee08f" stroke-width="1.5" stroke-linejoin="round" />
+					<path d="M16 3.2 28.6 10.4 16 17.6 3.4 10.4Z" fill="#2f8d55" />
+					<path d="M16 17.6v11.2L3.4 21.6V10.4Z" fill="#0f3d23" />
+					<path d="M16 17.6 28.6 10.4v11.2L16 28.8Z" fill="#186b3a" />
+					<path d="M11.4 9.1 16 6.5l4.6 2.6-4.6 2.6Z" fill="#c8f3d9" opacity=".85" />
+				</svg>
+				<b>命令模拟器</b>
+			</a>
+			<div class="crumb"><span>帮助文档 / 常见问题</span></div>
+			<a class="back" href="../index.html">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M4 11.5 12 4l8 7.5V20H4z" />
+					<path d="M9.5 20v-5.5h5V20" />
+				</svg>
+				<span>返回主页</span>
+			</a>
+		</div>
+	</header>
+
+	<div class="wrap layout">
+		<aside class="side">
+			<div class="side__inner">
+				<p class="side__label">问题分类</p>
+				<nav class="toc" aria-label="问题分类">
+					<a href="#q-input"><span class="num">01</span>输入答疑</a>
+					<a href="#q-ui"><span class="num">02</span>UI 界面答疑</a>
+				</nav>
+				<div class="side__foot">
+					<b>没找到答案？</b>
+					安装与本地文件的问题在使用须知里，命令写法在命令调试里。
+					<a href="./Instructions.html">← 去看使用须知</a>
+				</div>
+			</div>
+		</aside>
+
+		<article class="doc">
+			<p class="doc__eyebrow">FAQ</p>
+			<h1>常见问题</h1>
+			<p class="doc__lead">
+				输入法、界面异常——经常被问到的几个问题都在这里，
+				每条都给出了可以直接照做的处理办法。
+			</p>
+			<ul class="doc__meta">
+				<li>2 个分类</li>
+				<li>3 个问题</li>
+				<li>适配手机</li>
+			</ul>
+
+			<!-- ============ 输入答疑 ============ -->
+			<section class="cat" id="q-input" aria-labelledby="t-input">
+				<h2 id="t-input">输入答疑</h2>
+
+				<article class="qa">
+					<h3 class="qa__q"><span class="qmark">Q</span>如何取消输入法的安全键盘模式？</h3>
+					<div class="qa__a">
+						<p>
+							用户通常需要在<mark>手机的系统设置</mark>内关闭输入法的安全键盘模式，
+							通常在设置中搜索<mark>安全输入</mark>即可搜索到安全输入的相关设置，关闭即可。
+						</p>
+						<div class="callout">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M12 9v4" />
+								<path d="M12 17h.01" />
+								<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+							</svg>
+							<div>
+								<b>注意：</b>如果用户在直播或录制视频中需要输入密码，关闭安全输入将极大威胁密码安全，因此用户需要权衡利弊。
+							</div>
+						</div>
+					</div>
+				</article>
+
+				<article class="qa">
+					<h3 class="qa__q"><span class="qmark">Q</span>为什么输入法的复制粘贴不起作用或粘贴内容差别大？如何解决？</h3>
+					<div class="qa__a">
+						<p>
+							因为选用的是 tkinter 作为 UI 模块创建的工具。tkinter 是桌面端 UI 模块，因此对电脑的适配较为完全，
+							而对移动端的适配就容易出现问题。
+						</p>
+						<p>
+							<span class="solve">解决方法：</span>
+							一些文字相关的操作，如果你需要执行复制、剪切、粘贴等操作，请使用软件提供的<mark>文本操作菜单</mark>执行相关文字操作。
+						</p>
+					</div>
+				</article>
+			</section>
+
+			<!-- ============ UI 界面答疑 ============ -->
+			<section class="cat" id="q-ui" aria-labelledby="t-ui">
+				<h2 id="t-ui">UI 界面答疑</h2>
+
+				<article class="qa">
+					<h3 class="qa__q"><span class="qmark">Q</span>为什么我的 UI 显示的不完整？如何解决？</h3>
+					<div class="qa__a">
+						<p>
+							因为每个手机的设计不同，屏幕上的像素坐标也会大不相同，
+							tkinter 在每个安卓设备上使用都会出现不一样的效果。
+						</p>
+						<p>
+							<span class="solve">解决方法：</span>
+							在 Pydroid 3 的主界面，点击左上角菜单，点击 <code>Setting</code>，点击 <code>System</code>，
+							下滑至末尾，点击 <code>Tkinter: screen DPI</code>，将 DPI 改为 <strong>320 或更小</strong>即可，
+							依照自己设备效果选择最合适的 DPI。
+						</p>
+					</div>
+				</article>
+			</section>
+
+		</article>
+	</div>
+
+	<footer class="footer wrap">
+		<p>命令模拟器 · 常见问题</p>
+	</footer>
+
+	<script>
+		(function () {
+			var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+			var sections = links.map(function (link) {
+				return document.getElementById(link.getAttribute('href').slice(1));
+			}).filter(Boolean);
+			var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+			function setActive(id) {
+				links.forEach(function (link) {
+					var on = link.getAttribute('href') === '#' + id;
+					link.classList.toggle('is-active', on);
+					if (on) link.setAttribute('aria-current', 'true');
+					else link.removeAttribute('aria-current');
+				});
+			}
+
+			function updateActive() {
+				var offset = window.scrollY + 140;
+				var current = sections[0];
+				sections.forEach(function (section) {
+					if (section.offsetTop <= offset) current = section;
+				});
+				if (current) setActive(current.id);
+			}
+
+			var ticking = false;
+			window.addEventListener('scroll', function () {
+				if (ticking) return;
+				ticking = true;
+				requestAnimationFrame(function () {
+					updateActive();
+					ticking = false;
+				});
+			}, { passive: true });
+
+			// 点到当前分类时，让标签条把这一项滚到中间（窄屏才有效果）
+			links.forEach(function (link) {
+				link.addEventListener('click', function () {
+					var bar = document.querySelector('.toc');
+					if (!bar || !window.matchMedia('(max-width: 980px)').matches) return;
+					bar.scrollTo({
+						left: link.offsetLeft - (bar.clientWidth - link.offsetWidth) / 2,
+						behavior: reduceMotion ? 'auto' : 'smooth'
+					});
+				});
+			});
+
+			function scrollToSection(section) {
+				var header = document.querySelector('.header');
+				var offset = (header ? header.offsetHeight : 62) + 24;
+				var top = section.getBoundingClientRect().top + window.scrollY - offset;
+				var root = document.documentElement;
+				var previous = root.style.scrollBehavior;
+				root.style.scrollBehavior = 'auto';
+				window.scrollTo(0, Math.max(0, top));
+				root.style.scrollBehavior = previous;
+			}
+
+			function hashTarget() {
+				if (!location.hash) return null;
+				return document.getElementById(decodeURIComponent(location.hash.slice(1)));
+			}
+
+			function applyHash() {
+				var target = hashTarget();
+				if (!target) return;
+				setActive(target.id);
+				scrollToSection(target);
+			}
+
+			applyHash();
+			updateActive();
+
+			// 页面完全加载后再定位一次：此时布局与字体都已稳定
+			window.addEventListener('load', function () {
+				if (hashTarget()) {
+					requestAnimationFrame(applyHash);
+				}
+			});
+
+			// 兼容旧页面里可能残留的调用
+			window.close_menu = function () { };
+			window.website1 = function () { window.location.href = '../index.html'; };
+		}());
+	</script>
+</body>
+
+</html>
