@@ -1,79 +1,127 @@
-import os,inspect,json,time,threading,re,base64,zlib,traceback,subprocess,sys
+import os,inspect,json,time,threading,re,base64,zlib,traceback,random
+from tkinter import ttk
+import tkinter, tkinter.messagebox
 import package.file_operation as FileOperation
-from typing import List,Literal,Union
-from tkinter import ttk ; import tkinter ; import tkinter.messagebox
+from typing import List, Dict, Union
 import package.connent_API as connent_API
-
-import main_source.main_window.constant as app_constant
 import package.tk_tool as tk_tool
+
 
 class user_manager :
 
-    save_timestemp = 0
     save_path = os.path.join("save_world", "user_data.data")
-    save_data = {}
-    info_update = False
+    login_msg_match = re.compile("<login_msg>[\u0000-\uffff]+</login_msg>")
     save_data_template = {
-        "cookies": {"api_web_cookie":""}, 
+        "client_info": {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+            '(KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.%s.%s' % 
+            (random.randint(1000, 9999), random.randint(1000, 9999)),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            "Accept-Encoding": "gzip",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-CH-UA": "",
+            "Sec-CH-UA-Mobile": "?0",
+            "Sec-CH-UA-Platform": "Windows",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+        }, 
         "online_get": {}, 
         "user": {"account":None, "password":None, "data":None},
         "open_app_count": 0,
         "install_pack_list": {},
     }
-    login_msg_match = re.compile("<login_msg>[\u0000-\uffff]+</login_msg>")
 
     def __init__(self) :
-        if FileOperation.is_file(self.save_path) :
-            try : self.save_data = json.loads(FileOperation.read_a_file(self.save_path))
+        self.save_data = {}
+        self.info_update = False
+
+        if os.path.isfile(self.save_path) :
+            a = FileOperation.read_a_file(self.save_path)
+            try : self.save_data = json.loads(a)
             except : self.save_data = self.save_data_template
         else : self.save_data = self.save_data_template
 
         if "online_get" not in self.save_data : self.save_data["online_get"] = {}
         if "install_pack_list" not in self.save_data : self.save_data["install_pack_list"] = {}
+        if "client_info" not in self.save_data : self.save_data["client_info"] = {}
 
-        if "cookies" not in self.save_data : self.save_data["cookies"] = {"api_web_cookie":""}
-        if "api_web_cookie" not in self.save_data["cookies"] : self.save_data["cookies"]["api_web_cookie"] = ""
+        client_info, template_info = self.save_data["client_info"], self.save_data_template["client_info"]
+        if "cookie" not in client_info : client_info["cookie"] = {}
+        for key in template_info :
+            if key not in client_info : client_info[key] = template_info[key]
 
         if "user" not in self.save_data : self.save_data["user"] = {"account":None, "password":None, "data":None}
         if "account" not in self.save_data["user"] : self.save_data["user"]["account"] = None
         if "password" not in self.save_data["user"] : self.save_data["user"]["password"] = None
         if "data" not in self.save_data["user"] : self.save_data["user"]["data"] = None
 
-        self.save_timestemp = time.time() + 600
-
     def write_back(self) :
         FileOperation.write_a_file(self.save_path, json.dumps(self.save_data, indent=4))
 
-    def get_account(self) : 
-        json1:dict = self.save_data["user"]
-        if not(json1.get("account",None) and json1.get("password",None)) : 
-            self.login_out_account() ; return None
-        return base64.b64encode(
-            json.dumps({"account":json1["account"], "password":json1["password"]}).encode("utf-8")
-        ).decode("utf-8")
 
-    def login_out_account(self) :
+    def get_connent_header(self) :
+        cookie =  '; '.join([f"{key}={value}" for key, value in self.save_data["client_info"]["cookie"].items()])
+        copy_header = dict(self.save_data["client_info"])
+        copy_header['cookie'] = cookie
+        return copy_header
+
+    def set_cookie(self, data:Dict[str,str]) :
+        self.save_data["client_info"]["cookie"].update(data)
+
+
+    def get_account(self, base64encode=True) : 
+        json1 = {"account":None, "password":None}
+        json1["account"] = self.save_data["user"].get("account")
+        json1["password"] = self.save_data["user"].get("password")
+        if not isinstance(json1["account"], str) : 
+            self.login_out() ; return None
+        if not isinstance(json1["password"], str) : 
+            self.login_out() ; return None
+        
+        if not base64encode : return json1
+        json_str = json.dumps(json1).encode("utf-8")
+        return base64.b64encode(json_str).decode("utf-8")
+
+    def get_account_info(self) -> Union[dict, None] :
+        return self.save_data["user"].get("data", None)
+
+
+    def login_out(self) :
         self.save_data["user"] = {"account":None, "password":None, "data":None}
         self.write_back()
 
-    def login_account(self, account:str, passcode:str, request_msg:str) :
-        match_request_msg = self.login_msg_match.search(request_msg)
-        if match_request_msg is None : self.login_out_account() ; return None
+    def login_account(self, account:str="", passcode:str="", auto_login:bool=False) :
+        post_data = {"userdata":""}
+        request_header = self.get_connent_header()
+        if auto_login : post_data["userdata"] = self.get_account()
+        elif bool(account) and bool(passcode) : 
+            login_info_1 = {"account":account, "password":passcode}
+            post_data["userdata"] = base64.b64encode(json.dumps(login_info_1).encode("utf-8")).decode("utf-8")
+
+        #print(connent_API.AUTO_LOGIN, post_data, request_header)
+        responseData = connent_API.url_request(connent_API.AUTO_LOGIN, post_data, request_header)
+        if responseData is None : return None
+
+        match_request_msg = self.login_msg_match.search(responseData.decode("utf-8"))
+        if match_request_msg is None : self.login_out() ; return None
         account_log_msg = match_request_msg.group().replace("<login_msg>","").replace("</login_msg>","")
 
         try : msg_json = json.loads(account_log_msg)
-        except : self.login_out_account() ; return None
+        except : self.login_out() ; return None
 
-        if ('state_code' not in msg_json) or msg_json['state_code'] > 0 : self.login_out_account() ; return None
+        if ('state_code' not in msg_json) or msg_json['state_code'] > 0 : 
+            self.login_out() ; return None
         
         if account : self.save_data["user"]["account"] = account
         if passcode : self.save_data["user"]["password"] = passcode
         self.save_data["user"]['data'] = msg_json["server_back"]
+        self.save_data['client_info']["cookie"]["__test"] = request_header["cookie"].split("=")[1]
         self.write_back()
-        return True
-
-    def get_account_info(self) :
-        return self.save_data["user"].get("data", None)
+        return msg_json["server_back"]
 
 class initialization_log :
 
@@ -347,54 +395,63 @@ def mode_using(main_win, focus_input:Union[tkinter.Entry,tkinter.Text,ttk.Entry]
         if not isInputOpen : inputMethodManager.toggleSoftInput(0, 0)
     focus_input.focus_set()
 
-
-
 def get_app_infomation_and_login(Announcement, user:user_manager, log:initialization_log) :
     import main_source.main_window.constant as app_constant
+    request_header = user.get_connent_header()
+    online_response:bytes = None
 
-    log.write_log("正在获取软件信息...")
-    def updata_info() :
-        response2 = connent_API.request_url_without_error(connent_API.APP_INFO_URL)
-        if response2 is None : 
+    def test_network() :
+        log.write_log("正在验证网络通信...")
+        request1 = connent_API.url_request(connent_API.TEST_BAIDU_URL, request_headers=request_header)
+        if request1 is None : log.write_log("网络通信验证失败", 2) ; return False
+        else : log.write_log("网络通信验证成功", 2) ; return True
+
+    def get_online_info() :
+        nonlocal online_response
+        log.write_log("正在获取软件信息...")
+        online_response = connent_API.url_request(connent_API.APP_INFO_URL, request_headers=request_header)
+        if online_response is None : 
             Announcement.set_notification(None)
-            log.write_log("软件信息获取失败", 2) ; user.info_update = True ; return True
-        
+            log.write_log("软件信息获取失败", 2)
+            user.info_update = True
+            return True
+        log.write_log("软件信息获取成功", 2)
+        return True
+
+    def updata_info() :
+        log.write_log("正在解析软件信息...")
         try : 
-            response2 = connent_API.transfor_qq_share(response2.decode("utf-8"))
+            response2 = connent_API.transfor_qq_share(online_response.decode("utf-8"))
             response2 = zlib.decompress(base64.b64decode(response2.encode("utf-8"))).decode("utf-8")
             response2 = json.loads(response2)
-            user.save_data['online_get'] = response2
-
-            Announcement.set_notification(user.save_data['online_get']['notification'])
-            connent_API.get_online_api(user.save_data['online_get']['api'])
-            user.info_update = True ; log.write_log("软件信息同步完成",2)
-            return True
         except :
             if "notification" in user.save_data['online_get'] :
                 Announcement.set_notification(user.save_data['online_get']['notification'])
             if "api" in user.save_data['online_get'] :
                 connent_API.get_online_api(user.save_data['online_get']['api'])
-            log.write_log("无法同步信息，已使用上一次数据", 2)
+            log.write_log("无法解析信息，已使用上一次数据", 2)
+        else :
+            user.save_data['online_get'] = response2
+            Announcement.set_notification(user.save_data['online_get']['notification'])
+            connent_API.get_online_api(user.save_data['online_get']['api'])
+            log.write_log("软件信息同步完成", 2)
+        finally :
+            user.info_update = True
             return True
-
-    def test_network() :
-        request1 = connent_API.request_url_without_error(connent_API.TEST_BAIDU_URL)
-        if request1 is None : log.write_log("网络验证失败",2) ; return False
-        else : return True
 
     def get_info() :
         if app_constant.debug_testing : return None
-        data1 = {"userdata":user.get_account()} if (user.get_account() is not None) else None
-        request1 = connent_API.request_url_without_error(connent_API.AUTO_LOGIN,data1,user.save_data['cookies']["api_web_cookie"])
-        if request1 is None : log.write_log("自动登录连接失败",2) ; return False
-        else : 
-            log.write_log("自动登录连接成功",2)
-            user.save_data['cookies']["api_web_cookie"] = connent_API.request_headers['cookie']
-            user.login_account(None,None,request1.decode("utf-8"))
+        log.write_log("正在自动登录账户...") 
+        request1 = user.login_account(auto_login=True)
+        if request1 : 
+            log.write_log("自动登录成功", 2)
             return True
+        else : 
+            log.write_log("自动登录失败", 2) ; return False
 
-    for i in [updata_info, test_network, get_info] :
+    for i in [test_network, get_online_info, updata_info, get_info] :
         if not i() : break
+        log.write_log("") 
     user.write_back()
     log.set_time_end()
 
@@ -405,74 +462,6 @@ def get_app_infomation_and_login(Announcement, user:user_manager, log:initializa
     if not app_constant.debug_testing and OnlineVersion != app_constant.APP_VERSION : 
         tkinter.messagebox.showinfo("Info","最新版本已发布\n当前版本:%s.%s.%s\n最新版本:%s" % (app_constant.APP_VERSION[0],
         app_constant.APP_VERSION[1], app_constant.APP_VERSION[2], user.save_data['online_get']['app_version']))
-
-def flash_minecraft_id(log:initialization_log) :
-    update_id_zip_path = os.path.join("main_source", "update_source", "minecraft_id.zip")
-    import main_source.update_source.flash_source as flash_source
-    log.write_log("正在获取minecraft id...")
-
-    def download_online_id() -> bool :
-        try :
-            response = connent_API.request_url_without_error(connent_API.UPDATE_BE_ID, timeout_s=10)
-            if response is None : raise Exception
-            with open(update_id_zip_path, 'wb') as file1: file1.write(response)
-        except : log.write_log("在线BE-ID列表下载失败", 2) ; return True
-        else : log.write_log("在线BE-ID列表下载成功", 2) ; return True
-
-    def generate_online_id() -> bool :
-        try : flash_source.unzip_id_file()
-        except Exception as e : log.write_log(e.args[0], 2) ; return False
-
-        try : a = flash_source.report_source_update_date()
-        except Exception as e : log.write_log(e.args[0], 2) ; return False
-        for i in a : log.write_log(i, 2)
-
-        a = flash_source.update_minecraft_id()
-        for i in a["success"] : log.write_log(i, 2)
-        for i in a["error"] : log.write_log(i, 2)
-
-        a = flash_source.flash_search_id()
-        for i in a["success"] : log.write_log(i, 2)
-        for i in a["error"] : log.write_log(i, 2)
-
-        return True
-
-    for i in [download_online_id,generate_online_id] :
-        if not i() : break
-    log.set_time_end()
-
-def flash_minecraft_source(user:user_manager, log:initialization_log) :
-    source_path = os.path.join("main_source", "update_source", "be_resource.tar")
-    import main_source.update_source.flash_source as flash_source
-    while not user.info_update : time.sleep(0.2)
-    
-    log.write_log("正在检查minecraft source...")
-    if FileOperation.is_file(source_path) : 
-        if zlib.crc32(FileOperation.read_a_file(source_path, "readbyte")) == user.save_data["online_get"]["app_info"]["source_crc32"] :
-            log.set_time_end() ; log.write_log("检查完毕，无需更新", 2) ; return None
-
-    log.write_log("正在获取minecraft source...")
-
-    def download_online_source() :
-        be_resource = connent_API.request_url_without_error(user.save_data["online_get"]["app_info"]["source_update_url"], timeout_s=10)
-        if be_resource is None : log.write_log("资源联网获取失败",2) ; return False
-        log.write_log("资源获取成功", 2)
-        with open(source_path, 'wb') as file1 : file1.write(be_resource)
-        return True
-
-    def generate_online_source() -> bool :
-        try : flash_source.unzip_source_file()
-        except Exception as e : log.write_log(e.args[0], 2) ; return False
-
-        a = flash_source.update_minecraft_source()
-        for i in a["success"] : log.write_log(i, 2)
-        for i in a["error"] : log.write_log(i, 2)
-        return True
-
-    for i in [download_online_source,generate_online_source] :
-        if not i() : break
-    log.set_time_end()
-
 
 
 def Beginner_Tutorial(main_win, ask=True) :
@@ -503,7 +492,7 @@ def Tutorial_Start_1(main_win) :
     main_win.set_display_frame("setting_frame")
 
 def Tutorial_Start_2(main_win) :
-    import main_source.main_window.tk_frame as app_tk_frame
+    import main_source.main_window.display_ui as app_tk_frame
     TK:tkinter.Tk = main_win.window
 
     TellWin_1 = tk_tool.tk_TellBox(TK, TK, highlightcolor='green', bg="black")
@@ -611,3 +600,7 @@ def bool_test(main_win, bool1:bool) :
     if not main_win.tutorial_mode : 
         raise RuntimeError(inspect.currentframe().f_back.f_locals)
     return bool1
+
+
+
+

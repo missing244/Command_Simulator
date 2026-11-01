@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>加载错误报告</title>
+<style>
+  :root{
+    --bg:#0e1116; --card:#161b22; --border:#2b323b;
+    --fg:#e6edf3; --muted:#8b949e; --red:#f85149; --amber:#d29922; --green:#3fb950;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--bg);color:var(--fg);
+       font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  h1{font-size:18px;margin:0 0 12px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;
+        -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:6px 12px;border:1px solid var(--border);
+       border-radius:999px;background:var(--card);color:var(--muted);
+       font-size:13px;cursor:pointer;white-space:nowrap}
+  .tab.active{background:var(--red);border-color:var(--red);color:#fff}
+  .tab.ok.active{background:var(--green);border-color:var(--green)}
+  .tab .n{opacity:.75;margin-left:6px;font-size:12px}
+  .group{display:none}
+  .group.active{display:block}
+  details{background:var(--card);border:1px solid var(--border);
+          border-radius:8px;margin-bottom:8px;overflow:hidden}
+  summary{padding:10px 12px;cursor:pointer;font-family:ui-monospace,Menlo,monospace;
+          font-size:12.5px;word-break:break-all;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▾";color:var(--muted);margin-right:6px;
+                  display:inline-block;transition:transform .15s}
+  details:not([open]) summary::before{transform:rotate(-90deg)}
+  ul{margin:0;padding:0 12px 10px 28px;border-top:1px solid var(--border)}
+  li{padding:6px 0;color:var(--amber);font-size:12.5px;
+     font-family:ui-monospace,Menlo,monospace;word-break:break-word}
+  .empty{color:var(--green);text-align:center;padding:36px 0;font-size:14px}
+  .empty::before{content:"✓ ";font-weight:700}
+</style>
+</head>
+
+<body>
+<h1>加载错误报告</h1>
+<nav class="tabs" id="tabs"></nav>
+<main id="root"></main>
+
+<script>
+/* ================= 数据区（示例数据） ================= */
+const DATA = {
+  RP_load: /*__RP_LOAD_ERRORS__*/{},
+  RP_read: /*__RP_READ_ERRORS__*/{},
+  BP_load: /*__BP_LOAD_ERRORS__*/{},
+  BP_read: /*__BP_READ_ERRORS__*/{},
+};
+
+const SECTIONS = [
+  { key: "RP_load", label: "RP 加载" },
+  { key: "BP_load", label: "BP 加载" },
+  { key: "RP_read", label: "RP 读取" },
+  { key: "BP_read", label: "BP 读取" },
+];
+
+/* ================= 渲染逻辑 ================= */
+const esc = s => String(s).replace(/[&<>"']/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+function countErrors(obj){
+  return Object.values(obj || {}).reduce((n, arr) => n + (arr?.length || 0), 0);
+}
+
+function renderGroup(obj){
+  const entries = Object.entries(obj || {});
+  if (!entries.length) return `<p class="empty">无错误</p>`;
+  return entries.map(([path, msgs]) => `
+    <details open>
+      <summary>${esc(path)}<span class="n"> · ${msgs.length}</span></summary>
+      <ul>${msgs.map(m => `<li>${esc(m)}</li>`).join("")}</ul>
+    </details>`).join("");
+}
+
+function render(){
+  const tabsEl  = document.getElementById("tabs");
+  const rootEl  = document.getElementById("root");
+
+  tabsEl.innerHTML = SECTIONS.map((s, i) => {
+    const n = countErrors(DATA[s.key]);
+    const ok = n === 0 ? " ok" : "";
+    return `<button class="tab${ok}${i === 0 ? " active" : ""}" data-i="${i}">
+              ${s.label}<span class="n">${n}</span>
+            </button>`;
+  }).join("");
+
+  rootEl.innerHTML = SECTIONS.map((s, i) =>
+    `<section class="group${i === 0 ? " active" : ""}" data-i="${i}">
+       ${renderGroup(DATA[s.key])}
+     </section>`).join("");
+
+  tabsEl.onclick = e => {
+    const btn = e.target.closest(".tab");
+    if (!btn) return;
+    tabsEl.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b === btn));
+    rootEl.querySelectorAll(".group").forEach(g =>
+      g.classList.toggle("active", g.dataset.i === btn.dataset.i));
+  };
+}
+
+render();
+</script>
+</body>
+</html>

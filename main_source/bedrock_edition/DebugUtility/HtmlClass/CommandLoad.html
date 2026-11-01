@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>编译错误报告</title>
+<style>
+  :root{
+    --bg:#0e1116; --card:#161b22; --border:#2b323b;
+    --fg:#e6edf3; --muted:#8b949e; --red:#f85149; --amber:#d29922; --green:#3fb950;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--bg);color:var(--fg);
+       font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  h1{font-size:18px;margin:0 0 12px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;
+        -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:6px 12px;border:1px solid var(--border);
+       border-radius:999px;background:var(--card);color:var(--muted);
+       font-size:13px;cursor:pointer;white-space:nowrap}
+  .tab.active{background:var(--red);border-color:var(--red);color:#fff}
+  .tab.ok.active{background:var(--green);border-color:var(--green)}
+  .tab .n{opacity:.75;margin-left:6px;font-size:12px}
+  .group{display:none}
+  .group.active{display:block}
+  details{background:var(--card);border:1px solid var(--border);
+          border-radius:8px;margin-bottom:8px;overflow:hidden}
+  summary{padding:10px 12px;cursor:pointer;font-family:ui-monospace,Menlo,monospace;
+          font-size:12.5px;word-break:break-all;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▾";color:var(--muted);margin-right:6px;
+                  display:inline-block;transition:transform .15s}
+  details:not([open]) summary::before{transform:rotate(-90deg)}
+  ul{margin:0;padding:0 12px 10px 28px;border-top:1px solid var(--border)}
+  li{padding:6px 0;color:var(--amber);font-size:12.5px;
+     font-family:ui-monospace,Menlo,monospace;word-break:break-word}
+  .loc{color:var(--red);font-weight:600;margin-right:6px}
+  .cmd{display:block;color:var(--muted);margin-top:3px;
+       padding-left:6px;border-left:2px solid var(--border)}
+  .empty{color:var(--green);text-align:center;padding:36px 0;font-size:14px}
+  .empty::before{content:"✓ ";font-weight:700}
+  .empty.files{color:var(--muted)}
+  .empty.files::before{content:""}
+
+  /* 文件列表样式（CB文件面板专用） */
+  .filelist{background:var(--card);border:1px solid var(--border);
+            border-radius:8px;padding:6px 14px;margin:0;list-style:none;
+            border-top:none}
+  .filelist li{padding:7px 0;color:var(--fg);font-size:12.5px;
+               font-family:ui-monospace,Menlo,monospace;
+               border-bottom:1px solid var(--border);word-break:break-all}
+  .filelist li:last-child{border-bottom:none}
+  .filelist li::before{content:"📄 ";margin-right:4px}
+</style>
+</head>
+
+<body>
+<h1>编译错误报告</h1>
+<nav class="tabs" id="tabs"></nav>
+<main id="root"></main>
+
+<script>
+/* =================================================================
+ *  后端注入接口（编译产物）
+ *
+ *  1) FUNC_COMPILE   函数编译错误
+ *     Dict[PathStr, List[Tuple[line_no, char_idx, command_str, err_msg]]]
+ *     - PathStr    : 函数文件路径
+ *     - line_no    : 出错行号（从 1 开始）
+ *     - char_idx   : 出错字符偏移（从 0 开始，0 表示未精确到列）
+ *     - command_str: 出错的命令原文（可为空字符串）
+ *     - err_msg    : 错误描述
+ *
+ *  2) CB_FILES       已加载的命令方块文件列表
+ *     List[str]
+ *
+ *  3) CB_COMPILE     命令方块文件编译错误
+ *     Dict[PathStr, List[Tuple[line_no, char_idx, command_str, err_msg]]]
+ *     结构与 FUNC_COMPILE 完全一致
+ * ================================================================= */
+const DATA = {
+  FUNC_COMPILE: /*__FUNC_COMPILE_ERRORS__*/{},
+  CB_FILES:     /*__CB_FILES__*/[],
+  CB_COMPILE:   /*__CB_COMPILE_ERRORS__*/{},
+};
+
+/* ================= 分区定义 ================= */
+/* type: "errors" -> 按路径折叠的错误列表
+ *       "files"  -> 纯字符串列表                               */
+const SECTIONS = [
+  { key: "FUNC_COMPILE", label: "函数编译", type: "errors" },
+  { key: "CB_FILES",     label: "CB文件",   type: "files"  },
+  { key: "CB_COMPILE",   label: "CB编译",   type: "errors" },
+];
+
+/* ================= 工具函数 ================= */
+const esc = s => String(s).replace(/[&<>"']/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+function countErrors(obj){
+  return Object.values(obj || {}).reduce((n, arr) => n + (arr?.length || 0), 0);
+}
+
+function countItems(section){
+  const v = DATA[section.key];
+  if (section.type === "errors") return countErrors(v);
+  if (section.type === "files")  return Array.isArray(v) ? v.length : 0;
+  return 0;
+}
+
+/* ================= 渲染：错误条目 =================
+ * 兼容两种错误项：
+ *   - 4 元组 [line_no, char_idx, command_str, err_msg]（新版后端注入）
+ *   - 纯字符串（兜底，避免后端未升级时崩溃）
+ * ================================================== */
+function fmtErrItem(t){
+  if (Array.isArray(t)){
+    const line = t[0] ?? "?";
+    const col  = t[1] ?? 0;
+    const cmd  = t[2] ?? "";
+    const msg  = t[3] ?? "";
+    const loc  = `第 ${line} 行` + (col ? `:${col}` : "");
+    const cmdPart = cmd ? `<span class="cmd">${esc(cmd)}</span>` : "";
+    return `<li><span class="loc">${loc}</span>${esc(msg)}${cmdPart}</li>`;
+  }
+  // 兜底：直接当字符串渲染
+  return `<li>${esc(t)}</li>`;
+}
+
+function renderErrors(obj){
+  const entries = Object.entries(obj || {});
+  if (!entries.length) return `<p class="empty">无错误</p>`;
+  return entries.map(([path, msgs]) => `
+    <details open>
+      <summary>${esc(path)}<span class="n"> · ${msgs.length}</span></summary>
+      <ul>${msgs.map(fmtErrItem).join("")}</ul>
+    </details>`).join("");
+}
+
+/* ================= 渲染：文件列表 ================= */
+function renderFiles(list){
+  if (!Array.isArray(list) || !list.length)
+    return `<p class="empty files">暂无文件</p>`;
+  return `<ul class="filelist">${
+    list.map(f => `<li>${esc(f)}</li>`).join("")
+  }</ul>`;
+}
+
+/* ================= 渲染：分发 ================= */
+function renderBody(section){
+  if (section.type === "errors") return renderErrors(DATA[section.key]);
+  if (section.type === "files")  return renderFiles(DATA[section.key]);
+  return "";
+}
+
+/* ================= 渲染：主入口 ================= */
+function render(){
+  const tabsEl = document.getElementById("tabs");
+  const rootEl = document.getElementById("root");
+
+  // 1) 顶部 Tab 栏
+  tabsEl.innerHTML = SECTIONS.map((s, i) => {
+    const n  = countItems(s);
+    const ok = n === 0 ? " ok" : "";
+    return `<button class="tab${ok}${i === 0 ? " active" : ""}" data-i="${i}">
+              ${s.label}<span class="n">${n}</span>
+            </button>`;
+  }).join("");
+
+  // 2) 内容区
+  rootEl.innerHTML = SECTIONS.map((s, i) =>
+    `<section class="group${i === 0 ? " active" : ""}" data-i="${i}">
+       ${renderBody(s)}
+     </section>`).join("");
+
+  // 3) Tab 切换
+  tabsEl.onclick = e => {
+    const btn = e.target.closest(".tab");
+    if (!btn) return;
+    tabsEl.querySelectorAll(".tab").forEach(b =>
+      b.classList.toggle("active", b === btn));
+    rootEl.querySelectorAll(".group").forEach(g =>
+      g.classList.toggle("active", g.dataset.i === btn.dataset.i));
+  };
+}
+
+render();
+</script>
+</body>
+</html>

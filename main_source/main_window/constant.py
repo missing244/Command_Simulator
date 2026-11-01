@@ -4,7 +4,7 @@ try :
     if platform.system() == "Windows" : raise Exception
 except : jnius = None
 
-APP_VERSION = (2, 3, 2, 2) ; debug_testing = True
+APP_VERSION = (3, 0, 0, 1) ; debug_testing = True
 PythonActivity = jnius.autoclass('org.kivy.android.PythonActivity') if jnius else None
 Context = jnius.autoclass('android.content.Context') if jnius else None
 
@@ -18,47 +18,6 @@ def GetPlatform() :
   elif system_info.system.lower() == 'linux' and system_info.machine == "aarch64" : return 'linux_arm64'
 SoftwarePlatform: typing.Literal["windows", "android", "linux_amd64", "linux_arm64"] = GetPlatform()
 
-First_Load_Build_Dir = (
-    "save_world", 
-    "expand_pack", 
-    os.path.join("functionality", "example"),
-    os.path.join("functionality", "Command_Text"), 
-    os.path.join("functionality", "CB_Structure"),
-)
-
-#ID文件验证列表
-ID_File_Path = os.path.join("main_source", "update_source", "import_files")
-Prove_ID_List = [
-    'animation', 'animation_controller', 'biome', 'block', 'block_loot', 'block_state',
-    'damageCause', 'default_chunk', 'default_map', 'effect', 'enchant', 'entity', 'entitySlot',
-    'fog', 'gamerule', 'game_data', 'identifier_transfor', 'item', 'loot_table', 'music', 'particle',
-    'recipe', 'sound', 'structure', 'trading', 'translate'
-]
-
-#世界文件验证列表
-world_file_prove = ['level_name','world_info','scoreboard','chunk_data']
-
-
-manifest_json = """
-{
-    "format_version": 2,
-    "header": {
-    "uuid": "%s",
-    "name": "example_bp",
-    "version": [0, 0, 1],
-    "description": "This is a example behavior pack",
-    "min_engine_version": %s
-    },
-    "modules": [
-      {
-        "description": "子资源包简介",
-        "version": [0, 0, 1],
-        "uuid": "14d5fb6b-ef0a-47e5-8a98-d615709c1a03",
-        "type": "data"
-      }
-    ]
-}
-"""%(uuid.uuid4(), [1,20,50])
 
 world_config = {
   "normal_setting" : {
