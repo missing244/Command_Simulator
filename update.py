@@ -1,3 +1,4 @@
+exit()
 import random,traceback,base64,json,zlib,re
 from urllib import request
 from html.parser import HTMLParser
